@@ -1,8 +1,9 @@
 import {IClerk} from './interfaces';
-import {Runtime} from '../runtime/runtime';
-import {JsonRpc} from '../rpc/jsonrpc'
-import {Transaction,RequestErrors} from './types';
-import {JsonRpcMethod,JsonRpcResponse} from '../rpc/types';
+
+import {Transaction,RequestErrors} from '@algosigner/common/types';
+import {Runtime} from '@algosigner/common/runtime/runtime';
+import {JsonRpc} from '@algosigner/common/rpc/jsonrpc'
+import {JsonRpcMethod,JsonRpcResponse} from '@algosigner/common/rpc/types';
 
 export class Clerk extends Runtime implements IClerk {
     static get sendReqArgs(): Array<string> {

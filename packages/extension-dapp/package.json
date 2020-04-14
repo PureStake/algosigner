@@ -1,5 +1,5 @@
 {
-  "name": "algosigner-extension-library",
+  "name": "@algosigner/dapp",
   "version": "0.0.1",
   "scripts": {
     "type-check": "tsc --noEmit",

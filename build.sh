@@ -1,8 +1,11 @@
 rm -r dist
 mkdir dist
 
+cd packages/extension\-common && npm install
+cd ../..
+
 # extension-library
-cd packages/extension\-library && npm install && npm run bundle
+cd packages/extension\-dapp && npm install && npm run bundle
 cp dist/AlgoSigner.min.js ../../dist
 rm -r dist
 

@@ -1,5 +1,5 @@
 import {IJsonRpc} from './interfaces'
-import {RequestErrors} from '../fn/types';
+import {RequestErrors} from '../types';
 import {
     JsonRpcResponse,JSONRPC_VERSION, JsonRpcMethod, JsonRpcParams, JsonRpcBody
 } from './types';

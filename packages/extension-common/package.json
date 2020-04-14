@@ -1,0 +1,7 @@
+{
+  "name": "@algosigner/common",
+  "version": "0.0.1",
+  "dependencies": {
+    "@babel/runtime": "^7.9.2"
+  }
+}

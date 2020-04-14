@@ -1,5 +1,9 @@
 var path = require('path');
 
+function srcPath(subdir) {
+    return path.join(__dirname, "./", subdir);
+}
+
 module.exports = {
     // Change to your "entry-point".
     mode: 'production',
@@ -10,6 +14,9 @@ module.exports = {
         libraryTarget: "umd"
     },
     resolve: {
+        alias: {
+            "@algosigner/common": srcPath('../extension-common')
+        },
         extensions: ['.ts', '.tsx', '.js', '.json']
     },
     module: {
@@ -21,6 +28,7 @@ module.exports = {
                 loader: 'babel-loader',
                 options: {
                     presets: ['@babel/preset-env'],
+                    presets: ['@babel/preset-typescript'],
                     plugins: ['@babel/plugin-transform-runtime']
                 }
             }
