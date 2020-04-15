@@ -1,9 +1,11 @@
 import {IClerk} from './interfaces';
 
+import {MessageBuilder} from '../messaging/builder'; 
+
 import {Transaction,RequestErrors} from '@algosigner/common/types';
+import {JsonRpcMethod,JsonRpcResponse} from '@algosigner/common/messaging/types';
+
 import {Runtime} from '@algosigner/common/runtime/runtime';
-import {JsonRpc} from '@algosigner/common/rpc/jsonrpc'
-import {JsonRpcMethod,JsonRpcResponse} from '@algosigner/common/rpc/types';
 
 export class Clerk extends Runtime implements IClerk {
     static get sendReqArgs(): Array<string> {
@@ -13,7 +15,7 @@ export class Clerk extends Runtime implements IClerk {
         if(!super.requiredArgs(Clerk.sendReqArgs,Object.keys(params))){
             error = RequestErrors.InvalidTransactionParams;
         }
-        return JsonRpc.request(
+        return MessageBuilder.promise(
             JsonRpcMethod.SignTransaction, 
             Object.values(params),
             error
