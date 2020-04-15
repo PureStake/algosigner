@@ -1,5 +1,5 @@
 import {OnMessageListener} from './types'; 
-import {JsonRpcBody} from '@algosigner/common/messaging/types';
+import {JsonRpcBody,MessageBody,MessageSource} from '@algosigner/common/messaging/types';
 
 export class MessageApi {
     mc: MessageChannel;
@@ -11,7 +11,11 @@ export class MessageApi {
         this.mc.port1.onmessage = handler;
     }
 
-    send(body: JsonRpcBody) {
-        window.postMessage(body, window.location.origin, [this.mc.port2]);
+    send(body: JsonRpcBody, source: MessageSource = MessageSource.DApp) {
+        let msg: MessageBody = {
+            source: source,
+            body: body
+        }
+        window.postMessage(msg, window.location.origin, [this.mc.port2]);
     }
 }

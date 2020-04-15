@@ -1,6 +1,7 @@
 export const JSONRPC_VERSION: string = "2.0";
 
 export enum JsonRpcMethod {
+    Heartbeat = "heartbeat",
     SignTransaction = "sign-transaction"
 }
 
@@ -11,6 +12,15 @@ export type JsonRpcBody = {
     readonly method: JsonRpcMethod;
     readonly params: JsonRpcParams;
     readonly id: string;
+}
+
+export enum MessageSource {
+    Extension = "extension",
+    DApp = "dapp"
+}
+export type MessageBody = {
+    readonly source: MessageSource,
+    readonly body: JsonRpcBody
 }
 
 export type JsonRpcResponse = string;
