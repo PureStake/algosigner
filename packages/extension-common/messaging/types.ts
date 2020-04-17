@@ -2,6 +2,7 @@ export const JSONRPC_VERSION: string = "2.0";
 
 export enum JsonRpcMethod {
     Heartbeat = "heartbeat",
+    Authorization = "authorization",
     SignTransaction = "sign-transaction"
 }
 

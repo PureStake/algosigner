@@ -22,7 +22,7 @@ export class MessageBuilder {
                     Object.values(params)
                 ));
             } else {
-                throw new Error(error);
+                reject(error);
             }
         });
 

@@ -6,7 +6,7 @@ export class OnMessageHandler {
             if (event.data.error) {
                 reject(event.data.error);
             } else {
-                resolve(event.data);
+                resolve(event.data.body);
             }
         }
     }

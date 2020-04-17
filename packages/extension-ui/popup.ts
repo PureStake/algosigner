@@ -3,20 +3,16 @@ class Popup {
     constructor() {
         let ctx = this;
         document.addEventListener('DOMContentLoaded', function () {
-            console.log("popup loaded");
-
             let el = document.getElementById("demo_button");
             if(el) {
-                console.log("popup element is here");
-
                 el.addEventListener("click",() => {
-                    ctx.foo();
+                    ctx.myAction();
                 },false);
             }
         });
     }
 
-    foo() {
+    myAction() {
         this.send()
         .then(function(){
             console.log("Resolved in the popup!");
@@ -27,8 +23,6 @@ class Popup {
     }
 
     send() {
-        console.log("D");
-
         return new Promise((resolve,reject) => {
             function responseCb(response: any) {
                 resolve(response);
@@ -36,9 +30,6 @@ class Popup {
             let requestId = (+new Date).toString(16);
             chrome.runtime.sendMessage({id: requestId, method: "foo-bar"}, responseCb);
         });
-
-        // console.log("popup sending");
-        // chrome.runtime.sendMessage({port: "from_extension", method: "sign-txn-and-return"});
     }
 }
 new Popup();

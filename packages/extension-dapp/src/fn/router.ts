@@ -1,4 +1,6 @@
-// TBD, by default we are routing every message from the Extension to a global handler.
+// The Router routes messages sent to the dApp back to the extension.
+//
+// By default we are routing every message from the Extension to a global handler.
 // This handler bounces back a signal to the Extension as simple ACK mechanism, that will 
 // ultimately resolve the Promise in the Extension side.
 //

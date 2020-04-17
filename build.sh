@@ -20,5 +20,7 @@ cd .. && rm -r build
 # extension-ui
 cd ../../packages/extension\-ui && npm install && tsc && cd build
 cp popup.js ../../../dist # popup
+cp authorization.js ../../../dist # authorization script
 cp ../popup.html ../../../dist # popup html
+cp ../authorization.html ../../../dist # authorization html
 cd .. && rm -r build

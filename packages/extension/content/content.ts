@@ -6,18 +6,13 @@ class Content {
     events: {[key: string]: any} = {};
     static get PortName(): string {return "content"}
     port: chrome.runtime.Port = chrome.runtime.connect({name: Content.PortName});
+    // enableListener: (this: Window, ev: MessageEvent) => any;
 
     constructor() {
+        this.inject();
         this.listenDOM();
         this.listenPortReponses();
         this.listenPortRequests();
-        this.inject();
-        let ctx = this;
-        // chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
-        //     if(port.name == 'background') {
-        //         ctx.listenPortRequests(port);
-        //     }
-        // });
     }
 
     inject() {
@@ -31,17 +26,16 @@ class Content {
     // Listen to user events and forward them to the background
     listenDOM() {
         let ctx = this;
-        window.addEventListener("message",(event) => {
-            var d = event.data;
-            console.log("-CONTENT");
-            console.log(JSON.stringify(d));
+        window.addEventListener("message",(ev) => {
+            var d = ev.data;
             if("source" in d){
                 if(d.source == "dapp") {
                     let eventId: string = d.body.id;
-                    ctx.events[eventId] = event;
+                    ctx.events[eventId] = ev;
                 }
                 if(d.source == "dapp" || d.source == "router") {
-                    ctx.port.postMessage(d);
+                    d.origin = window.location.origin;
+                    ctx.port.postMessage(d); // {origin, source, body}
                 }
             }
         });
@@ -50,17 +44,17 @@ class Content {
     // Listen to responses from the background
     listenPortReponses() {
         let ctx = this;
-        this.port.onMessage.addListener((message) => {
-            if('eventId' in message && message.eventId in ctx.events) {
-                ctx.events[message.eventId].ports[0].postMessage(message.body);
-                delete ctx.events[message.eventId];
+        this.port.onMessage.addListener((d) => {
+            if(d.body.id in ctx.events) {
+                ctx.events[d.body.id].ports[0].postMessage(d);
+                delete ctx.events[d.body.id];
             }
         });
     }
     // Listen to requests from the background
     listenPortRequests() {
-        chrome.runtime.onMessage.addListener((message) => {
-            window.postMessage(message, window.location.origin);
+        chrome.runtime.onMessage.addListener((d) => {
+            window.postMessage(d, window.location.origin);
         });
     }
 }

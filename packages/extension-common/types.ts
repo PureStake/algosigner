@@ -1,5 +1,6 @@
 export enum RequestErrors {
     None,
+    NotAuthorized = '[RequestErrors.NotAuthorized] The extension user does not authorize the request.',
     InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.'
 }
 
