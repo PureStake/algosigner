@@ -6,58 +6,65 @@ enum RequestErrors {
 }
 
 class Authorization {
+
+    static request: {[key: string]: any} = {};
+    static pool: Array<string> = [];
+
+    public static isAuthorized(origin: string): boolean {
+        if(Authorization.pool.indexOf(origin) > -1 ){
+            return true;
+        }
+        return false;
+    }
     public static methods(): {[key: string]: Function} {
         return {
             "authorization": (
                 d: any, 
-                ctx: Background, 
                 port: chrome.runtime.Port
             ) => {
-                chrome.windows.create({
-                    url: chrome.runtime.getURL("authorization.html"),
-                    type: "popup",
-                    focused: true,
-                    width:480,
-                    height:640
-                }, function (w) {
-                    if(w) {
-                        ctx.authorizationRequest = {
-                            window_id: w.id,
-                            port:port,
-                            message:d
-                        };
-                        setTimeout(function(){
-                            chrome.runtime.sendMessage(d);
-                        },100);
-                    }
-                });
+                if(Authorization.isAuthorized(d.origin)){
+                    // Do not need to re-authorized, resolve right away
+                    port.postMessage(d);
+                } else {
+                    chrome.windows.create({
+                        url: chrome.runtime.getURL("authorization.html"),
+                        type: "popup",
+                        focused: true,
+                        width:480,
+                        height:640
+                    }, function (w) {
+                        if(w) {
+                            Authorization.request = {
+                                window_id: w.id,
+                                port:port,
+                                message:d
+                            };
+                            setTimeout(function(){
+                                chrome.runtime.sendMessage(d);
+                            },100);
+                        }
+                    });
+                }
             },
-            "authorization-allow": (
-                ctx: Background
-            ) => {
-                let auth = ctx.authorizationRequest;
+            "authorization-allow": () => {
+                let auth = Authorization.request;
                 auth.port.postMessage(auth.message);
                 chrome.windows.remove(auth.window_id);
-                ctx.authorized.push(auth.message.body.params[0]);
-                ctx.authorizationRequest = {};
+                Authorization.pool.push(auth.message.body.params[0]);
+                Authorization.request = {};
             },
-            "authorization-deny": (
-                ctx: Background
-            ) => {
-                let auth = ctx.authorizationRequest;
+            "authorization-deny": () => {
+                let auth = Authorization.request;
                 auth.message.error = RequestErrors.NotAuthorized;
                 auth.port.postMessage(auth.message);
                 chrome.windows.remove(auth.window_id);
-                ctx.authorizationRequest = {};
+                Authorization.request = {};
             }
         }
     }
 }
 
 class Background {
-
-    authorizationRequest: {[key: string]: any} = {};
-    authorized: Array<string> = [];
     events: {[key: string]: any} = {};
     static get PortName(): string {return "background"}
 
@@ -73,7 +80,7 @@ class Background {
         chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
 
             if(request.body.method in Authorization.methods()) {
-                Authorization.methods()[request.body.method](ctx);
+                Authorization.methods()[request.body.method]();
             } else {
                 ctx.events[request.id] = sendResponse;
                 chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
@@ -91,12 +98,12 @@ class Background {
                 case 'dapp':
                     if(d.body.method in Authorization.methods()) {
                         // This is an authorization request
-                        Authorization.methods()[d.body.method](d,ctx,port);
+                        Authorization.methods()[d.body.method](d,port);
                     } else {
                         // This is a dApp request through the content port. 
                         // TODO: we need to find the current tab origin from here to cross-check that
                         // the provided origin was not injected (as the content-script can be modified).
-                        if(ctx.authorized.indexOf(d.origin) > -1 ){
+                        if(Authorization.isAuthorized(d.origin)){
                             // TODO: Do further processing, api request etc.. and respond through the port.
                             port.postMessage(d);
                         } else {
