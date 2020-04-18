@@ -28,7 +28,15 @@ class Popup {
                 resolve(response);
             }
             let requestId = (+new Date).toString(16);
-            chrome.runtime.sendMessage({id: requestId, method: "foo-bar"}, responseCb);
+            chrome.runtime.sendMessage({
+                source:'extension',
+                body:{
+                    jsonrpc: '2.0',
+                    method:'method-example-from-extension',
+                    params:[],
+                    id: (+new Date).toString(16)
+                }
+            }, responseCb);
         });
     }
 }

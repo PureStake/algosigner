@@ -5,6 +5,19 @@ enum RequestErrors {
     InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.'
 }
 
+class Messaging {
+    public static send(d: any,active_tab: boolean = true) {
+        if(active_tab) {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+                var tab_id = tabs[0].id || 0;
+                chrome.tabs.sendMessage(tab_id,d);
+            });
+        } else {
+            // TODO all tabs?
+        }
+    }
+}
+
 class Authorization {
 
     static request: {[key: string]: any} = {};
@@ -18,13 +31,10 @@ class Authorization {
     }
     public static methods(): {[key: string]: Function} {
         return {
-            "authorization": (
-                d: any, 
-                port: chrome.runtime.Port
-            ) => {
+            "authorization": (d: any) => {
                 if(Authorization.isAuthorized(d.origin)){
                     // Do not need to re-authorized, resolve right away
-                    port.postMessage(d);
+                    Messaging.send(d);
                 } else {
                     chrome.windows.create({
                         url: chrome.runtime.getURL("authorization.html"),
@@ -36,7 +46,6 @@ class Authorization {
                         if(w) {
                             Authorization.request = {
                                 window_id: w.id,
-                                port:port,
                                 message:d
                             };
                             setTimeout(function(){
@@ -48,76 +57,78 @@ class Authorization {
             },
             "authorization-allow": () => {
                 let auth = Authorization.request;
-                auth.port.postMessage(auth.message);
+                let message = auth.message;
+
                 chrome.windows.remove(auth.window_id);
                 Authorization.pool.push(auth.message.body.params[0]);
                 Authorization.request = {};
+
+                setTimeout(() => {
+                    Messaging.send(message);
+                },1000);
             },
             "authorization-deny": () => {
                 let auth = Authorization.request;
+                let message = auth.message;
+
                 auth.message.error = RequestErrors.NotAuthorized;
-                auth.port.postMessage(auth.message);
                 chrome.windows.remove(auth.window_id);
                 Authorization.request = {};
+
+                setTimeout(() => {
+                    Messaging.send(message);
+                },1000);
             }
         }
     }
 }
 
 class Background {
+    
     events: {[key: string]: any} = {};
     static get PortName(): string {return "background"}
 
     constructor() {
+
         let ctx = this;
-
-        chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
-            if(port.name == 'content') {
-                ctx.listenPort(port);
-            }
-        });
-
         chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
-
-            if(request.body.method in Authorization.methods()) {
-                Authorization.methods()[request.body.method]();
-            } else {
-                ctx.events[request.id] = sendResponse;
-                chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-                    var tab_id = tabs[0].id || 0;
-                    chrome.tabs.sendMessage(tab_id,{'source':'extension','body':request});
-                });
-                return true; // required. This tells Chrome that this response will be resolved asynchronously.
-            }
-        });
-    }
-    listenPort(port: chrome.runtime.Port) {
-        let ctx = this;
-        port.onMessage.addListener((d) => {
-            switch(d.source) {
+            let ctx = this;
+            let source = request.source; // dapp, extension
+            let origin = request.origin;
+            let body = request.body;
+            switch(source) {
                 case 'dapp':
-                    if(d.body.method in Authorization.methods()) {
-                        // This is an authorization request
-                        Authorization.methods()[d.body.method](d,port);
+                    if(body.method in Authorization.methods()) {
+                        Authorization.methods()[body.method](request);
                     } else {
-                        // This is a dApp request through the content port. 
                         // TODO: we need to find the current tab origin from here to cross-check that
                         // the provided origin was not injected (as the content-script can be modified).
-                        if(Authorization.isAuthorized(d.origin)){
-                            // TODO: Do further processing, api request etc.. and respond through the port.
-                            port.postMessage(d);
+                        if(Authorization.isAuthorized(origin)){
+                            // TODO: Do further processing, api request etc.. and respond
+                            Messaging.send(request);
                         } else {
-                            d.error = RequestErrors.NotAuthorized;
-                            port.postMessage(d);
+                            request.error = RequestErrors.NotAuthorized;
+                            Messaging.send(request);
                         }
                     }
                     break;
+                case 'extension':
+                    if(body.method in Authorization.methods()) {
+                        Authorization.methods()[body.method](request);
+                    } else {
+                        ctx.events[request.body.id] = sendResponse;
+                        Messaging.send(request);
+                        return true; // required. This tells Chrome that this response will be resolved asynchronously.
+                    }
+                    break;
                 case 'router':
-                    // This is a Popup request coming back from the content port.
-                    // TODO: this should lead to resolve the Popup promise
-                    let eventId = d.id;
-                    ctx.events[eventId]();
-                    delete ctx.events[eventId];
+                    if(body.method in Authorization.methods()) {
+                        Authorization.methods()[body.method](request);
+                    } else {
+                        let eventId = body.id;
+                        ctx.events[eventId]();
+                        delete ctx.events[eventId];
+                    }
                     break;
             }
         });

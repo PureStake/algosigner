@@ -5,14 +5,11 @@ class Content {
 
     events: {[key: string]: any} = {};
     static get PortName(): string {return "content"}
-    port: chrome.runtime.Port = chrome.runtime.connect({name: Content.PortName});
-    // enableListener: (this: Window, ev: MessageEvent) => any;
 
     constructor() {
         this.inject();
-        this.listenDOM();
-        this.listenPortReponses();
-        this.listenPortRequests();
+        this.messageChannelListener();
+        this.chromeRuntimeListener();
     }
 
     inject() {
@@ -23,8 +20,7 @@ class Content {
         (document.head||document.documentElement).appendChild(el);
     }
 
-    // Listen to user events and forward them to the background
-    listenDOM() {
+    messageChannelListener() {
         let ctx = this;
         window.addEventListener("message",(ev) => {
             var d = ev.data;
@@ -35,26 +31,25 @@ class Content {
                 }
                 if(d.source == "dapp" || d.source == "router") {
                     d.origin = window.location.origin;
-                    ctx.port.postMessage(d); // {origin, source, body}
+                    chrome.runtime.sendMessage(d); // {origin, source, body}
                 }
             }
         });
     }
 
-    // Listen to responses from the background
-    listenPortReponses() {
+    chromeRuntimeListener() {
         let ctx = this;
-        this.port.onMessage.addListener((d) => {
-            if(d.body.id in ctx.events) {
-                ctx.events[d.body.id].ports[0].postMessage(d);
-                delete ctx.events[d.body.id];
-            }
-        });
-    }
-    // Listen to requests from the background
-    listenPortRequests() {
         chrome.runtime.onMessage.addListener((d) => {
-            window.postMessage(d, window.location.origin);
+            let source = d.source;
+            let origin = d.origin;
+            let body = d.body;
+
+            if(body.id in ctx.events) {
+                ctx.events[body.id].ports[0].postMessage(d);
+                delete ctx.events[body.id];
+            } else {
+                window.postMessage(d, window.location.origin);
+            }
         });
     }
 }
