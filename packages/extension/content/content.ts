@@ -4,7 +4,6 @@ const BUNDLE = 'AlgoSigner.min.js';
 class Content {
 
     events: {[key: string]: any} = {};
-    static get PortName(): string {return "content"}
 
     constructor() {
         this.inject();

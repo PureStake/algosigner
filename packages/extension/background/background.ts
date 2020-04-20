@@ -1,9 +1,4 @@
-// TODO: this is hardcoded, should use @algosigner/common/types.RequestErrors
-enum RequestErrors {
-    None,
-    NotAuthorized = '[RequestErrors.NotAuthorized] The extension user does not authorize the request.',
-    InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.'
-}
+import {RequestErrors} from '@algosigner/common/types';
 
 class Messaging {
     public static send(d: any,active_tab: boolean = true) {
@@ -86,7 +81,6 @@ class Authorization {
 class Background {
     
     events: {[key: string]: any} = {};
-    static get PortName(): string {return "background"}
 
     constructor() {
 

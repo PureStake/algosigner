@@ -3,6 +3,18 @@
   "version": "0.0.1",
   "devDependencies": {
     "@types/chrome": "0.0.104",
-    "typescript": "^3.7.5"
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.8.3",
+    "@babel/preset-typescript": "^7.8.3",
+    "babel-loader": "^8.1.0",
+    "typescript": "^3.7.5",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.9.2"
   }
 }

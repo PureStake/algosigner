@@ -10,9 +10,9 @@ cp dist/AlgoSigner.min.js ../../dist
 rm -r dist
 
 # extension
-cd ../../packages/extension && npm install && tsc && cd build
-cp content/content.js ../../../dist # content
-cp background/background.js ../../../dist # background
+cd ../../packages/extension && npm install && webpack && cd build
+cp ./content.js ../../../dist # content
+cp ./background.js ../../../dist # background
 cp ../manifest.json ../../../dist # manifest
 cp ../public/images/icon.png ../../../dist # icon
 cd .. && rm -r build
