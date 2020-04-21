@@ -12,7 +12,7 @@ module.exports = {
 		minimize: false
 	},
     entry: {
-        background: './background/background.ts',
+        background: './background/index.ts',
         content: './content/content.ts'
     },
     output: {
