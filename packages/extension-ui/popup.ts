@@ -24,6 +24,10 @@ class Popup {
 
     send() {
         return new Promise((resolve,reject) => {
+            // Important TODO in the extension UI:
+            // We need to implement a Promise timeout in *all* messages we send to the dApp, 
+            // as we depend on the dApp's response to resolve it. If something happens in the dApp side,
+            // we could end up stacking unresolved Promises in memory.
             function responseCb(response: any) {
                 resolve(response);
             }
