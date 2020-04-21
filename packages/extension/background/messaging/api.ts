@@ -23,5 +23,6 @@ export class MessageApi {
                     // TODO all tabs?
                 }
                 break;
+        }
     }
 }
