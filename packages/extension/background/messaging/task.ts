@@ -3,17 +3,30 @@ import {MessageApi} from './api';
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
 
-export class Authorization {
+export class Task {
 
     static request: {[key: string]: any} = {};
-    static pool: Array<string> = [];
+    static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
-        if(Authorization.pool.indexOf(origin) > -1 ){
+        if(Task.authorized_pool.indexOf(origin) > -1 ){
             return true;
         }
         return false;
     }
+
+    public static build(request: any) {
+        let body = request.body;
+        let method = body.method;
+        return new Promise((resolve,reject) => {
+            Task.methods().public[method](
+                request,
+                resolve,
+                reject
+            );
+        });
+    }
+
     public static methods(): {
         [key: string]: {
             [JsonRpcMethod: string]: Function
@@ -21,9 +34,9 @@ export class Authorization {
     } {
         return {
             'public': {
+                // authorization
                 [JsonRpcMethod.Authorization]: (d: any) => {
-                    if(Authorization.isAuthorized(d.origin)){
-                        // Do not need to re-authorized, resolve right away
+                    if(Task.isAuthorized(d.origin)){
                         MessageApi.send(d);
                     } else {
                         chrome.windows.create({
@@ -34,7 +47,7 @@ export class Authorization {
                             height:640
                         }, function (w) {
                             if(w) {
-                                Authorization.request = {
+                                Task.request = {
                                     window_id: w.id,
                                     message:d
                                 };
@@ -44,28 +57,38 @@ export class Authorization {
                             }
                         });
                     }
+                },
+                // sign-transaction
+                [JsonRpcMethod.SignTransaction]: (
+                    request: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    // TODO further processing..
+                    resolve(request);
                 }
             },
             'private': {
+                // authorization-allow
                 [JsonRpcMethod.AuthorizationAllow]: () => {
-                    let auth = Authorization.request;
+                    let auth = Task.request;
                     let message = auth.message;
 
                     chrome.windows.remove(auth.window_id);
-                    Authorization.pool.push(auth.message.body.params[0]);
-                    Authorization.request = {};
+                    Task.authorized_pool.push(auth.message.body.params[0]);
+                    Task.request = {};
 
                     setTimeout(() => {
                         MessageApi.send(message);
                     },1000);
                 },
+                // authorization-deny
                 [JsonRpcMethod.AuthorizationDeny]: () => {
-                    let auth = Authorization.request;
+                    let auth = Task.request;
                     let message = auth.message;
 
                     auth.message.error = RequestErrors.NotAuthorized;
                     chrome.windows.remove(auth.window_id);
-                    Authorization.request = {};
+                    Task.request = {};
 
                     setTimeout(() => {
                         MessageApi.send(message);

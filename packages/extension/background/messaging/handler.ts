@@ -1,11 +1,27 @@
 import {MessageApi} from './api';
-import {Authorization} from './authorization';
+import {Task} from './task';
 
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod,MessageSource} from '@algosigner/common/messaging/types';
 
+const auth_methods = [
+    JsonRpcMethod.Authorization,
+    JsonRpcMethod.AuthorizationAllow,
+    JsonRpcMethod.AuthorizationDeny
+];
+
 export class OnMessageHandler {
     static events: {[key: string]: any} = {};
+    private static isAuthorization(method: JsonRpcMethod) {
+        if(auth_methods.indexOf(method) > -1)
+            return true;
+        return false;
+    }
+    private static isPublic(method: JsonRpcMethod) {
+        if(method in Task.methods().public)
+            return true;
+        return false;
+    }
     static handle(request: any,sender: any,sendResponse: any) {
 
         let source: MessageSource = request.source;
@@ -15,24 +31,37 @@ export class OnMessageHandler {
         let id = body.id;
 
         switch(source) {
-            // Requests from dapp to extension
+            // Message from dapp to extension
             case MessageSource.DApp:
-                if(method in Authorization.methods().public) {
-                    Authorization.methods().public[method](request);
+                if(OnMessageHandler.isAuthorization(method) 
+                    && OnMessageHandler.isPublic(method)) {
+                    // Is a public authorization message, dapp is asking to connect
+                    Task.methods().public[method](request);
                 } else {
-                    if(Authorization.isAuthorized(origin)){
-                        // TODO: Do further processing, api request etc.. and respond
-                        MessageApi.send(request);
+                    // Other requests from dapp fall here
+                    if(Task.isAuthorized(origin)){
+                        // If the origin is authorized, build a promise
+                        Task.build(request)
+                        .then(function(d){
+                            MessageApi.send(d);
+                        })
+                        .catch(function(e){
+                            request.error = e;
+                            MessageApi.send(request);
+                        });
                     } else {
+                        // Origin is not authorized
                         request.error = RequestErrors.NotAuthorized;
                         MessageApi.send(request);
                     }
                 }
                 break;
-            // Requests from extension to dapp
+            // Message from extension to dapp
             case MessageSource.Extension:
-                if(method in Authorization.methods().private) {
-                    Authorization.methods().private[method](request);
+                if(OnMessageHandler.isAuthorization(method) 
+                    && !OnMessageHandler.isPublic(method)) {
+                    // Is a protected authorization message, allowing or denying auth
+                    Task.methods().private[method](request);
                 } else {
                     OnMessageHandler.events[id] = sendResponse;
                     MessageApi.send(request);
@@ -40,9 +69,9 @@ export class OnMessageHandler {
                     return true;
                 }
                 break;
-            // A response for a extension to dapp request
+            // A response message for a extension to dapp request
             case MessageSource.Router:
-                if(Authorization.isAuthorized(origin) && id in OnMessageHandler.events){
+                if(Task.isAuthorized(origin) && id in OnMessageHandler.events){
                     OnMessageHandler.events[id]();
                     setTimeout(function(){
                         delete OnMessageHandler.events[id];
