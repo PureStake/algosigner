@@ -20,15 +20,14 @@ export class Router {
             var d = event.data;
             if("source" in d){
                 if(d.source == "extension") {
-                    // TODO
                     d.source = 'router';
+                    d.origin = window.location.origin;
                     this.handler(d);
                 }
             }
         });
     }
     default(d:any){
-        // ..amaze the world with something
         this.bounce(d);
     }
     bounce(d:any){

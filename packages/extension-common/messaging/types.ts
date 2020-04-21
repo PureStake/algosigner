@@ -3,6 +3,8 @@ export const JSONRPC_VERSION: string = "2.0";
 export enum JsonRpcMethod {
     Heartbeat = "heartbeat",
     Authorization = "authorization",
+    AuthorizationAllow = "authorization-allow",
+    AuthorizationDeny = "authorization-deny",
     SignTransaction = "sign-transaction"
 }
 
@@ -17,7 +19,8 @@ export type JsonRpcBody = {
 
 export enum MessageSource {
     Extension = "extension",
-    DApp = "dapp"
+    DApp = "dapp",
+    Router = "router"
 }
 export type MessageBody = {
     readonly source: MessageSource,
