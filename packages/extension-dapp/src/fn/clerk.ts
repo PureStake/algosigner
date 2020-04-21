@@ -15,9 +15,12 @@ export class Clerk extends Runtime implements IClerk {
         if(!super.requiredArgs(Clerk.sendReqArgs,Object.keys(params))){
             error = RequestErrors.InvalidTransactionParams;
         }
+        // TODO here we need to perform some sorting
+        // to guarantee that the order of 1st) all the required parameters and 2nd) all the
+        // optional parameters is the same 
         return MessageBuilder.promise(
             JsonRpcMethod.SignTransaction, 
-            Object.values(params),
+            params,
             error
         );
     }

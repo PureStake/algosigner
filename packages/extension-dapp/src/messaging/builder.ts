@@ -19,7 +19,7 @@ export class MessageBuilder {
                 api.listen(OnMessageHandler.promise(resolve,reject));
                 api.send(JsonRpc.getBody(
                     method, 
-                    Object.values(params)
+                    params
                 ));
             } else {
                 reject(error);

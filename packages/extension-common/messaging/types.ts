@@ -8,7 +8,7 @@ export enum JsonRpcMethod {
     SignTransaction = "sign-transaction"
 }
 
-export type JsonRpcParams = Array<string | number | undefined>;
+export type JsonRpcParams = {[key: string]: string | number | undefined};
 
 export type JsonRpcBody = {
     readonly jsonrpc: string;
