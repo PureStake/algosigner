@@ -7,11 +7,17 @@ function srcPath(subdir) {
 module.exports = {
     // Change to your "entry-point".
     mode: 'production',
-    entry: './src/index',
+    optimization: {
+		// We no not want to minimize our code.
+		minimize: false
+	},
+    entry: {
+        background: './src/background/index.ts',
+        content: './src/content/content.ts'
+    },
     output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'AlgoSigner.min.js',
-        libraryTarget: "umd"
+        path: path.resolve(__dirname, 'build'),
+        filename: '[name].js',
     },
     resolve: {
         alias: {
