@@ -12,8 +12,8 @@ module.exports = {
 		minimize: false
 	},
     entry: {
-        background: './background/index.ts',
-        content: './content/content.ts'
+        background: './src/background/index.ts',
+        content: './src/content/content.ts'
     },
     output: {
         path: path.resolve(__dirname, 'build'),
@@ -21,7 +21,7 @@ module.exports = {
     },
     resolve: {
         alias: {
-            "@algosigner/common": srcPath('../extension-common')
+            "@algosigner/common": srcPath('../extension-common/src')
         },
         extensions: ['.ts', '.tsx', '.js', '.json']
     },
