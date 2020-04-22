@@ -29,8 +29,7 @@ class Content {
                     ctx.events[eventId] = ev;
                 }
                 if(d.source == "dapp" || d.source == "router") {
-                    d.origin = window.location.origin;
-                    chrome.runtime.sendMessage(d); // {origin, source, body}
+                    chrome.runtime.sendMessage(d); // {source, body}
                 }
             }
         });
@@ -39,10 +38,7 @@ class Content {
     chromeRuntimeListener() {
         let ctx = this;
         chrome.runtime.onMessage.addListener((d) => {
-            let source = d.source;
-            let origin = d.origin;
             let body = d.body;
-
             if(body.id in ctx.events) {
                 ctx.events[body.id].ports[0].postMessage(d);
                 delete ctx.events[body.id];

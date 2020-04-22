@@ -10,25 +10,35 @@ const auth_methods = [
     JsonRpcMethod.AuthorizationDeny
 ];
 
-export class OnMessageHandler {
-    static events: {[key: string]: any} = {};
-    private static isAuthorization(method: JsonRpcMethod) {
+class RequestValidation {
+    public static isAuthorization(method: JsonRpcMethod) {
         if(auth_methods.indexOf(method) > -1)
             return true;
         return false;
     }
-    private static isPublic(method: JsonRpcMethod) {
+    public static isPublic(method: JsonRpcMethod) {
         if(method in Task.methods().public)
             return true;
         return false;
     }
-    static handle(request: any,sender: any,sendResponse: any) {
+}
 
-        let source: MessageSource = request.source;
-        let origin = request.origin;
-        let body = request.body;
-        let method = body.method;
-        let id = body.id;
+export class OnMessageHandler extends RequestValidation {
+    static events: {[key: string]: any} = {};
+    static handle(request: any,sender: any,sendResponse: any) {
+        
+        try {
+            request.origin = new URL(sender.url).origin;
+        } catch(e) {
+            request.error = RequestErrors.NotAuthorized;
+            MessageApi.send(request);
+            return;
+        }
+
+        const source: MessageSource = request.source;
+        const body = request.body;
+        const method = body.method;
+        const id = body.id;
 
         switch(source) {
             // Message from dapp to extension
@@ -39,7 +49,7 @@ export class OnMessageHandler {
                     Task.methods().public[method](request);
                 } else {
                     // Other requests from dapp fall here
-                    if(Task.isAuthorized(origin)){
+                    if(Task.isAuthorized(request.origin)){
                         // If the origin is authorized, build a promise
                         Task.build(request)
                         .then(function(d){
@@ -71,7 +81,7 @@ export class OnMessageHandler {
                 break;
             // A response message for a extension to dapp request
             case MessageSource.Router:
-                if(Task.isAuthorized(origin) && id in OnMessageHandler.events){
+                if(Task.isAuthorized(request.origin) && id in OnMessageHandler.events){
                     OnMessageHandler.events[id]();
                     setTimeout(function(){
                         delete OnMessageHandler.events[id];

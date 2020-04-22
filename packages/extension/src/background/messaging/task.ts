@@ -5,8 +5,8 @@ import {JsonRpcMethod} from '@algosigner/common/messaging/types';
 
 export class Task {
 
-    static request: {[key: string]: any} = {};
-    static authorized_pool: Array<string> = [];
+    private static request: {[key: string]: any} = {};
+    private static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
         if(Task.authorized_pool.indexOf(origin) > -1 ){
@@ -74,12 +74,12 @@ export class Task {
                     let message = auth.message;
 
                     chrome.windows.remove(auth.window_id);
-                    Task.authorized_pool.push(auth.message.body.params[0]);
+                    Task.authorized_pool.push(message.origin);
                     Task.request = {};
 
                     setTimeout(() => {
                         MessageApi.send(message);
-                    },1000);
+                    },100);
                 },
                 // authorization-deny
                 [JsonRpcMethod.AuthorizationDeny]: () => {
@@ -92,7 +92,7 @@ export class Task {
 
                     setTimeout(() => {
                         MessageApi.send(message);
-                    },1000);
+                    },100);
                 }
             }
         }

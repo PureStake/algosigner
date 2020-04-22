@@ -20,7 +20,7 @@ class Wrapper {
     connect(): Promise<JsonRpcResponse> {
         return MessageBuilder.promise(
             JsonRpcMethod.Authorization, 
-            [window.location.origin]
+            {}
         );
     }
 }

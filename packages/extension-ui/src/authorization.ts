@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if(request.body.method == 'authorization') {
             let origin = document.getElementById("origin");
             if(origin) {
-                origin.textContent = request.body.params[0];
+                origin.textContent = request.origin;
             }
         }
     });
