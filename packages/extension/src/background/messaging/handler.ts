@@ -55,9 +55,8 @@ export class OnMessageHandler extends RequestValidation {
                         .then(function(d){
                             MessageApi.send(d);
                         })
-                        .catch(function(e){
-                            request.error = e;
-                            MessageApi.send(request);
+                        .catch(function(d){
+                            MessageApi.send(d);
                         });
                     } else {
                         // Origin is not authorized

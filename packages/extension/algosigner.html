@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <title>AlgoSigner</title>
+    <script defer type="text/javascript" src="./background.js"></script>
+    <style>
+      body{
+        border: 5px solid lightslategray;
+        margin: 0px;
+        padding: 1px;
+        background: black;
+      }
+      .grid-container {
+        display: grid;
+        width:550px; 
+        grid-gap: 10px;
+        text-align:center;
+        background-color: rgb(180, 200, 220);
+      }
+      .grid-row {
+        margin: 0 20% 0 20%;
+      }
+      .item-left {
+        grid-column-start: 1;
+        grid-column-end: 2;
+        float: left;
+      }
+      .item-right {
+        grid-column-start: 3;
+        grid-column-end: 4;
+        float: right;
+      }
+      .item-button {
+        display: block;
+        width: 60%;
+        margin: 0 20% 0 20%;
+      }
+      .hidden-row {
+        visibility: hidden;
+        height: 0px;
+        margin: 0px;
+        padding: 0px;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div class="grid-container">
+        <div id="grid-row" style="grid-row-start: 0; grid-row-end: 1; margin-top: 5px;">
+          <img src="icon.png" width="30" height="30" title="AlgoSigner" style="vertical-align: middle;"/> 
+          <h1 style="display:inline-block; margin: 0px; vertical-align: middle;"> AlgoSigner </h1>
+          <hr />
+        </div> 
+        <div id="keywrap" class="hidden-row" style="grid-row-start: 1; grid-row-end: 2;">
+          Public Key:&nbsp;
+          <div id="public_key" style="overflow-wrap: break-word;"></div>
+          <hr />
+        </div>
+        <dev class="grid-row" style="grid-row-start: 2; grid-row-end: 3;"> 
+          <span class="item-left">Password: </span><input class="item-right" id="input_password" type="password" />
+        </dev>
+        <dev class="grid-row" style="grid-row-start: 3; grid-row-end: 4;">     
+          <span class="item-left">New Password: </span><input class="item-right" id="new_password" type="password" />        
+        </dev>
+        <dev class="grid-row" style="grid-row-start: 4; grid-row-end: 7;"> 
+          <hr />  
+          <button class="item-button" id="login_button">Login</button>      
+          <button class="item-button" id="new_password_button">Set New Password</button>          
+          <button class="item-button" id="create_wallet">Create New Wallet</button>      
+          <button class="item-button" id="get_local">Get Local</button>      
+          <button class="item-button" id="clear_local">Clear Local</button>     
+        </dev>
+        <div style="grid-row-start: 7; grid-row-end: 8; background-color:rgb(180, 200, 220);">
+          <hr />
+          <h2>Log Demo Area</h2>
+          <textarea id="dev_area" style="width: 80%; height: 200px; margin-bottom: 20px;"></textarea>   
+        </div>      
+    </div>
+  </body>
+</html>
