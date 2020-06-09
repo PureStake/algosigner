@@ -1,20 +1,38 @@
 {
   "name": "algosigner-extension",
   "version": "0.0.1",
+  "author": "https://developer.purestake.io",
+  "description": "Sign Algorand transactions in your browser with PureStake.",
+  "keywords": [
+    "Algorand",
+    "PureStake"
+  ],
   "devDependencies": {
-    "@types/chrome": "0.0.104",
     "@babel/cli": "^7.8.3",
-    "@babel/core": "^7.8.3",
+    "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-transform-runtime": "^7.9.0",
-    "@babel/preset-env": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.9.6",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-react": "^7.9.4",
     "@babel/preset-typescript": "^7.8.3",
+    "@types/chrome": "0.0.104",
     "babel-loader": "^8.1.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.1",
     "typescript": "^3.7.5",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@babel/runtime": "^7.9.2"
+    "@babel/runtime": "^7.9.2",
+    "algosdk": "^1.5.0"
+  },
+  "scripts": {
+    "bundle": "browserify ./src/background/algosigner.js -o ./build/background.js -t [ babelify --presets [ @babel/preset-env @babel/preset-react ] --plugins [@babel/plugin-transform-runtime] ] && touch ./build/content.js",
+    "copy": "cp algosigner.html ./build/ && cp manifest.json ./build/ && cp -r ./src/public/images/* ./build/",
+    "build": "rm -rf ./dist/* && rm -rf ./@types/* && npm run build:types && npm run bundle:webpack && npm run copy",
+    "build:types": "tsc --emitDeclarationOnly",
+    "bundle:webpack": "webpack"
   }
 }
