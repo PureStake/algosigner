@@ -10,6 +10,7 @@ import ImportAccount from './pages/ImportAccount'
 import Wallet from './pages/Wallet'
 import Account from './pages/Account'
 import SendAlgos from './pages/SendAlgos'
+import Header from './components/Header'
 
 
 export const StoreContext = createContext();
@@ -17,8 +18,9 @@ export const StoreContext = createContext();
 const StoreProvider = ({children}) => {
   const existingStore = localStorage.getItem('wallet');
   const store = useLocalStore(() => ({
-    testNet: [],
-    mainNet: [],
+    TestNet: [],
+    MainNet: [],
+    ledger: 'MainNet',
     addAccount: (ledger, account) => {
       store[ledger].push(account)
     },
@@ -29,6 +31,9 @@ const StoreProvider = ({children}) => {
           break;
         }
       }
+    },
+    setLedger: (ledger) => {
+      store.ledger = ledger;
     }
   }));
 
@@ -64,14 +69,17 @@ const App = () => {
 
     return html`
       <${StoreProvider}>
-        <${Router} history=${createHashHistory()}>
-          <${Wallet} path="/" />
-          <${ImportAccount} path="/import-account/:ledger" />
-          <${Account} path="/:ledger/:address" />
-          <${SendAlgos} path="/:ledger/:address/send" />
-        </${Router}>
+        <div style="overflow: hidden; width: 450px; height: 550px;">
+          <${Header} />
+          <${Router} history=${createHashHistory()}>
+            <${Wallet} path="/" />
+            <${ImportAccount} path="/import-account/:ledger" />
+            <${Account} path="/:ledger/:address" />
+            <${SendAlgos} path="/:ledger/:address/send" />
+          </${Router}>
+        </div>
       </${StoreProvider}>
     `;
 };
 
-render(html`<${App}/>`, mountNode, mountNode.lastChild)
+// render(html`<${App}/>`, mountNode, mountNode.lastChild)

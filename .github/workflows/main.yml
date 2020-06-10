@@ -1,0 +1,36 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  end_to_end_tests:
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2-beta
+      with:
+        node-version: '12'
+    # - name: Build project
+    #   run: npm run prebuild && npm run build
+    - name: Build ui
+      run: npm run buildui
+    - name: Install testing dependencies
+      env:
+        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+      run: npm install 
+    - name: Run headful puppeteer tests
+      uses: djp3/puppeteer-headful@master
+      with:
+        args: npm test
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v2
+      with:
+        name: screenshot
+        path: example.png
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: ./dist/*

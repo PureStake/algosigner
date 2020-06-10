@@ -16,7 +16,6 @@ interface Account {
 const Wallet: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
 
-  const [ledger, setLedger] = useState<any>("testNet") 
 
   const addAccount = (ledger: any) => {
     var keys = algosdk.generateAccount();
@@ -28,34 +27,29 @@ const Wallet: FunctionalComponent = (props) => {
     store.addAccount(ledger, newAccount);
   }
 
-  return useObserver(() => (
-    html`
-      <div class="panel" style="overflow: auto; width: 650px; height: 550px;">
-        <p class="panel-heading">
-          Wallets
-        </p>
-        <p class="panel-tabs">
-          <a class=${ ledger == 'testNet' ? 'is-active' : ''} onClick=${() => setLedger('testNet')}>TestNet</a>
-          <a class=${ ledger == 'mainNet' ? 'is-active' : ''}  onClick=${() => setLedger('mainNet')}>MainNet</a>
-        </p>
+  return useObserver(() => {
+    const { ledger } = store;
+
+    return html`
+       <div class="panel" style="overflow: auto;">
         ${ store[ledger].map((x: Account) => html`
           <${Link} class="panel-block" href=${`/${ledger}/${x.address}`}>
             ${ x.address }
           </${Link}>
         `)}
         <div class="panel-block">
-          <button class="button is-link is-outlined is-fullwidth" onClick=${() => {addAccount(ledger)}}>
+          <button class="button is-link is-fullwidth" onClick=${() => {addAccount(ledger)}}>
             Create new account
           </button>
         </div>
         <div class="panel-block">
-          <${Link} class="button is-link is-outlined is-fullwidth" href=${`/import-account/${ledger}`}>
+          <${Link} class="button is-link is-fullwidth" href=${`/import-account/${ledger}`}>
             Import existing account
           </${Link}>
         </div>
       </div>
     `
-  ))
+  })
 }
 
 export default Wallet

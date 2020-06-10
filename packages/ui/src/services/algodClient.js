@@ -7,6 +7,6 @@ const token = {
 }
 
 export const algodClient = {
-	testNet: new Algod(token, testnetServer, ''),
-	mainNet: new Algod(token, mainnetServer, ''),
+	TestNet: new Algod(token, testnetServer, ''),
+	MainNet: new Algod(token, mainnetServer, ''),
 }

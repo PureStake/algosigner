@@ -17,6 +17,12 @@
     "builddapp": "cd ./packages/dapp && npm install --loglevel=error && npm run build && cd ../..",
     "buildui": "cd ./packages/ui && npm install --loglevel=error && npm run build && cd ../..",
     "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",    
-    "install": "cd ./packages/common && npm install && cd ../.. && cd ./packages/crypto && npm install && cd ../.. && cd ./packages/storage && npm install && cd ../.. && cd ./packages/extension && npm install && cd ../.. "
+    "install": "cd ./packages/common && npm install && cd ../.. && cd ./packages/crypto && npm install && cd ../.. && cd ./packages/storage && npm install && cd ../.. && cd ./packages/extension && npm install && cd ../.. ",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^26.0.1",
+    "puppeteer": "^3.1.0",
+    "jest-puppeteer": "^4.4.0"
   }
 }

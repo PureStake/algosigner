@@ -56,7 +56,7 @@ const Account: FunctionalComponent = (props: any) => {
         </button>
       </div>
       <div class="panel-block">
-        <${Link} class="button is-link is-outlined is-fullwidth" href=${`${url}/send`}>
+        <${Link} class="button is-danger is-fullwidth" href=${`${url}/send`}>
           Send Algos
         </${Link}>
       </div>
