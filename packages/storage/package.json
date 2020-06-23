@@ -1,8 +1,8 @@
 {
-  "name": "algosigner-crypto",
+  "name": "algosigner-storage",
   "version": "0.0.1",
   "author": "https://developer.purestake.io",
-  "description": "Cryptographic wrapper for saving and retrieving extention information in Algosigner",
+  "description": "Storage wrapper for saving and retrieving extention information in Algosigner",
   "type": "module",
   "devDependencies": {
     "typescript": "^3.7.5",

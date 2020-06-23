@@ -1,6 +1,8 @@
 'use strict';
-import encryptionWrap from "../../../crypto/encryptionWrap";
+import  extensionStorage from "@algosigner/storage/dist/extensionStorage";
+import encryptionWrap from "./encryptionWrap";
 import createNewAccount from "./account/createAccount.js";
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const _defaultPassphrase = "Password1";
@@ -12,8 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let input_password = document.getElementById('input_password');
     let login_button = document.getElementById('login_button');
-    let new_password = document.getElementById('new_password');
-    let new_password_button = document.getElementById('new_password_button');
 
     let create_wallet = document.getElementById('create_wallet');
 
@@ -22,50 +22,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return input_password && input_password.value !== "" ? input_password.value : _defaultPassphrase;
     };
 
-    // Get new passphrase
-    function getnewPassphrase() {
-        return new_password && new_password.value !== "" ? new_password.value : _defaultPassphrase;
-    };
-
-    // Log information about the process back to the extension UI
-    function logToDevUI(value, shouldClear=false) {
-        if(shouldClear)
-            dev_area.value = "";
-        if(dev_area.value.toString().length > 0)
-            dev_area.value += '\n\n';
-        dev_area.value += value;
-    };
-
-    if(login_button) // Button exists on extension
+    if(login_button) // Button exists on extension, so load the others. Testing only.
     {
         // Testing Method: Get storage.local information for extension
         get_local.onclick = function(element){
-            encryptionWrap.extensionStorage.getStorageLocal((result) => {
+            extensionStorage.getStorageLocal((result) => {
                 dev_area.value = result;
             })
         }
 
         // Testing Method: Delete all storage.local for extension
         clear_local.onclick = function(element){
-            encryptionWrap.extensionStorage.clearStorageLocal((result) => {
+            extensionStorage.clearStorageLocal((result) => {
+                console.log("Clear result: " + result);
                 dev_area.value = result ? 'Success' : 'Failed';
             })
         }
 
         // Unlock the storage.local object
         login_button.onclick = function(element) {
-            dev_area.value = '';
-            encryptionWrap.unlock({ passphrase: getInputPassphrase() }, (loginObject) => {
-                if(typeof(loginObject))
-                    dev_area.value = loginObject.toString();
+            dev_area.value = 'Attempting unlock...';
+            encryptionWrap.unlock({ passphrase: encryptionWrap.stringToUint8ArrayBuffer(getInputPassphrase()) },
+            (unlockedValue) => {
+                if(unlockedValue && unlockedValue['STATUS']){
+                    dev_area.value = unlockedValue['STATUS'];
+                }
+                else if(unlockedValue){
+                    dev_area.value = unlockedValue;
+                }
                 else
                     dev_area.value = `Login failed.`;
-            }); 
-        };
-
-        // Overwrite previous encryption object with new password showing previous encryption and new encryption
-        new_password_button.onclick = function(element) {
-            dev_area.value = 'Not Implemented';
+            });
         };
 
         // Testing Method: Deleted current storage.local, create a new mnemonic, and save
@@ -75,19 +62,24 @@ document.addEventListener('DOMContentLoaded', () => {
             dev_area.value += `Mnemonic:\n${accountArray[0]}`;
             public_key.textContent = accountArray[1];
             keywrap.classList.remove("hidden-row");
-            encryptionWrap.lock({ passphrase: getInputPassphrase(), encryptObject: accountArray[0] }, (isSuccessful)=>{
-                dev_area.value += isSuccessful ? '\n\nSuccess' : '\n\nFailure';
-                login_button.classList.remove("hidden-row");
-                new_password_button.classList.remove("hidden-row");  
-            }); 
+            encryptionWrap.lock({ passphrase: encryptionWrap.stringToUint8ArrayBuffer(getInputPassphrase()), encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(accountArray)) },
+            (isSuccessful) => {
+                console.log(`Lock was successful? ${isSuccessful}`);
+                if(isSuccessful){
+                    dev_area.value += `\n\nLocked value set.`;
+                    login_button.classList.remove("hidden-row");
+                }
+                else{
+                    dev_area.value += `\n\nLocked value failed to save.`;
+                }
+            });
         };
 
         // Check default account key in local storage
-        encryptionWrap.extensionStorage.noAccountExistsCheck(_accountKey, (isAccount) => {
+        extensionStorage.noAccountExistsCheck(_accountKey, (isAccount) => {
             if(!isAccount){
                 dev_area.value = 'No previous account found, use Create New Wallet.';
                 login_button.classList.add("hidden-row");
-                new_password_button.classList.add("hidden-row");
             }
         }); 
     }
