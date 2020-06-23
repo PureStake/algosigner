@@ -9,12 +9,14 @@
   ],
   "scripts": {
     "copy": "cp ./packages/extension/build/* dist/",
-    "prebuild": "rm -rf ./dist/* && npm run buildcommon && npm run buildcrypto && npm run buildui && npm run buildextension && npm run builddapp",
-    "buildcommon": "cd ./packages/common && npm install --loglevel=error  && npm run build && cd ../..",
-    "buildcrypto": "cd ./packages/crypto && npm install --loglevel=error && npm run build && cd ../..",
-    "buildextension": "cd ./packages/extension && npm install --loglevel=error && npm run build && cd ../..",
+    "prebuild": "rm -rf ./dist/*",
+    "buildcommon": "cd ./packages/common  && npm run build && cd ../..",
+    "buildcrypto": "cd ./packages/crypto && npm run build && cd ../..",
+    "buildstorage": "cd ./packages/storage && npm run build && cd ../..",
+    "buildextension": "cd ./packages/extension && npm run build && cd ../..",
     "builddapp": "cd ./packages/dapp && npm install --loglevel=error && npm run build && cd ../..",
     "buildui": "cd ./packages/ui && npm install --loglevel=error && npm run build && cd ../..",
-    "build": "npm run copy"
+    "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",    
+    "install": "cd ./packages/common && npm install && cd ../.. && cd ./packages/crypto && npm install && cd ../.. && cd ./packages/storage && npm install && cd ../.. && cd ./packages/extension && npm install && cd ../.. "
   }
 }
