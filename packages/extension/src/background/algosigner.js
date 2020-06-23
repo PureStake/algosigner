@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             dev_area.value += `Mnemonic:\n${accountArray[0]}`;
             public_key.textContent = accountArray[1];
             keywrap.classList.remove("hidden-row");
-            encryptionWrap.lock({ passphrase: encryptionWrap.stringToUint8ArrayBuffer(getInputPassphrase()), encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(accountArray)) },
+            encryptionWrap.lock({ passphrase: encryptionWrap.stringToUint8ArrayBuffer(getInputPassphrase()), 
+                encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(accountArray)) },
             (isSuccessful) => {
                 console.log(`Lock was successful? ${isSuccessful}`);
                 if(isSuccessful){

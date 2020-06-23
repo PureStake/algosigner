@@ -3215,14 +3215,25 @@ module.exports = _asyncToGenerator;
             this.iterations = iterations;
           }
 
-        } // CONCATENATED MODULE: ./src/secureStorageContext.ts
+        } // CONCATENATED MODULE: ./src/errors/types.ts
+
+
+        class InvalidCipherText extends Error {
+          constructor(message) {
+            message ? super(message) : super();
+            this.name = 'InvalidCipherText';
+            Error.captureStackTrace(this, InvalidCipherText);
+          }
+
+        }
+
+        ; // CONCATENATED MODULE: ./src/secureStorageContext.ts
 
         /**
          * @license
          * Copyright 2020
          * =========================================
         */
-
 
         var __awaiter = undefined && undefined.__awaiter || function (thisArg, _arguments, P, generator) {
           function adopt(value) {
@@ -3325,11 +3336,11 @@ module.exports = _asyncToGenerator;
           ///
 
 
-          deriveLockKey(keyMaterial, nonce) {
+          deriveLockKey(keyMaterial, csalt) {
             return __awaiter(this, void 0, void 0, function* () {
               return yield window.crypto.subtle.deriveKey({
                 name: "PBKDF2",
-                salt: nonce,
+                salt: csalt || this.security.salt,
                 iterations: this.security.iterations,
                 hash: "SHA-256"
               }, keyMaterial, {
@@ -3345,13 +3356,19 @@ module.exports = _asyncToGenerator;
 
           lock(lockParameters) {
             return __awaiter(this, void 0, void 0, function* () {
-              let keyMaterial = yield this.createPasskey(lockParameters.passphrase); //let masterKey = await this.deriveMasterKey(keyMaterial);
-              // TODO: BC - Swap for multiple, introduce nonce update
+              let keyMaterial = yield this.createPasskey(lockParameters.passphrase);
+              let secretKey;
+
+              if (lockParameters.cVersion) {// FUTURE: Override settings with version information if it exists.
+              }
+
+              if (lockParameters.cSalt && lockParameters.cSalt.byteLength != PBKDF2Parameters.SaltSize) {
+                throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
+              } // TODO: BC - Swap for multiple, introduce nonce update
               // let nonce = this.generateRandomValues(32);
 
-              let nonce = this.security.iv;
-              let secretKey = yield this.deriveLockKey(keyMaterial, nonce);
-              console.log(`Unlock key:\n${JSON.stringify(secretKey)}`); // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
+
+              secretKey = yield this.deriveLockKey(keyMaterial, lockParameters.cSalt); // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
 
               return yield window.crypto.subtle.encrypt({
                 name: "AES-GCM",
@@ -3366,19 +3383,28 @@ module.exports = _asyncToGenerator;
 
           unlock(lockParameters) {
             return __awaiter(this, void 0, void 0, function* () {
-              // TODO: BC - Raise errors if Lock Parameters are malformed
-              let keyMaterial = yield this.createPasskey(lockParameters.passphrase); //let masterKey = await this.deriveMasterKey(keyMaterial);
-              // TODO: BC - change this to handle multiple decrypts
+              let keyMaterial = yield this.createPasskey(lockParameters.passphrase);
+              let secretKey;
 
-              let secretKey = yield this.deriveLockKey(keyMaterial, this.security.iv); // TODO: BC - Raise an exception if salt matches but version or iterations do not.
+              if (lockParameters.cVersion) {// FUTURE: Override settings with version information if it exists.
+              }
 
-              console.log(`Unlock key:\n${JSON.stringify(secretKey)}`); // TODO: BC - Raise an invalid-ciphertext exception if decryption fails.
-              // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
+              if (lockParameters.cSalt) {
+                // FUTURE: BC - Raise an exception if salt matches but version or iterations do not.
+                throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
+              } // TODO: BC - change this to handle multiple decrypts
 
-              return yield window.crypto.subtle.decrypt({
-                name: "AES-GCM",
-                iv: this.getVersionBuffer()
-              }, secretKey, lockParameters.encryptObject);
+
+              secretKey = yield this.deriveLockKey(keyMaterial, lockParameters.cSalt); // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
+
+              try {
+                return yield window.crypto.subtle.decrypt({
+                  name: "AES-GCM",
+                  iv: this.getVersionBuffer()
+                }, secretKey, lockParameters.encryptObject);
+              } catch (_a) {
+                throw new InvalidCipherText();
+              }
             });
           }
 

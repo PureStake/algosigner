@@ -51,7 +51,9 @@ export class EncryptionWrap {
   public uint8ArrayReconstruct(stringArray: string): Uint8Array {
     return new Uint8Array(stringArray.split(',').map(x=>parseInt(x)));
   }
+
   private errorLog(error: string): void {
+    // TODO: BC - How should we handle errors?
     console.log(error);
   }
 
@@ -83,8 +85,7 @@ export class EncryptionWrap {
       });
     }
     catch(e) {
-      // TODO: BC - How should we log / handle errors?
-      console.log(`Error: ${e}`);         
+      this.errorLog(e);     
     }
   }
 
@@ -126,8 +127,7 @@ export class EncryptionWrap {
       });    
     }
     catch(e) {
-      // TODO: BC - How should we log / handle errors?
-      console.log(`Error: ${e}`);         
+      this.errorLog(e);         
     }
     
   }

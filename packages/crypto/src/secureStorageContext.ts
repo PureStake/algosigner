@@ -7,6 +7,7 @@
 import { LockParameters } from "./lockParameters";
 import { PBKDF2Security } from "./pbkdf2Security";
 import { PBKDF2Parameters } from "./pbkdf2Parameters";
+import { InvalidCipherText } from "./errors/types";
 
 ///
 // Encryption default functionality for AlgoSigner. 
@@ -81,11 +82,11 @@ export class SecureStorageContext {
   ///
   // Using the masterkey and nonce create a new secret key for use in key derivation. 
   ///
-  private async deriveLockKey(keyMaterial: CryptoKey, nonce?: ArrayBuffer): Promise<CryptoKey> { 
+  private async deriveLockKey(keyMaterial: CryptoKey, csalt?: Uint8Array): Promise<CryptoKey> { 
     return await window.crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
-        salt: nonce, 
+        salt: csalt || this.security.salt, 
         iterations: this.security.iterations,   
         hash: "SHA-256"
       },
@@ -100,17 +101,22 @@ export class SecureStorageContext {
   // Using the context passphrase, salt, iv, and iterations, derive a password hash and encrypt with lockParameters.
   // Return the ArrayBuffer result from the encrypt step. 
   ///
-  public async lock(lockParameters: LockParameters): Promise<ArrayBuffer> {          
+  public async lock(lockParameters: LockParameters): Promise<ArrayBuffer> { 
     let keyMaterial = await this.createPasskey(lockParameters.passphrase);
-    //let masterKey = await this.deriveMasterKey(keyMaterial);
+    let secretKey: CryptoKey;
+
+    if(lockParameters.cVersion){
+      // FUTURE: Override settings with version information if it exists.
+    }
+
+    if(lockParameters.cSalt && lockParameters.cSalt.byteLength != PBKDF2Parameters.SaltSize){
+        throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
+    }
 
     // TODO: BC - Swap for multiple, introduce nonce update
     // let nonce = this.generateRandomValues(32);
-    let nonce = this.security.iv;
-    let secretKey = await this.deriveLockKey(keyMaterial, nonce);
+    secretKey = await this.deriveLockKey(keyMaterial, lockParameters.cSalt);
 
-    console.log(`Unlock key:\n${JSON.stringify(secretKey)}`);
-    
     // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
     return await window.crypto.subtle.encrypt(
       {
@@ -127,28 +133,35 @@ export class SecureStorageContext {
   // Return the ArrayBuffer result from the decrypt step. 
   ///
   public async unlock(lockParameters: LockParameters): Promise<ArrayBuffer> {
-    // TODO: BC - Raise errors if Lock Parameters are malformed
-
-  
     let keyMaterial = await this.createPasskey(lockParameters.passphrase);
-    //let masterKey = await this.deriveMasterKey(keyMaterial);
+    let secretKey: CryptoKey;
+
+    if(lockParameters.cVersion){
+      // FUTURE: Override settings with version information if it exists.
+    }
+ 
+    if(lockParameters.cSalt){
+      // FUTURE: BC - Raise an exception if salt matches but version or iterations do not.
+      throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
+    }
 
     // TODO: BC - change this to handle multiple decrypts
-    let secretKey = await this.deriveLockKey(keyMaterial, this.security.iv);
-    // TODO: BC - Raise an exception if salt matches but version or iterations do not.
-    
-    console.log(`Unlock key:\n${JSON.stringify(secretKey)}`);
+    secretKey = await this.deriveLockKey(keyMaterial, lockParameters.cSalt);
 
-    // TODO: BC - Raise an invalid-ciphertext exception if decryption fails.
     // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
-    return await window.crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: this.getVersionBuffer() 
-      },
-      secretKey,
-      lockParameters.encryptObject
-    );
+    try {
+      return await window.crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: this.getVersionBuffer() 
+        },
+        secretKey,
+        lockParameters.encryptObject
+      );
+    }
+    catch { 
+      throw new InvalidCipherText();
+    }
   }
 }
 
