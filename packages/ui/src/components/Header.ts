@@ -5,21 +5,13 @@ import LedgerSelect from './LedgerSelect'
 
 const Header: FunctionalComponent = () => {
   return html`
-    <div class="container is-fluid">
-    <div class="level">
-      <div class="level-left">
-        <div class="level-item">
-          <span>
-            AlgoSigner
-          </span>
-        </div>
+    <div class="container is-fluid" style="flex: 0; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #EFF4F7">
+      <span>
+        AlgoSigner
+      </span>
+      <div>
+        <${LedgerSelect} />
       </div>
-      <div class="level-right">
-        <div class="level-item">
-          <${LedgerSelect} />
-        </div>
-      </div>
-    </div>
     </div>
   `;
 };

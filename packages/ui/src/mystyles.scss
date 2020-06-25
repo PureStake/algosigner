@@ -1,6 +1,6 @@
 @charset "utf-8";
 
-@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
 $purple: #8A4D76;
 $pink: #FA7C91;
@@ -8,7 +8,7 @@ $brown: #757763;
 $beige-light: #D0D1CD;
 $beige-lighter: #EFF0EB;
 
-$grey-light: #EFF4F7;
+$grey-lighter: #EFF4F7;
 $grey: #8A9FA8;
 
 $orange-light: #FF9548;
@@ -21,25 +21,42 @@ $blue-dark: #222B60;
 
 $red-light: rgba(231, 183, 183, 0.5);
 
-$family-sans-serif: "Nunito", sans-serif;
+$family-sans-serif: 'Roboto', sans-serif;
 $primary: $blue;
 $link: $orange;
-$danger: $red-light;
+// $danger: $red-light;
 $input-border-color: $grey;
 $control-border-width: 1px;
 $input-shadow: none;
 $input-radius: 12px;
 
+// MODAL
+$modal-close-right: 4px;
+$modal-close-top: 8px;
+
+.modal-content, .modal-card {
+	max-height: calc(100vh - 100px) !important;
+}
+
+// BOX
+// $box-shadow: none;
+
+.main-view {
+	display: flex;
+	flex: 1;
+};
+
 @import "bulma/sass/utilities/_all.sass";
 @import "bulma/sass/base/_all.sass";
+@import "bulma/sass/helpers/_all.sass";
 @import "bulma/sass/elements/box.sass";
 @import "bulma/sass/elements/button.sass";
 @import "bulma/sass/elements/container.sass";
 @import "bulma/sass/elements/title.sass";
 @import "bulma/sass/form/_all.sass";
-@import "bulma/sass/components/panel.sass";
 @import "bulma/sass/components/level.sass";
-@import "bulma/sass/layout/hero.sass";
 @import "bulma/sass/layout/section.sass";
+@import "bulma/sass/layout/hero.sass";
 @import "bulma/sass/components/modal.sass";
 @import "bulma/sass/components/dropdown.sass";
+@import "bulma/sass/grid/columns.sass";

@@ -2,6 +2,7 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
+import { route } from 'preact-router';
 
 import { StoreContext } from '../index'
 
@@ -20,6 +21,7 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
   const setLedger = (ledger) => {
     store.setLedger(ledger);
     flip();
+    route('/wallet');
   }
 
   return useObserver(() => (html`
