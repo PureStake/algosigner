@@ -6,10 +6,17 @@ import { useLocalStore, useObserver } from 'mobx-react-lite';
 import { Router, Route } from 'preact-router';
 import { createHashHistory } from 'history';
 
-import ImportAccount from './pages/ImportAccount'
-import Wallet from './pages/Wallet'
-import Account from './pages/Account'
-import SendAlgos from './pages/SendAlgos'
+import Header from 'components/Header'
+import Footer from 'components/Footer'
+
+import Welcome from 'pages/Welcome'
+import SetPassword from 'pages/SetPassword'
+import Login from 'pages/Login'
+import CreateAccount from 'pages/CreateAccount'
+import ImportAccount from 'pages/ImportAccount'
+import Wallet from 'pages/Wallet'
+import Account from 'pages/Account'
+import SendAlgos from 'pages/SendAlgos'
 
 
 export const StoreContext = createContext();
@@ -17,8 +24,10 @@ export const StoreContext = createContext();
 const StoreProvider = ({children}) => {
   const existingStore = localStorage.getItem('wallet');
   const store = useLocalStore(() => ({
-    testNet: [],
-    mainNet: [],
+    TestNet: [],
+    MainNet: [],
+    ledger: 'MainNet',
+    password: null,
     addAccount: (ledger, account) => {
       store[ledger].push(account)
     },
@@ -29,6 +38,12 @@ const StoreProvider = ({children}) => {
           break;
         }
       }
+    },
+    setLedger: (ledger) => {
+      store.ledger = ledger;
+    },
+    SetPassword: (password) => {
+      store.password = password;
     }
   }));
 
@@ -44,32 +59,40 @@ const StoreProvider = ({children}) => {
   `
 };
 
-const List = () => {
-  const store = useContext(StoreContext);
-  return useObserver(() => (
-    html`<a>${ store.accounts }</a>`
-  ))
-}
 
 require('./mystyles.scss');
 
 const mountNode = document.getElementById('root');
 
+const Root = (props) => {
+  return html`
+      ${props.children}
+  `
+}
 
 const App = () => {
-    let currentUrl;
-    const handleRoute = (e) => {
-        currentUrl = e.url;
-    };
-
     return html`
       <${StoreProvider}>
-        <${Router} history=${createHashHistory()}>
-          <${Wallet} path="/" />
-          <${ImportAccount} path="/import-account/:ledger" />
-          <${Account} path="/:ledger/:address" />
-          <${SendAlgos} path="/:ledger/:address/send" />
-        </${Router}>
+        <div style="overflow: hidden; width: 450px; height: 550px; display: flex; flex-direction: column;">
+          <${Router} history=${createHashHistory()}>
+            <${Welcome} path="/" />
+            <${SetPassword} path="/set-password" />
+            <${Login} path="/login" />
+            <${Root} path="/:*?">
+              <${Header} />
+              <div style="overflow: auto; flex: 1; display: flex; flex-direction: column;">
+                <${Router}>
+                  <${Wallet} path="/wallet" />
+                  <${CreateAccount} path="/:ledger/create-account" />
+                  <${ImportAccount} path="/:ledger/import-account" />
+                  <${Account} path="/:ledger/:address" />
+                  <${SendAlgos} path="/:ledger/:address/send" />
+                </${Router}>
+              </div>
+              <${Footer} />
+            </${Route}>
+          </${Router}>
+        </div>
       </${StoreProvider}>
     `;
 };

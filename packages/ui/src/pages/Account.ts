@@ -2,19 +2,22 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
-import { Link } from 'preact-router';
+import { Link, route } from 'preact-router';
 
-import { StoreContext } from '../index'
-import { algodClient } from '../services/algodClient'
-import TransactionsList from '../components/TransactionsList'
-import AccountDetails from '../components/AccountDetails'
+import { StoreContext } from 'index'
+import { algodClient } from 'services/algodClient'
+import TransactionsList from 'components/Account/TransactionsList'
+import AssetsList from 'components/Account/AssetsList'
+import AccountDetails from 'components/Account/AccountDetails'
 
 
 const Account: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { url, ledger, address } = props;
   const [showDetails, setShowDetails] = useState<boolean>(false)
+  const [showAssets, setShowAssets] = useState<boolean>(false);
   const [results, setResults] = useState<any>(null);
+
   let account;
 
   for (var i = store[ledger].length - 1; i >= 0; i--) {
@@ -25,7 +28,7 @@ const Account: FunctionalComponent = (props: any) => {
   }
 
   const fetchApi = async () => {
-    let res = await algodClient[ledger].accountInformation(address);
+    let res = await algodClient[ledger].accountInformation(address).do();
     if (res) {
       setResults(res);
     }
@@ -36,35 +39,37 @@ const Account: FunctionalComponent = (props: any) => {
   }, []);
 
   return html`
-    <div class="panel" style="overflow: auto; width: 650px; height: 550px;">
-      <p class="panel-heading" style="overflow: hidden; text-overflow: ellipsis;">
-        <a class="icon" style="margin-right: 1em;" onClick=${() => window.history.back()}>
-          ${'\u2190'}
-        </a>
-        Account ${account.address}
-      </p>
-      ${ results && html`
-        <div class="panel-block">
-          <span>
-            Balance: ${results.amount}
-          </span>
-        </div>
-      `}
-      <div class="panel-block">
-        <button class="button is-outlined is-fullwidth" onClick=${()=>setShowDetails(true)}>
-          Show details
+    <div class="px-4 py-3 has-text-weight-bold ">
+      <p class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
+        <a class="icon mr-2" onClick=${() => route('/wallet')}>${'\u003C'}</a>
+        ${account.name} Account
+        <button class="button is-outlined is-small"
+          style="float: right;" onClick=${()=>setShowDetails(true)}>
+          ${'\u22EE'}
         </button>
-      </div>
-      <div class="panel-block">
-        <${Link} class="button is-link is-outlined is-fullwidth" href=${`${url}/send`}>
-          Send Algos
-        </${Link}>
-      </div>
-      <${TransactionsList} address=${address} ledger=${ledger}/>
+      </p>
+      <span>
+        Balance:
+        ${ results && html`
+          ${results.amount} MAlgos
+        `}
+      </span>
     </div>
+    <div class="px-4">
+      <${Link} class="button is-primary is-fullwidth" href=${`${url}/send`}>
+        Send Algos
+      </${Link}>
+    </div>
+
+    ${ results && results.assets.length > 0 && html`
+      <${AssetsList} assets=${results.assets} ledger=${ledger}/>
+    `}
+
+    <${TransactionsList} address=${address} ledger=${ledger}/>
+
     <div class=${`modal ${showDetails ? 'is-active' : ''}`}>
       <div class="modal-background"></div>
-      <div class="modal-content" style="padding: 0 15px;">
+      <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
         <div class="box" style="overflow-wrap: break-word;">
           <${AccountDetails} account=${account} ledger=${ledger} />
         </div>
