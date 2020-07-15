@@ -6,7 +6,11 @@ export enum JsonRpcMethod {
     AuthorizationAllow = "authorization-allow",
     AuthorizationDeny = "authorization-deny",
     SignTransaction = "sign-transaction",
-    Algod = "algod"
+    Algod = "algod",
+    CreateAccount = "create-account",
+    SaveAccount = "save-account",
+    ImportAccount = "import-account",
+    Login = "login"
 }
 
 export enum SupportedAlgod {

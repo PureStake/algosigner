@@ -19,8 +19,25 @@ const SetPassword: FunctionalComponent = (props) => {
       setError("Password needs at least 8 characters!");
       return false;
     }
-    store.SetPassword(pwd);
-    route('/wallet')
+
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method: 'create-wallet',
+            params: {
+              passphrase: pwd
+            },
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      if ('error' in response){
+        alert(response);
+      } else {
+        store.updateWallet(response);
+        route('/wallet');
+      }
+    });
   };
 
   return html`

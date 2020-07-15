@@ -10,6 +10,7 @@ import { StoreContext } from 'index'
 import SetAccountName from 'components/CreateAccount/SetAccountName'
 import AccountKeys from 'components/CreateAccount/AccountKeys'
 import ConfirmMnemonic from 'components/CreateAccount/ConfirmMnemonic'
+import Authenticate from 'components/Authenticate'
 
 interface Account {
   address: string;
@@ -20,18 +21,30 @@ interface Account {
 const CreateAccount: FunctionalComponent = (props: any) => {
   const { url, ledger } = props;
   const [name, setName] = useState('');
-  const [account, setAccount] = useState<Account | null>(null);
+  const [account, setAccount] = useState<Account>({
+    address: '',
+    mnemonic: '',
+    name: '',
+  });
   const [step, setStep] = useState<number>(0);
   const store:any = useContext(StoreContext);
 
   useEffect(() => {
-    // var keys = generateAccount();
-    // const mnemonic = secretKeyToMnemonic(keys.sk);
-    // setAccount({
-    //   address: keys.addr,
-    //   mnemonic: mnemonic,
-    //   name: ""
-    // });
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method: 'create-account',
+            params: {},
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      setAccount({
+        mnemonic: response[0],
+        address: response[1],
+        name: ""
+      });
+    });
   }, []);
 
   const nextStep = () => {
@@ -49,10 +62,29 @@ const CreateAccount: FunctionalComponent = (props: any) => {
     setStep(step - 1);
   }
 
-  const createAccount = () => {
-    console.log(account);
-    store.addAccount(ledger, account);
-    route('/wallet');
+  const createAccount = (pwd) => {
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method: 'save-account',
+            params: {
+              ledger: ledger,
+              address: account.address || '',
+              mnemonic: account.mnemonic || '',
+              name: account.name || '',
+              passphrase: pwd
+            },
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      if ('error' in response){
+        alert(response);
+      } else {
+        store.updateWallet(response);
+        route('/wallet');
+      }
+    });
   };
 
 
@@ -74,6 +106,10 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       <${ConfirmMnemonic}
         account=${account}
         prevStep=${prevStep}
+        nextStep=${nextStep} />
+    `}
+    ${ step===3 && html`
+      <${Authenticate}
         nextStep=${createAccount} />
     `}
   `

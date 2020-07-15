@@ -103,7 +103,8 @@ export class EncryptionWrap {
       this._extensionStorage.getStorage(this._walletName, async (result: { account: string, params: { salt: string, iv: string, iterations: number } }) => {  
         if(!result)
         {
-          callback && callback({'STATUS': 'No Account Found'});
+          // No accounts
+          callback && callback({TestNet: [], MainNet: []});
           return;
         }
 
@@ -119,10 +120,10 @@ export class EncryptionWrap {
 
         // Await the unlock and callback with the string interpretation.
         await decryptionContext.unlock(lockParams).then((decryptedObject) => {
-          callback && callback(this.arrayBufferToString(decryptedObject));
+          callback && callback(JSON.parse(this.arrayBufferToString(decryptedObject)));
         }).catch((e) => {
           this.errorLog(e);
-          callback && callback({'STATUS': 'Login Failed'});
+          callback && callback({error: 'Login Failed'});
         });        
       });    
     }

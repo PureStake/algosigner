@@ -24,12 +24,12 @@ export const StoreContext = createContext();
 const StoreProvider = ({children}) => {
   const existingStore = localStorage.getItem('wallet');
   const store = useLocalStore(() => ({
-    TestNet: [],
-    MainNet: [],
     ledger: 'MainNet',
-    password: null,
-    addAccount: (ledger, account) => {
-      store[ledger].push(account)
+    addAccount: (ledger, address, name) => {
+      store[ledger].push({
+        address: address,
+        name: name
+      })
     },
     deleteAccount: (ledger, account) => {
       for (var i = store[ledger].length - 1; i >= 0; i--) {
@@ -42,8 +42,9 @@ const StoreProvider = ({children}) => {
     setLedger: (ledger) => {
       store.ledger = ledger;
     },
-    SetPassword: (password) => {
-      store.password = password;
+    updateWallet: (newWallet) => {
+      store.TestNet = newWallet.TestNet;
+      store.MainNet = newWallet.MainNet;
     }
   }));
 

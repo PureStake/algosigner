@@ -8,7 +8,8 @@ import { StoreContext } from 'index'
 const Welcome: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
 
-  if (store.password) {
+  // If there is a wallet then redirect to login.
+  if (store.MainNet !== undefined) {
     route('/login');
   }
   return html`

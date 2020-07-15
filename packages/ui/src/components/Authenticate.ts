@@ -1,36 +1,13 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import { Link, route } from 'preact-router';
 
-import { StoreContext } from 'index'
 
-const Login: FunctionalComponent = (props) => {
+const Authenticate: FunctionalComponent = (props: any) => {
+  const { nextStep } = props;
   const [pwd, setPwd] = useState<String>('');
   const [error, setError] = useState<String>('');
-  const store:any = useContext(StoreContext);
 
-  const login = () => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'login',
-            params: {
-              passphrase: pwd
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
-      console.log('UNLOCK', response);
-      if ('error' in response){
-        setError('Wrong password!')
-      } else {
-        store.updateWallet(response)
-        route('/wallet');
-      }
-    });
-  };
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
@@ -65,12 +42,12 @@ const Login: FunctionalComponent = (props) => {
       <div class="mx-5 mb-3">
         <button class="button is-link is-fullwidth"
           disabled=${pwd.length === 0}
-          onClick=${login} >
-          Login
+          onClick=${() => nextStep(pwd)} >
+          Continue
         </button>
       </div>
     </div>
   `
 }
 
-export default Login;
+export default Authenticate;

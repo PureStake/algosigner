@@ -11,12 +11,12 @@ import { BlobStructure } from "./blobStructure";
 ///
 export class LockParameters {
     passphrase: ArrayBuffer;
-    encryptObject: ArrayBuffer; 
+    encryptObject?: ArrayBuffer; 
     cVersion?: Number; 
     cSalt?: Uint8Array; 
 
     // Used initiate information around an encrypt object. Can be compatible with existing blobs, using the same version and salt.
-    constructor(passphrase: ArrayBuffer, encryptObject: ArrayBuffer, compatibleWithBlob?: BlobStructure){
+    constructor(passphrase: ArrayBuffer, encryptObject?: ArrayBuffer, compatibleWithBlob?: BlobStructure){
         this.passphrase = passphrase;
         this.encryptObject = encryptObject; 
         

@@ -94,6 +94,17 @@ export class Task {
                         MessageApi.send(message);
                     },100);
                 }
+            },
+            'extension' : {
+                [JsonRpcMethod.CreateAccount]: () => {
+
+                },
+                [JsonRpcMethod.SaveAccount]: () => {
+                    
+                },
+                [JsonRpcMethod.ImportAccount]: () => {
+                    
+                }
             }
         }
     }
