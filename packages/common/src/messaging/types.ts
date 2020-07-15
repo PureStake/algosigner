@@ -25,7 +25,8 @@ export type JsonRpcBody = {
 export enum MessageSource {
     Extension = "extension",
     DApp = "dapp",
-    Router = "router"
+    Router = "router",
+    UI = "ui"
 }
 export type MessageBody = {
     readonly source: MessageSource,

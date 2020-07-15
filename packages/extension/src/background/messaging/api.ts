@@ -25,4 +25,11 @@ export class MessageApi {
                 break;
         }
     }
+    public static sendUI(d: any) {
+        switch(PLATFORM) {
+            case 'chrome':
+                chrome.runtime.sendMessage(d);
+                break;
+        }
+    }
 }
