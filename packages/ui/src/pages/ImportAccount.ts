@@ -1,10 +1,10 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import { mnemonicToSecretKey } from 'algosdk';
 import { route } from 'preact-router';
 
 import { StoreContext } from '../index'
+import HeaderView from 'components/HeaderView'
 
 interface Account {
   address: string;
@@ -19,18 +19,18 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const [name, setName] = useState<string>('');
 
   const importAccount = () => {
-    try {
-      var recoveredAccount = mnemonicToSecretKey(mnemonic); 
-      const newAccount: Account = {
-        address: recoveredAccount.addr,
-        mnemonic: mnemonic,
-        name: name
-      };
-      store.addAccount(ledger, newAccount);
-      route('/');
-    } catch (error) {
-      alert(error);
-    }
+    // try {
+    //   var recoveredAccount = mnemonicToSecretKey(mnemonic); 
+    //   const newAccount: Account = {
+    //     address: recoveredAccount.addr,
+    //     mnemonic: mnemonic,
+    //     name: name
+    //   };
+    //   store.addAccount(ledger, newAccount);
+    //   route('/');
+    // } catch (error) {
+    //   alert(error);
+    // }
   }
 
   const handleInput = e => {
@@ -38,24 +38,12 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   }
 
   return html`
-    <div class="panel" style="overflow: auto; width: 650px; height: 550px;">
-      <p class="panel-heading">
-        <a style="margin-right: 1em;" onClick=${() => window.history.back()}>
-          ${'\u2190'}
-        </a>
-        Import a ${ledger} account
-      </p>
-      <div class="panel-block">
-        <input
-          class="input"
-          placeholder="Account name"
-          value=${name}
-          onInput=${(e)=>setName(e.target.value)}/>
-      </div>
-      <div class="panel-block">
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+      <${HeaderView} action="${() => route('/wallet')}"
+        title="Import a ${ledger} account!" />
+      <div class="px-3" style="flex: 1;">
         <p>Insert the 25 word mnemonic of the acccount you want to import:</p>
-      </div>
-      <div class="panel-block">
+
         <textarea
           class="textarea"
           placeholder="apples butter king monkey nuts ..."
@@ -63,7 +51,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           onInput=${handleInput}
           value=${mnemonic}/>
       </div>
-      <div class="panel-block">
+      <div style="padding: 1em;">
         <button class="button is-link is-outlined is-fullwidth"
           onClick=${importAccount}>
           Import!

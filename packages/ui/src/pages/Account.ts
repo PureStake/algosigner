@@ -5,7 +5,6 @@ import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
 
 import { StoreContext } from 'index'
-import { algodClient } from 'services/algodClient'
 import TransactionsList from 'components/Account/TransactionsList'
 import AssetsList from 'components/Account/AssetsList'
 import AccountDetails from 'components/Account/AccountDetails'
@@ -28,10 +27,19 @@ const Account: FunctionalComponent = (props: any) => {
   }
 
   const fetchApi = async () => {
-    let res = await algodClient[ledger].accountInformation(address).do();
-    if (res) {
-      setResults(res);
-    }
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method:'account',
+            ledger: 'testnet',
+            address: address,
+            params:[],
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      setResults(response);
+    });
   }
 
   useEffect(() => {

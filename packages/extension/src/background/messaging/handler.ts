@@ -1,5 +1,7 @@
 import {MessageApi} from './api';
 import {Task} from './task';
+// import { Algodv2, Indexer } from 'algosdk';
+const algosdk = require("algosdk");
 
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod,MessageSource} from '@algosigner/common/messaging/types';
@@ -26,6 +28,8 @@ class RequestValidation {
 export class OnMessageHandler extends RequestValidation {
     static events: {[key: string]: any} = {};
     static handle(request: any,sender: any,sendResponse: any) {
+        console.log('HANDLIG MESSAGE', request, sender, sendResponse);
+        console.log('ID', chrome.runtime.id);
         
         try {
             request.origin = new URL(sender.url).origin;
@@ -86,6 +90,42 @@ export class OnMessageHandler extends RequestValidation {
                         delete OnMessageHandler.events[id];
                     },1000);
                 }
+                break;
+
+            case MessageSource.UI:
+                let algoD, indexer;
+                const headers = {
+                    'X-API-key' : 'ZgqaehGkvP6pSNSaoNoy31Nr61BZlhU29E9ERPRU',
+                };
+                const testnetIndexerServer = "https://algosigner.api.purestake.run/testnet/indexer";
+                const mainnetServer = "https://algosigner.api.purestake.run/mainnet/algod";
+                const mainnetIndexerServer = "https://algosigner.api.purestake.run/mainnet/indexer";
+                const testnetServer = "https://algosigner.api.purestake.run/testnet/algod";
+
+                if (body.ledger === 'testnet'){
+                    algoD = new algosdk.Algodv2(headers, testnetServer, '', );
+                    indexer = new algosdk.Indexer(headers, testnetIndexerServer, '');
+                } else {
+                    algoD = new algosdk.Algodv2(headers, mainnetServer, '');
+                    indexer = new algosdk.Indexer(headers, mainnetIndexerServer, '');
+                }
+                if (method === "account"){
+                    algoD.accountInformation(body.address).do().then((res: any) => {
+                      sendResponse(res);
+                    });
+                    return true;
+                } else if (method === "transactions"){
+                    indexer.lookupAccountTransactions(body.params.address).limit(body.params.limit).do().then((res: any) => {
+                      sendResponse(res);
+                    });
+                    return true;
+                } else if (method === "asset-details"){
+                    indexer.lookupAssetByID(body.params['asset-id']).do().then((res: any) => {
+                      sendResponse(res);
+                    });
+                    return true;
+                }
+
                 break;
         }
     }

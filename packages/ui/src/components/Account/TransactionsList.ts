@@ -2,8 +2,6 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 
-import { algodClient } from 'services/algodClient'
-
 import TxAcfg from 'components/TransactionDetail/TxAcfg'
 import TxPay from 'components/TransactionDetail/TxPay'
 import TxKeyreg from 'components/TransactionDetail/TxKeyreg'
@@ -19,22 +17,51 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const [nextToken, setNextToken] = useState<any>(null);
 
   const fetchApi = async () => {
-    let txs = algodClient[ledger+'Indexer'].lookupAccountTransactions(address);
-    txs.limit(20);
-    if (nextToken)
-      txs.nextToken(nextToken);
-    txs = await txs.do();
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method:'transactions',
+            ledger: 'testnet',
+            params: {
+              address: address,
+              limit: 20
+            },
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      if (results.length > 0) {
+        setResults(results.concat(response.transactions))
+      } else {
+        setResults(response.transactions);
+      }
+      if (response["next-token"]) 
+        setNextToken(response["next-token"]);
+      else
+        setNextToken(null);
+    });
+    // let txs = algodClient[ledger+'Indexer'].lookupAccountTransactions(address);
+    // txs.limit(20);
+    // if (nextToken)
+    //   txs.nextToken(nextToken);
+    // txs = await txs.do();
 
-    if (txs) {
-      setResults(txs.transactions);
+    // if (txs) {
+    //   // If there are already transactions, just append the new ones
+    //   if (results.length > 0) {
+    //     setResults(results.concat(txs.transactions))
+    //   } else {
+    //     setResults(txs.transactions);
+    //   }
 
-      if (txs["next-token"])
-        setNextToken(txs["next-token"]);
-    }
+    //   if (txs["next-token"]) 
+    //     setNextToken(txs["next-token"]);
+    //   else
+    //     setNextToken(null);
+    // }
   }
 
   const handleClick = (tx) => {
-    console.log('asdfasdf', tx)
     switch(tx['tx-type']) {
       case 'pay':
         setShowTx(html`<${TxPay} tx=${tx} ledger=${ledger} />`);
@@ -61,6 +88,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
 
   if (!results)
     return null;
+
+  const loadMore = () => {
+    fetchApi()
+  }
 
   const getInfo = (tx, date) => {
     function getTime(date,  roundTime) {
@@ -172,6 +203,14 @@ const TransactionsList: FunctionalComponent = (props: any) => {
           ${getInfo(tx, date)}
         </div>
       `)}
+      ${ nextToken && html`
+        <div class="py-3 px-4 has-text-centered"
+          style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
+          <a onClick=${loadMore}>
+            Load more transactions
+          </a>
+        </div>
+      `}
     </div>
 
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>

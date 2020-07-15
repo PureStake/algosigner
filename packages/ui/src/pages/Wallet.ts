@@ -1,7 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import algosdk from 'algosdk';
 import { useObserver } from 'mobx-react-lite';
 import { Link } from 'preact-router';
 

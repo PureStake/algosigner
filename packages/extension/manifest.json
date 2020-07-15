@@ -21,7 +21,7 @@
     "browser_action": {
       "default_title": "AlgoSigner",
       "default_icon": "icon.png",
-      "default_popup":"algosigner.html"
+      "default_popup":"index.html"
     },
     "permissions": [
         "storage"

@@ -3,17 +3,24 @@ import { FunctionalComponent } from "preact";
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 
-import { algodClient } from 'services/algodClient'
-
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
   const [results, setResults] = useState<any>(null);
 
   const fetchApi = async () => {
-    console.log(algodClient)
-    let res = await algodClient[ledger].accountInformation(account.address).do();
-    if (res)
-      setResults(res);
+    chrome.runtime.sendMessage({
+        source:'ui',
+        body:{
+            jsonrpc: '2.0',
+            method:'account',
+            ledger: 'testnet',
+            address: account.address,
+            params:[],
+            id: (+new Date).toString(16)
+        }
+    }, function(response) {
+      setResults(response);
+    });
   }
 
   useEffect(() => {

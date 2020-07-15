@@ -1,11 +1,10 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import { mnemonicToSecretKey, signTransaction } from 'algosdk';
+// import { mnemonicToSecretKey, signTransaction } from 'algosdk';
 import { route } from 'preact-router';
 
 import { StoreContext } from 'index'
-import { algodClient } from 'services/algodClient'
 
 import HeaderView from 'components/HeaderView'
 
@@ -31,34 +30,34 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
   const sendTx = async () => {
     setStatus('sending');
-    var recoveredAccount = mnemonicToSecretKey(account.mnemonic); 
+    // var recoveredAccount = mnemonicToSecretKey(account.mnemonic); 
 
-    let params = await algodClient[ledger].getTransactionParams();
-    let endRound = +params.lastRound + 1000;
+    // let params = await algodClient[ledger].getTransactionParams();
+    // let endRound = +params.lastRound + 1000;
 
-    let txn = {
-      "from": recoveredAccount.addr,
-      "to": to,
-      "fee": 10,
-      "amount": +amount,
-      "firstRound": params.lastRound,
-      "lastRound": endRound,
-      "genesisID": params.genesisID,
-      "genesisHash": params.genesishashb64,
-      "note": new Uint8Array(0),
-    };
+    // let txn = {
+    //   "from": recoveredAccount.addr,
+    //   "to": to,
+    //   "fee": 10,
+    //   "amount": +amount,
+    //   "firstRound": params.lastRound,
+    //   "lastRound": endRound,
+    //   "genesisID": params.genesisID,
+    //   "genesisHash": params.genesishashb64,
+    //   "note": new Uint8Array(0),
+    // };
 
-    const txHeaders = {
-        'Content-Type' : 'application/x-binary'
-    }
-    let signedTxn = signTransaction(txn, recoveredAccount.sk);
+    // const txHeaders = {
+    //     'Content-Type' : 'application/x-binary'
+    // }
+    // let signedTxn = signTransaction(txn, recoveredAccount.sk);
 
-    algodClient[ledger].sendRawTransaction(signedTxn.blob, txHeaders).then((resp) => {
-      setTxId(resp.txId)
-      setStatus('sent');
-    }).catch(e => {
-      throw(e)
-    });
+    // algodClient[ledger].sendRawTransaction(signedTxn.blob, txHeaders).then((resp) => {
+    //   setTxId(resp.txId)
+    //   setStatus('sent');
+    // }).catch(e => {
+    //   throw(e)
+    // });
   };
 
   const handleInputTo = e => {

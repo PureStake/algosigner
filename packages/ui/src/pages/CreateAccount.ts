@@ -1,4 +1,4 @@
-import { generateAccount, secretKeyToMnemonic } from 'algosdk';
+// import { generateAccount, secretKeyToMnemonic } from 'algosdk';
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
@@ -25,13 +25,13 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
 
   useEffect(() => {
-    var keys = generateAccount();
-    const mnemonic = secretKeyToMnemonic(keys.sk);
-    setAccount({
-      address: keys.addr,
-      mnemonic: mnemonic,
-      name: ""
-    });
+    // var keys = generateAccount();
+    // const mnemonic = secretKeyToMnemonic(keys.sk);
+    // setAccount({
+    //   address: keys.addr,
+    //   mnemonic: mnemonic,
+    //   name: ""
+    // });
   }, []);
 
   const nextStep = () => {

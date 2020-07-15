@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.9.2",
-    "algosdk": "^1.5.0"
+    "algosdk": "^1.6.2"
   },
   "scripts": {
     "bundle": "browserify ./src/background/algosigner.js -o ./build/background.js -t [ babelify --presets [ @babel/preset-env @babel/preset-react ] --plugins [@babel/plugin-transform-runtime] ] && touch ./build/content.js",
