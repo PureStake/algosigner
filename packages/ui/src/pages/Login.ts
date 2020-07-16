@@ -2,6 +2,9 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { Link, route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 
@@ -11,18 +14,10 @@ const Login: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
 
   const login = () => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'login',
-            params: {
-              passphrase: pwd
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
-      console.log('UNLOCK', response);
+    const params = {
+      passphrase: pwd
+    };
+    sendMessage(JsonRpcMethod.Login, params, function(response) {
       if ('error' in response){
         setError('Wrong password!')
       } else {

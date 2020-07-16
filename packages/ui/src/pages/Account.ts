@@ -1,8 +1,11 @@
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
+
+import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 import TransactionsList from 'components/Account/TransactionsList'
@@ -27,17 +30,11 @@ const Account: FunctionalComponent = (props: any) => {
   }
 
   const fetchApi = async () => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method:'account',
-            ledger: 'testnet',
-            address: address,
-            params:[],
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
+    const params = {
+      ledger: ledger,
+      address: address
+    };
+    sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
       setResults(response);
     });
   }

@@ -4,6 +4,9 @@ import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 
@@ -30,15 +33,7 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
 
   useEffect(() => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'create-account',
-            params: {},
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
+    sendMessage(JsonRpcMethod.CreateAccount, {}, function(response) {
       setAccount({
         mnemonic: response[0],
         address: response[1],
@@ -63,22 +58,15 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   }
 
   const createAccount = (pwd) => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'save-account',
-            params: {
-              ledger: ledger,
-              address: account.address || '',
-              mnemonic: account.mnemonic || '',
-              name: account.name || '',
-              passphrase: pwd
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
-      if ('error' in response){
+    const params = {
+      ledger: ledger,
+      address: account.address || '',
+      mnemonic: account.mnemonic || '',
+      name: account.name || '',
+      passphrase: pwd
+    };
+    sendMessage(JsonRpcMethod.SaveAccount, params, function(response) {
+      if ('error' in response) {
         alert(response);
       } else {
         store.updateWallet(response);

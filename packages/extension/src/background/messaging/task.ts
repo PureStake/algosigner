@@ -1,4 +1,5 @@
 import {MessageApi} from './api';
+import {InternalMethods} from './internalMethods';
 
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
@@ -93,17 +94,45 @@ export class Task {
                     setTimeout(() => {
                         MessageApi.send(message);
                     },100);
+                },
+                // algod
+                [JsonRpcMethod.Algod]: () => {
+                    let auth = Task.request;
+                    let message = auth.message;
+
+                    auth.message.error = RequestErrors.NotAuthorized;
+                    chrome.windows.remove(auth.window_id);
+                    Task.request = {};
+
+                    setTimeout(() => {
+                        MessageApi.send(message);
+                    },100);
                 }
             },
             'extension' : {
-                [JsonRpcMethod.CreateAccount]: () => {
-
+                [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse)
                 },
-                [JsonRpcMethod.SaveAccount]: () => {
-                    
+                [JsonRpcMethod.CreateAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.CreateAccount](request, sendResponse)
                 },
-                [JsonRpcMethod.ImportAccount]: () => {
-                    
+                [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.Login](request, sendResponse)
+                },
+                [JsonRpcMethod.SaveAccount]:  (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.SaveAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.ImportAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.ImportAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.Transactions]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.Transactions](request, sendResponse)
+                },
+                [JsonRpcMethod.AccountDetails]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AccountDetails](request, sendResponse)
+                },
+                [JsonRpcMethod.AssetDetails]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AssetDetails](request, sendResponse)
                 }
             }
         }

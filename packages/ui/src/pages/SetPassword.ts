@@ -2,6 +2,9 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { Link, route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 
@@ -20,17 +23,10 @@ const SetPassword: FunctionalComponent = (props) => {
       return false;
     }
 
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'create-wallet',
-            params: {
-              passphrase: pwd
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
+    const params = {
+      passphrase: pwd
+    };
+    sendMessage(JsonRpcMethod.CreateWallet, params, function(response) {
       if ('error' in response){
         alert(response);
       } else {

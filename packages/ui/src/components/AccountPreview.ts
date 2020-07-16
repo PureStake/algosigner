@@ -2,25 +2,23 @@ import { html } from 'htm/preact';
 import { FunctionalComponent } from "preact";
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
   const [results, setResults] = useState<any>(null);
 
   const fetchApi = async () => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method:'account',
-            ledger: 'testnet',
-            address: account.address,
-            params:[],
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
+    const params = {
+      ledger: ledger,
+      address: account.address,
+    };
+    sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
       setResults(response);
     });
+
   }
 
   useEffect(() => {

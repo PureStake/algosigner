@@ -1,6 +1,9 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import TxAcfg from 'components/TransactionDetail/TxAcfg'
 import TxPay from 'components/TransactionDetail/TxPay'
@@ -17,48 +20,24 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const [nextToken, setNextToken] = useState<any>(null);
 
   const fetchApi = async () => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method:'transactions',
-            ledger: 'testnet',
-            params: {
-              address: address,
-              limit: 20
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
-      if (results.length > 0) {
+    const params = {
+      'ledger': ledger,
+      'address': address,
+      'next-token': nextToken,
+      'limit': 20
+    };
+    sendMessage(JsonRpcMethod.Transactions, params, function(response) {
+      // If there are already transactions, just append the new ones
+      if (results.length > 0)
         setResults(results.concat(response.transactions))
-      } else {
+      else
         setResults(response.transactions);
-      }
+
       if (response["next-token"]) 
         setNextToken(response["next-token"]);
       else
         setNextToken(null);
     });
-    // let txs = algodClient[ledger+'Indexer'].lookupAccountTransactions(address);
-    // txs.limit(20);
-    // if (nextToken)
-    //   txs.nextToken(nextToken);
-    // txs = await txs.do();
-
-    // if (txs) {
-    //   // If there are already transactions, just append the new ones
-    //   if (results.length > 0) {
-    //     setResults(results.concat(txs.transactions))
-    //   } else {
-    //     setResults(txs.transactions);
-    //   }
-
-    //   if (txs["next-token"]) 
-    //     setNextToken(txs["next-token"]);
-    //   else
-    //     setNextToken(null);
-    // }
   }
 
   const handleClick = (tx) => {

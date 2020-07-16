@@ -1,36 +1,25 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useEffect } from 'preact/hooks';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-// import { algodClient } from 'services/algodClient'
+import { sendMessage } from 'services/Messaging'
+
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
   const [results, setResults] = useState<any>(null);
 
   const fetchApi = async () => {
-    chrome.runtime.sendMessage({
-      source:'ui',
-      body:{
-        jsonrpc: '2.0',
-        method:'asset-details',
-        ledger: 'testnet',
-        params: {
-          'asset-id': asset['asset-id']
-        },
-        id: (+new Date).toString(16)
-      }
-    }, function(response) {
+    const params = {
+      'ledger': ledger,
+      'asset-id': asset['asset-id']
+    };
+    sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
       asset.name = response.asset.params.name;
       asset.unitname = response.asset.params['unit-name'];
       setResults(response.asset.params);
     });
-    // let res = await algodClient[ledger+'Indexer'].lookupAssetByID(asset['asset-id']).do();
-    // if (res) {
-    //   asset.name = res.asset.params.name;
-    //   asset.unitname = res.asset.params['unit-name'];
-    //   setResults(res.asset.params);
-    // }
   }
 
   useEffect(() => {

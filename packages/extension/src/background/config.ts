@@ -1,30 +1,40 @@
-import {Ledger} from './messaging/types';
-
-export enum Backend {
-    Purestake = "Purestake",
-    Algod = "Algod"
-}
+import { Ledger, Backend, API } from './messaging/types';
 
 export class Settings {
-    static ledger: Ledger = Ledger.Testnet;
-    static backend: Backend = Backend.Algod;
+    static backend: Backend = Backend.PureStake;
     static backend_settings: {[key: string]: any} = {
-        [Backend.Purestake]: {
-            [Ledger.Testnet]: "",
-            [Ledger.Mainnet]: "",
-            api_key: ""
-        },
-        [Backend.Algod]: {
+        [Backend.PureStake]: {
             [Ledger.Testnet]: {
-                token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                server: "http://127.0.0.1",
-                port: "4001"
+                [API.Algod] : {
+                    url: "https://algosigner.api.purestake.run/testnet/algod",
+                    port: ""
+                },
+                [API.Indexer] : {
+                    url: "https://algosigner.api.purestake.run/testnet/indexer",
+                    port: ""
+                }
             },
             [Ledger.Mainnet]: {
-                token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                server: "http://127.0.0.1",
-                port: "4001"
+                [API.Algod] : {
+                    url: "https://algosigner.api.purestake.run/mainnet/algod",
+                    port: ""
+                },
+                [API.Indexer] : {
+                    url: "https://algosigner.api.purestake.run/mainnet/indexer",
+                    port: ""
+                },
+            },
+            apiKey: {
+                'X-API-key' : 'ZgqaehGkvP6pSNSaoNoy31Nr61BZlhU29E9ERPRU',
             }
+        }
+    }
+
+    public static getBackendParams(ledger: Ledger, api: API) {
+        return {
+            url: this.backend_settings[this.backend][ledger][api].url,
+            port: this.backend_settings[this.backend][ledger][api].port,
+            apiKey: this.backend_settings[this.backend].apiKey
         }
     }
 };

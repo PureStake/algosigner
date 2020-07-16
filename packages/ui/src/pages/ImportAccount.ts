@@ -2,10 +2,13 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { StoreContext } from '../index'
 import HeaderView from 'components/HeaderView'
 import Authenticate from 'components/Authenticate'
+
+import { sendMessage } from 'services/Messaging'
 
 interface Account {
   address: string;
@@ -25,21 +28,13 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   };
 
   const importAccount = (pwd) => {
-    chrome.runtime.sendMessage({
-        source:'ui',
-        body:{
-            jsonrpc: '2.0',
-            method: 'import-account',
-            params: {
-              passphrase: pwd,
-              mnemonic: mnemonic,
-              name: name,
-              ledger: ledger
-            },
-            id: (+new Date).toString(16)
-        }
-    }, function(response) {
-      console.log('IMPORT', response);
+    const params = {
+      passphrase: pwd,
+      mnemonic: mnemonic,
+      name: name,
+      ledger: ledger
+    };
+    sendMessage(JsonRpcMethod.ImportAccount, params, function(response) {
       if ('error' in response) { 
           alert(response);
       } else {
@@ -47,17 +42,6 @@ const ImportAccount: FunctionalComponent = (props: any) => {
         route('/wallet');
       }
     });
-    // try {
-    //   var recoveredAccount = mnemonicToSecretKey(mnemonic); 
-    //   const newAccount: Account = {
-    //     address: recoveredAccount.addr,
-    //     mnemonic: mnemonic,
-    //     name: name
-    //   };
-    //   store.addAccount(ledger, newAccount);
-    // } catch (error) {
-    //   alert(error);
-    // }
   }
 
   const handleInput = e => {

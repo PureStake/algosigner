@@ -2,6 +2,10 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+function srcPath(subdir) {
+    return path.join(__dirname, "./", subdir);
+}
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -47,6 +51,7 @@ module.exports = {
       "react": "preact/compat",
       "react-dom/test-utils": "preact/test-utils",
       "react-dom": "preact/compat",
+      "@algosigner/common": srcPath('../common/src'),
     },
     modules: [
       path.resolve('./src'),

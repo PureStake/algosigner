@@ -6,10 +6,15 @@ export declare enum JsonRpcMethod {
     AuthorizationDeny = "authorization-deny",
     SignTransaction = "sign-transaction",
     Algod = "algod",
+    Indexer = "indexer",
+    CreateWallet = "create-wallet",
     CreateAccount = "create-account",
     SaveAccount = "save-account",
     ImportAccount = "import-account",
-    Login = "login"
+    Login = "login",
+    AccountDetails = "account-details",
+    Transactions = "transactions",
+    AssetDetails = "asset-details"
 }
 export declare enum SupportedAlgod {
     Status = "status"
