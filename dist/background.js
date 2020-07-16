@@ -17248,6 +17248,7 @@ let JsonRpcMethod;
   JsonRpcMethod["CreateAccount"] = "create-account";
   JsonRpcMethod["SaveAccount"] = "save-account";
   JsonRpcMethod["ImportAccount"] = "import-account";
+  JsonRpcMethod["DeleteAccount"] = "delete-account";
   JsonRpcMethod["Login"] = "login";
   JsonRpcMethod["AccountDetails"] = "account-details";
   JsonRpcMethod["Transactions"] = "transactions";
@@ -17387,9 +17388,6 @@ class internalMethods_InternalMethods {
   }
 
   static [JsonRpcMethod.CreateWallet](request, sendResponse) {
-    const lockParam = {
-      passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
-    };
     const newWallet = {
       TestNet: [],
       MainNet: []
@@ -17426,10 +17424,11 @@ class internalMethods_InternalMethods {
       mnemonic,
       name,
       ledger,
-      address
+      address,
+      passphrase
     } = request.body.params;
     const unlockParam = {
-      passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
+      passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(passphrase)
     };
     background_encryptionWrap.unlock(unlockParam, unlockedValue => {
       if ('error' in unlockedValue) {
@@ -17441,6 +17440,40 @@ class internalMethods_InternalMethods {
           name: name
         };
         unlockedValue[ledger].push(newAccount);
+        background_encryptionWrap.lock({
+          passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase),
+          encryptObject: background_encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
+        }, isSuccessful => {
+          if (isSuccessful) sendResponse(this.safeWallet(unlockedValue));else sendResponse({
+            error: 'Lock failed'
+          });
+        });
+      }
+    });
+    return true;
+  }
+
+  static [JsonRpcMethod.DeleteAccount](request, sendResponse) {
+    const {
+      ledger,
+      address,
+      passphrase
+    } = request.body.params;
+    const unlockParam = {
+      passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(passphrase)
+    };
+    background_encryptionWrap.unlock(unlockParam, unlockedValue => {
+      if ('error' in unlockedValue) {
+        sendResponse(unlockedValue);
+      } else {
+        // Find address to delete
+        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+          if (unlockedValue[ledger][i].address === address) {
+            unlockedValue[ledger].splice(i, 1);
+            break;
+          }
+        }
+
         background_encryptionWrap.lock({
           passphrase: background_encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase),
           encryptObject: background_encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
@@ -17645,6 +17678,9 @@ class task_Task {
         },
         [JsonRpcMethod.ImportAccount]: (request, sendResponse) => {
           return internalMethods_InternalMethods[JsonRpcMethod.ImportAccount](request, sendResponse);
+        },
+        [JsonRpcMethod.DeleteAccount]: (request, sendResponse) => {
+          return internalMethods_InternalMethods[JsonRpcMethod.DeleteAccount](request, sendResponse);
         },
         [JsonRpcMethod.Transactions]: (request, sendResponse) => {
           return internalMethods_InternalMethods[JsonRpcMethod.Transactions](request, sendResponse);

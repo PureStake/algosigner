@@ -40,9 +40,6 @@ export class InternalMethods {
 
 
     public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
-        const lockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
-        };
         const newWallet = {
             TestNet: [],
             MainNet: []
@@ -81,9 +78,9 @@ export class InternalMethods {
 
 
     public static [JsonRpcMethod.SaveAccount](request: any, sendResponse: Function) {
-        const { mnemonic, name, ledger, address } = request.body.params;
+        const { mnemonic, name, ledger, address, passphrase } = request.body.params;
         const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
+            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
         };
 
         encryptionWrap.unlock(unlockParam, (unlockedValue: any) => {
@@ -96,6 +93,38 @@ export class InternalMethods {
                     name: name
                 }
                 unlockedValue[ledger].push(newAccount);
+                encryptionWrap.lock({
+                    passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
+                    encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
+                },
+                (isSuccessful: any) => {
+                    if (isSuccessful)
+                        sendResponse(this.safeWallet(unlockedValue));
+                    else 
+                        sendResponse({error: 'Lock failed'});
+                });
+            }
+        });
+        return true;
+    }
+
+    public static [JsonRpcMethod.DeleteAccount](request: any, sendResponse: Function) {
+        const { ledger, address, passphrase } = request.body.params;
+        const unlockParam : LockParameters = {
+            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
+        };
+
+        encryptionWrap.unlock(unlockParam, (unlockedValue: any) => {
+            if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+            } else {
+                // Find address to delete
+                for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                    if (unlockedValue[ledger][i].address === address) {
+                        unlockedValue[ledger].splice(i, 1);
+                        break;
+                    }
+                }
                 encryptionWrap.lock({
                     passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
                     encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))

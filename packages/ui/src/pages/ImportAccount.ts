@@ -27,7 +27,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     setStep(step + 1);
   };
 
-  const importAccount = (pwd) => {
+  const importAccount = (pwd: string) => {
     const params = {
       passphrase: pwd,
       mnemonic: mnemonic,

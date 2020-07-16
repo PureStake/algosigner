@@ -88,7 +88,7 @@ var o=function(e,t){return(o=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
         <//>
       </div>
     </div>
-  `);var G,W,K;function q(e,t,n){chrome.runtime.sendMessage({source:"ui",body:{jsonrpc:"2.0",method:e,params:t,id:(+new Date).toString(16)}},n)}!function(e){e.Heartbeat="heartbeat",e.Authorization="authorization",e.AuthorizationAllow="authorization-allow",e.AuthorizationDeny="authorization-deny",e.SignTransaction="sign-transaction",e.Algod="algod",e.Indexer="indexer",e.CreateWallet="create-wallet",e.CreateAccount="create-account",e.SaveAccount="save-account",e.ImportAccount="import-account",e.Login="login",e.AccountDetails="account-details",e.Transactions="transactions",e.AssetDetails="asset-details"}(G||(G={})),function(e){e.Status="status"}(W||(W={})),function(e){e.Extension="extension",e.DApp="dapp",e.Router="router",e.UI="ui"}(K||(K={}));var J=e=>{const[t,n]=Object(s.j)(""),[r,o]=Object(s.j)(""),[i,u]=Object(s.j)(""),c=Object(s.b)(Ae);return a`
+  `);var G,W,K;function q(e,t,n){chrome.runtime.sendMessage({source:"ui",body:{jsonrpc:"2.0",method:e,params:t,id:(+new Date).toString(16)}},n)}!function(e){e.Heartbeat="heartbeat",e.Authorization="authorization",e.AuthorizationAllow="authorization-allow",e.AuthorizationDeny="authorization-deny",e.SignTransaction="sign-transaction",e.Algod="algod",e.Indexer="indexer",e.CreateWallet="create-wallet",e.CreateAccount="create-account",e.SaveAccount="save-account",e.ImportAccount="import-account",e.DeleteAccount="delete-account",e.Login="login",e.AccountDetails="account-details",e.Transactions="transactions",e.AssetDetails="asset-details"}(G||(G={})),function(e){e.Status="status"}(W||(W={})),function(e){e.Extension="extension",e.DApp="dapp",e.Router="router",e.UI="ui"}(K||(K={}));var J=e=>{const[t,n]=Object(s.j)(""),[r,o]=Object(s.j)(""),[i,u]=Object(s.j)(""),c=Object(s.b)(Ae);return a`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div style="flex: 1">
           <section class="hero is-primary has-text-centered">
@@ -572,27 +572,30 @@ var o=function(e,t){return(o=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
       <button class="modal-close is-large" aria-label="close" onClick=${()=>o(null)} />
     </div>
 
-  `},be=n(6),me=n.n(be);var _e=e=>{const t=Object(s.b)(Ae),{account:n,ledger:r}=e;var o=me()(4,"L");o.addData(n.address),o.make();let i=o.createDataURL(10,1);return a`
-    <strong>Address</strong>
-    <p>${n.address}</p>
+  `},be=n(6),me=n.n(be);var _e=e=>{const t=Object(s.b)(Ae),[n,r]=Object(s.j)(!1),{account:o,ledger:i}=e;var u=me()(4,"L");u.addData(o.address),u.make();let c=u.createDataURL(10,1);return n?a`
+      <${te}
+        nextStep=${e=>{const n={ledger:i,address:o.address,passphrase:e};q(G.DeleteAccount,n,(function(e){"error"in e?alert(e):(t.updateWallet(e),x("/wallet"))}))}} />
+    `:a`
+      <strong>Address</strong>
+      <p>${o.address}</p>
 
-    <div style="text-align: center;">
-      <img src="${i}"
-        style="padding: 0.5em;
-          margin: 0.5em;
-          border: 1px solid #9095AF;
-          border-radius: 10px;"
-        width="250"
-        height="250"/>
-    </div>
+      <div style="text-align: center;">
+        <img src="${c}"
+          style="padding: 0.5em;
+            margin: 0.5em;
+            border: 1px solid #9095AF;
+            border-radius: 10px;"
+          width="250"
+          height="250"/>
+      </div>
 
-    <button
-      class="button is-danger is-fullwidth"
-      onClick=${()=>{t.deleteAccount(r,n),x("/")}}>
-      Delete account!
-    </button>
+      <button
+        class="button is-danger is-fullwidth"
+        onClick=${()=>r(!0)}>
+        Delete account!
+      </button>
 
-  `},we=function(e,t,n,r){return new(n||(n=Promise))((function(o,i){function a(e){try{u(r.next(e))}catch(e){i(e)}}function s(e){try{u(r.throw(e))}catch(e){i(e)}}function u(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}u((r=r.apply(e,t||[])).next())}))};var xe=e=>{const t=Object(s.b)(Ae),{url:n,ledger:r,address:o}=e,[i,u]=Object(s.j)(!1),[c,l]=Object(s.j)(!1),[f,d]=Object(s.j)(null);let p;for(var h=t[r].length-1;h>=0;h--)if(t[r][h].address===o){p=t[r][h];break}return Object(s.d)(()=>{we(void 0,void 0,void 0,(function*(){const e={ledger:r,address:o};q(G.AccountDetails,e,(function(e){d(e)}))}))},[]),a`
+    `},we=function(e,t,n,r){return new(n||(n=Promise))((function(o,i){function a(e){try{u(r.next(e))}catch(e){i(e)}}function s(e){try{u(r.throw(e))}catch(e){i(e)}}function u(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(a,s)}u((r=r.apply(e,t||[])).next())}))};var xe=e=>{const t=Object(s.b)(Ae),{url:n,ledger:r,address:o}=e,[i,u]=Object(s.j)(!1),[c,l]=Object(s.j)(!1),[f,d]=Object(s.j)(null);let p;for(var h=t[r].length-1;h>=0;h--)if(t[r][h].address===o){p=t[r][h];break}return Object(s.d)(()=>{we(void 0,void 0,void 0,(function*(){const e={ledger:r,address:o};q(G.AccountDetails,e,(function(e){d(e)}))}))},[]),a`
     <div class="px-4 py-3 has-text-weight-bold ">
       <p class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
         <a class="icon mr-2" onClick=${()=>x("/wallet")}>${"<"}</a>

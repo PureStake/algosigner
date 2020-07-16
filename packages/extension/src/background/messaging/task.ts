@@ -125,6 +125,9 @@ export class Task {
                 [JsonRpcMethod.ImportAccount]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.ImportAccount](request, sendResponse)
                 },
+                [JsonRpcMethod.DeleteAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.DeleteAccount](request, sendResponse)
+                },
                 [JsonRpcMethod.Transactions]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.Transactions](request, sendResponse)
                 },

@@ -18,7 +18,6 @@ const AccountPreview: FunctionalComponent = (props: any) => {
     sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
       setResults(response);
     });
-
   }
 
   useEffect(() => {
