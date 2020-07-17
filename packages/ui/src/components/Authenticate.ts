@@ -10,7 +10,8 @@ const Authenticate: FunctionalComponent = (props: any) => {
 
 
   return html`
-    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+    <div class="main-view"
+      style="flex-direction: column; justify-content: space-between; background:url('assets/background.svg');">
       <div style="flex: 1">
         <section class="hero is-primary has-text-centered">
           <div class="hero-body">

@@ -9,6 +9,7 @@ import { createHashHistory } from 'history';
 import Header from 'components/Header'
 import Footer from 'components/Footer'
 
+import Authorize from 'pages/Authorize'
 import Welcome from 'pages/Welcome'
 import SetPassword from 'pages/SetPassword'
 import Login from 'pages/Login'
@@ -76,6 +77,7 @@ const App = () => {
       <${StoreProvider}>
         <div style="overflow: hidden; width: 450px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
+            <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />
             <${Login} path="/login" />
