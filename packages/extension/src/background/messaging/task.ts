@@ -37,11 +37,13 @@ export class Task {
             'public': {
                 // authorization
                 [JsonRpcMethod.Authorization]: (d: any) => {
+                    // If access was already granted, authorize connection.
                     if(Task.isAuthorized(d.origin)){
+                        d.response = {};
                         MessageApi.send(d);
                     } else {
                         chrome.windows.create({
-                            url: chrome.runtime.getURL("authorization.html"),
+                            url: chrome.runtime.getURL("index.html#/authorize"),
                             type: "popup",
                             focused: true,
                             width:480,
@@ -53,6 +55,7 @@ export class Task {
                                     message:d
                                 };
                                 setTimeout(function(){
+                                    console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     chrome.runtime.sendMessage(d);
                                 },100);
                             }
@@ -79,8 +82,10 @@ export class Task {
                     Task.request = {};
 
                     setTimeout(() => {
+                        // Response needed
+                        message.response = {};
                         MessageApi.send(message);
-                    },100);
+                    }, 1000);
                 },
                 // authorization-deny
                 [JsonRpcMethod.AuthorizationDeny]: () => {
@@ -136,6 +141,9 @@ export class Task {
                 },
                 [JsonRpcMethod.AssetDetails]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.AssetDetails](request, sendResponse)
+                },
+                [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse)
                 }
             }
         }

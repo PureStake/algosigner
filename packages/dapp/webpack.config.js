@@ -15,7 +15,7 @@ module.exports = {
     },
     resolve: {
         alias: {
-            "@algosigner/common": srcPath('~/packages/common/src')
+            "@algosigner/common": srcPath('../common/src'),
         },
         extensions: ['.ts', '.tsx', '.js', '.json']
     },

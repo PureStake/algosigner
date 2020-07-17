@@ -1,25 +1,29 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-// import { mnemonicToSecretKey, signTransaction } from 'algosdk';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 
 import HeaderView from 'components/HeaderView'
+import Authenticate from 'components/Authenticate'
 
 
 const SendAlgos: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { matches, path, url, ledger, address } = props;
-  let account;
 
-  console.log(matches, path, url);
-
+  const [showAuthenticate, setShowAuthenticate] = useState(false);
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState('');
+  const [note, setNote] = useState('');
   const [txId, setTxId] = useState('');
+
+  let account;
 
   for (var i = store[ledger].length - 1; i >= 0; i--) {
     if (store[ledger][i].address === address) {
@@ -28,72 +32,70 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     }
   }
 
-  const sendTx = async () => {
+  const sendTx = async (pwd: string) => {
     setStatus('sending');
-    // var recoveredAccount = mnemonicToSecretKey(account.mnemonic); 
-
-    // let params = await algodClient[ledger].getTransactionParams();
-    // let endRound = +params.lastRound + 1000;
-
-    // let txn = {
-    //   "from": recoveredAccount.addr,
-    //   "to": to,
-    //   "fee": 10,
-    //   "amount": +amount,
-    //   "firstRound": params.lastRound,
-    //   "lastRound": endRound,
-    //   "genesisID": params.genesisID,
-    //   "genesisHash": params.genesishashb64,
-    //   "note": new Uint8Array(0),
-    // };
-
-    // const txHeaders = {
-    //     'Content-Type' : 'application/x-binary'
-    // }
-    // let signedTxn = signTransaction(txn, recoveredAccount.sk);
-
-    // algodClient[ledger].sendRawTransaction(signedTxn.blob, txHeaders).then((resp) => {
-    //   setTxId(resp.txId)
-    //   setStatus('sent');
-    // }).catch(e => {
-    //   throw(e)
-    // });
+    const params = {
+      ledger: ledger,
+      address: account.address,
+      amount: amount,
+      note: note,
+      to: to,
+      passphrase: pwd
+    };
+    sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
+      setTxId(response.txId);
+      setStatus('sent');
+    })
   };
-
-  const handleInputTo = e => {
-    setTo(e.target.value);
-  }
-  const handleInputAmount = e => {
-    setAmount(e.target.value);
-  }
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
-        title="Send from ${account.name}" />
+        title="Send SendAlgos" />
 
       <div class="px-4" style="flex: 1">
-        <input
-          class="input"
-          placeholder="To"
-          value=${to}
-          onInput=${handleInputTo}/>
-
-        <input class="input mt-4"
+        <input class="input mb-4"
           placeholder="Amount"
           type="number"
           value=${amount}
-          onInput=${handleInputAmount} />
+          onInput=${(e) => setAmount(e.target.value)} />
+        
+        <b>From</b>
+        <div class="box py-2"
+          style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; box-shadow: none; height: 55px;">
+          <h6 class="title is-6">${ account.name }</h6>
+          <h6 class="subtitle is-6">${ account.address }</h6>
+        </div>
+
+        <input
+          class="input mb-4"
+          placeholder="To address"
+          value=${to}
+          onInput=${(e) => setTo(e.target.value)}/>
+        <input
+          class="input"
+          placeholder="Note"
+          value=${note}
+          onInput=${(e) => setNote(e.target.value)}/>
       </div>
       <div class="px-4 py-4">
         <button
           class="button is-link is-outlined is-fullwidth"
-          onClick=${() => sendTx()}>
+          onClick=${() => setShowAuthenticate(true)}>
           Send!
         </button>
       </div>
     </div>
+
+    <div class=${`modal ${showAuthenticate ? 'is-active' : ''}`}>
+      <div class="modal-background"></div>
+      <div class="modal-content" style="padding: 0 15px;">
+        <${Authenticate}
+          nextStep=${sendTx} />
+      </div>
+    </div>
+
     <div class=${`modal ${status.length > 0 ? 'is-active' : ''}`}>
       <div class="modal-background"></div>
       <div class="modal-content" style="padding: 0 15px;">
@@ -112,6 +114,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         </div>
       </div>
     </div>
+
   `
 };
 

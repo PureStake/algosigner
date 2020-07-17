@@ -3,6 +3,30 @@ import { html } from 'htm/preact';
 import { Link } from 'preact-router';
 
 const Authorize: FunctionalComponent = (props) => {
+  const deny = () => {
+    chrome.runtime.sendMessage({
+        source:'extension',
+        body:{
+            jsonrpc: '2.0',
+            method:'authorization-deny',
+            params:[],
+            id: (+new Date).toString(16)
+        }
+    });
+  };
+
+  const grant = () => {
+    chrome.runtime.sendMessage({
+        source:'extension',
+        body:{
+            jsonrpc: '2.0',
+            method:'authorization-allow',
+            params:[],
+            id: (+new Date).toString(16)
+        }
+    });
+  }
+
   return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div style="flex: 1">
@@ -27,13 +51,16 @@ const Authorize: FunctionalComponent = (props) => {
           </section>
         </div>
 
-        <div class="mx-5 mb-3">
-          <${Link} class="button is-link" href="/set-password">
+        <div class="mx-5 mb-3" style="display: flex;">
+          <button class="button is-link is-outlined px-6"
+            onClick=${deny}>
             Reject
-          <//>
-          <${Link} class="button is-link" href="/set-password">
-            Authorize access
-          <//>
+          </button>
+          <button class="button is-primary ml-3"
+            style="flex: 1;"
+            onClick=${grant}>
+            Grant access
+          </button>
         </div>
       </div>
     `

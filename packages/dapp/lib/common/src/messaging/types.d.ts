@@ -15,7 +15,8 @@ export declare enum JsonRpcMethod {
     Login = "login",
     AccountDetails = "account-details",
     Transactions = "transactions",
-    AssetDetails = "asset-details"
+    AssetDetails = "asset-details",
+    SignSendTransaction = "sign-send-transaction"
 }
 export declare enum SupportedAlgod {
     Status = "status"

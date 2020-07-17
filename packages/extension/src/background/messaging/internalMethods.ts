@@ -208,4 +208,57 @@ export class InternalMethods {
         });
         return true;
     }
+
+    public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
+        const { ledger, address, to, amount, note, passphrase } = request.body.params;
+        var algod = this.getAlgod(ledger);
+
+        const unlockParam : LockParameters = {
+            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
+        };
+
+        encryptionWrap.unlock(unlockParam, async (unlockedValue: any) => {
+            if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+                return false;
+            }
+            let account;
+
+            // Find address to send algos from
+            for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                if (unlockedValue[ledger][i].address === address) {
+                    account = unlockedValue[ledger][i];
+                    break;
+                }
+            }
+
+            var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
+            let params = await algod.getTransactionParams().do();
+
+            let txn = {
+              "from": address,
+              "to": to,
+              "fee": params.fee,
+              "amount": +amount,
+              "firstRound": params.firstRound,
+              "lastRound": params.lastRound,
+              "genesisID": params.genesisID,
+              "genesisHash": params.genesisHash,
+              "note": new Uint8Array(Buffer.from(note, "base64"))
+            };
+
+            const txHeaders = {
+                'Content-Type' : 'application/x-binary'
+            }
+            let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+
+            algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
+                sendResponse(resp);
+            }).catch((e: any) => {
+              throw(e)
+            });
+        });
+
+        return true;
+    }
 }
