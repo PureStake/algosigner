@@ -23,6 +23,7 @@ const Authenticate: FunctionalComponent = (props: any) => {
 
         <section class="section pt-7">
           <input
+            id="enterPassword"
             class="input"
             type="password"
             placeholder="Password"
@@ -42,6 +43,7 @@ const Authenticate: FunctionalComponent = (props: any) => {
 
       <div class="mx-5 mb-3">
         <button class="button is-link is-fullwidth"
+          id="nextStep"
           disabled=${pwd.length === 0}
           onClick=${() => nextStep(pwd)} >
           Continue

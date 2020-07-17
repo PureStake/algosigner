@@ -28,6 +28,7 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
     <div class=${ddClass}>
       <div class="dropdown-trigger">
         <button
+          id="selectLedger"
           class="button"
           onClick=${flip}
           aria-haspopup="true"
@@ -41,12 +42,12 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
       </div>
       <div class="dropdown-menu" id="dropdown-menu" role="menu">
         <div class="dropdown-content">
-          <a
+          <a id="selectTestNet"
             onClick=${()=>setLedger('TestNet')}
             class="dropdown-item">
             TestNet
           </a>
-          <a
+          <a id="selectMainNet"
             onClick=${()=>setLedger('MainNet')}
             class="dropdown-item">
             MainNet
