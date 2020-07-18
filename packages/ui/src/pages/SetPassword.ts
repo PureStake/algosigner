@@ -57,11 +57,13 @@ const SetPassword: FunctionalComponent = (props) => {
             <input
               class="input mt-4"
               placeholder="Password"
+              id="setPassword"
               type="password"
               value=${pwd}
               onInput=${(e)=>setPwd(e.target.value)}/>
             <input
               class="input mt-4"
+              id="confirmPassword"
               type="password"
               placeholder="Confirm password"
               value=${confirmPwd}
