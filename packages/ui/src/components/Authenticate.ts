@@ -6,7 +6,7 @@ import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
 
 const Authenticate: FunctionalComponent = (props: any) => {
-  const { nextStep } = props;
+  const { nextStep, error, loading } = props;
   const [pwd, setPwd] = useState<String>('');
 
   const disabled : boolean = pwd.length === 0;
@@ -18,8 +18,8 @@ const Authenticate: FunctionalComponent = (props: any) => {
   }
 
   return html`
-    <div class="section has-text-white has-text-centered">
-      <img src=${logo} style="width: 150px;" />
+    <div class="section has-text-white has-text-centered py-0">
+      <img src=${logo} width="120" class="mb-6" />
 
       <p>
         AlgoSigner needs your password to continue
@@ -33,7 +33,11 @@ const Authenticate: FunctionalComponent = (props: any) => {
         onKeyDown=${handleEnter}
         onInput=${(e)=>setPwd(e.target.value)}/>
 
-      <button class="button is-link is-fullwidth mb-6"
+      <p class="mb-3 has-text-danger has-text-centered" style="height: 1.5em;">
+        ${error && error.length > 0 && error}
+      </p>
+
+      <button class="button is-link is-fullwidth mb-6 ${loading ? 'is-loading':''}"
         id="nextStep"
         disabled=${disabled}
         onClick=${() => nextStep(pwd)} >

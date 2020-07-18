@@ -46,9 +46,9 @@ const Login: FunctionalComponent = (props) => {
     <div class="main-view"
       style="flex-direction: column; justify-content: space-between; background:url(${background}); background-size: cover; color: white;">
       <div style="flex: 1">
-        <section class="hero has-text-centered">
+        <section class="hero has-text-centered mb-6">
           <div class="hero-body">
-            <img src=${logo} style="width: 150px;" />
+            <img src=${logo} width="120" class="mb-3" />
           </div>
         </section>
 
