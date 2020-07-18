@@ -94,6 +94,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <${Authenticate}
           nextStep=${sendTx} />
       </div>
+      <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowAuthenticate(false)} />
     </div>
 
     <div class=${`modal ${status.length > 0 ? 'is-active' : ''}`}>
