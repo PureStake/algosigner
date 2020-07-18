@@ -25,8 +25,8 @@ const AccountPreview: FunctionalComponent = (props: any) => {
   }, []);
 
   return html`
-    <div class="box py-2"
-      style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; box-shadow: none; height: 55px;"
+    <div class="box py-2 is-shadowless"
+      style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; height: 55px;"
       onClick=${() => route(`/${ledger}/${account.address}`)}>
       <div style="display: flex; justify-content: space-between;">
         <div>
