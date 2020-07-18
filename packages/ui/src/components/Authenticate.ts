@@ -38,7 +38,7 @@ const Authenticate: FunctionalComponent = (props: any) => {
       </p>
 
       <button class="button is-link is-fullwidth mb-6 ${loading ? 'is-loading':''}"
-        id="nextStep"
+        id="authButton"
         disabled=${disabled}
         onClick=${() => nextStep(pwd)} >
         Continue

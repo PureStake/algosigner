@@ -76,6 +76,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
       <div class="px-4" style="flex: 1">
         <input class="input mb-4"
+          id="amountAlgos"
           placeholder="Algos"
           type="number"
           value=${amount}
@@ -110,6 +111,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       </div>
       <div class="px-4 py-4">
         <button
+          id="submitSendAlgos"
           class="button is-link is-outlined is-fullwidth"
           onClick=${() => setAskAuth(true)}>
           Send!
@@ -134,8 +136,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <div class="modal-content" style="padding: 0 15px;">
           <div class="box">
             <p>Transaction sent with ID</p>
-            <p style="word-break: break-all;">${txId}</p>
+            <p id="txId" style="word-break: break-all;">${txId}</p>
             <button
+              id="backToWallet"
               class="button is-success is-outlined is-fullwidth mt-4"
               onClick=${() => route('/wallet')}>
               Back to wallet!

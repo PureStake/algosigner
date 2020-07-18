@@ -79,6 +79,7 @@ const SetPassword: FunctionalComponent = (props) => {
 
         <div class="mx-5 mb-3">
           <button
+            id="createWallet"
             class="button is-link is-fullwidth"
             disabled=${pwd.length === 0 || confirmPwd.length === 0}
             onClick=${createWallet}>
