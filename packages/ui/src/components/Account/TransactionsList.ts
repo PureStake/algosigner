@@ -177,7 +177,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
       ${ results.map((tx: any) => html`
         <div class="py-3 px-4"
-          style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+          style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
           onClick=${() => handleClick(tx)}>
           ${getInfo(tx, date)}
         </div>

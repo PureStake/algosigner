@@ -54,14 +54,11 @@ const Account: FunctionalComponent = (props: any) => {
         </button>
       </p>
       <span>
-        Balance:
-        ${ results && html`
-          ${results.amount} MAlgos
-        `}
+        Balance: ${ results && html`${results.amount/1e6} <span class="has-text-grey-light">Algos</span>` }
       </span>
     </div>
     <div class="px-4">
-      <${Link} class="button is-primary is-fullwidth" href=${`${url}/send`}>
+      <${Link} class="button is-primary is-fullwidth py-2" href=${`${url}/send`}>
         Send Algos
       </${Link}>
     </div>

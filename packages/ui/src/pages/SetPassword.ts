@@ -42,7 +42,7 @@ const SetPassword: FunctionalComponent = (props) => {
   return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div style="flex: 1">
-          <section class="has-text-centered py-4"
+          <section class="has-text-centered py-3"
             style="background:url(${background}); background-size: cover;">
             <img src=${walletLock} width="200" />
           </section>

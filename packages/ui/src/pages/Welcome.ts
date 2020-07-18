@@ -22,7 +22,7 @@ const Welcome: FunctionalComponent = (props) => {
       <div style="flex: 1">
 
         <section class="section pt-4 has-text-centered">
-          <img src=${logo} class="py-6" width="120" />
+          <img src=${logo} class="py-6" width="100" />
 
           <h1 class="title is-6 mb-0 has-text-white">
             Welcome to
