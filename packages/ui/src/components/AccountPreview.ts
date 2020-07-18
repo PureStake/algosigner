@@ -4,7 +4,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
@@ -25,8 +25,7 @@ const AccountPreview: FunctionalComponent = (props: any) => {
   }, []);
 
   return html`
-    <div class="box py-2 is-shadowless"
-      style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; height: 55px;"
+    <div class="box py-2 is-shadowless account-preview"
       onClick=${() => route(`/${ledger}/${account.address}`)}>
       <div style="display: flex; justify-content: space-between;">
         <div>
@@ -36,6 +35,9 @@ const AccountPreview: FunctionalComponent = (props: any) => {
           ${ results && html`
             <b>${results.assets.length}</b> ASAs<br />
             <b>${results.amount}</b> MAlgos
+          `}
+          ${ results===null && html`
+            <span class="loader"></span>
           `}
         </div>
       </div>

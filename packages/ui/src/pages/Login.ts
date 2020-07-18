@@ -27,6 +27,7 @@ const Login: FunctionalComponent = (props) => {
 
   const login = () => {
     setLoading(true);
+    setError('');
     const params = {
       passphrase: pwd
     };
