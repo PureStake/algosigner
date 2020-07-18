@@ -55,6 +55,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           title="Import a ${ledger} account!" />
         <div class="px-3" style="flex: 1;">
           <input
+            id="accountName"
             class="input"
             placeholder="Account name"
             value=${name}
@@ -63,6 +64,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           <p>Insert the 25 word mnemonic of the acccount you want to import:</p>
 
           <textarea
+            id="enterMnemonic"
             class="textarea"
             placeholder="apples butter king monkey nuts ..."
             rows="5"
@@ -71,6 +73,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
         </div>
         <div style="padding: 1em;">
           <button class="button is-link is-outlined is-fullwidth"
+            id="nextStep"
             onClick=${nextStep}>
             Continue
           </button>

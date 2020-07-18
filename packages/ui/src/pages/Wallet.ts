@@ -32,6 +32,7 @@ const Wallet: FunctionalComponent = (props) => {
 
         <div style="padding: 0.5em 0.75em;">
           <button
+            id="addAccount"
             class="button is-link is-fullwidth"
             onClick=${() => {setShowAddModal(true)}}>
             Add an account
@@ -44,12 +45,12 @@ const Wallet: FunctionalComponent = (props) => {
         <div class="modal-content" style="padding: 0 15px;">
           <div class="box">
             <div>
-              <${Link} class="button is-fullwidth" href=${`/${ledger}/create-account`}>
+              <${Link} class="button is-fullwidth" id="createAccount" href=${`/${ledger}/create-account`}>
                 Create new account
               </${Link}>
             </div>
             <div>
-              <${Link} class="button is-fullwidth mt-5" href=${`/${ledger}/import-account`}>
+              <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${ledger}/import-account`}>
                 Import existing account
               </${Link}>
             </div>
