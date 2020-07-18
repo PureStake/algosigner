@@ -30,6 +30,9 @@ const CreateAccount: FunctionalComponent = (props: any) => {
     name: '',
   });
   const [step, setStep] = useState<number>(0);
+  const [askAuth, setAskAuth] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string>('');
   const store:any = useContext(StoreContext);
 
   useEffect(() => {
@@ -65,9 +68,21 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       name: account.name || '',
       passphrase: pwd
     };
+    setLoading(true);
+    setAuthError('');
+
     sendMessage(JsonRpcMethod.SaveAccount, params, function(response) {
       if ('error' in response) {
-        alert(response);
+        setLoading(false);
+        switch (response.error) {
+          case "Login Failed":
+            setAuthError('Wrong passphrase');
+            break;
+          default:
+            setAskAuth(false);
+            alert(`There was an unkown error: ${response.error}`);
+            break;
+        }
       } else {
         store.updateWallet(response);
         route('/wallet');
@@ -94,11 +109,20 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       <${ConfirmMnemonic}
         account=${account}
         prevStep=${prevStep}
-        nextStep=${nextStep} />
+        nextStep=${() => {setAskAuth(true)}} />
+
     `}
-    ${ step===3 && html`
-      <${Authenticate}
-        nextStep=${createAccount} />
+    ${ askAuth && html`
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-content" style="padding: 0 15px;">
+          <${Authenticate}
+            error=${authError}
+            loading=${loading}
+            nextStep=${createAccount} />
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setAskAuth(false)} />
+      </div>
     `}
   `
 };

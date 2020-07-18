@@ -27,17 +27,14 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   }, []);
 
   const addWord = (e) => {
-    console.log(testMnemonic);
-    if (testMnemonic.length === 0){
+    if (testMnemonic.length === 0)
       setTestMnemonic(e.target.name);
-    }
-    else{
+    else
       setTestMnemonic(testMnemonic + ' ' + e.target.name);
-    }
   };
 
   // 5x5 grid
-  let grid : Array<string[]> = [];
+  let grid : Array<any[]> = [];
 
   let buttons : Array<any> = shuffledMnemonic.map(word => html`
     <button class="button is-small is-fullwidth mt-3"
@@ -59,6 +56,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
       <${HeaderView} action=${prevStep}
         title="Confirm your mnemonic" />
       <div class="px-3" style="flex: 1;">
+        <p class="mb-4">Use the buttons below to confirm the mnemonic</p>
         <textarea placeholder="Use the buttons below the enter the 25 word mnemonic to add this account to your wallet" class="textarea" value=${testMnemonic} readonly></textarea>
         <div class="columns is-mobile">
           ${grid.map(column => html`<div class="column is-one-fifth">${column}</div>`)}

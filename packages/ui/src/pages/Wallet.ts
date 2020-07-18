@@ -35,7 +35,7 @@ const Wallet: FunctionalComponent = (props) => {
             id="addAccount"
             class="button is-link is-fullwidth"
             onClick=${() => {setShowAddModal(true)}}>
-            Add an account
+            Add account
           </button>
         </div>
       </div>

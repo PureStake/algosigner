@@ -2,6 +2,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+$body-size: 15px;
+
 $purple: #8A4D76;
 $pink: #FA7C91;
 $brown: #757763;
@@ -38,6 +40,7 @@ $modal-close-top: 8px;
 	max-height: calc(100vh - 100px) !important;
 }
 
+
 // BOX
 // $box-shadow: none;
 
@@ -45,6 +48,14 @@ $modal-close-top: 8px;
 	display: flex;
 	flex: 1;
 };
+
+.account-preview.box {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background: #EFF4F7;
+	height: 3.2em;
+	cursor: pointer;
+}
 
 @import "bulma/sass/utilities/_all.sass";
 @import "bulma/sass/base/_all.sass";
@@ -54,9 +65,17 @@ $modal-close-top: 8px;
 @import "bulma/sass/elements/container.sass";
 @import "bulma/sass/elements/title.sass";
 @import "bulma/sass/form/_all.sass";
-@import "bulma/sass/components/level.sass";
 @import "bulma/sass/layout/section.sass";
 @import "bulma/sass/layout/hero.sass";
+@import "bulma/sass/components/level.sass";
 @import "bulma/sass/components/modal.sass";
 @import "bulma/sass/components/dropdown.sass";
 @import "bulma/sass/grid/columns.sass";
+
+
+.loader {
+	@include loader;
+	border-width: 1px;
+	border-bottom-color: #94b1c3;
+	border-left-color: #94b1c3;
+}

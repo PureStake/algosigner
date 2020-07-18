@@ -8,6 +8,9 @@ import { sendMessage } from 'services/Messaging'
 
 import { StoreContext } from 'index'
 
+import background from 'assets/background.png';
+import walletLock from 'assets/wallet-lock.png';
+
 const SetPassword: FunctionalComponent = (props) => {
   const [pwd, setPwd] = useState<String>('');
   const [confirmPwd, setConfirmPwd] = useState<String>('');
@@ -28,7 +31,7 @@ const SetPassword: FunctionalComponent = (props) => {
     };
     sendMessage(JsonRpcMethod.CreateWallet, params, function(response) {
       if ('error' in response){
-        alert(response);
+        setError(response.error);
       } else {
         store.updateWallet(response);
         route('/wallet');
@@ -39,19 +42,16 @@ const SetPassword: FunctionalComponent = (props) => {
   return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div style="flex: 1">
-          <section class="hero is-primary has-text-centered">
-            <div class="hero-body py-5">
-              <h1 class="title">
-                Create a Memorable Password
-              </h1>
-            </div>
+          <section class="has-text-centered py-3"
+            style="background:url(${background}); background-size: cover;">
+            <img src=${walletLock} width="200" />
           </section>
 
-          <section class="section pt-4">
+          <section class="section pt-4 pb-0">
             <p>
               You don’t need a username, this wallet is tied to this browser. If you forget your password, your wallet will be lost. Make your password strong (at least 8 characters) and easy to remember.
             </p>
-            <p class="mt-4">
+            <p class="mt-2">
               We recommend using a sentence that is meaningful, for "example". “my_1st_game_was_GALAGA!”
             </p>
             <input

@@ -2,53 +2,47 @@ import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 
+import background from 'assets/background.png';
+import logo from 'assets/logo-inverted.svg';
 
 const Authenticate: FunctionalComponent = (props: any) => {
-  const { nextStep } = props;
+  const { nextStep, error, loading } = props;
   const [pwd, setPwd] = useState<String>('');
-  const [error, setError] = useState<String>('');
 
+  const disabled : boolean = pwd.length === 0;
+
+  const handleEnter = (e) => {
+    if (e.keyCode === 13 && !disabled) {
+      nextStep(pwd);
+    }
+  }
 
   return html`
-    <div class="main-view"
-      style="flex-direction: column; justify-content: space-between; background:url('assets/background.svg');">
-      <div style="flex: 1">
-        <section class="hero is-primary has-text-centered">
-          <div class="hero-body">
-            <h1 class="title">
-              Authenticate
-            </h1>
-          </div>
-        </section>
+    <div class="section has-text-white has-text-centered py-0">
+      <img src=${logo} width="120" class="mb-6" />
 
-        <section class="section pt-7">
-          <input
-            id="enterPassword"
-            class="input"
-            type="password"
-            placeholder="Password"
-            value=${pwd}
-            onInput=${(e)=>setPwd(e.target.value)}/>
+      <p>
+        AlgoSigner needs your password to continue
+      </p>
+      <input
+        class="input my-5"
+        id="enterPassword"
+        type="password"
+        placeholder="Password"
+        value=${pwd}
+        onKeyDown=${handleEnter}
+        onInput=${(e)=>setPwd(e.target.value)}/>
 
-          <p class="mt-5 has-text-centered is-size-7">
-            AlgoSigner does not store your password. If you’ve forgotten your password, you’ll need to create a new wallet and re-link your accounts.
-          </p>
-          ${error.length > 0 && html`
-            <p class="mt-4 has-text-danger has-text-centered">
-              ${error}
-            </p>
-          `}
-        </section>
-      </div>
+      <p class="mb-3 has-text-danger has-text-centered" style="height: 1.5em;">
+        ${error && error.length > 0 && error}
+      </p>
 
-      <div class="mx-5 mb-3">
-        <button class="button is-link is-fullwidth"
-          id="nextStep"
-          disabled=${pwd.length === 0}
-          onClick=${() => nextStep(pwd)} >
-          Continue
-        </button>
-      </div>
+      <button class="button is-link is-fullwidth mb-6 ${loading ? 'is-loading':''}"
+        id="nextStep"
+        disabled=${disabled}
+        onClick=${() => nextStep(pwd)} >
+        Continue
+      </button>
     </div>
   `
 }

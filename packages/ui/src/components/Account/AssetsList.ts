@@ -9,7 +9,7 @@ const AssetPreview: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="py-2 px-4"
-      style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+      style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
       onClick=${() => setShowAsset(asset)}>
       ${ asset.name && asset.name.length > 0 && html`
         ${ asset.name }

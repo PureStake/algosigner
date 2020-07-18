@@ -507,6 +507,7 @@ class InternalMethods {
     };
 
     try {
+      console.log('ahi');
       var recoveredAccount = algosdk.mnemonicToSecretKey(mnemonic);
       var newAccount = {
         address: recoveredAccount.addr,
@@ -515,7 +516,7 @@ class InternalMethods {
       };
     } catch (error) {
       sendResponse({
-        error: 'Invalid mnemonic'
+        error: error.message
       });
       return false;
     }
@@ -615,9 +616,14 @@ class InternalMethods {
       };
       let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
       algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then(resp => {
-        sendResponse(resp);
+        sendResponse({
+          txId: resp.txId
+        });
       }).catch(e => {
-        throw e;
+        console.log('error', e.message);
+        sendResponse({
+          error: e.message
+        });
       });
     });
     return true;
