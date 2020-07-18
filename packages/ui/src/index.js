@@ -75,7 +75,7 @@ const Root = (props) => {
 const App = () => {
     return html`
       <${StoreProvider}>
-        <div style="overflow: hidden; width: 450px; height: 550px; display: flex; flex-direction: column;">
+        <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
