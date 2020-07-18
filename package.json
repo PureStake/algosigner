@@ -8,7 +8,7 @@
     "PureStake"
   ],
   "scripts": {
-    "copy": "cp ./packages/extension/build/* dist/ && cp ./packages/ui/dist/* dist/ && cp ./packages/dapp/dist/* dist/",
+    "copy": "cp ./packages/extension/build/* dist/ && cp -r ./packages/ui/dist/* dist/ && cp ./packages/dapp/dist/* dist/",
     "prebuild": "rm -rf ./dist/*",
     "buildcommon": "cd ./packages/common  && npm run build && cd ../..",
     "buildcrypto": "cd ./packages/crypto && npm run build && cd ../..",
