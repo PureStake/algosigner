@@ -154,7 +154,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     }
 
     return html`
-      <div style="display: flex; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between;" id="div_${tx.id}">
         <div style="max-width: 60%; white-space: nowrap;">
           <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
             ${subtitle}

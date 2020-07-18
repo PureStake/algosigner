@@ -26,7 +26,7 @@ const AccountPreview: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box py-2 is-shadowless account-preview"
-      onClick=${() => route(`/${ledger}/${account.address}`)}>
+      onClick=${() => route(`/${ledger}/${account.address}`)} id="account_${ account.name}">
       <div style="display: flex; justify-content: space-between;">
         <div>
           <b>${ account.name }</b>

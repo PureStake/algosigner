@@ -45,10 +45,10 @@ const Account: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
-      <p class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
+      <p id="accountName" class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
         <a class="icon mr-2" onClick=${() => route('/wallet')}>${'\u003C'}</a>
         ${account.name} Account
-        <button class="button is-outlined is-small"
+        <button class="button is-outlined is-small" id="showDetails"
           style="float: right;" onClick=${()=>setShowDetails(true)}>
           ${'\u22EE'}
         </button>
@@ -58,7 +58,7 @@ const Account: FunctionalComponent = (props: any) => {
       </span>
     </div>
     <div class="px-4">
-      <${Link} class="button is-primary is-fullwidth py-2" href=${`${url}/send`}>
+      <${Link} id="sendAlgos" class="button is-primary is-fullwidth py-2" href=${`${url}/send`}>
         Send Algos
       </${Link}>
     </div>

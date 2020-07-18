@@ -41,9 +41,9 @@ const AccountDetails: FunctionalComponent = (props: any) => {
   if (!deleting)
     return html`
       <strong>Address</strong>
-      <p>${account.address}</p>
+      <p id="accountAddress">${account.address}</p>
 
-      <div style="text-align: center;">
+      <div style="text-align: center;" id="qrCode">
         <img src="${qrImg}"
           style="padding: 0.5em;
             margin: 0.5em;
@@ -54,6 +54,7 @@ const AccountDetails: FunctionalComponent = (props: any) => {
       </div>
 
       <button
+        id="deleteAccount"
         class="button is-danger is-fullwidth"
         onClick=${() => setDeleting(true)}>
         Delete account!
