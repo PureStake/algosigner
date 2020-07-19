@@ -9,10 +9,9 @@ const AccountKeys: FunctionalComponent = (props: any) => {
 
   let grid : Array<any[]> = [[], [], [], [], []];
   const blocks : Array<any> = account.mnemonic.split(" ").map((word, idx) => html`
-    <div class="mb-2" style="position: relative;">
+    <div class="mb-2" style="position: relative;" id="div_${idx+1}">
       <div class="has-text-link"
         style="position: absolute; text-align: right; left: -1.2em; top: -0.2em; width: 1em; font-size: 0.6em;">
-        ${idx+1}
       </div>
       ${word}
     </div>
@@ -28,7 +27,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
       <div class="px-3" style="flex: 1;">
         <div class="mb-4" style="background: #EFF4F7; padding: 1em">
           <b>Account address</b>
-          <p style="word-break: break-all;">${account.address}</p>
+          <p style="word-break: break-all;" id="accountAddress">${account.address}</p>
           <b>Mnemonic</b>
           <div class="columns is-mobile">
             ${grid.map(column => html`
@@ -40,7 +39,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
         <p>You will <b>not</b> be able to recover it.</p>
       </div>
       <div style="padding: 1em;">
-        <button class="button is-primary is-fullwidth"
+        <button class="button is-primary is-fullwidth" id="nextStep"
             onClick=${nextStep}>
           Continue
         </button>

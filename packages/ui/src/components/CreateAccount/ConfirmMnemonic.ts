@@ -38,7 +38,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
 
   let buttons : Array<any> = shuffledMnemonic.map(word => html`
     <button class="button is-small is-fullwidth mt-3"
-      name="${word}"
+      name="${word}" id="${word}"
       disabled=${testMnemonic.includes(word)}
       onClick=${addWord}>
       ${word}
@@ -57,13 +57,14 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
         title="Confirm your mnemonic" />
       <div class="px-3" style="flex: 1;">
         <p class="mb-4">Use the buttons below to confirm the mnemonic</p>
-        <textarea placeholder="Use the buttons below the enter the 25 word mnemonic to add this account to your wallet" class="textarea" value=${testMnemonic} readonly></textarea>
+        <textarea id="enterMnemonic" placeholder="Use the buttons below the enter the 25 word mnemonic to add this account to your wallet" class="textarea" value=${testMnemonic} readonly></textarea>
         <div class="columns is-mobile">
           ${grid.map(column => html`<div class="column is-one-fifth">${column}</div>`)}
         </div>
       </div>
       <div style="padding: 1em;">
         <button class="button is-primary is-fullwidth"
+          id="nextStep"
           disabled=${notEqual}
           onClick=${nextStep}>
           Continue
