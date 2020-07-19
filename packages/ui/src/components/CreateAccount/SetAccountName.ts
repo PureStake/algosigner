@@ -18,6 +18,7 @@ const SetAccountName: FunctionalComponent = (props: any) => {
         title="Create ${ledger} Account" />
       <div class="px-3" style="flex: 1;">
         <input
+          id="setAccountName"
           class="input mb-4"
           placeholder="Account name"
           value=${name}
@@ -29,6 +30,7 @@ const SetAccountName: FunctionalComponent = (props: any) => {
       </div>
       <div style="padding: 1em;">
         <button class="button is-primary is-fullwidth"
+          id="nextStep"
           disabled=${name.length === 0}
           onClick=${nextStep}>
           Continue

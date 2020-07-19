@@ -54,6 +54,7 @@ const Login: FunctionalComponent = (props) => {
 
         <section class="section pt-4">
           <input
+            id="enterPassword"
             class="input"
             type="password"
             placeholder="Password"
@@ -73,7 +74,7 @@ const Login: FunctionalComponent = (props) => {
       </div>
 
       <div class="mx-5 mb-3">
-        <button
+        <button id="login"
           class="button is-link is-fullwidth ${loading ? 'is-loading':''}"
           disabled=${disabled}
           onClick=${login}>

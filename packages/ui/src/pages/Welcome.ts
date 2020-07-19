@@ -41,7 +41,7 @@ const Welcome: FunctionalComponent = (props) => {
       </div>
 
       <div class="mx-5 mb-3">
-        <${Link} class="button is-link is-fullwidth" href="/set-password">
+        <${Link} id="setPassword" class="button is-link is-fullwidth" href="/set-password">
           Get started
         <//>
       </div>
