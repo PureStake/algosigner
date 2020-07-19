@@ -49,8 +49,9 @@ describe('Basic Happy Path Tests', () => {
     })
 
     test('Create Wallet with Password', async () => {
-        await extensionPage.click('.button')        
+        await extensionPage.click('#setPassword')        
         await expect(extensionPage.$eval('.mt-2', e => e.innerText)).resolves.toMatch('my_1st_game_was_GALAGA!')
+        await extensionPage.waitForSelector('#createAccount')
         await extensionPage.type('#setPassword',unsafePassword);
         await extensionPage.type('#confirmPassword',unsafePassword);
         await extensionPage.click('#createWallet')
