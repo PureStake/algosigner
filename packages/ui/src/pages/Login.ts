@@ -1,6 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
+import { useState, useContext, useRef, useEffect } from 'preact/hooks';
 import { Link, route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
@@ -15,6 +15,7 @@ const Login: FunctionalComponent = (props) => {
   const [pwd, setPwd] = useState<String>('');
   const [loading, setLoading] = useState<Boolean>(false);
   const [error, setError] = useState<String>('');
+  const inputRef = useRef<HTMLHeadingElement>(null);
   const store:any = useContext(StoreContext);
 
   const disabled = pwd.length === 0 || loading;
@@ -42,6 +43,12 @@ const Login: FunctionalComponent = (props) => {
     });
   };
 
+  useEffect(() => {
+    if (inputRef !== null) {
+       inputRef.current.focus();
+    }
+  }, [])
+
   return html`
     <div class="main-view"
       style="flex-direction: column; justify-content: space-between; background:url(${background}); background-size: cover; color: white;">
@@ -60,6 +67,7 @@ const Login: FunctionalComponent = (props) => {
             placeholder="Password"
             value=${pwd}
             onKeyDown=${handleEnter}
+            ref=${inputRef}
             onInput=${(e)=>setPwd(e.target.value)}/>
 
           <p class="mt-5 has-text-centered is-size-7">

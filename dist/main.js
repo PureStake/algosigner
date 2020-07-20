@@ -181,7 +181,7 @@ var n=function(c,e){return(n=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
           </button>
         </div>
       </div>
-    `};var tc=c=>{const[e,t]=Object(o.j)(""),[a,n]=Object(o.j)(!1),[r,i]=Object(o.j)(""),s=Object(o.b)(Oc),h=0===e.length||a,v=()=>{n(!0),i("");const c={passphrase:e};U(I.Login,c,(function(c){"error"in c?(n(!1),i("Wrong password!")):(s.updateWallet(c),b("/wallet"))}))};return l`
+    `};var tc=c=>{const[e,t]=Object(o.j)(""),[a,n]=Object(o.j)(!1),[r,i]=Object(o.j)(""),s=Object(o.i)(null),h=Object(o.b)(Oc),v=0===e.length||a,u=()=>{n(!0),i("");const c={passphrase:e};U(I.Login,c,(function(c){"error"in c?(n(!1),i("Wrong password!")):(h.updateWallet(c),b("/wallet"))}))};return Object(o.d)(()=>{null!==s&&s.current.focus()},[]),l`
     <div class="main-view"
       style="flex-direction: column; justify-content: space-between; background:url(${Y}); background-size: cover; color: white;">
       <div style="flex: 1">
@@ -198,7 +198,8 @@ var n=function(c,e){return(n=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
             type="password"
             placeholder="Password"
             value=${e}
-            onKeyDown=${c=>{13!==c.keyCode||h||v()}}
+            onKeyDown=${c=>{13!==c.keyCode||v||u()}}
+            ref=${s}
             onInput=${c=>t(c.target.value)}/>
 
           <p class="mt-5 has-text-centered is-size-7">
@@ -215,8 +216,8 @@ var n=function(c,e){return(n=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
       <div class="mx-5 mb-3">
         <button id="login"
           class="button is-link is-fullwidth ${a?"is-loading":""}"
-          disabled=${h}
-          onClick=${v}>
+          disabled=${v}
+          onClick=${u}>
           Login
         </button>
       </div>
