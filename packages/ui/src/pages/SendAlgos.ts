@@ -48,7 +48,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       passphrase: pwd
     };
     sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
-      console.log('SENT', response)
       if ('error' in response) { 
         setLoading(false);
         switch (response.error) {
@@ -119,16 +118,18 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       </div>
     </div>
 
-    <div class=${`modal ${askAuth ? 'is-active' : ''}`}>
-      <div class="modal-background"></div>
-      <div class="modal-content" style="padding: 0 15px;">
-        <${Authenticate}
-          error=${authError}
-          loading=${loading}
-          nextStep=${sendTx} />
+    ${askAuth && html`
+      <div class="modal is-active"}>
+        <div class="modal-background"></div>
+        <div class="modal-content" style="padding: 0 15px;">
+          <${Authenticate}
+            error=${authError}
+            loading=${loading}
+            nextStep=${sendTx} />
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setAskAuth(false)} />
       </div>
-      <button class="modal-close is-large" aria-label="close" onClick=${()=>setAskAuth(false)} />
-    </div>
+    `}
 
     ${txId.length > 0 && html`
       <div class="modal is-active">
@@ -140,7 +141,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <button
               id="backToWallet"
               class="button is-success is-outlined is-fullwidth mt-4"
-              onClick=${() => route('/wallet')}>
+              onClick=${() => route(`/${matches.ledger}/${matches.address}`)}>
               Back to wallet!
             </button>
           </div>

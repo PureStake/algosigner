@@ -56,7 +56,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
             ${results.creator.slice(0, 8)}.....${results.creator.slice(-8)}
           </span>
         </p>
-        <div class="has-text-centered">
+        <div class="has-text-centered mt-3">
           <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${asset['asset-id']}`}
             target="_blank"
             rel="noopener noreferrer">
