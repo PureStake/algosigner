@@ -22,6 +22,9 @@ import Wallet from 'pages/Wallet'
 import Account from 'pages/Account'
 import SendAlgos from 'pages/SendAlgos'
 
+import '@fortawesome/fontawesome-free/js/fontawesome'
+import '@fortawesome/fontawesome-free/js/solid'
+
 
 export const StoreContext = createContext();
 
@@ -76,7 +79,7 @@ const StoreProvider = ({children}) => {
 };
 
 
-require('./mystyles.scss');
+require('./styles.scss');
 
 const mountNode = document.getElementById('root');
 

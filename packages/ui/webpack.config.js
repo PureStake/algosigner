@@ -53,7 +53,7 @@ module.exports = {
       template: './index.html'
     }),
     new MiniCssExtractPlugin({
-      filename: 'mystyles.css'
+      filename: 'styles.css'
     }),
   ],
   resolve: {

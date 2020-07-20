@@ -20,7 +20,6 @@ const Wallet: FunctionalComponent = (props) => {
 
   return useObserver(() => {
     const { ledger } = store;
-    console.log('LEDGER', ledger)
 
     return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
@@ -30,7 +29,15 @@ const Wallet: FunctionalComponent = (props) => {
           `)}
         </div>
 
-        <div style="padding: 0.5em 0.75em;">
+        <div class="has-text-centered" style="padding: 0.5em 0.75em;">
+          ${ store[ledger].length === 0 && html`
+            <div class="mb-4" style="color: #8A9FA8;">
+              <p class="has-text-weight-bold is-size-4 mb-4" style="letter-spacing: 1px;">
+                Create or import<br />an account
+              </p>
+              <i style="color: #C4C4C4;" class="fas fa-4x fa-arrow-down"></i>
+            </div>
+          `}
           <button
             id="addAccount"
             class="button is-link is-fullwidth"
