@@ -71,7 +71,7 @@ const Account: FunctionalComponent = (props: any) => {
     <${TransactionsList} address=${address} ledger=${ledger}/>
 
     <div class=${`modal ${showDetails ? 'is-active' : ''}`}>
-      <div class="modal-background"></div>
+      <div class="modal-background" onClick=${()=>setShowDetails(false)}></div>
       <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
         <div class="box" style="overflow-wrap: break-word;">
           <${AccountDetails} account=${account} ledger=${ledger} />

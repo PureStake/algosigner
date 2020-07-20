@@ -5,6 +5,8 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
 
+import ToClipboard from 'components/ToClipboard'
+
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
@@ -30,11 +32,30 @@ const AssetDetails: FunctionalComponent = (props: any) => {
   return html`
     <div class="box" style="overflow-wrap: break-word;">
       ${ results && html`
-        <p><strong>Asset name:</strong> ${results.name}</p>
-        <p><strong>Balance:</strong> ${asset.amount} ${results['unit-name']}</p>
-        <hr />
-        <p><strong>Creator:</strong> ${results.creator}</p>
-        <p><strong>Total units:</strong> ${results.total} ${results['unit-name']}</p>
+        <div class="has-text-centered mb-2">
+          <b>${results.name}</b>
+          <br />
+          <span class="has-text-grey-light">${asset['asset-id']}</span>
+        </div>
+        <p>
+          <b>Your balance</b>
+          <span class="is-pulled-right">
+            ${asset.amount} <b>${results['unit-name']}</b>
+          </span>
+        </p>
+        <hr class="my-2" />
+        <p>
+          <b>Total units</b>
+          <span class="is-pulled-right">
+            ${results.total} <b>${results['unit-name']}</b>
+          </span>
+        </p>
+        <p>
+          <b>Creator</b> (<${ToClipboard} data=${results.creator} />)
+          <span class="is-pulled-right">
+            ${results.creator.slice(0, 8)}.....${results.creator.slice(-8)}
+          </span>
+        </p>
         <div class="has-text-centered">
           <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${asset['asset-id']}`}
             target="_blank"
