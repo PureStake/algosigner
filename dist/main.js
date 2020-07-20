@@ -35,7 +35,7 @@ var n=function(c,e){return(n=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
           style="border: none;">
           <span>${e.ledger}</span>
           <span class="icon is-small">
-            <i class="fas fa-angle-down" aria-hidden="true"></i>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
           </span>
         </button>
       </div>

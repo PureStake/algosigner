@@ -36,7 +36,7 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
           style="border: none;">
           <span>${store.ledger}</span>
           <span class="icon is-small">
-            <i class="fas fa-angle-down" aria-hidden="true"></i>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
           </span>
         </button>
       </div>
