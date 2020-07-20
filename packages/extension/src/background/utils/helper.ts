@@ -1,6 +1,8 @@
 import {Ledger} from '../messaging/types';
 
 export default class Helper {
+    private _session: any;
+
     // Ledger helpers
     public static ledger(): {[key: string]: any} {
         return {
@@ -23,5 +25,13 @@ export default class Helper {
                 return s[0].toUpperCase() + s.substr(1);
             }
         }
+    }
+
+    public set session(v : any) {
+        this._session = v;
+    }
+
+    public get session() : any {
+        return this._session;
     }
 }

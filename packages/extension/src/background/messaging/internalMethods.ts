@@ -2,9 +2,11 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { LockParameters } from  "@algosigner/crypto/dist/secureStorageContext";
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
+import Helper from '../utils/helper';
 import encryptionWrap from "../encryptionWrap";
 const algosdk = require("algosdk");
 
+const helper = new Helper;
 
 export class InternalMethods {
     private static getAlgod(ledger: Ledger) {
@@ -39,6 +41,10 @@ export class InternalMethods {
     }
 
 
+    public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
+        return helper.session;
+    }
+
     public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
         const newWallet = {
             TestNet: [],
@@ -61,10 +67,12 @@ export class InternalMethods {
             passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
         };
         encryptionWrap.unlock(unlockParam, (response: any) => {
-            if ('error' in response)
+            if ('error' in response){
                 sendResponse(response);
-            else
-                sendResponse(this.safeWallet(response));
+            } else {
+                helper.session = this.safeWallet(response); 
+                sendResponse(helper.session);
+            }
 
         });
         return true;
@@ -98,10 +106,12 @@ export class InternalMethods {
                     encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
                 },
                 (isSuccessful: any) => {
-                    if (isSuccessful)
-                        sendResponse(this.safeWallet(unlockedValue));
-                    else 
+                    if (isSuccessful) {
+                        helper.session = this.safeWallet(unlockedValue); 
+                        sendResponse(helper.session);
+                    } else {
                         sendResponse({error: 'Lock failed'});
+                    }
                 });
             }
         });
@@ -130,10 +140,12 @@ export class InternalMethods {
                     encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
                 },
                 (isSuccessful: any) => {
-                    if (isSuccessful)
-                        sendResponse(this.safeWallet(unlockedValue));
-                    else 
+                    if (isSuccessful) {
+                        helper.session = this.safeWallet(unlockedValue); 
+                        sendResponse(helper.session);
+                    } else {
                         sendResponse({error: 'Lock failed'});
+                    }
                 });
             }
         });
@@ -169,10 +181,12 @@ export class InternalMethods {
                     encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
                 },
                 (isSuccessful: any) => {
-                    if(isSuccessful)
-                        sendResponse(this.safeWallet(unlockedValue));
-                    else
+                    if(isSuccessful) {
+                        helper.session = this.safeWallet(unlockedValue); 
+                        sendResponse(helper.session);
+                    } else {
                         sendResponse({error: 'Lock failed'});
+                    }
                 });
             }
         });

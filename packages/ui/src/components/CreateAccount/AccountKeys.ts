@@ -3,6 +3,7 @@ import { html } from 'htm/preact';
 import { useState } from 'preact/hooks';
 
 import HeaderView from 'components/HeaderView'
+import ToClipboard from 'components/ToClipboard'
 
 const AccountKeys: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
@@ -26,9 +27,15 @@ const AccountKeys: FunctionalComponent = (props: any) => {
       <${HeaderView} action=${prevStep} title="Save your keys!" />
       <div class="px-3" style="flex: 1;">
         <div class="mb-4" style="background: #EFF4F7; padding: 1em">
-          <b>Account address</b>
+          <div>
+            <b>Account address</b>
+            <${ToClipboard} class="is-pulled-right" data=${account.address} />
+          </div>
           <p style="word-break: break-all;" id="accountAddress">${account.address}</p>
-          <b>Mnemonic</b>
+          <div style="display: flow-root;">
+            <b>Mnemonic </b>
+            <${ToClipboard} class="is-pulled-right" data=${account.mnemonic} />
+          </div>
           <div class="columns is-mobile">
             ${grid.map(column => html`
               <div class="column is-one-fifth">${column}</div>

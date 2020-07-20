@@ -16,6 +16,7 @@
     "buildextension": "cd ./packages/extension && npm run build && cd ../..",
     "builddapp": "cd ./packages/dapp && npm install --loglevel=error && npm run build && npm run bundle && cd ../..",
     "buildui": "cd ./packages/ui && npm install --loglevel=error && npm run build && cd ../..",
+    "buildcopyui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
     "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",    
     "install": "cd ./packages/common && npm install && cd ../.. && cd ./packages/crypto && npm install && cd ../.. && cd ./packages/storage && npm install && cd ../.. && cd ./packages/extension && npm install && cd ../.. ",
     "test": "jest"
