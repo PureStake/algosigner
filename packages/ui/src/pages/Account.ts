@@ -48,8 +48,9 @@ const Account: FunctionalComponent = (props: any) => {
       <p id="accountName" class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
         <a class="icon mr-2" onClick=${() => route('/wallet')}>${'\u003C'}</a>
         ${account.name} Account
-        <button class="button is-outlined is-small" id="showDetails"
-          style="float: right;" onClick=${()=>setShowDetails(true)}>
+        <button id="showDetails"
+          class="button is-outlined is-small is-primary is-pulled-right"
+          onClick=${()=>setShowDetails(true)}>
           ${'\u22EE'}
         </button>
       </p>
