@@ -11,9 +11,11 @@ import { StoreContext } from 'index'
 import Authenticate from 'components/Authenticate'
 
 const AccountDetails: FunctionalComponent = (props: any) => {
+  const { account, ledger } = props;
   const store:any = useContext(StoreContext);
   const [deleting, setDeleting] = useState<boolean>(false);
-  const { account, ledger } = props;
+  const [loading, setLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string>('');
 
   const deleteAccount = (pwd: string) => {
     const params = {
@@ -21,9 +23,20 @@ const AccountDetails: FunctionalComponent = (props: any) => {
       address: account.address,
       passphrase: pwd
     };
+    setLoading(true);
+    setAuthError('');
     sendMessage(JsonRpcMethod.DeleteAccount, params, function(response) {
       if ('error' in response) { 
-          alert(response);
+        setLoading(false);
+        switch (response.error) {
+          case "Login Failed":
+            setAuthError('Wrong passphrase');
+            break;
+          default:
+            setDeleting(false);
+            alert(`There was an unkown error: ${response.error}`);
+            break;
+        }
       } else {
         store.updateWallet(response);
         route('/wallet');
@@ -40,30 +53,33 @@ const AccountDetails: FunctionalComponent = (props: any) => {
 
   if (!deleting)
     return html`
-      <strong>Address</strong>
-      <p id="accountAddress">${account.address}</p>
+      <div class="box" style="overflow-wrap: break-word;">
+        <strong>Address</strong>
+        <p id="accountAddress">${account.address}</p>
 
-      <div style="text-align: center;" id="qrCode">
-        <img src="${qrImg}"
-          style="padding: 0.5em;
-            margin: 0.5em;
-            border: 1px solid #9095AF;
-            border-radius: 10px;"
-          width="250"
-          height="250"/>
+        <div style="text-align: center;" id="qrCode">
+          <img src="${qrImg}"
+            style="padding: 0.5em;
+              margin: 0.5em;
+              border: 1px solid #9095AF;
+              border-radius: 10px;"
+            width="250"
+            height="250"/>
+        </div>
+
+        <button
+          id="deleteAccount"
+          class="button is-danger is-fullwidth"
+          onClick=${() => setDeleting(true)}>
+          Delete account!
+        </button>
       </div>
-
-      <button
-        id="deleteAccount"
-        class="button is-danger is-fullwidth"
-        onClick=${() => setDeleting(true)}>
-        Delete account!
-      </button>
-
     `
   else
     return html`
       <${Authenticate}
+        error=${authError}
+        loading=${loading}
         nextStep=${deleteAccount} />
     `
 };
