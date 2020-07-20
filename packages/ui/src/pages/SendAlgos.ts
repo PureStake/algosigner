@@ -119,7 +119,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     </div>
 
     ${askAuth && html`
-      <div class="modal is-active"}>
+      <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content" style="padding: 0 15px;">
           <${Authenticate}

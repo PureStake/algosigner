@@ -814,7 +814,7 @@ var n=function(c,e){return(n=Object.setPrototypeOf||{__proto__:[]}instanceof Arr
     </div>
 
     ${s&&l`
-      <div class="modal is-active"}>
+      <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content" style="padding: 0 15px;">
           <${ic}
