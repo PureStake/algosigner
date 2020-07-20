@@ -3,8 +3,11 @@ import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { autorun } from 'mobx';
 import { useLocalStore, useObserver } from 'mobx-react-lite';
-import { Router, Route } from 'preact-router';
+import { Router, Route, route } from 'preact-router';
 import { createHashHistory } from 'history';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import Header from 'components/Header'
 import Footer from 'components/Footer'
@@ -23,7 +26,7 @@ import SendAlgos from 'pages/SendAlgos'
 export const StoreContext = createContext();
 
 const StoreProvider = ({children}) => {
-  const existingStore = localStorage.getItem('wallet');
+  const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
     addAccount: (ledger, address, name) => {
@@ -49,12 +52,23 @@ const StoreProvider = ({children}) => {
     }
   }));
 
-  if (existingStore) {
-    Object.assign(store, JSON.parse(existingStore)); 
-  }
   autorun(() => {
-    localStorage.setItem('wallet', JSON.stringify(store))
+    sessionStorage.setItem('wallet', JSON.stringify(store))
   })
+
+  // Try to retrieve session from background
+  sendMessage(JsonRpcMethod.GetSession, {}, function(response) {
+    // Object.assign(store, JSON.parse(existingStore));
+    console.log('GETSESSION', response)
+    if (response && response.exist){
+      if ('session' in response) {
+        store.updateWallet(response.session);
+        route('/wallet');
+      } else {
+        route('/login');
+      }
+    }
+  });
 
   return html`
     <${StoreContext.Provider} value=${store}>${children}</${StoreContext.Provider}>

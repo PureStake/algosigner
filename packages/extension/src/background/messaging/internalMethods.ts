@@ -42,7 +42,18 @@ export class InternalMethods {
 
 
     public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
-        return helper.session;
+        encryptionWrap.checkStorage((exist: boolean) => {
+            if (!exist) {
+                sendResponse({exist: false});
+            } else {
+                if (helper.session)
+                    sendResponse({exist: true, session: helper.session});
+                else
+                    sendResponse({exist: true});
+            }
+
+        });
+        return true;
     }
 
     public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
@@ -54,10 +65,12 @@ export class InternalMethods {
             passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
             encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(newWallet))
         }, (isSuccessful: any) => {
-            if (isSuccessful)
-                sendResponse(newWallet);
-            else
+            if (isSuccessful) {
+                helper.session = this.safeWallet(newWallet); 
+                sendResponse(helper.session);
+            } else {
                 sendResponse({error: 'Lock failed'});
+            }
         });
         return true;
     }

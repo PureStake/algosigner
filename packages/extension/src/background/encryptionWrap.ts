@@ -132,6 +132,22 @@ export class EncryptionWrap {
     }
     
   }
+
+  public async checkStorage(callback: Function): Promise<void> {
+    try {
+      // Retrieve the object from the storage location, then attempt to decrypt the value.
+      this._extensionStorage.getStorage(this._walletName, async (result: { account: string, params: { salt: string, iv: string, iterations: number } }) => {
+        if(!result)
+          callback(false);
+        else
+          callback(true);
+      });    
+    }
+    catch(e) {
+      this.errorLog(e);         
+    }
+    
+  }
 }
 const encryptionWrap = new EncryptionWrap();
 export default encryptionWrap;

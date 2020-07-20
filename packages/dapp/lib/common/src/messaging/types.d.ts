@@ -12,6 +12,7 @@ export declare enum JsonRpcMethod {
     SaveAccount = "save-account",
     ImportAccount = "import-account",
     DeleteAccount = "delete-account",
+    GetSession = "get-session",
     Login = "login",
     AccountDetails = "account-details",
     Transactions = "transactions",

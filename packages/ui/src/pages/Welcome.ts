@@ -1,21 +1,13 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
-import { Link, route } from 'preact-router';
-
-import { StoreContext } from 'index'
+import { Link } from 'preact-router';
 
 import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
 import logotype from 'assets/logotype-inverted.svg';
 
 const Welcome: FunctionalComponent = (props) => {
-  const store:any = useContext(StoreContext);
 
-  // If there is a wallet then redirect to login.
-  if (store.MainNet !== undefined) {
-    route('/login');
-  }
   return html`
     <div class="main-view has-text-white"
       style="flex-direction: column; justify-content: space-between; background:url(${background}); background-size: cover;">

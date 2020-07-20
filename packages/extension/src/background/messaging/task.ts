@@ -124,6 +124,9 @@ export class Task {
                 [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.Login](request, sendResponse)
                 },
+                [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse)
+                },
                 [JsonRpcMethod.SaveAccount]:  (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.SaveAccount](request, sendResponse)
                 },
