@@ -1,7 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import algosdk from 'algosdk';
 import { useObserver } from 'mobx-react-lite';
 import { Link } from 'preact-router';
 
@@ -21,7 +20,6 @@ const Wallet: FunctionalComponent = (props) => {
 
   return useObserver(() => {
     const { ledger } = store;
-    console.log('LEDGER', ledger)
 
     return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
@@ -31,11 +29,20 @@ const Wallet: FunctionalComponent = (props) => {
           `)}
         </div>
 
-        <div style="padding: 0.5em 0.75em;">
+        <div class="has-text-centered" style="padding: 0.5em 0.75em;">
+          ${ store[ledger].length === 0 && html`
+            <div class="mb-4" style="color: #8A9FA8;">
+              <p class="has-text-weight-bold is-size-4 mb-4" style="letter-spacing: 1px;">
+                Create or import<br />an account
+              </p>
+              <i style="color: #C4C4C4;" class="fas fa-4x fa-arrow-down"></i>
+            </div>
+          `}
           <button
+            id="addAccount"
             class="button is-link is-fullwidth"
             onClick=${() => {setShowAddModal(true)}}>
-            Add an account
+            Add account
           </button>
         </div>
       </div>
@@ -45,12 +52,12 @@ const Wallet: FunctionalComponent = (props) => {
         <div class="modal-content" style="padding: 0 15px;">
           <div class="box">
             <div>
-              <${Link} class="button is-fullwidth" href=${`/${ledger}/create-account`}>
+              <${Link} class="button is-fullwidth" id="createAccount" href=${`/${ledger}/create-account`}>
                 Create new account
               </${Link}>
             </div>
             <div>
-              <${Link} class="button is-fullwidth mt-5" href=${`/${ledger}/import-account`}>
+              <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${ledger}/import-account`}>
                 Import existing account
               </${Link}>
             </div>

@@ -10,7 +10,7 @@ There are multiple packages in the project that combine to build the overall ext
 	* packages->						// Folder for scripts compents that support the extension
 	    * common->                      // Contains core elements used in other packages
         * crypto->                      // Wrapper for accessing the local encrypted account information
-        * dapp->                        // Sample project to demonstrate interaction with the extension
+        * dapp->                        // AlgoSigner library that gets injected in dApps
         * extension->                   // Extension definition files
         * ui->                          // Front end application for interaction within the extension interface
 	* node_modues->						// Installed packages. Is not present unless you are re-building the package contents

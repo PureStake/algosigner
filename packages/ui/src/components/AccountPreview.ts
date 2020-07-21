@@ -2,18 +2,22 @@ import { html } from 'htm/preact';
 import { FunctionalComponent } from "preact";
 import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { algodClient } from 'services/algodClient'
+import { sendMessage } from 'services/Messaging';
 
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
   const [results, setResults] = useState<any>(null);
 
   const fetchApi = async () => {
-    console.log(algodClient)
-    let res = await algodClient[ledger].accountInformation(account.address).do();
-    if (res)
-      setResults(res);
+    const params = {
+      ledger: ledger,
+      address: account.address,
+    };
+    sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
+      setResults(response);
+    });
   }
 
   useEffect(() => {
@@ -21,9 +25,8 @@ const AccountPreview: FunctionalComponent = (props: any) => {
   }, []);
 
   return html`
-    <div class="box py-2"
-      style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; box-shadow: none; height: 55px;"
-      onClick=${() => route(`/${ledger}/${account.address}`)}>
+    <div class="box py-2 is-shadowless account-preview"
+      onClick=${() => route(`/${ledger}/${account.address}`)} id="account_${ account.name}">
       <div style="display: flex; justify-content: space-between;">
         <div>
           <b>${ account.name }</b>
@@ -32,6 +35,9 @@ const AccountPreview: FunctionalComponent = (props: any) => {
           ${ results && html`
             <b>${results.assets.length}</b> ASAs<br />
             <b>${results.amount}</b> MAlgos
+          `}
+          ${ results===null && html`
+            <span class="loader"></span>
           `}
         </div>
       </div>

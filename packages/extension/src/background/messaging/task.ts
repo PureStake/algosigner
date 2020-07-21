@@ -1,4 +1,5 @@
 import {MessageApi} from './api';
+import {InternalMethods} from './internalMethods';
 
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
@@ -36,11 +37,13 @@ export class Task {
             'public': {
                 // authorization
                 [JsonRpcMethod.Authorization]: (d: any) => {
+                    // If access was already granted, authorize connection.
                     if(Task.isAuthorized(d.origin)){
+                        d.response = {};
                         MessageApi.send(d);
                     } else {
                         chrome.windows.create({
-                            url: chrome.runtime.getURL("authorization.html"),
+                            url: chrome.runtime.getURL("index.html#/authorize"),
                             type: "popup",
                             focused: true,
                             width:480,
@@ -52,6 +55,7 @@ export class Task {
                                     message:d
                                 };
                                 setTimeout(function(){
+                                    console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     chrome.runtime.sendMessage(d);
                                 },100);
                             }
@@ -78,8 +82,10 @@ export class Task {
                     Task.request = {};
 
                     setTimeout(() => {
+                        // Response needed
+                        message.response = {};
                         MessageApi.send(message);
-                    },100);
+                    }, 1000);
                 },
                 // authorization-deny
                 [JsonRpcMethod.AuthorizationDeny]: () => {
@@ -93,6 +99,54 @@ export class Task {
                     setTimeout(() => {
                         MessageApi.send(message);
                     },100);
+                },
+                // algod
+                [JsonRpcMethod.Algod]: () => {
+                    let auth = Task.request;
+                    let message = auth.message;
+
+                    auth.message.error = RequestErrors.NotAuthorized;
+                    chrome.windows.remove(auth.window_id);
+                    Task.request = {};
+
+                    setTimeout(() => {
+                        MessageApi.send(message);
+                    },100);
+                }
+            },
+            'extension' : {
+                [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse)
+                },
+                [JsonRpcMethod.CreateAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.CreateAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.Login](request, sendResponse)
+                },
+                [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse)
+                },
+                [JsonRpcMethod.SaveAccount]:  (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.SaveAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.ImportAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.ImportAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.DeleteAccount]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.DeleteAccount](request, sendResponse)
+                },
+                [JsonRpcMethod.Transactions]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.Transactions](request, sendResponse)
+                },
+                [JsonRpcMethod.AccountDetails]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AccountDetails](request, sendResponse)
+                },
+                [JsonRpcMethod.AssetDetails]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AssetDetails](request, sendResponse)
+                },
+                [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse)
                 }
             }
         }

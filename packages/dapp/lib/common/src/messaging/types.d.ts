@@ -5,7 +5,19 @@ export declare enum JsonRpcMethod {
     AuthorizationAllow = "authorization-allow",
     AuthorizationDeny = "authorization-deny",
     SignTransaction = "sign-transaction",
-    Algod = "algod"
+    Algod = "algod",
+    Indexer = "indexer",
+    CreateWallet = "create-wallet",
+    CreateAccount = "create-account",
+    SaveAccount = "save-account",
+    ImportAccount = "import-account",
+    DeleteAccount = "delete-account",
+    GetSession = "get-session",
+    Login = "login",
+    AccountDetails = "account-details",
+    Transactions = "transactions",
+    AssetDetails = "asset-details",
+    SignSendTransaction = "sign-send-transaction"
 }
 export declare enum SupportedAlgod {
     Status = "status"
@@ -22,7 +34,8 @@ export declare type JsonRpcBody = {
 export declare enum MessageSource {
     Extension = "extension",
     DApp = "dapp",
-    Router = "router"
+    Router = "router",
+    UI = "ui"
 }
 export declare type MessageBody = {
     readonly source: MessageSource;

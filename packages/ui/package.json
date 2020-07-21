@@ -8,7 +8,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "algosdk": "^1.6.2",
+    "@fortawesome/fontawesome-free": "^5.14.0",
     "history": "^5.0.0",
     "htm": "^3.0.4",
     "mobx": "^5.15.4",
@@ -24,6 +24,7 @@
     "css-loader": "^3.6.0",
     "enzyme": "^3.11.0",
     "enzyme-adapter-preact-pure": "^2.2.0",
+    "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.2.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.0.1",

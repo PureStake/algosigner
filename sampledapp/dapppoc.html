@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        body {
+            padding: 40px;
+            background-color: #e9e9e9;
+        }
+        .buttons {
+            width:100%;
+            margin-bottom: 10px;
+        }
+        .buttons .btn {
+            display: inline;
+        }
+        .btn {
+            padding: 5px 10px;
+            background-color: #FFF;
+            border: 1px solid #999;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        .log {
+            font-size: 18px;width:98%;padding:1%;
+        }
+    </style>
+<body>
+    <div class="buttons">
+            <button id="poc_status" class="btn" disabled>AlgoSigner.query('status')</button>
+            <button id="poc_send" class="btn" disabled>AlgoSigner.sign()</button>
+            <button id="poc_connect" class="btn">AlgoSigner.connect()</button>
+    </div>
+    <textarea id="poc_log" class="log" rows="38"></textarea>
+    <script>
+        (() => {
+            let resolved_info = "[V] Promised resolved:\n";
+            let catched_info = "[X] Promised caught:\n";
+
+            function send(obj){
+
+                AlgoSigner.sign(obj)
+                .then((d) => {
+                    document.getElementById("poc_log").value += resolved_info;
+                    document.getElementById("poc_log").value += JSON.stringify(d) + "\n\n";
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("poc_log").value += catched_info;
+                    document.getElementById("poc_log").value += JSON.stringify(e) + "\n\n";
+                });
+            }
+
+            function query(obj){
+                AlgoSigner.query(obj)
+                .then((d) => {
+                    document.getElementById("poc_log").value += resolved_info;
+                    document.getElementById("poc_log").value += JSON.stringify(d) + "\n\n";
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("poc_log").value += catched_info;
+                    document.getElementById("poc_log").value += JSON.stringify(e) + "\n\n";
+                });
+            }
+
+            function connectListener(ev) {
+                connect();
+            }
+
+            function connect() {
+
+                AlgoSigner.connect()
+                .then((d) => {
+
+                    AlgoSigner.subscribe("heartbeat",() => {
+                        document.getElementById("poc_log").value += "[V] Heartbeat subscrition Event received.\n\n";
+                    });
+
+                    let el = document.getElementById('poc_send');
+                    el.disabled = false;
+                    el.addEventListener("click",() => {
+                        send({amount: 100,to: "6BJJ3ESASBS2UVHSEBYD6WD2HDRLYUIRPGJK2JJYZ6CMW6L3DHZYHYHWJU"});
+                    }, false);
+
+                    el = document.getElementById('poc_status');
+                    el.disabled = false;
+                    el.addEventListener("click",() => {
+                        query('status',{});
+                    }, false);
+
+                    el = document.getElementById('poc_connect');
+                    el.disabled = true;
+                })
+                .catch((e) => {
+                    let el = document.getElementById('poc_connect');
+                    el.disabled = false;
+                    el.removeEventListener("click",connectListener);
+                    el.addEventListener("click",connectListener, false);
+                    console.error(e);
+                    document.getElementById("poc_log").value += catched_info;
+                    document.getElementById("poc_log").value += JSON.stringify(e) + "\n\n";
+                });
+            }
+
+            // setTimeout(() => {
+            //     connect();
+            // },100);
+            let el = document.getElementById('poc_connect');
+            el.addEventListener("click", connect, false);
+        })();
+    </script>
+</body>
+</html>

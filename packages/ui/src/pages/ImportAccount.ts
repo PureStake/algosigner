@@ -1,10 +1,14 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import { mnemonicToSecretKey } from 'algosdk';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { StoreContext } from '../index'
+import HeaderView from 'components/HeaderView'
+import Authenticate from 'components/Authenticate'
+
+import { sendMessage } from 'services/Messaging'
 
 interface Account {
   address: string;
@@ -17,20 +21,42 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const { ledger } = props;
   const [mnemonic, setMnemonic] = useState<string>('');
   const [name, setName] = useState<string>('');
+  const [askAuth, setAskAuth] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
-  const importAccount = () => {
-    try {
-      var recoveredAccount = mnemonicToSecretKey(mnemonic); 
-      const newAccount: Account = {
-        address: recoveredAccount.addr,
-        mnemonic: mnemonic,
-        name: name
-      };
-      store.addAccount(ledger, newAccount);
-      route('/');
-    } catch (error) {
-      alert(error);
-    }
+  const disabled = false;
+  // const disabled = name.length === 0 || mnemonic.split(" ").length < 25;
+
+  const importAccount = (pwd: string) => {
+    const params = {
+      passphrase: pwd,
+      mnemonic: mnemonic,
+      name: name,
+      ledger: ledger
+    };
+    setLoading(true);
+    setAuthError('');
+    setError('');
+
+    sendMessage(JsonRpcMethod.ImportAccount, params, function(response) {
+      if ('error' in response) { 
+        setLoading(false);
+        switch (response.error) {
+          case "Login Failed":
+            setAuthError('Wrong passphrase');
+            break;
+          default:
+            setError(response.error);
+            setAskAuth(false);
+            break;
+        }
+      } else {
+        store.updateWallet(response);
+        route('/wallet');
+      }
+    });
   }
 
   const handleInput = e => {
@@ -38,38 +64,55 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   }
 
   return html`
-    <div class="panel" style="overflow: auto; width: 650px; height: 550px;">
-      <p class="panel-heading">
-        <a style="margin-right: 1em;" onClick=${() => window.history.back()}>
-          ${'\u2190'}
-        </a>
-        Import a ${ledger} account
-      </p>
-      <div class="panel-block">
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+      <${HeaderView} action="${() => route('/wallet')}"
+        title="Import ${ledger} account" />
+      <div class="px-3" style="flex: 1;">
         <input
+          id="accountName"
           class="input"
           placeholder="Account name"
           value=${name}
           onInput=${(e)=>setName(e.target.value)}/>
-      </div>
-      <div class="panel-block">
-        <p>Insert the 25 word mnemonic of the acccount you want to import:</p>
-      </div>
-      <div class="panel-block">
+
+        <p class="my-3">
+          Insert the 25 word mnemonic of the acccount you want to import
+        </p>
+
         <textarea
+          id="enterMnemonic"
           class="textarea"
           placeholder="apples butter king monkey nuts ..."
           rows="5"
           onInput=${handleInput}
           value=${mnemonic}/>
+
+        <p class="mt-3 has-text-danger" style="height: 1.5em;">
+          ${error!==undefined && error.length > 0 && error}
+        </p>
       </div>
-      <div class="panel-block">
-        <button class="button is-link is-outlined is-fullwidth"
-          onClick=${importAccount}>
-          Import!
+      <div style="padding: 1em;">
+        <button class="button is-primary is-fullwidth"
+          id="nextStep"
+          disabled=${disabled}
+          onClick=${() => {setAskAuth(true)}}>
+          Continue
         </button>
       </div>
     </div>
+
+    ${ askAuth && html`
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-content" style="padding: 0 15px;">
+          <${Authenticate}
+            error=${authError}
+            loading=${loading}
+            nextStep=${importAccount} />
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setAskAuth(false)} />
+      </div>
+    `}
   `
 };
 

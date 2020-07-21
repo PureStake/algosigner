@@ -3,12 +3,16 @@ import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { autorun } from 'mobx';
 import { useLocalStore, useObserver } from 'mobx-react-lite';
-import { Router, Route } from 'preact-router';
+import { Router, Route, route } from 'preact-router';
 import { createHashHistory } from 'history';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import { sendMessage } from 'services/Messaging'
 
 import Header from 'components/Header'
 import Footer from 'components/Footer'
 
+import Authorize from 'pages/Authorize'
 import Welcome from 'pages/Welcome'
 import SetPassword from 'pages/SetPassword'
 import Login from 'pages/Login'
@@ -18,18 +22,21 @@ import Wallet from 'pages/Wallet'
 import Account from 'pages/Account'
 import SendAlgos from 'pages/SendAlgos'
 
+import '@fortawesome/fontawesome-free/js/fontawesome'
+import '@fortawesome/fontawesome-free/js/solid'
+
 
 export const StoreContext = createContext();
 
 const StoreProvider = ({children}) => {
-  const existingStore = localStorage.getItem('wallet');
+  const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
-    TestNet: [],
-    MainNet: [],
     ledger: 'MainNet',
-    password: null,
-    addAccount: (ledger, account) => {
-      store[ledger].push(account)
+    addAccount: (ledger, address, name) => {
+      store[ledger].push({
+        address: address,
+        name: name
+      })
     },
     deleteAccount: (ledger, account) => {
       for (var i = store[ledger].length - 1; i >= 0; i--) {
@@ -42,17 +49,29 @@ const StoreProvider = ({children}) => {
     setLedger: (ledger) => {
       store.ledger = ledger;
     },
-    SetPassword: (password) => {
-      store.password = password;
+    updateWallet: (newWallet) => {
+      store.TestNet = newWallet.TestNet;
+      store.MainNet = newWallet.MainNet;
     }
   }));
 
-  if (existingStore) {
-    Object.assign(store, JSON.parse(existingStore)); 
-  }
   autorun(() => {
-    localStorage.setItem('wallet', JSON.stringify(store))
+    sessionStorage.setItem('wallet', JSON.stringify(store))
   })
+
+  // Try to retrieve session from background
+  sendMessage(JsonRpcMethod.GetSession, {}, function(response) {
+    // Object.assign(store, JSON.parse(existingStore));
+    console.log('GETSESSION', response)
+    if (response && response.exist){
+      if ('session' in response) {
+        store.updateWallet(response.session);
+        route('/wallet');
+      } else {
+        route('/login');
+      }
+    }
+  });
 
   return html`
     <${StoreContext.Provider} value=${store}>${children}</${StoreContext.Provider}>
@@ -60,7 +79,7 @@ const StoreProvider = ({children}) => {
 };
 
 
-require('./mystyles.scss');
+require('./styles.scss');
 
 const mountNode = document.getElementById('root');
 
@@ -73,8 +92,9 @@ const Root = (props) => {
 const App = () => {
     return html`
       <${StoreProvider}>
-        <div style="overflow: hidden; width: 450px; height: 550px; display: flex; flex-direction: column;">
+        <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
+            <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />
             <${Login} path="/login" />

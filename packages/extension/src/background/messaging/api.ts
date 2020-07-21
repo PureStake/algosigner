@@ -5,9 +5,9 @@ export class MessageApi {
     public static listen() {
         switch(PLATFORM) {
             case 'chrome':
-                    chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
-                        return OnMessageHandler.handle(request,sender,sendResponse);
-                    });
+                chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
+                    return OnMessageHandler.handle(request,sender,sendResponse);
+                });
                 break;
         }
     }

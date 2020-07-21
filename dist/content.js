@@ -81,12 +81,12 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 55);
+/******/ 	return __webpack_require__(__webpack_require__.s = 74);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 0:
+/***/ 2:
 /***/ (function(module, exports) {
 
 function _defineProperty(obj, key, value) {
@@ -108,117 +108,71 @@ module.exports = _defineProperty;
 
 /***/ }),
 
-/***/ 1:
-/***/ (function(module, exports) {
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-module.exports = _classCallCheck;
-
-/***/ }),
-
-/***/ 2:
-/***/ (function(module, exports) {
-
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  return Constructor;
-}
-
-module.exports = _createClass;
-
-/***/ }),
-
-/***/ 55:
+/***/ 74:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(0);
-/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__);
 
+const allowed_public_methods = ['get-account-keys'];
+const BUNDLE = 'AlgoSigner.min.js';
 
-
-var allowed_public_methods = ['get-account-keys'];
-var BUNDLE = 'AlgoSigner.min.js';
-
-var Content = /*#__PURE__*/function () {
-  function Content() {
-    _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0___default()(this, Content);
-
-    _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2___default()(this, "events", {});
+class Content {
+  constructor() {
+    _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default()(this, "events", {});
 
     this.inject();
     this.messageChannelListener();
     this.chromeRuntimeListener();
   }
 
-  _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1___default()(Content, [{
-    key: "inject",
-    value: function inject() {
-      var url = chrome.runtime.getURL(BUNDLE);
-      var el = document.createElement('script');
-      el.setAttribute('type', 'text/javascript');
-      el.setAttribute('src', url);
-      (document.head || document.documentElement).appendChild(el);
-    }
-  }, {
-    key: "messageChannelListener",
-    value: function messageChannelListener() {
-      var ctx = this;
-      window.addEventListener("message", function (ev) {
-        var d = ev.data;
+  inject() {
+    let url = chrome.runtime.getURL(BUNDLE);
+    const el = document.createElement('script');
+    el.setAttribute('type', 'text/javascript');
+    el.setAttribute('src', url);
+    (document.head || document.documentElement).appendChild(el);
+  } // Messages coming from AlgoSigner injected library.
+  // They are sent to background using chrome.runtime.
 
-        if ("source" in d) {
-          if (d.source == "dapp") {
-            var eventId = d.body.id;
-            ctx.events[eventId] = ev;
-          }
 
-          if (d.source == "dapp" || d.source == "router") {
-            chrome.runtime.sendMessage(d); // {source, body}
-          }
+  messageChannelListener() {
+    let ctx = this;
+    window.addEventListener("message", ev => {
+      var d = ev.data;
+
+      if ("source" in d) {
+        if (d.source == "dapp") {
+          let eventId = d.body.id;
+          ctx.events[eventId] = ev;
         }
-      });
-    }
-  }, {
-    key: "chromeRuntimeListener",
-    value: function chromeRuntimeListener() {
-      var ctx = this;
-      chrome.runtime.onMessage.addListener(function (d) {
-        var body = d.body;
 
-        if (body.id in ctx.events) {
-          ctx.events[body.id].ports[0].postMessage(d);
-          delete ctx.events[body.id];
-        } else {
-          window.postMessage(d, window.location.origin);
+        if (d.source == "dapp" || d.source == "router") {
+          chrome.runtime.sendMessage(d); // {source, body}
         }
-      });
-    }
-  }]);
+      }
+    });
+  } // Messages coming from background.
+  // They are sent to the AlgoSigner injected library.
 
-  return Content;
-}();
+
+  chromeRuntimeListener() {
+    let ctx = this;
+    chrome.runtime.onMessage.addListener(d => {
+      let body = d.body;
+
+      if (body.id in ctx.events) {
+        ctx.events[body.id].ports[0].postMessage(d);
+        delete ctx.events[body.id];
+      } else {
+        window.postMessage(d, window.location.origin);
+      }
+    });
+  }
+
+}
 
 new Content();
 

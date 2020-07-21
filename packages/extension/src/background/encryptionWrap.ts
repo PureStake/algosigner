@@ -103,7 +103,8 @@ export class EncryptionWrap {
       this._extensionStorage.getStorage(this._walletName, async (result: { account: string, params: { salt: string, iv: string, iterations: number } }) => {  
         if(!result)
         {
-          callback && callback({'STATUS': 'No Account Found'});
+          // No accounts
+          callback && callback({TestNet: [], MainNet: []});
           return;
         }
 
@@ -119,11 +120,27 @@ export class EncryptionWrap {
 
         // Await the unlock and callback with the string interpretation.
         await decryptionContext.unlock(lockParams).then((decryptedObject) => {
-          callback && callback(this.arrayBufferToString(decryptedObject));
+          callback && callback(JSON.parse(this.arrayBufferToString(decryptedObject)));
         }).catch((e) => {
           this.errorLog(e);
-          callback && callback({'STATUS': 'Login Failed'});
+          callback && callback({error: 'Login Failed'});
         });        
+      });    
+    }
+    catch(e) {
+      this.errorLog(e);         
+    }
+    
+  }
+
+  public async checkStorage(callback: Function): Promise<void> {
+    try {
+      // Retrieve the object from the storage location, then attempt to decrypt the value.
+      this._extensionStorage.getStorage(this._walletName, async (result: { account: string, params: { salt: string, iv: string, iterations: number } }) => {
+        if(!result)
+          callback(false);
+        else
+          callback(true);
       });    
     }
     catch(e) {

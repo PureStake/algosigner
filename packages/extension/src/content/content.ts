@@ -19,6 +19,8 @@ class Content {
         (document.head||document.documentElement).appendChild(el);
     }
 
+    // Messages coming from AlgoSigner injected library.
+    // They are sent to background using chrome.runtime.
     messageChannelListener() {
         let ctx = this;
         window.addEventListener("message",(ev) => {
@@ -35,6 +37,8 @@ class Content {
         });
     }
 
+    // Messages coming from background.
+    // They are sent to the AlgoSigner injected library.
     chromeRuntimeListener() {
         let ctx = this;
         chrome.runtime.onMessage.addListener((d) => {

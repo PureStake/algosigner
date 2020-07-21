@@ -9,7 +9,7 @@ const AssetPreview: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="py-2 px-4"
-      style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+      style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
       onClick=${() => setShowAsset(asset)}>
       ${ asset.name && asset.name.length > 0 && html`
         ${ asset.name }
@@ -54,7 +54,7 @@ const AssetsList: FunctionalComponent = (props: any) => {
 
 
     <div class=${`modal ${fullList ? 'is-active' : ''}`}>
-      <div class="modal-background"></div>
+      <div class="modal-background" onClick=${()=>setFullList(false)}></div>
       <div class="modal-content" style="padding: 0 15px;">
         <div class="box" style="overflow-wrap: break-word;">
           ${ assets.map((asset: any) => html`
@@ -66,7 +66,7 @@ const AssetsList: FunctionalComponent = (props: any) => {
     </div>
 
     <div class=${`modal ${showAsset ? 'is-active' : ''}`}>
-      <div class="modal-background"></div>
+      <div class="modal-background" onClick=${()=>setShowAsset(null)}></div>
       <div class="modal-content" style="padding: 0 15px;">
         ${ showAsset && html`
           <${AssetDetails} asset=${showAsset} ledger=${ledger} />

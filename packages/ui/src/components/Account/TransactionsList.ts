@@ -1,8 +1,9 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { algodClient } from 'services/algodClient'
+import { sendMessage } from 'services/Messaging'
 
 import TxAcfg from 'components/TransactionDetail/TxAcfg'
 import TxPay from 'components/TransactionDetail/TxPay'
@@ -19,22 +20,27 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const [nextToken, setNextToken] = useState<any>(null);
 
   const fetchApi = async () => {
-    let txs = algodClient[ledger+'Indexer'].lookupAccountTransactions(address);
-    txs.limit(20);
-    if (nextToken)
-      txs.nextToken(nextToken);
-    txs = await txs.do();
+    const params = {
+      'ledger': ledger,
+      'address': address,
+      'next-token': nextToken,
+      'limit': 20
+    };
+    sendMessage(JsonRpcMethod.Transactions, params, function(response) {
+      // If there are already transactions, just append the new ones
+      if (results.length > 0)
+        setResults(results.concat(response.transactions))
+      else
+        setResults(response.transactions);
 
-    if (txs) {
-      setResults(txs.transactions);
-
-      if (txs["next-token"])
-        setNextToken(txs["next-token"]);
-    }
+      if (response["next-token"]) 
+        setNextToken(response["next-token"]);
+      else
+        setNextToken(null);
+    });
   }
 
   const handleClick = (tx) => {
-    console.log('asdfasdf', tx)
     switch(tx['tx-type']) {
       case 'pay':
         setShowTx(html`<${TxPay} tx=${tx} ledger=${ledger} />`);
@@ -61,6 +67,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
 
   if (!results)
     return null;
+
+  const loadMore = () => {
+    fetchApi()
+  }
 
   const getInfo = (tx, date) => {
     function getTime(date,  roundTime) {
@@ -144,7 +154,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     }
 
     return html`
-      <div style="display: flex; justify-content: space-between;">
+      <div style="display: flex; justify-content: space-between;" id="div_${tx.id}">
         <div style="max-width: 60%; white-space: nowrap;">
           <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
             ${subtitle}
@@ -167,11 +177,19 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
       ${ results.map((tx: any) => html`
         <div class="py-3 px-4"
-          style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+          style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
           onClick=${() => handleClick(tx)}>
           ${getInfo(tx, date)}
         </div>
       `)}
+      ${ nextToken && html`
+        <div class="py-3 px-4 has-text-centered"
+          style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
+          <a onClick=${loadMore}>
+            Load more transactions
+          </a>
+        </div>
+      `}
     </div>
 
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>

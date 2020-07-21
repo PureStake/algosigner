@@ -2,6 +2,10 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+function srcPath(subdir) {
+    return path.join(__dirname, "./", subdir);
+}
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -29,7 +33,18 @@ module.exports = {
             }
           }
         ]
-      }
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              outputPath: 'assets',
+            },
+          },
+        ],
+      },
     ],
   },
   plugins: [
@@ -38,7 +53,7 @@ module.exports = {
       template: './index.html'
     }),
     new MiniCssExtractPlugin({
-      filename: 'mystyles.css'
+      filename: 'styles.css'
     }),
   ],
   resolve: {
@@ -47,6 +62,7 @@ module.exports = {
       "react": "preact/compat",
       "react-dom/test-utils": "preact/test-utils",
       "react-dom": "preact/compat",
+      "@algosigner/common": srcPath('../common/src'),
     },
     modules: [
       path.resolve('./src'),
