@@ -29,11 +29,11 @@ jobs:
       with:
         args: npm test
     - name: Upload screenshots
+      if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
         name: screenshot
-        path: example.png
-        if: ${{ always() }}
+        path: ./*.png
     - name: Upload build artifact
       uses: actions/upload-artifact@v2
       with:
