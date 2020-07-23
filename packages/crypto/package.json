@@ -4,6 +4,11 @@
   "author": "https://developer.purestake.io",
   "description": "Cryptographic wrapper for saving and retrieving extention information in Algosigner",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PureStake/algosigner/packages/crypto.git"
+  },
+  "license": "",
   "devDependencies": {
     "typescript": "^3.7.5",
     "ts-loader": "^7.0.5",
@@ -11,7 +16,8 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@types/node": "^14.0.13"
+    "@types/node": "^14.0.13",
+    "@babel/runtime": "^7.9.2"
   },
   "scripts": {
     "clean": "rm -rf ./dist/",

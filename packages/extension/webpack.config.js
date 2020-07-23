@@ -16,14 +16,15 @@ module.exports = {
         content: './src/content/content.ts'
     },
     output: {
-        path: path.resolve(__dirname, 'build'),
+        path: path.resolve(__dirname, 'dist'),
         filename: '[name].js',
     },
     resolve: {
         alias: {
-            "@algosigner/common": srcPath('../common/src'),
+            '@algosigner/common': srcPath('../common/src'),
             '@algosigner/crypto': srcPath('../crypto'),
             '@algosigner/storage': srcPath('../storage'),
+            '@algosigner/ui': srcPath('../ui')
         },
         extensions: ['.ts', '.tsx', '.js', '.json']
     },
@@ -37,7 +38,7 @@ module.exports = {
                 options: {
                     presets: ['@babel/preset-env'],
                     presets: ['@babel/preset-typescript'],
-                    plugins: ['@babel/plugin-transform-runtime']
+                    plugins: ['@babel/plugin-transform-runtime', "@babel/plugin-proposal-nullish-coalescing-operator", "@babel/plugin-proposal-optional-chaining"]     
                 }
             }
         }],

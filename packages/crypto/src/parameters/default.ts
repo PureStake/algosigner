@@ -8,17 +8,24 @@
 // Number of iterations, quantized to amounts based on strength. 
 // Weak should only be used in low-end devices where increased speed of derivation is required. 
 ///
-enum Iterations {
+export enum Iterations {
     WEAK = 200000,
     MEDIUM = 1000000,
-    STRONG = 5000000
+    STRONG = 5000000,
 };
 
 ///
-// The PBKDF2 parameters. We use a salt and IV size of 32 with one of the set options for iterations.
+// Array of valid versions.
 ///
-export const PBKDF2Parameters = {
-    Iterations: Iterations,
+export const ValidVersions = [1];
+
+///
+// Parameters for deriving keys.
+///
+export const DefaultEncryptionParameters = {
+    Iterations: Iterations.STRONG,
     SaltSize: 32,
-    IVSize: 32
+    NonceSize: 32,
+    Version: 1
 };
+

@@ -1,5 +1,4 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { LockParameters } from  "@algosigner/crypto/dist/secureStorageContext";
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
 import Helper from '../utils/helper';
@@ -9,6 +8,8 @@ const algosdk = require("algosdk");
 const helper = new Helper;
 
 export class InternalMethods {
+    private static _encryptionWrap: encryptionWrap|undefined;
+
     private static getAlgod(ledger: Ledger) {
         const params = Settings.getBackendParams(ledger, API.Algod);
         return new algosdk.Algodv2(params.apiKey, params.url, params.port);
@@ -23,6 +24,7 @@ export class InternalMethods {
             TestNet: [],
             MainNet: []
         };
+        
         for (var i = 0; i < wallet.TestNet.length; i++) {
             const { address, name } = wallet['TestNet'][i];
             safeWallet.TestNet.push({
@@ -42,7 +44,7 @@ export class InternalMethods {
 
 
     public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
-        encryptionWrap.checkStorage((exist: boolean) => {
+        this._encryptionWrap?.checkStorage((exist: boolean) => {
             if (!exist) {
                 sendResponse({exist: false});
             } else {
@@ -57,14 +59,13 @@ export class InternalMethods {
     }
 
     public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
+        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
         const newWallet = {
             TestNet: [],
             MainNet: []
         };
-        encryptionWrap.lock({
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
-            encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(newWallet))
-        }, (isSuccessful: any) => {
+        this._encryptionWrap?.lock(JSON.stringify(newWallet),
+            (isSuccessful: any) => {
             if (isSuccessful) {
                 helper.session = this.safeWallet(newWallet); 
                 sendResponse(helper.session);
@@ -76,10 +77,8 @@ export class InternalMethods {
     }
 
     public static [JsonRpcMethod.Login](request: any, sendResponse: Function) {
-        const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
-        };
-        encryptionWrap.unlock(unlockParam, (response: any) => {
+        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
+        this._encryptionWrap.unlock((response: any) => {
             if ('error' in response){
                 sendResponse(response);
             } else {
@@ -100,11 +99,9 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.SaveAccount](request: any, sendResponse: Function) {
         const { mnemonic, name, ledger, address, passphrase } = request.body.params;
-        const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
-        };
-
-        encryptionWrap.unlock(unlockParam, (unlockedValue: any) => {
+        this._encryptionWrap = new encryptionWrap(passphrase);
+        
+        this._encryptionWrap.unlock((unlockedValue: any) => {
             if ('error' in unlockedValue) {
                 sendResponse(unlockedValue);
             } else {
@@ -114,10 +111,7 @@ export class InternalMethods {
                     name: name
                 }
                 unlockedValue[ledger].push(newAccount);
-                encryptionWrap.lock({
-                    passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
-                    encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
-                },
+                this._encryptionWrap?.lock(JSON.stringify(unlockedValue),
                 (isSuccessful: any) => {
                     if (isSuccessful) {
                         helper.session = this.safeWallet(unlockedValue); 
@@ -133,11 +127,9 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.DeleteAccount](request: any, sendResponse: Function) {
         const { ledger, address, passphrase } = request.body.params;
-        const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
-        };
+        this._encryptionWrap = new encryptionWrap(passphrase);
 
-        encryptionWrap.unlock(unlockParam, (unlockedValue: any) => {
+        this._encryptionWrap.unlock((unlockedValue: any) => {
             if ('error' in unlockedValue) {
                 sendResponse(unlockedValue);
             } else {
@@ -148,10 +140,7 @@ export class InternalMethods {
                         break;
                     }
                 }
-                encryptionWrap.lock({
-                    passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
-                    encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
-                },
+                this._encryptionWrap?.lock(JSON.stringify(unlockedValue),                                                                                               
                 (isSuccessful: any) => {
                     if (isSuccessful) {
                         helper.session = this.safeWallet(unlockedValue); 
@@ -160,6 +149,7 @@ export class InternalMethods {
                         sendResponse({error: 'Lock failed'});
                     }
                 });
+                
             }
         });
         return true;
@@ -167,12 +157,9 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.ImportAccount](request: any, sendResponse: Function) {
         const { mnemonic, name, ledger } = request.body.params;
-        const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase)
-        };
+        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
         try {
-            console.log('ahi')
           var recoveredAccount = algosdk.mnemonicToSecretKey(mnemonic); 
           var newAccount = {
             address: recoveredAccount.addr,
@@ -184,15 +171,12 @@ export class InternalMethods {
           return false;
         }
 
-        encryptionWrap.unlock(unlockParam, (unlockedValue: any) => {
+        this._encryptionWrap.unlock((unlockedValue: any) => {
             if ('error' in unlockedValue) {
                 sendResponse(unlockedValue);
             } else {
                 unlockedValue[ledger].push(newAccount);
-                encryptionWrap.lock({
-                    passphrase: encryptionWrap.stringToUint8ArrayBuffer(request.body.params.passphrase), 
-                    encryptObject: encryptionWrap.stringToUint8ArrayBuffer(JSON.stringify(unlockedValue))
-                },
+                this._encryptionWrap?.lock(JSON.stringify(unlockedValue),
                 (isSuccessful: any) => {
                     if(isSuccessful) {
                         helper.session = this.safeWallet(unlockedValue); 
@@ -239,13 +223,10 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
         const { ledger, address, to, amount, note, passphrase } = request.body.params;
+        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
         var algod = this.getAlgod(ledger);
 
-        const unlockParam : LockParameters = {
-            passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
-        };
-
-        encryptionWrap.unlock(unlockParam, async (unlockedValue: any) => {
+        this._encryptionWrap.unlock(async (unlockedValue: any) => {
             if ('error' in unlockedValue) {
                 sendResponse(unlockedValue);
                 return false;

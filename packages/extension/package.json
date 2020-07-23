@@ -32,11 +32,9 @@
     "algosdk": "^1.6.2"
   },
   "scripts": {
-    "bundle": "browserify ./src/background/algosigner.js -o ./build/background.js -t [ babelify --presets [ @babel/preset-env @babel/preset-react ] --plugins [@babel/plugin-transform-runtime] ] && touch ./build/content.js",
-    "copy": "cp algosigner.html ./build/ && cp manifest.json ./build/ && cp -r ./src/public/images/* ./build/",
-    "build": "rm -rf ./dist/* && rm -rf ./@types/* && npm run build:types && npm run bundle:webpack && npm run copy",
-    "build:types": "tsc --emitDeclarationOnly",
-    "bundle:webpack": "webpack",
+    "copy": "cp algosigner.html ./dist/ && cp manifest.json ./dist/ && cp -r ./src/public/images/* ./dist/",
+    "build": "rm -rf ./dist/* && rm -rf ./@types/* && npm run bundle && npm run copy",
+    "bundle": "webpack",
     "test": "jest"
   }
 }
