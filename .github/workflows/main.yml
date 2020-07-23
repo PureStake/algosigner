@@ -16,7 +16,7 @@ jobs:
     #   run: npm run prebuild && npm run build
     # - name: Build ui
     #   run: npm run buildui
-    - name: Delelete all dist
+    - name: Delete all dist
       run: npm run delall
     - name: Install testing dependencies
       env:
