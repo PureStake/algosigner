@@ -114,12 +114,12 @@ describe('Basic Happy Path Tests', () => {
 
     })
 
-    test('Load Account Info Again', async () => {       
-        await extensionPage.waitForSelector('#account_'+testNetAccount)
-        await extensionPage.click('#account_'+testNetAccount)
-        await extensionPage.waitFor(500)
-        await expect(extensionPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/E2E-Tests/)
-    })
+    // test('Load Account Info Again', async () => {       
+    //     await extensionPage.waitForSelector('#account_'+testNetAccount)
+    //     await extensionPage.click('#account_'+testNetAccount)
+    //     await extensionPage.waitFor(500)
+    //     await expect(extensionPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/E2E-Tests/)
+    // })
 
     // there is a timing issue here - and maybe a cache problem
     // test('Tx ID Present', async () => {
@@ -196,15 +196,15 @@ describe('Create Account', () => {
         // await extensionPage.goto(baseUrl);
     })
 
-    test('Welcome Page Title', async () => {
-        await extensionPage.waitForSelector('#enterPassword')
-        await expect(extensionPage.title()).resolves.toMatch(extensionName)
-    })
+    // test('Welcome Page Title', async () => {
+    //     await extensionPage.waitForSelector('#enterPassword')
+    //     await expect(extensionPage.title()).resolves.toMatch(extensionName)
+    // })
 
-    test('Create Wallet with Password', async () => {
-        await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.click('#login')
-    })
+    // test('Create Wallet with Password', async () => {
+    //     await extensionPage.type('#enterPassword',unsafePassword);
+    //     await extensionPage.click('#login')
+    // })
 
     test('Create An Account, Step 1 - Enter Account Name', async () => {
         await extensionPage.waitForSelector('#addAccount')

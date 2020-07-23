@@ -5,3 +5,4 @@
 **/package-lock.json
 **/@types
 **/packages/dapp/lib
+.DS_Store
