@@ -10,6 +10,7 @@
   "scripts": {
     "copy": "cp -r ./packages/extension/dist/* dist/ && cp -r ./packages/ui/dist/* dist/ && cp -r ./packages/dapp/dist/* dist/",
     "prebuild": "rm -rf ./dist/*",
+    "delall": "rm -rf ./packages/common/dist/* && rm -rf ./packages/crypto/dist/* && rm -rf ./packages/dapp/dist/* rm -rf ./packages/extension/dist/* && rm -rf ./packages/storage/dist/* rm -rf ./packages/ui/dist/*",
     "buildcommon": "cd ./packages/common && npm run build && cd ../..",
     "buildcrypto": "cd ./packages/crypto && npm run build && cd ../..",
     "buildstorage": "cd ./packages/storage && npm run build && cd ../..",
@@ -17,7 +18,7 @@
     "builddapp": "cd ./packages/dapp && npm run build && npm run bundle && cd ../..",
     "buildui": "cd ./packages/ui && npm run build && cd ../..",
     "buildcopyui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
-    "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",    
+    "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",
     "install": "npm run installcommon && npm run installcrypto  && npm run installstorage && npm run installui && npm run installextension && npm run installdapp ",
     "installcommon": "cd ./packages/common && npm install && cd ../..",
     "installcrypto": "cd ./packages/crypto && npm install && cd ../..",

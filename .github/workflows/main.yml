@@ -16,6 +16,8 @@ jobs:
     #   run: npm run prebuild && npm run build
     # - name: Build ui
     #   run: npm run buildui
+    - name: Delelete all dist
+      run: npm run delall
     - name: Install testing dependencies
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
