@@ -39,27 +39,30 @@ describe('Basic Happy Path Tests', () => {
     })
     
     beforeEach(async () => {
-        // turns out we should not re-open the page, as the wallet is gone
-        // extensionPage = await browser.newPage();
-        // await extensionPage.goto(baseUrl);
     })
 
     test('Welcome Page Title', async () => {
         await expect(extensionPage.title()).resolves.toMatch(extensionName)
     })
 
-    test('Create Wallet with Password', async () => {
+    test('Create New Wallet', async () => {
         await extensionPage.waitForSelector('#setPassword')
         await extensionPage.click('#setPassword')        
+    })
+
+    test('Set new wallet password', async () => {
         await expect(extensionPage.$eval('.mt-2', e => e.innerText)).resolves.toMatch('my_1st_game_was_GALAGA!')
         await extensionPage.waitForSelector('#createWallet')
         await extensionPage.type('#setPassword',unsafePassword);
         await extensionPage.type('#confirmPassword',unsafePassword);
+        await extensionPage.waitFor(2000)
+        await extensionPage.waitForSelector('#createWallet')
         await extensionPage.click('#createWallet')
     })
 
     test('Switch Ledger', async () => {
         await extensionPage.waitFor(2000)
+        await extensionPage.screenshot({path: 'test_waiting_for_page.png'})
         await extensionPage.click('#selectLedger')
         await extensionPage.waitFor(500)
         await extensionPage.click('#selectTestNet')
@@ -113,21 +116,6 @@ describe('Basic Happy Path Tests', () => {
         await extensionPage.waitFor(3000)
 
     })
-
-    // test('Load Account Info Again', async () => {       
-    //     await extensionPage.waitForSelector('#account_'+testNetAccount)
-    //     await extensionPage.click('#account_'+testNetAccount)
-    //     await extensionPage.waitFor(500)
-    //     await expect(extensionPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/E2E-Tests/)
-    // })
-
-    // there is a timing issue here - and maybe a cache problem
-    // test('Tx ID Present', async () => {
-    //     await extensionPage.waitFor(5000)
-    //     // its not there yet!
-    //     await extensionPage.click('#div_'+txId)
-    //     })
-
 
     test('Load Account Details', async () => {
         await extensionPage.click('#showDetails')
