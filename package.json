@@ -8,17 +8,23 @@
     "PureStake"
   ],
   "scripts": {
-    "copy": "cp ./packages/extension/build/* dist/ && cp -r ./packages/ui/dist/* dist/ && cp ./packages/dapp/dist/* dist/",
+    "copy": "cp -r ./packages/extension/dist/* dist/ && cp -r ./packages/ui/dist/* dist/ && cp -r ./packages/dapp/dist/* dist/",
     "prebuild": "rm -rf ./dist/*",
-    "buildcommon": "cd ./packages/common  && npm run build && cd ../..",
+    "buildcommon": "cd ./packages/common && npm run build && cd ../..",
     "buildcrypto": "cd ./packages/crypto && npm run build && cd ../..",
     "buildstorage": "cd ./packages/storage && npm run build && cd ../..",
     "buildextension": "cd ./packages/extension && npm run build && cd ../..",
-    "builddapp": "cd ./packages/dapp && npm install --loglevel=error && npm run build && npm run bundle && cd ../..",
-    "buildui": "cd ./packages/ui && npm install --loglevel=error && npm run build && cd ../..",
+    "builddapp": "cd ./packages/dapp && npm run build && npm run bundle && cd ../..",
+    "buildui": "cd ./packages/ui && npm run build && cd ../..",
     "buildcopyui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
     "build": "npm run buildcommon && npm run buildcrypto  && npm run buildstorage && npm run buildui && npm run buildextension && npm run builddapp && npm run copy",    
-    "install": "cd ./packages/common && npm install && cd ../.. && cd ./packages/crypto && npm install && cd ../.. && cd ./packages/storage && npm install && cd ../.. && cd ./packages/extension && npm install && cd ../.. ",
+    "install": "npm run installcommon && npm run installcrypto  && npm run installstorage && npm run installui && npm run installextension && npm run installdapp ",
+    "installcommon": "cd ./packages/common && npm install && cd ../..",
+    "installcrypto": "cd ./packages/crypto && npm install && cd ../..",
+    "installstorage": "cd ./packages/storage && npm install && cd ../..",
+    "installextension": "cd ./packages/extension && npm install && cd ../..",
+    "installdapp": "cd ./packages/dapp && npm install && cd ../..",
+    "installui": "cd ./packages/ui && npm install && cd ../..",
     "test": "jest"
   },
   "devDependencies": {

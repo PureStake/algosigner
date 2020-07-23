@@ -3,11 +3,15 @@ Crypto wrapper for AlgoSigner. Creates wrapped functionality to Web Crypto API f
 
 ## Project Use
 After installation output files will be in the /dist/ folder. This includes secureStorageContext.js, and the typescript definitions for the supporting structure. 
-    -SecureStorageContext -> Entry point, providing locking and unlocking capability.
-    -LockParameters -> Object that contains passphrase, encrypt objects, and compatibility.
-    -PBKDF2Parameters -> Defaults to be used in password derivation with iteration options for slower machines.
-    -PBKDF2Security -> Contains internally generated information needed to lock and unlock. 
-    -BlobStructure -> Returned lock structure that includes security information and locked object. 
+ - SecureStorageContext -> Entry point, providing locking and unlocking capability.
+#### parameters
+ - default -> Contains default and acceptable range parameters used for encryption. 
+ - validate -> Functions for checking validity of salt, iterations, version.
+#### structures
+ - blob -> Structure for locked objects. Returned as a result of lock, may used as a compatibleBlob, and is passed in for unlocking.  
+ - contextSecurity -> The security context the secureStorageContext object. Contains passphrase, nIterations, and version for locking and unlocking.
+#### errors 
+ - types -> Error definition for InvalidCipherText and any additional custom errors. 
 
 ## Installation
 Install NPM

@@ -4,36 +4,33 @@
  * =========================================
 */
 
-import { LockParameters } from "./lockParameters";
-import { PBKDF2Security } from "./pbkdf2Security";
-import { PBKDF2Parameters } from "./pbkdf2Parameters";
+import { ContextSecurity } from "./structures/contextSecurity";
+import { DefaultEncryptionParameters } from "./parameters/default";
+import { validateSalt, validateIterations } from "./parameters/validate";
 import { InvalidCipherText } from "./errors/types";
+import { Blob } from "./structures/blob";
 
 ///
 // Encryption default functionality for AlgoSigner. 
 // Uses pbkdf2 and SHA-256 for passphrase derivation and hash.
 // Uses a 256 bit AES-GCM cipher for encryption.
+// params may contain values for ['nIterations', 'version'].
 ///
 export class SecureStorageContext {
-  security: PBKDF2Security; // Security information for the local secure context
-
-  constructor(params?: any){
-    const iterations = (params && params["iterations"]) || PBKDF2Parameters.Iterations.STRONG;
-    const saltSize = PBKDF2Parameters.SaltSize;
-    const ivSize = PBKDF2Parameters.IVSize;
-
-    this.security = new PBKDF2Security(this.generateRandomValues(saltSize), this.generateRandomValues(ivSize), iterations);
+  contextSecurity: ContextSecurity;
+  constructor(passphrase: ArrayBuffer, params?: any) {
+    this.contextSecurity = new ContextSecurity(passphrase, params);
   }
   
   ///
   // Create a 96 bit array buffer using version for iv.
   ///
   private getVersionBuffer(){
-    let version = this.security.version.toString().padStart(12, '0');
-    var versionBuffer = new ArrayBuffer(version.length); 
+    let paddedVersion = DefaultEncryptionParameters.Version.toString().padStart(12, '0');
+    var versionBuffer = new ArrayBuffer(paddedVersion.length); 
     var versionUint8Array = new Uint8Array(versionBuffer);
-    for (var i = 0; i < version.length; i++) {
-      versionUint8Array[i] = version.charCodeAt(i);
+    for (var i = 0; i < paddedVersion.length; i++) {
+      versionUint8Array[i] = paddedVersion.charCodeAt(i);
     }
     return versionBuffer;
   }
@@ -44,7 +41,7 @@ export class SecureStorageContext {
   private generateRandomValues(byteLength: number): Uint8Array {
       return window.crypto.getRandomValues(new Uint8Array(byteLength));
   }
-    
+  
   ///
   // Using the passphrase, create a CryptoKey for use in key derivation. 
   ///
@@ -52,117 +49,181 @@ export class SecureStorageContext {
     return await window.crypto.subtle.importKey(
       "raw",
       passphrase, 
-      { name: "PBKDF2" }, 
+      "PBKDF2", 
       false,
-      ["deriveBits", "deriveKey"]
-    );
+      ["deriveBits", "deriveKey"])
+    .then((cryptoKey: CryptoKey) => {
+      return cryptoKey;
+    });
+  }
+
+  private async deriveBitsFromRawKey(rawKey: CryptoKey, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
+    return await window.crypto.subtle.deriveBits(
+      {
+          name: "PBKDF2",
+          hash: "SHA-256",
+          salt: salt,
+          iterations: iterations,
+      },
+      rawKey as CryptoKey,
+      256
+    )
+    .then((masterBits: ArrayBuffer) => {
+      return masterBits;
+    });
   }
 
   ///
-  // **NOT FUNCTIONAL** Master/secret key functionality is not working currently
-  // Using the key material create a new master key. 
+  // Derive the master key from the passphrase using PBKDF2
   ///
-  private async deriveMasterKey(keyMaterial: CryptoKey): Promise<CryptoKey> { 
-    return await window.crypto.subtle.deriveKey(
+  private async deriveMasterKey(salt: Uint8Array, iterations: number): Promise<CryptoKey> { 
+    // Generate the raw key directly from passphrase
+    let rawKey = await this.createPasskey(this.contextSecurity.passphrase);
+    // Generate bits from the key that will be ued for a master key import
+    const masterKeyBits = await this.deriveBitsFromRawKey(rawKey, salt, iterations);
+    // Import the newly created master key bits for HKDF
+    return await window.crypto.subtle.importKey(
+      "raw",
+      masterKeyBits,
       {
-        name: "PBKDF2",
-        salt: this.security.salt, 
-        iterations: this.security.iterations,   
-        hash: "SHA-256"
+          name: "HKDF",
+          hash: "SHA-256",
       },
-      keyMaterial,
-      { name: "HKDF", length: 256 },
-      //{ name: "AES-GCM", length: 256 },
       false,
       ["deriveBits", "deriveKey"]
-      //["encrypt", "decrypt"]
-    );
+    ).then(masterKey => {
+      return masterKey;
+    });
   }
 
   ///
   // Using the masterkey and nonce create a new secret key for use in key derivation. 
   ///
-  private async deriveLockKey(keyMaterial: CryptoKey, csalt?: Uint8Array): Promise<CryptoKey> { 
+  private async deriveAESKeyFromMasterKey(masterKey: CryptoKey, nonce: Uint8Array): Promise<CryptoKey> {
+    // We use a hardcoded salt for all implementations, gerated with 'openssl rand -base64 32'
+    const hkdfSalt = Uint8Array.from(atob("wJW4IFKeBayDZpNJTmMyb1nkGWX4LXdZ3XOJwz3reAY="), c => c.charCodeAt(0));
     return await window.crypto.subtle.deriveKey(
       {
-        name: "PBKDF2",
-        salt: csalt || this.security.salt, 
-        iterations: this.security.iterations,   
+        name: "HKDF",
+        salt: hkdfSalt, 
+        // Ignore Typescript warnings for HKDF/HKDF-CTR differences
+        //@ts-ignore
+        info: nonce,  
         hash: "SHA-256"
       },
-      keyMaterial,
+      masterKey,
       { name: "AES-GCM", length: 256 },
       false,
       ["encrypt", "decrypt"]
-    );
+    ).then(aesKey => {
+      return aesKey;
+    });
+  }
+
+  public async asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
   }
 
   ///
   // Using the context passphrase, salt, iv, and iterations, derive a password hash and encrypt with lockParameters.
   // Return the ArrayBuffer result from the encrypt step. 
   ///
-  public async lock(lockParameters: LockParameters): Promise<ArrayBuffer> { 
-    let keyMaterial = await this.createPasskey(lockParameters.passphrase);
-    let secretKey: CryptoKey;
-
-    if(lockParameters.cVersion){
-      // FUTURE: Override settings with version information if it exists.
+  public async lock(records: ArrayBuffer|ArrayBuffer[], compatibleWithBlob?: Blob): Promise<Blob|Blob[]> {   
+    if(!(records instanceof ArrayBuffer || Array.isArray(records) && records.every(value => value instanceof ArrayBuffer))){
+      throw new SyntaxError("The provided records parameter was not an instance or list of ArrayBuffer.");
     }
 
-    if(lockParameters.cSalt && lockParameters.cSalt.byteLength != PBKDF2Parameters.SaltSize){
-        throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
-    }
+    // Check for overrides
+    let saltOverride: Uint8Array;
+    let iterationsOverride: number; 
+    if(compatibleWithBlob) {
+      // Checking indepently so that salt alone may be provided, using default iterations for the current or provided version.
+      if(compatibleWithBlob.salt) {
+        saltOverride = compatibleWithBlob.salt;
+        validateSalt(saltOverride, compatibleWithBlob.version);
+      }
+      if(compatibleWithBlob.nIterations) {
+        iterationsOverride = compatibleWithBlob.nIterations;
+        validateIterations(iterationsOverride, compatibleWithBlob.version);   
+      }  
+    }    
 
-    // TODO: BC - Swap for multiple, introduce nonce update
-    // let nonce = this.generateRandomValues(32);
-    secretKey = await this.deriveLockKey(keyMaterial, lockParameters.cSalt);
+    // Use overrides or a random salt and defaults
+    let salt = saltOverride || this.generateRandomValues(DefaultEncryptionParameters.SaltSize);  
+    let nIterations = iterationsOverride || this.contextSecurity.nIterations;
 
-    // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
-    return await window.crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: this.getVersionBuffer()  
-      },
-      secretKey, 
-      lockParameters.encryptObject
-    );
+    // Derive a master key.
+    let masterKey = await this.deriveMasterKey(salt, nIterations);
+
+    // Setup the return blob array
+    var blobs:Blob[] = [];
+
+    // Handle singular record input by combining the record to a records array
+    let recordsArray:ArrayBuffer[] = [];
+    recordsArray = recordsArray.concat(records);
+
+    await this.asyncForEach(recordsArray, async (record) => {
+      // Generate a new nonce with each encrypt
+      let nonce = this.generateRandomValues(DefaultEncryptionParameters.NonceSize);
+      // Generate the AES key from the master with new nonce.
+      let aesKey = await this.deriveAESKeyFromMasterKey(masterKey, nonce);
+      // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
+      await window.crypto.subtle.encrypt(
+        {
+          name: "AES-GCM",
+          iv: this.getVersionBuffer()  
+        },
+        aesKey, 
+        record 
+      ).then(encryptedObject => {
+        blobs.push(new Blob(encryptedObject, salt, nonce, nIterations, this.contextSecurity.version));
+      }); 
+    });
+
+    // Return array or singular based on input option
+    return Array.isArray(records) ? blobs : blobs[0];      
   }
     
   ///
-  // Using the context passphrase, salt, iv, and iterations, derive a password hash and decrypt with lockParameters.
+  // Using the context passphrase, salt, iv, and iterations, derive a password hash and decrypt.
   // Return the ArrayBuffer result from the decrypt step. 
   ///
-  public async unlock(lockParameters: LockParameters): Promise<ArrayBuffer> {
-    let keyMaterial = await this.createPasskey(lockParameters.passphrase);
-    let secretKey: CryptoKey;
+  public async unlock(blobs: Blob|Blob[]): Promise<ArrayBuffer|ArrayBuffer[]> {
+    // Setup the return records array
+    var records:ArrayBuffer[] = [];
 
-    if(lockParameters.cVersion){
-      // FUTURE: Override settings with version information if it exists.
-    }
- 
-    if(lockParameters.cSalt){
-      // FUTURE: BC - Raise an exception if salt matches but version or iterations do not.
-      throw new RangeError(`The compatible Salt must be ${PBKDF2Parameters.SaltSize} for version 1.`);
-    }
+    // Handle singular record input by combining the record to a blobs array
+    let blobsArray:Blob[] = [];
+    blobsArray = blobsArray.concat(blobs);
 
-    // TODO: BC - change this to handle multiple decrypts
-    secretKey = await this.deriveLockKey(keyMaterial, lockParameters.cSalt);
+    await this.asyncForEach(blobsArray, async (blob) => {
+      // Recreate master key from the blob information.
+      let masterKey = await this.deriveMasterKey(blob.salt, blob.nIterations);
+      // Recreate the AES key from the blob structure.
+      let aesKey = await this.deriveAESKeyFromMasterKey(masterKey, blob.nonce);
+      // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
+      try {
+        await window.crypto.subtle.decrypt(
+          {
+            name: "AES-GCM",
+            iv: this.getVersionBuffer() 
+          },
+          aesKey,
+          blob.encryptedObject
+        ).then(decryptedValue => {
+          records.push(decryptedValue);
+        });
+      }
+      catch { 
+        throw new InvalidCipherText();
+      }
+    });
 
-    // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
-    try {
-      return await window.crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: this.getVersionBuffer() 
-        },
-        secretKey,
-        lockParameters.encryptObject
-      );
-    }
-    catch { 
-      throw new InvalidCipherText();
-    }
+    // Return array or singular based on input option
+    return Array.isArray(blobs) ? records : records[0]; 
   }
 }
 
-export  { LockParameters, PBKDF2Security, PBKDF2Parameters };
+export  { Blob, DefaultEncryptionParameters };

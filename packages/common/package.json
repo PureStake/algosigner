@@ -3,13 +3,15 @@
   "version": "0.0.1",
   "author": "https://developer.purestake.io",
   "description": "Common library functions for AlgoSigner",
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript": "^3.7.5"
+  },
   "dependencies": {
     "@babel/runtime": "^7.9.2"
   },
   "scripts": {
     "bundle": "",
     "copy": "",
-    "build": ""
+    "build": "tsc"
   }
 }
