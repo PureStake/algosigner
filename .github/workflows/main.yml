@@ -11,24 +11,29 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2-beta
       with:
-        node-version: '12'
+        node-version: '12.15'
     # - name: Build project
     #   run: npm run prebuild && npm run build
-    - name: Build ui
-      run: npm run buildui
+    # - name: Build ui
+    #   run: npm run buildui
+    - name: Delete all dist
+      run: npm run delall
     - name: Install testing dependencies
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
       run: npm install 
+    - name: Build
+      run: npm run build
     - name: Run headful puppeteer tests
       uses: djp3/puppeteer-headful@master
       with:
         args: npm test
     - name: Upload screenshots
+      if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
         name: screenshot
-        path: example.png
+        path: ./*.png
     - name: Upload build artifact
       uses: actions/upload-artifact@v2
       with:

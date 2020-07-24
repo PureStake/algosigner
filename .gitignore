@@ -4,4 +4,6 @@
 **/build_extension
 **/package-lock.json
 **/@types
-
+**/packages/dapp/lib
+.DS_Store
+test*.png
