@@ -29,6 +29,7 @@ import '@fortawesome/fontawesome-free/js/solid'
 export const StoreContext = createContext();
 
 const StoreProvider = ({children}) => {
+        console.log('PATHNAME1',window.location.hash);
   const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
@@ -64,11 +65,23 @@ const StoreProvider = ({children}) => {
     // Object.assign(store, JSON.parse(existingStore));
     console.log('GETSESSION', response)
     if (response && response.exist){
+      let hashPath = "";
+      if (window.location.hash.length > 0)
+         // Remove # from hash
+        hashPath = window.location.hash.slice(2);
+      console.log('hashpath', hashPath)
       if ('session' in response) {
         store.updateWallet(response.session);
-        route('/wallet');
+        if (hashPath.length > 0) {
+          console.log('1', hashPath)
+          route(`/${hashPath}`)
+        } else {
+          console.log('2', hashPath)
+          route('/wallet')
+        }
       } else {
-        route('/login');
+        console.log('3', hashPath)
+        route('/login/'+hashPath);
       }
     }
   });
@@ -97,7 +110,7 @@ const App = () => {
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />
-            <${Login} path="/login" />
+            <${Login} path="/login/:redirect?" />
             <${Root} path="/:*?">
               <${Header} />
               <div style="overflow: auto; flex: 1; display: flex; flex-direction: column;">

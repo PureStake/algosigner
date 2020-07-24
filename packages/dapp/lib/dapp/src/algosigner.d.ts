@@ -4,7 +4,9 @@ declare class Wrapper {
     private router;
     connect: Function;
     sign: Function;
-    query: Function;
+    accounts: Function;
+    algod: Function;
+    indexer: Function;
     subscribe: Function;
     static getInstance(): Wrapper;
 }

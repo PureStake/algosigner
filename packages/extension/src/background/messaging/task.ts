@@ -1,8 +1,14 @@
-import {MessageApi} from './api';
-import {InternalMethods} from './internalMethods';
+const algosdk = require("algosdk");
 
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
+import { Ledger, API } from './types';
+import { LockParameters } from  "@algosigner/crypto/dist/secureStorageContext";
+
+import {InternalMethods} from './internalMethods';
+import {MessageApi} from './api';
+import encryptionWrap from "../encryptionWrap";
+import { Settings } from '../config';
 
 export class Task {
 
@@ -46,8 +52,8 @@ export class Task {
                             url: chrome.runtime.getURL("index.html#/authorize"),
                             type: "popup",
                             focused: true,
-                            width:480,
-                            height:640
+                            width: 400 + 12,
+                            height: 550 + 34
                         }, function (w) {
                             if(w) {
                                 Task.request = {
@@ -64,12 +70,115 @@ export class Task {
                 },
                 // sign-transaction
                 [JsonRpcMethod.SignTransaction]: (
-                    request: any,
+                    d: any,
                     resolve: Function, reject: Function
                 ) => {
-                    // TODO further processing..
-                    resolve(request);
-                }
+                    const { from,
+                        to,
+                        fee,
+                        passphrase,
+                        ledger,
+                        amount,
+                        firstRound,
+                        lastRound,
+                        genesisID,
+                        genesisHash,
+                        note } = d.body.params;
+                    const params = Settings.getBackendParams(Ledger.TestNet, API.Algod);
+                    const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
+
+                    const unlockParam : LockParameters = {
+                        passphrase: encryptionWrap.stringToUint8ArrayBuffer(passphrase)
+                    };
+
+                    encryptionWrap.unlock(unlockParam, async (unlockedValue: any) => {
+                        if ('error' in unlockedValue) {
+                            reject(unlockedValue);
+                        }
+
+                        let account;
+
+                        // Find address to send algos from
+                        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                            if (unlockedValue[ledger][i].address === from) {
+                                account = unlockedValue[ledger][i];
+                                break;
+                            }
+                        }
+
+                        var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
+                        let params = await algod.getTransactionParams().do();
+
+                        let txn = {
+                            "from": from,
+                            "to": to,
+                            "fee": params.fee,
+                            "amount": +amount,
+                            "firstRound": params.firstRound,
+                            "lastRound": params.lastRound,
+                            "genesisID": params.genesisID,
+                            "genesisHash": params.genesisHash,
+                            "note": new Uint8Array(0)
+                        };
+
+                        let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+
+                        console.log(signedTxn);
+                        d.response = signedTxn;
+                        console.log('RESOLVING', d)
+                        resolve(d);
+                    });
+                },
+                // algod
+                [JsonRpcMethod.Algod]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    const { params } = d.body;
+                    const conn = Settings.getBackendParams(params.ledger, API.Algod);
+                    let url = conn.url;
+                    if (conn.port.length > 0)
+                        url += ':' + conn.port;
+
+                    fetch(`${url}${params.path}`, {
+                        headers: conn.apiKey
+                    })
+                    .then(async (response) => {
+                        d.response = await response.json();
+                        resolve(d);
+                    }).catch((error) => {
+                        reject(error);
+                    })
+                },
+                // Indexer
+                [JsonRpcMethod.Indexer]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    const { params } = d.body;
+                    const conn = Settings.getBackendParams(params.ledger, API.Indexer);
+                    let url = conn.url;
+                    if (conn.port.length > 0)
+                        url += ':' + conn.port;
+
+                    fetch(`${url}${params.path}`, {
+                        headers: conn.apiKey
+                    })
+                    .then(async (response) => {
+                        d.response = await response.json();
+                        resolve(d);
+                    }).catch((error) => {
+                        reject(error);
+                    })
+                },
+                // Accounts
+                [JsonRpcMethod.Accounts]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    d.response = InternalMethods.getHelperSession()[d.body.params.ledger];
+                    resolve(d);
+                },
             },
             'private': {
                 // authorization-allow
@@ -100,19 +209,6 @@ export class Task {
                         MessageApi.send(message);
                     },100);
                 },
-                // algod
-                [JsonRpcMethod.Algod]: () => {
-                    let auth = Task.request;
-                    let message = auth.message;
-
-                    auth.message.error = RequestErrors.NotAuthorized;
-                    chrome.windows.remove(auth.window_id);
-                    Task.request = {};
-
-                    setTimeout(() => {
-                        MessageApi.send(message);
-                    },100);
-                }
             },
             'extension' : {
                 [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {

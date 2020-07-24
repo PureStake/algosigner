@@ -8,7 +8,9 @@ class Wrapper {
     
     public connect: Function = this.task.connect;
     public sign: Function = this.task.sign;
-    public query: Function = this.task.query;
+    public accounts: Function = this.task.accounts;
+    public algod: Function = this.task.algod;
+    public indexer: Function = this.task.indexer;
     public subscribe: Function = this.task.subscribe;
 
     public static getInstance(): Wrapper {

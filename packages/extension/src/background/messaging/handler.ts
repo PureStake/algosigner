@@ -1,9 +1,6 @@
 import {MessageApi} from './api';
 import {Task} from './task';
 
-// import { Algodv2, Indexer } from 'algosdk';
-const algosdk = require("algosdk");
-
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod,MessageSource} from '@algosigner/common/messaging/types';
 

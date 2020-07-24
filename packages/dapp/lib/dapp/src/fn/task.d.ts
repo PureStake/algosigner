@@ -8,8 +8,10 @@ export declare class Task extends Runtime implements ITask {
     };
     static get inPayloadSign(): Array<string>;
     connect(): Promise<JsonPayload>;
-    accounts(): void;
+    accounts(params: JsonPayload, error?: RequestErrors): Promise<JsonPayload>;
     sign(params: Transaction, error?: RequestErrors): Promise<JsonPayload>;
     query(method: SupportedAlgod, params: JsonPayload, error?: RequestErrors): Promise<JsonPayload>;
+    algod(params: JsonPayload, error?: RequestErrors): Promise<JsonPayload>;
+    indexer(params: JsonPayload, error?: RequestErrors): Promise<JsonPayload>;
     subscribe(eventName: string, callback: Function): void;
 }

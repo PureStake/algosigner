@@ -40,6 +40,10 @@ export class InternalMethods {
         return safeWallet;
     }
 
+    public static getHelperSession() {
+        return helper.session;
+    }
+
 
     public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
         encryptionWrap.checkStorage((exist: boolean) => {
@@ -172,7 +176,6 @@ export class InternalMethods {
         };
 
         try {
-            console.log('ahi')
           var recoveredAccount = algosdk.mnemonicToSecretKey(mnemonic); 
           var newAccount = {
             address: recoveredAccount.addr,

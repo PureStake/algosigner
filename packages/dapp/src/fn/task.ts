@@ -21,7 +21,16 @@ export class Task extends Runtime implements ITask {
         );
     }
 
-    accounts(){}
+    accounts(
+        params: JsonPayload,
+        error: RequestErrors = RequestErrors.None
+    ): Promise<JsonPayload>{
+        return MessageBuilder.promise(
+            JsonRpcMethod.Accounts, 
+            params as JsonPayload,
+            error
+        );
+    }
 
     // TODO needs json and raw payload support and complete argument support
     sign(
@@ -55,6 +64,29 @@ export class Task extends Runtime implements ITask {
             error
         );
     }
+
+    algod(
+        params: JsonPayload,
+        error: RequestErrors = RequestErrors.None
+    ): Promise<JsonPayload>{
+        return MessageBuilder.promise(
+            JsonRpcMethod.Algod, 
+            params,
+            error
+        );
+    }
+
+    indexer(
+        params: JsonPayload,
+        error: RequestErrors = RequestErrors.None
+    ): Promise<JsonPayload>{
+        return MessageBuilder.promise(
+            JsonRpcMethod.Indexer, 
+            params,
+            error
+        );
+    }
+
 
     subscribe(
         eventName: string,
