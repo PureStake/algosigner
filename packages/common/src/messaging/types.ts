@@ -8,6 +8,7 @@ export enum JsonRpcMethod {
     SignTransaction = "sign-transaction",
     Algod = "algod",
     Indexer = "indexer",
+    Accounts = "accounts",
     // UI methods
     CreateWallet = "create-wallet",
     CreateAccount = "create-account",

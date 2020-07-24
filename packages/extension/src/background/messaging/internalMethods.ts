@@ -42,6 +42,10 @@ export class InternalMethods {
         return safeWallet;
     }
 
+    public static getHelperSession() {
+        return helper.session;
+    }
+
 
     public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
         this._encryptionWrap?.checkStorage((exist: boolean) => {

@@ -4,7 +4,7 @@ export class Settings {
     static backend: Backend = Backend.PureStake;
     static backend_settings: {[key: string]: any} = {
         [Backend.PureStake]: {
-            [Ledger.Testnet]: {
+            [Ledger.TestNet]: {
                 [API.Algod] : {
                     url: "https://algosigner.api.purestake.run/testnet/algod",
                     port: ""
@@ -14,7 +14,7 @@ export class Settings {
                     port: ""
                 }
             },
-            [Ledger.Mainnet]: {
+            [Ledger.MainNet]: {
                 [API.Algod] : {
                     url: "https://algosigner.api.purestake.run/mainnet/algod",
                     port: ""

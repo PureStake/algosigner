@@ -11,7 +11,8 @@ import { StoreContext } from 'index'
 import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
 
-const Login: FunctionalComponent = (props) => {
+const Login: FunctionalComponent = (props: any) => {
+  const { redirect } = props;
   const [pwd, setPwd] = useState<String>('');
   const [loading, setLoading] = useState<Boolean>(false);
   const [error, setError] = useState<String>('');
@@ -38,7 +39,11 @@ const Login: FunctionalComponent = (props) => {
         setError('Wrong password!');
       } else {
         store.updateWallet(response);
-        route('/wallet');
+        console.log('redirect', redirect);
+        if (redirect.length > 0)
+          route(`/${redirect}`)
+        else
+          route('/wallet');
       }
     });
   };
