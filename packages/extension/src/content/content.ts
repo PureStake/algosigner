@@ -1,5 +1,6 @@
 const allowed_public_methods = ['get-account-keys'];
 const BUNDLE = 'AlgoSigner.min.js';
+import {extensionBrowser} from '@algosigner/common/chrome';
 
 class Content {
 
@@ -12,7 +13,7 @@ class Content {
     }
 
     inject() {
-        let url = chrome.runtime.getURL(BUNDLE);
+        let url = extensionBrowser.runtime.getURL(BUNDLE);
         const el = document.createElement('script');
         el.setAttribute('type', 'text/javascript');
         el.setAttribute('src', url);
@@ -31,7 +32,7 @@ class Content {
                     ctx.events[eventId] = ev;
                 }
                 if(d.source == "dapp" || d.source == "router") {
-                    chrome.runtime.sendMessage(d); // {source, body}
+                    extensionBrowser.runtime.sendMessage(d); // {source, body}
                 }
             }
         });
@@ -41,7 +42,7 @@ class Content {
     // They are sent to the AlgoSigner injected library.
     chromeRuntimeListener() {
         let ctx = this;
-        chrome.runtime.onMessage.addListener((d) => {
+        extensionBrowser.runtime.onMessage.addListener((d) => {
             let body = d.body;
             if(body.id in ctx.events) {
                 ctx.events[body.id].ports[0].postMessage(d);

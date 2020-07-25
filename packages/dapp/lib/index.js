@@ -1,2 +1,0 @@
-export { AlgoSigner } from './algosigner';
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9pbmRleC50cyJdLCJuYW1lcyI6WyJBbGdvU2lnbmVyIl0sIm1hcHBpbmdzIjoiQUFBQSxTQUFRQSxVQUFSLFFBQXlCLGNBQXpCIiwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IHtBbGdvU2lnbmVyfSBmcm9tICcuL2FsZ29zaWduZXInOyJdfQ==

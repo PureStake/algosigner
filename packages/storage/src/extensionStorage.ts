@@ -4,7 +4,7 @@
  * =========================================
 */
 
-import { extension } from "../../common/src/chrome"
+import {extensionBrowser} from '@algosigner/common/chrome';
 
 ///
 // Handles the setting and retrieval of data into the browser storage.local location. 
@@ -18,11 +18,11 @@ export class ExtensionStorage {
     ///
     public setStorage(objectName: string, saveObject: object, callback: Function){
       console.log(`Setting storage with an object that is a type of ${typeof saveObject} and value: \n{${objectName}:${saveObject}}`);
-      extension.storage.local.set({ [objectName]: saveObject }, () => {
-          let isSuccessful = !extension.runtime.lastError;
+      extensionBrowser.storage.local.set({ [objectName]: saveObject }, () => {
+          let isSuccessful = !extensionBrowser.runtime.lastError;
           if(!isSuccessful) {
             //TODO: How to handle save failures?
-            console.log(extension.runtime.lastError && `Chrome error: ${extension.runtime.lastError.message}`);
+            console.log(extensionBrowser.runtime.lastError && `Chrome error: ${extensionBrowser.runtime.lastError.message}`);
           }
           
           callback && callback(isSuccessful);
@@ -34,7 +34,7 @@ export class ExtensionStorage {
     // Callback: Callback will return a boolean of true if an account exists or false if no account is present. 
     ///
     public getStorage(objectName: string, callback: Function) {
-      extension.storage.local.get([objectName], (result: any) => {
+      extensionBrowser.storage.local.get([objectName], (result: any) => {
         callback && callback(result[objectName]);
       });
     }
@@ -44,7 +44,7 @@ export class ExtensionStorage {
     // Callback: Callback will return a boolean of true if an account exists or false if no account is present. 
     ///
     public noAccountExistsCheck(objectName: string, callback: Function) {
-      extension.storage.local.get([objectName], function(result) {
+      extensionBrowser.storage.local.get([objectName], function(result: any) {
             if(result[objectName]) {
               callback && callback(true);
             }
@@ -60,8 +60,8 @@ export class ExtensionStorage {
     // Callback: Callback will return all data stored for the extension. 
     ///
     protected getStorageLocal(callback: Function) {
-      extension.storage.local.get(null, (result)=> {
-          if(!extension.runtime.lastError){
+      extensionBrowser.storage.local.get(null, (result: any)=> {
+          if(!extensionBrowser.runtime.lastError){
             callback(JSON.stringify(result));
           }
       });
@@ -73,8 +73,8 @@ export class ExtensionStorage {
     // Callback: Callback will return true if successful, false if there is an error. 
     ///
     protected clearStorageLocal(callback: Function) {
-      extension.storage.local.clear(() => {
-          if(!extension.runtime.lastError) {
+      extensionBrowser.storage.local.clear(() => {
+          if(!extensionBrowser.runtime.lastError) {
             console.log('Clearing of local data successful.');
             callback && callback(true);
           }

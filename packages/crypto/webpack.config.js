@@ -12,9 +12,6 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].js',
-        libraryTarget: "umd",
-        library: 'secureStorageContext',
-        umdNamedDefine: true,
         globalObject: 'this'
     },
     resolve: {
@@ -29,7 +26,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.ts(x?)$/,
+                test: /\.(ts|js)x?$/,
                 exclude: /node_modules/,
                 use: [
                     {

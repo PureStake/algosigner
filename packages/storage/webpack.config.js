@@ -12,13 +12,13 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].js',
-        libraryTarget: "umd",
-        library: 'extensionStorage',
-        umdNamedDefine: true,
         globalObject: 'this'
     },
     resolve: {
-        alias: { "@storage": srcPath('~/') },
+        alias: {
+            '@storage': srcPath('~/'),
+            '@algosigner/common': srcPath('../common/src')
+        },
         extensions: ['.ts', '.tsx', '.js']
     },
     //devtool: 'source-map',
@@ -29,7 +29,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.ts(x?)$/,
+                test: /\.(ts|js)x?$/,
                 exclude: /node_modules/,
                 use: [
                     {

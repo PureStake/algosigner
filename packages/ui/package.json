@@ -1,6 +1,8 @@
 {
   "name": "algosigner-ui",
   "version": "0.0.1",
+  "author": "https://developer.purestake.io",
+  "description": "User interface built for AlgoSigner.",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server",

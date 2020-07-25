@@ -8,33 +8,21 @@
     "PureStake"
   ],
   "devDependencies": {
-    "@babel/cli": "^7.8.3",
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-transform-runtime": "^7.9.6",
-    "@babel/preset-env": "^7.9.5",
-    "@babel/preset-react": "^7.9.4",
-    "@babel/preset-typescript": "^7.8.3",
-    "@types/chrome": "0.0.104",
-    "babel-loader": "^8.1.0",
-    "babel-jest": "^26.0.1",
-    "babel-preset-es2015": "^6.24.1",
-    "babelify": "^10.0.0",
-    "browserify": "^16.5.1",
     "jest": "^26.0.1",
     "jest-webextension-mock": "^3.6.0",
     "typescript": "^3.7.5",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "ts-loader": "^7.0.5"
   },
   "dependencies": {
-    "@babel/runtime": "^7.9.2",
     "algosdk": "^1.6.2"
   },
   "scripts": {
-    "copy": "cp algosigner.html ./dist/ && cp manifest.json ./dist/ && cp -r ./src/public/images/* ./dist/",
-    "build": "rm -rf ./dist/* && rm -rf ./@types/* && npm run bundle && npm run copy",
+    "build": "npm run clean && npm run bundle && npm run copy",
     "bundle": "webpack",
+    "clean": "rm -rf ./dist/*",
+    "copy": "cp manifest.json ./dist/ && cp -r ./src/public/images/* ./dist/",
     "test": "jest"
   }
 }
