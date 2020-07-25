@@ -1,7 +1,5 @@
 **/node_modules
-**/packages/*/dist
-**/build
-**/build_extension
+**/dist
 **/package-lock.json
 **/@types
 **/packages/dapp/lib

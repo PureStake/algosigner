@@ -1,6 +1,6 @@
 import {MessageApi} from './api';
 import {Task} from './task';
-
+import {extensionBrowser} from '@algosigner/common/chrome';
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod,MessageSource} from '@algosigner/common/messaging/types';
 
@@ -43,7 +43,7 @@ export class OnMessageHandler extends RequestValidation {
 
         // Check if the message comes from the extension
         // TODO: Change to a more secure way
-        if (sender.origin.includes(chrome.runtime.id)) {
+        if (sender.origin.includes(extensionBrowser.runtime.id)) {
             // Message from extension
             switch(source) {
                 // Message from extension to dapp

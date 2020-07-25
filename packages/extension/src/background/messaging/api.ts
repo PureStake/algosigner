@@ -1,11 +1,12 @@
 import {PLATFORM} from '../utils/environment';
 import {OnMessageHandler} from './handler';
+import {extensionBrowser} from '@algosigner/common/chrome';
 
 export class MessageApi {
     public static listen() {
         switch(PLATFORM) {
             case 'chrome':
-                chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
+                extensionBrowser.runtime.onMessage.addListener((request,sender,sendResponse) => {
                     return OnMessageHandler.handle(request,sender,sendResponse);
                 });
                 break;
@@ -15,9 +16,9 @@ export class MessageApi {
         switch(PLATFORM) {
             case 'chrome':
                 if(active_tab) {
-                    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
+                    extensionBrowser.tabs.query({active: true, currentWindow: true}, function(tabs){
                         var tab_id = tabs[0].id || 0;
-                        chrome.tabs.sendMessage(tab_id,d);
+                        extensionBrowser.tabs.sendMessage(tab_id,d);
                     });
                 } else {
                     // TODO all tabs?

@@ -120,7 +120,10 @@ export class SecureStorageContext {
     });
   }
 
-  public async asyncForEach(array, callback) {
+  ///
+  // Help to create a synced encrypt and decrypt to maintain the same item order.
+  ///
+  public async asyncForEach(array: any, callback: any) {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
@@ -164,7 +167,7 @@ export class SecureStorageContext {
     let recordsArray:ArrayBuffer[] = [];
     recordsArray = recordsArray.concat(records);
 
-    await this.asyncForEach(recordsArray, async (record) => {
+    await this.asyncForEach(recordsArray, async (record: any) => {
       // Generate a new nonce with each encrypt
       let nonce = this.generateRandomValues(DefaultEncryptionParameters.NonceSize);
       // Generate the AES key from the master with new nonce.
@@ -198,7 +201,7 @@ export class SecureStorageContext {
     let blobsArray:Blob[] = [];
     blobsArray = blobsArray.concat(blobs);
 
-    await this.asyncForEach(blobsArray, async (blob) => {
+    await this.asyncForEach(blobsArray, async (blob: Blob) => {
       // Recreate master key from the blob information.
       let masterKey = await this.deriveMasterKey(blob.salt, blob.nIterations);
       // Recreate the AES key from the blob structure.

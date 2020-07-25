@@ -2,16 +2,13 @@
   "name": "@algosigner/common",
   "version": "0.0.1",
   "author": "https://developer.purestake.io",
-  "description": "Common library functions for AlgoSigner",
+  "description": "Common library functions for AlgoSigner.",
   "devDependencies": {
     "typescript": "^3.7.5"
   },
-  "dependencies": {
-    "@babel/runtime": "^7.9.2"
-  },
+  "dependencies": {},
   "scripts": {
-    "bundle": "",
-    "copy": "",
-    "build": "tsc"
+    "build": "npm run clean && tsc",
+    "clean": "rm -rf ./dist/"
   }
 }

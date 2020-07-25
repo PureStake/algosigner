@@ -29,18 +29,17 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.json']
     },
     module: {
-        rules: [{
-            // Include ts, tsx, js, and jsx files.
-            test: /\.(ts|js)x?$/,
-            exclude: /node_modules/,
-            use: {
-                loader: 'babel-loader',
-                options: {
-                    presets: ['@babel/preset-env'],
-                    presets: ['@babel/preset-typescript'],
-                    plugins: ['@babel/plugin-transform-runtime', "@babel/plugin-proposal-nullish-coalescing-operator", "@babel/plugin-proposal-optional-chaining"]     
-                }
+        rules: [
+            {
+                test: /\.(ts|js)x?$/,
+                exclude: /node_modules/,
+                use: [
+                    {
+                        loader: "ts-loader",
+                        options: {}
+                    }
+                ]
             }
-        }],
+        ]
     }
 };
