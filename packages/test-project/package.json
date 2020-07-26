@@ -10,6 +10,7 @@
     "puppeteer": "^5.2.1"
   },
   "scripts": {
+    "github-test": "jest --group=github",
     "test": "jest --group=puppeteer",
     "start": "node server.js"
   }
