@@ -1,0 +1,16 @@
+{
+  "name": "algorand-test-project",
+  "version": "0.0.1",
+  "description": "Repository for tests",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^26.1.0",
+    "jest-puppeteer": "^4.4.0",
+    "jest-runner-groups": "^2.0.1",
+    "puppeteer": "^5.2.1"
+  },
+  "scripts": {
+    "test": "jest --group=puppeteer",
+    "start": "node server.js"
+  }
+}
