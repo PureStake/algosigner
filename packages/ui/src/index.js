@@ -21,6 +21,7 @@ import ImportAccount from 'pages/ImportAccount'
 import Wallet from 'pages/Wallet'
 import Account from 'pages/Account'
 import SendAlgos from 'pages/SendAlgos'
+import SignTransaction from 'pages/SignTransaction'
 
 import '@fortawesome/fontawesome-free/js/fontawesome'
 import '@fortawesome/fontawesome-free/js/solid'
@@ -107,6 +108,7 @@ const App = () => {
       <${StoreProvider}>
         <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
+            <${SignTransaction} path="/sign-transaction" />
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />
