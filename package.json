@@ -15,7 +15,7 @@
     "postbuild": "npm run copy",
     "postinstall": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install); (cd ./packages/test-project && npm install);",
     "prebuild": "rm -rf ./dist/*",
-    "test": "cd ./packages/test-project && npm run test"
+    "test": "cd ./packages/test-project && npm run github-test"
   },
   "devDependencies": {
     "puppeteer": "^5.2.1"
