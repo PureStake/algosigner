@@ -48,6 +48,8 @@ export class InternalMethods {
 
 
     public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
+        this._encryptionWrap = new encryptionWrap("");
+
         this._encryptionWrap?.checkStorage((exist: boolean) => {
             if (!exist) {
                 sendResponse({exist: false});
