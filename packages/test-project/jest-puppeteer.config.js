@@ -1,4 +1,4 @@
-const pathToExtension = require('path').join(__dirname, 'dist');
+const pathToExtension = require('path').join('../..', 'dist');
 
 module.exports = {
   launch: {

@@ -1,6 +1,8 @@
-// Basic e2e tests for the AlgoSigner UI
-
-
+/**
+ * Basic e2e tests for the AlgoSigner UI
+ * 
+ * @group puppeteer
+ */
 
 describe('Basic Happy Path Tests', () => {
     
