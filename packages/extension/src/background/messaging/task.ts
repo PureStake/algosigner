@@ -72,57 +72,23 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-                    const { from,
-                        to,
-                        fee,
-                        passphrase,
-                        ledger,
-                        amount,
-                        firstRound,
-                        lastRound,
-                        genesisID,
-                        genesisHash,
-                        note } = d.body.params;
-                    const params = Settings.getBackendParams(Ledger.TestNet, API.Algod);
-                    const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
-
-                    let context = new encryptionWrap(this.request.body.params.passphrase);
-                    context.unlock(async (unlockedValue: any) => {
-                        if ('error' in unlockedValue) {
-                            reject(unlockedValue);
+                    extensionBrowser.windows.create({
+                        url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
+                        type: "popup",
+                        focused: true,
+                        width: 400 + 12,
+                        height: 550 + 34
+                    }, function (w) {
+                        if(w) {
+                            Task.request = {
+                                window_id: w.id,
+                                message: d
+                            };
+                            // Send message with tx info
+                            setTimeout(function(){
+                                extensionBrowser.runtime.sendMessage(d);
+                            },100);
                         }
-
-                        let account;
-
-                        // Find address to send algos from
-                        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                            if (unlockedValue[ledger][i].address === from) {
-                                account = unlockedValue[ledger][i];
-                                break;
-                            }
-                        }
-
-                        var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
-                        let params = await algod.getTransactionParams().do();
-
-                        let txn = {
-                            "from": from,
-                            "to": to,
-                            "fee": params.fee,
-                            "amount": +amount,
-                            "firstRound": params.firstRound,
-                            "lastRound": params.lastRound,
-                            "genesisID": params.genesisID,
-                            "genesisHash": params.genesisHash,
-                            "note": new Uint8Array(0)
-                        };
-
-                        let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
-
-                        console.log(signedTxn);
-                        d.response = signedTxn;
-                        console.log('RESOLVING', d)
-                        resolve(d);
                     });
                 },
                 // algod
@@ -190,7 +156,7 @@ export class Task {
                         // Response needed
                         message.response = {};
                         MessageApi.send(message);
-                    }, 1000);
+                    }, 100);
                 },
                 // authorization-deny
                 [JsonRpcMethod.AuthorizationDeny]: () => {
@@ -203,10 +169,86 @@ export class Task {
 
                     setTimeout(() => {
                         MessageApi.send(message);
-                    },100);
+                    }, 100);
                 },
             },
             'extension' : {
+                // sign-allow
+                [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
+                    let auth = Task.request;
+                    let message = auth.message;
+
+                    const { from,
+                        to,
+                        fee,
+                        ledger,
+                        amount,
+                        firstRound,
+                        lastRound,
+                        genesisID,
+                        genesisHash,
+                        note } = message.body.params;
+                    const { passphrase } = request.body.params;
+                    console.log('signing, or at least trying')
+                    const params = Settings.getBackendParams(ledger, API.Algod);
+                    const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
+
+                    let context = new encryptionWrap(passphrase);
+                    context.unlock(async (unlockedValue: any) => {
+                        if ('error' in unlockedValue) {
+                            sendResponse(unlockedValue);
+                            return false;
+                        }
+
+                        extensionBrowser.windows.remove(auth.window_id);
+
+                        let account;
+
+                        // Find address to send algos from
+                        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                            if (unlockedValue[ledger][i].address === from) {
+                                account = unlockedValue[ledger][i];
+                                break;
+                            }
+                        }
+
+                        var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
+                        let params = await algod.getTransactionParams().do();
+
+                        let txn = {
+                            "from": from,
+                            "to": to,
+                            "fee": fee,
+                            "amount": +amount,
+                            "firstRound": firstRound,
+                            "lastRound": lastRound,
+                            "genesisID": genesisID,
+                            "genesisHash": genesisHash,
+                            "note": new Uint8Array(0)
+                        };
+
+                        let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+
+                        Task.request = {};
+
+                        message.response = signedTxn;
+                        console.log('RESPONSING WITH MESSAGE', message)
+                        MessageApi.send(message);
+                    });
+                    return true;
+                },
+                [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
+                    let auth = Task.request;
+                    let message = auth.message;
+
+                    auth.message.error = RequestErrors.NotAuthorized;
+                    extensionBrowser.windows.remove(auth.window_id);
+                    Task.request = {};
+
+                    setTimeout(() => {
+                        MessageApi.send(message);
+                    }, 100);
+                },
                 [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse)
                 },
