@@ -26,6 +26,12 @@ class Content {
         let ctx = this;
         window.addEventListener("message",(ev) => {
             var d = ev.data;
+            try {
+                JSON.parse(d); 
+            }
+            catch {
+                console.log(`Message not in JSON format. Unable to determine source from message. \n${d}`);
+            }
             if("source" in d){
                 if(d.source == "dapp") {
                     let eventId: string = d.body.id;
@@ -35,6 +41,7 @@ class Content {
                     extensionBrowser.runtime.sendMessage(d); // {source, body}
                 }
             }
+            
         });
     }
 

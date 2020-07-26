@@ -17,6 +17,12 @@ export class Router {
         this.handler = this.default;
         window.addEventListener("message",(event) => {
             var d = event.data;
+            try {
+                JSON.parse(d);  
+            }
+            catch {
+                console.log(`Message not in JSON format. Unable to determine source from message. \n${d}`);
+            }              
             if("source" in d){
                 if(d.source == "extension") {
                     d.source = 'router';
@@ -24,6 +30,7 @@ export class Router {
                     this.handler(d);
                 }
             }
+
         });
     }
     default(d:any){
