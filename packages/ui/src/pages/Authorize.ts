@@ -52,11 +52,12 @@ const Authorize: FunctionalComponent = (props) => {
         </div>
 
         <div class="mx-5 mb-3" style="display: flex;">
-          <button class="button is-link is-outlined px-6"
+          <button id="denyAccess" class="button is-link is-outlined px-6"
             onClick=${deny}>
             Reject
           </button>
           <button class="button is-primary ml-3"
+            id="grantAccess"
             style="flex: 1;"
             onClick=${grant}>
             Grant access
