@@ -4,13 +4,15 @@
  * @group dapp
  */
 
+const testNetAccount = "E2E-Tests"     // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
+
+
 describe('Basic Happy Path Tests', () => {
     
     const extensionName = 'AlgoSigner' 
     const extensionPopupHtml = 'index.html'
     const unsafePassword = 'c5brJp5f'
     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
-    const testNetAccount = "E2E-Tests" // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
     const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
     const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
     const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
@@ -90,81 +92,109 @@ describe('Basic Happy Path Tests', () => {
 
 })
 
-describe('Try out content.js', () => {
+describe('Basic dApp Tests', () => {
 
     const sampleDapp = 'https://fxgamundi.github.io/algosigner-dapp/'
     const samplePage = 'https://purestake.com'
-    let resolved_info = ''
-    let catched_info = ''
-    let txParams
+    let getParams
     let appPage
     let connected
+    let getStatus
 
     jest.setTimeout(10000);
 
     beforeAll( async () => {
         appPage = await browser.newPage();
         await appPage.goto(sampleDapp);
-        await appPage.waitFor(9000)
+        await appPage.waitFor(1000)
     })
 
-    test('Try out access to content.js', async () => {
+    test('Connect Dapp through content.js', async () => {
         
-        // const newPagePromise = new Promise(x => page.once('popup', x));
-
         connected = await appPage.evaluate( () => {
             AlgoSigner.connect()
-            });
-             
-        await appPage.waitFor(2000)
+            });  
 
+        await appPage.waitFor(2000)
         const pages = await browser.pages();
         const popup = pages[pages.length-1];
         await popup.waitForSelector("#grantAccess");
         await popup.click("#grantAccess");
     })
 
+    test('Get TestNet accounts', async () => {
+        const getAccounts = await appPage.evaluate( () => {
+        
+            return Promise.resolve(
+                AlgoSigner.accounts({ledger: 'TestNet'})
+                    .then((d) => {
+                        document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                        return d;
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                        document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                    }))
+            
+        })
+        expect(getAccounts[0].name).toMatch(testNetAccount)
+    })
+
     test('Get params', async () => {
         
         getParams = await appPage.evaluate( () => {
 
-            AlgoSigner.algod({
-                ledger: 'TestNet',
-                path: '/v2/transactions/params'
-            })
-            .then((d) => {
-               // document.getElementById("log").value += resolved_info;
-                document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                txParams = d;
-            })
-            .catch((e) => {
-                console.error(e);
-                //document.getElementById("log").value += catched_info;
-                document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-            });
+            return Promise.resolve(
+                AlgoSigner.algod({
+                    ledger: 'TestNet',
+                    path: '/v2/transactions/params'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
         })
 
-        await appPage.waitFor(2000)
+        expect(getParams).toHaveProperty('consensus-version')
+        expect(getParams).toHaveProperty('fee')
+        expect(getParams.fee).toEqual(1)
+        expect(getParams).toHaveProperty('min-fee')        
+        expect(getParams).toHaveProperty('genesis-hash')
+        expect(getParams).toHaveProperty('genesis-id')
+        expect(getParams).toHaveProperty('last-round')
+
     })
 
     test('Get Status', async () => {
         getStatus = await appPage.evaluate( () => {
-
-            AlgoSigner.algod({
-                ledger: 'TestNet',
-                path: '/v2/status'
-            })
-            .then((d) => {
-                document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                txParams = d;
-            })
-            .catch((e) => {
-                console.error(e);
-                document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-            });
+            
+            return Promise.resolve(
+                AlgoSigner.algod({
+                    ledger: 'TestNet',
+                    path: '/v2/status'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
         })
 
-        await appPage.waitFor(2000)
+        expect(getStatus).toHaveProperty('time-since-last-round')
+        expect(getStatus).toHaveProperty('last-round')
+        expect(getStatus).toHaveProperty('last-version') 
+        expect(getStatus).toHaveProperty('next-version') 
+        expect(getStatus).toHaveProperty('next-version-round') 
+        expect(getStatus).toHaveProperty('next-version-supported') 
+        expect(getStatus).toHaveProperty('stopped-at-unsupported-round') 
+        expect(getStatus).toHaveProperty('catchup-time')        
     })
 
     test('Get Ledger Supply', async () => {
@@ -207,9 +237,9 @@ describe('Try out content.js', () => {
         await appPage.waitFor(2000)
     })
 
-    test('just sit there', async () => {
-        await appPage.waitFor(9000)
-    })
+    // test('just sit there', async () => {
+    //     await appPage.waitFor(9000)
+    // })
 })
 
 
