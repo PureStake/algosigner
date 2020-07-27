@@ -98,13 +98,24 @@ export class Task {
                 ) => {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Algod);
+
+                    let fetchParams : any = {
+                        headers: conn.apiKey,
+                        method: params.method || 'GET',
+                    };
+                    if (params.body)
+                        fetchParams.body = params.body;
+                    console.log('CHECKING FOR BODY', fetchParams.body, params.body);
+                    if (params.contentType)
+                        fetchParams.headers['Content-Type'] = params.contentType;
+                    else
+                        fetchParams.headers['Content-Type'] = '';
+
                     let url = conn.url;
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, {
-                        headers: conn.apiKey
-                    })
+                    fetch(`${url}${params.path}`, fetchParams)
                     .then(async (response) => {
                         d.response = await response.json();
                         resolve(d);
@@ -119,13 +130,19 @@ export class Task {
                 ) => {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Indexer);
+
+                    let fetchParams : any = {
+                        headers: conn.apiKey,
+                        method: params.method || 'GET',
+                    };
+                    if (params.body)
+                        fetchParams.body = params.body;
+
                     let url = conn.url;
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, {
-                        headers: conn.apiKey
-                    })
+                    fetch(`${url}${params.path}`, fetchParams)
                     .then(async (response) => {
                         d.response = await response.json();
                         resolve(d);
