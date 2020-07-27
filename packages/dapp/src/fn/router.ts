@@ -17,19 +17,30 @@ export class Router {
         this.handler = this.default;
         window.addEventListener("message",(event) => {
             var d = event.data;
+
             try {
-                JSON.parse(d);  
+                if (typeof d === 'string') {
+                    let result = JSON.parse(d);  
+                    let type = Object.prototype.toString.call(result);
+                    if(type === '[object Object]' || type === '[object Array]') {
+                        // We can display message output here, but as a string object it doesn't match our format and is likely from other sources
+                    }   
+                }       
+                else {
+                    if(Object.prototype.toString.call(d) === '[object Object]' && "source" in d){
+                        if(d.source == "extension") {
+                            d.source = 'router';
+                            d.origin = window.location.origin;
+                            this.handler(d);
+                        }
+                    }
+                }         
             }
             catch {
-                console.log(`Message not in JSON format. Unable to determine source from message. \n${d}`);
-            }              
-            if("source" in d){
-                if(d.source == "extension") {
-                    d.source = 'router';
-                    d.origin = window.location.origin;
-                    this.handler(d);
-                }
-            }
+                console.log(`Unable to determine source from message. \nEvent:${JSON.stringify(event)}`);
+            }    
+
+
 
         });
     }
