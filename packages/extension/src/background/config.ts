@@ -24,9 +24,7 @@ export class Settings {
                     port: ""
                 },
             },
-            apiKey: {
-                'X-API-key' : 'ZgqaehGkvP6pSNSaoNoy31Nr61BZlhU29E9ERPRU',
-            }
+            apiKey: {}
         }
     }
 

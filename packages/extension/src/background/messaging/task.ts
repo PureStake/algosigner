@@ -92,6 +92,38 @@ export class Task {
                     });
                 },
                 // algod
+                [JsonRpcMethod.SendTransaction]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    const { params } = d.body;
+                    const conn = Settings.getBackendParams(params.ledger, API.Algod);
+                    const sendPath = '/v2/transactions';
+                    let fetchParams : any = {
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': 'application/x-binary',
+                        },
+                        method: 'POST',
+                    };
+                    const tx = atob(params.tx).split("").map(x => x.charCodeAt(0));
+                    fetchParams.body = new Uint8Array(tx);
+
+
+                    let url = conn.url;
+                    if (conn.port.length > 0)
+                        url += ':' + conn.port;
+
+
+                    fetch(`${url}${sendPath}`, fetchParams)
+                    .then(async (response) => {
+                        d.response = await response.json();
+                        resolve(d);
+                    }).catch((error) => {
+                        reject(error);
+                    })
+                },
+                // algod
                 [JsonRpcMethod.Algod]: (
                     d: any,
                     resolve: Function, reject: Function
@@ -99,17 +131,17 @@ export class Task {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Algod);
 
+                    const contentType = params.contentType ? params.contentType : '';
+
                     let fetchParams : any = {
-                        headers: conn.apiKey,
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': contentType,
+                        },
                         method: params.method || 'GET',
                     };
                     if (params.body)
                         fetchParams.body = params.body;
-                    console.log('CHECKING FOR BODY', fetchParams.body, params.body);
-                    if (params.contentType)
-                        fetchParams.headers['Content-Type'] = params.contentType;
-                    else
-                        fetchParams.headers['Content-Type'] = '';
 
                     let url = conn.url;
                     if (conn.port.length > 0)
@@ -246,9 +278,18 @@ export class Task {
 
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
+                        // Clean class saved request
                         Task.request = {};
 
-                        message.response = signedTxn;
+                        console.log('signedTxn.blob', signedTxn.blob);
+                        console.log('signedTxn.blob', algosdk.decodeObj(signedTxn.blob));
+
+                        message.response = {
+                            txID: signedTxn.txID,
+                            blob: btoa(String.fromCharCode(...signedTxn.blob))
+                        };
+                        // message.response = algosdk.encodeObj(signedTxn);
+                        // message.response = signedTxn;
                         console.log('RESPONSING WITH MESSAGE', message)
                         MessageApi.send(message);
                     });
