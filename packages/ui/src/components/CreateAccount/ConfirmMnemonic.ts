@@ -19,19 +19,33 @@ function shuffle(a) {
 const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
   const [testMnemonic, setTestMnemonic] = useState<string>('');
+  const [testMnemonicArray, setTestMnemonicArray] = useState<string>('');
   const [shuffledMnemonic, setShuffledMnemonic] = useState([]);
 
   useEffect(() => {
-    // setShuffledMnemonic(shuffle(account.mnemonic.split(" ")));
-    setShuffledMnemonic(account.mnemonic.split(" "));
+    setShuffledMnemonic(shuffle(account.mnemonic.split(" ")));
   }, []);
 
   const addWord = (e) => {
+    let newMnemonic;
     if (testMnemonic.length === 0)
-      setTestMnemonic(e.target.name);
+      newMnemonic = e.target.name;
     else
-      setTestMnemonic(testMnemonic + ' ' + e.target.name);
+      newMnemonic = testMnemonic + ' ' + e.target.name;
+    setTestMnemonic(newMnemonic);
+    setTestMnemonicArray(newMnemonic.split(' '));
   };
+
+  let copyTestMnemonic = [...testMnemonicArray];
+
+  const hasWord = (word) => {
+    const idx = copyTestMnemonic.indexOf(word);
+    if (idx >= 0){
+      copyTestMnemonic.splice(idx, 1);
+      return true;
+    }
+    return false
+  }
 
   // 5x5 grid
   let grid : Array<any[]> = [];
@@ -39,18 +53,16 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   let buttons : Array<any> = shuffledMnemonic.map(word => html`
     <button class="button is-small is-fullwidth mt-3"
       name="${word}" id="${word}"
-      disabled=${testMnemonic.includes(word)}
+      disabled=${hasWord(word)}
       onClick=${addWord}>
       ${word}
     </button>
   `);
-  // let buttons : Array<any> = shuffledMnemonic.map(word => html`<code>is-three-quarters-mobile</code><br />`);
 
   while (buttons.length) {
     grid.push(buttons.splice(0, 5));
   }
 
-  const notEqual = testMnemonic != account.mnemonic;
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action=${prevStep}
@@ -65,7 +77,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
       <div style="padding: 1em;">
         <button class="button is-primary is-fullwidth"
           id="nextStep"
-          disabled=${notEqual}
+          disabled=${testMnemonic !== account.mnemonic}
           onClick=${nextStep}>
           Continue
         </button>
