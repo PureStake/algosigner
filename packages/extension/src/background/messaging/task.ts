@@ -120,7 +120,8 @@ export class Task {
                         d.response = await response.json();
                         resolve(d);
                     }).catch((error) => {
-                        reject(error);
+                        d.error = error.message;
+                        reject(d);
                     })
                 },
                 // algod
@@ -152,7 +153,8 @@ export class Task {
                         d.response = await response.json();
                         resolve(d);
                     }).catch((error) => {
-                        reject(error);
+                        d.error = error.message;
+                        reject(d);
                     })
                 },
                 // Indexer
@@ -184,7 +186,8 @@ export class Task {
                         d.response = await response.json();
                         resolve(d);
                     }).catch((error) => {
-                        reject(error);
+                        d.error = error.message;
+                        reject(d);
                     })
                 },
                 // Accounts
