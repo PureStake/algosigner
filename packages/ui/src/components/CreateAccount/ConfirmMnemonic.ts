@@ -19,19 +19,26 @@ function shuffle(a) {
 const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
   const [testMnemonic, setTestMnemonic] = useState<string>('');
+  const [testMnemonicArray, setTestMnemonicArray] = useState<string>('');
   const [shuffledMnemonic, setShuffledMnemonic] = useState([]);
 
   useEffect(() => {
-    // setShuffledMnemonic(shuffle(account.mnemonic.split(" ")));
-    setShuffledMnemonic(account.mnemonic.split(" "));
+    setShuffledMnemonic(shuffle(account.mnemonic.split(" ")));
   }, []);
 
   const addWord = (e) => {
+    let newMnemonic;
     if (testMnemonic.length === 0)
-      setTestMnemonic(e.target.name);
+      newMnemonic = e.target.name;
     else
-      setTestMnemonic(testMnemonic + ' ' + e.target.name);
+      newMnemonic = testMnemonic + ' ' + e.target.name;
+    setTestMnemonic(newMnemonic);
+    setTestMnemonicArray(newMnemonic.split(' '));
   };
+
+  const hasWord = (word) => {
+    return testMnemonic.includes(word)
+  }
 
   // 5x5 grid
   let grid : Array<any[]> = [];
@@ -39,7 +46,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   let buttons : Array<any> = shuffledMnemonic.map(word => html`
     <button class="button is-small is-fullwidth mt-3"
       name="${word}" id="${word}"
-      disabled=${testMnemonic.includes(word)}
+      disabled=${hasWord(word)}
       onClick=${addWord}>
       ${word}
     </button>
