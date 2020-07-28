@@ -32,7 +32,6 @@ export class Task extends Runtime implements ITask {
         );
     }
 
-    // TODO needs json and raw payload support and complete argument support
     sign(
         params: Transaction, 
         error: RequestErrors = RequestErrors.None
@@ -47,20 +46,13 @@ export class Task extends Runtime implements ITask {
         );
     }
 
-    query(
-        method: SupportedAlgod,
-        params: JsonPayload,
+    send(
+        params: Transaction, 
         error: RequestErrors = RequestErrors.None
-    ): Promise<JsonPayload>{
-
-        let request: JsonPayload = {
-            method: method,
-            params: params
-        };
-
+    ): Promise<JsonPayload> {
         return MessageBuilder.promise(
-            JsonRpcMethod.Algod, 
-            request as JsonPayload,
+            JsonRpcMethod.SendTransaction, 
+            params,
             error
         );
     }

@@ -62,7 +62,7 @@ export class Task {
                                 setTimeout(function(){
                                     console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     extensionBrowser.runtime.sendMessage(d);
-                                },100);
+                                }, 300);
                             }
                         });
                     }
@@ -87,9 +87,42 @@ export class Task {
                             // Send message with tx info
                             setTimeout(function(){
                                 extensionBrowser.runtime.sendMessage(d);
-                            },100);
+                            }, 300);
                         }
                     });
+                },
+                // algod
+                [JsonRpcMethod.SendTransaction]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    const { params } = d.body;
+                    const conn = Settings.getBackendParams(params.ledger, API.Algod);
+                    const sendPath = '/v2/transactions';
+                    let fetchParams : any = {
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': 'application/x-binary',
+                        },
+                        method: 'POST',
+                    };
+                    const tx = atob(params.tx).split("").map(x => x.charCodeAt(0));
+                    fetchParams.body = new Uint8Array(tx);
+
+
+                    let url = conn.url;
+                    if (conn.port.length > 0)
+                        url += ':' + conn.port;
+
+
+                    fetch(`${url}${sendPath}`, fetchParams)
+                    .then(async (response) => {
+                        d.response = await response.json();
+                        resolve(d);
+                    }).catch((error) => {
+                        d.error = error.message;
+                        reject(d);
+                    })
                 },
                 // algod
                 [JsonRpcMethod.Algod]: (
@@ -98,18 +131,30 @@ export class Task {
                 ) => {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Algod);
+
+                    const contentType = params.contentType ? params.contentType : '';
+
+                    let fetchParams : any = {
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': contentType,
+                        },
+                        method: params.method || 'GET',
+                    };
+                    if (params.body)
+                        fetchParams.body = params.body;
+
                     let url = conn.url;
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, {
-                        headers: conn.apiKey
-                    })
+                    fetch(`${url}${params.path}`, fetchParams)
                     .then(async (response) => {
                         d.response = await response.json();
                         resolve(d);
                     }).catch((error) => {
-                        reject(error);
+                        d.error = error.message;
+                        reject(d);
                     })
                 },
                 // Indexer
@@ -119,18 +164,30 @@ export class Task {
                 ) => {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Indexer);
+
+                    const contentType = params.contentType ? params.contentType : '';
+
+                    let fetchParams : any = {
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': contentType,
+                        },
+                        method: params.method || 'GET',
+                    };
+                    if (params.body)
+                        fetchParams.body = params.body;
+
                     let url = conn.url;
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, {
-                        headers: conn.apiKey
-                    })
+                    fetch(`${url}${params.path}`, fetchParams)
                     .then(async (response) => {
                         d.response = await response.json();
                         resolve(d);
                     }).catch((error) => {
-                        reject(error);
+                        d.error = error.message;
+                        reject(d);
                     })
                 },
                 // Accounts
@@ -181,7 +238,6 @@ export class Task {
                     const { from,
                         to,
                         fee,
-                        ledger,
                         amount,
                         firstRound,
                         lastRound,
@@ -189,7 +245,17 @@ export class Task {
                         genesisHash,
                         note } = message.body.params;
                     const { passphrase } = request.body.params;
-                    console.log('signing, or at least trying')
+
+                    let ledger
+                    switch (genesisID) {
+                        case "mainnet-v1.0":
+                            ledger = Ledger.MainNet
+                            break;
+                        case "testnet-v1.0":
+                            ledger = Ledger.TestNet
+                            break;
+                    }
+
                     const params = Settings.getBackendParams(ledger, API.Algod);
                     const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
 
@@ -229,10 +295,16 @@ export class Task {
 
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
+                        // Clean class saved request
                         Task.request = {};
 
-                        message.response = signedTxn;
-                        console.log('RESPONSING WITH MESSAGE', message)
+                        console.log('signedTxn.blob', signedTxn.blob);
+                        console.log('signedTxn.blob', algosdk.decodeObj(signedTxn.blob));
+
+                        message.response = {
+                            txID: signedTxn.txID,
+                            blob: btoa(String.fromCharCode(...signedTxn.blob))
+                        };
                         MessageApi.send(message);
                     });
                     return true;
