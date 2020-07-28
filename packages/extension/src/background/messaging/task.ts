@@ -62,7 +62,7 @@ export class Task {
                                 setTimeout(function(){
                                     console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     extensionBrowser.runtime.sendMessage(d);
-                                }, 300);
+                                }, 500);
                             }
                         });
                     }
@@ -87,7 +87,7 @@ export class Task {
                             // Send message with tx info
                             setTimeout(function(){
                                 extensionBrowser.runtime.sendMessage(d);
-                            }, 300);
+                            }, 500);
                         }
                     });
                 },
