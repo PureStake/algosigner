@@ -64,7 +64,7 @@ describe('Basic Happy Path Tests', () => {
 
     test('Switch Ledger', async () => {
         await extensionPage.waitFor(2000)
-        await extensionPage.screenshot({path: 'test_waiting_for_page.png'})
+        await extensionPage.screenshot({path: 'screenshots/test_waiting_for_page.png'})
         await extensionPage.click('#selectLedger')
         await extensionPage.waitFor(500)
         await extensionPage.click('#selectTestNet')

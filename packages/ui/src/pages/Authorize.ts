@@ -1,21 +1,29 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
+import { useEffect } from 'preact/hooks';
 import { Link } from 'preact-router';
 
+function deny() {
+  chrome.runtime.sendMessage({
+      source:'extension',
+      body:{
+          jsonrpc: '2.0',
+          method:'authorization-deny',
+          params:[],
+          id: (+new Date).toString(16)
+      }
+  });
+}
+
 const Authorize: FunctionalComponent = (props) => {
-  const deny = () => {
-    chrome.runtime.sendMessage({
-        source:'extension',
-        body:{
-            jsonrpc: '2.0',
-            method:'authorization-deny',
-            params:[],
-            id: (+new Date).toString(16)
-        }
-    });
-  };
+  useEffect(() => {
+    window.addEventListener("beforeunload", deny);
+    return () => window.removeEventListener("beforeunload", deny);
+  }, []);
+
 
   const grant = () => {
+    window.removeEventListener("beforeunload", deny);
     chrome.runtime.sendMessage({
         source:'extension',
         body:{
@@ -52,11 +60,12 @@ const Authorize: FunctionalComponent = (props) => {
         </div>
 
         <div class="mx-5 mb-3" style="display: flex;">
-          <button class="button is-link is-outlined px-6"
+          <button id="denyAccess" class="button is-link is-outlined px-6"
             onClick=${deny}>
             Reject
           </button>
           <button class="button is-primary ml-3"
+            id="grantAccess"
             style="flex: 1;"
             onClick=${grant}>
             Grant access

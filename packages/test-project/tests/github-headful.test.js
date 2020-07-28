@@ -43,7 +43,7 @@ describe('Basic Happy Path Tests', () => {
     test('Create New Wallet', async () => {
         await extensionPage.waitForSelector('#setPassword')
         await extensionPage.click('#setPassword')   
-        await extensionPage.screenshot({path: 'built.png'})     
+        await extensionPage.screenshot({path: 'screenshots/test_built.png'})     
     })
 
 });

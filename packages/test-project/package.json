@@ -11,6 +11,7 @@
   },
   "scripts": {
     "github-test": "jest --group=github",
+    "dapp-test": "jest --group=dapp",
     "test": "jest --group=puppeteer",
     "start": "node server.js"
   }

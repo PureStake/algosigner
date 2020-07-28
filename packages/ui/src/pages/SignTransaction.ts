@@ -1,11 +1,15 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import Authenticate from 'components/Authenticate'
 import { sendMessage } from 'services/Messaging'
+
+function deny() {
+  sendMessage(JsonRpcMethod.SignDeny, {}, function() {});
+}
 
 const SignTransaction: FunctionalComponent = (props) => {
   const [askAuth, setAskAuth] = useState<boolean>(false);
@@ -23,9 +27,11 @@ const SignTransaction: FunctionalComponent = (props) => {
       }
   });
 
-  const deny = () => {
-    sendMessage(JsonRpcMethod.SignDeny, {}, function() {});
-  };
+  useEffect(() => {
+    window.addEventListener("beforeunload", deny);
+    return () => window.removeEventListener("beforeunload", deny);
+  }, []);
+
 
   const sign = (pwd: string) => {
     const params = {
@@ -34,9 +40,12 @@ const SignTransaction: FunctionalComponent = (props) => {
     setLoading(true);
     setAuthError('');
     setError('');
+    window.removeEventListener("beforeunload", deny);
+
 
     sendMessage(JsonRpcMethod.SignAllow, params, function(response) {
       if ('error' in response) { 
+        window.addEventListener("beforeunload", deny);
         setLoading(false);
         switch (response.error) {
           case "Login Failed":
@@ -71,11 +80,11 @@ const SignTransaction: FunctionalComponent = (props) => {
       </div>
 
       <div class="mx-5 mb-3" style="display: flex;">
-        <button class="button is-link is-outlined px-6"
+        <button id="rejectTx" class="button is-link is-outlined px-6"
           onClick=${deny}>
           Reject
         </button>
-        <button class="button is-primary ml-3"
+        <button id="approveTx" class="button is-primary ml-3"
           style="flex: 1;"
           onClick=${() => {setAskAuth(true)}}>
           Sign!
