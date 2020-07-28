@@ -62,7 +62,7 @@ export class Task {
                                 setTimeout(function(){
                                     console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     extensionBrowser.runtime.sendMessage(d);
-                                },100);
+                                }, 300);
                             }
                         });
                     }
@@ -87,7 +87,7 @@ export class Task {
                             // Send message with tx info
                             setTimeout(function(){
                                 extensionBrowser.runtime.sendMessage(d);
-                            },100);
+                            }, 300);
                         }
                     });
                 },
@@ -163,8 +163,13 @@ export class Task {
                     const { params } = d.body;
                     const conn = Settings.getBackendParams(params.ledger, API.Indexer);
 
+                    const contentType = params.contentType ? params.contentType : '';
+
                     let fetchParams : any = {
-                        headers: conn.apiKey,
+                        headers: {
+                            ...conn.apiKey,
+                            'Content-Type': contentType,
+                        },
                         method: params.method || 'GET',
                     };
                     if (params.body)
