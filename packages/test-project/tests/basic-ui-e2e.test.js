@@ -1,7 +1,7 @@
 /**
  * Basic e2e tests for the AlgoSigner UI
  * 
- * @group puppeteer
+ * @group basic-ui
  */
 
 describe('Basic Happy Path Tests', () => {
@@ -41,6 +41,10 @@ describe('Basic Happy Path Tests', () => {
     })
     
     beforeEach(async () => {
+    })
+
+    afterAll(async () => {
+        extensionPage.close()
     })
 
     test('Welcome Page Title', async () => {
@@ -178,7 +182,9 @@ describe('Create Account', () => {
         await extensionPage.goto(baseUrl);
     })
     
-
+    afterAll(async () => {
+        extensionPage.close()
+    })
 
     beforeEach(async () => {
         // turns out we should not re-open the page, as the wallet is gone

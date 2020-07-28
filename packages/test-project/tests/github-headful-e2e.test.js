@@ -36,6 +36,10 @@ describe('Basic Happy Path Tests', () => {
     beforeEach(async () => {
     })
 
+    afterAll(async () => {
+        extensionPage.close()
+    })
+
     test('Welcome Page Title', async () => {
         await expect(extensionPage.title()).resolves.toMatch(extensionName)
     })

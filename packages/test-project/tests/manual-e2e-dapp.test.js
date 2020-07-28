@@ -1,7 +1,7 @@
 /**
- * Basic e2e tests for GitHub to pass
+ * Exercises dApp - requires manual intervention 
  * 
- * @group dapp
+ * @group manual-dapp
  */
 
 const testNetAccount = "E2E-Tests"     // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
@@ -43,6 +43,10 @@ describe('Wallet Setup', () => {
     })
     
     beforeEach(async () => {
+    })
+
+    afterAll(async () => {
+        extensionPage.close()
     })
 
     test('Welcome Page Title', async () => {
@@ -94,7 +98,7 @@ describe('Wallet Setup', () => {
 
 describe('Basic dApp Tests', () => {
 
-    const sampleDapp = 'https://fxgamundi.github.io/algosigner-dapp/'
+    const sampleDapp = 'https://purestake.github.io/algosigner-dapp-example/'
     const samplePage = 'https://purestake.com'
     let getParams
     let appPage
@@ -109,6 +113,10 @@ describe('Basic dApp Tests', () => {
         appPage = await browser.newPage();
         await appPage.goto(sampleDapp);
         await appPage.waitFor(1000)
+    })
+
+    afterAll(async () => {
+        appPage.close()
     })
 
     test('Connect Dapp through content.js', async () => {
@@ -261,7 +269,7 @@ describe('Basic dApp Tests', () => {
 
     test('Send Tx', async () => {
 
-       // have to manually intervene for now
+       // have to manually intervene - execution scope issue
         getSignedBlob = await appPage.evaluate( (testAccountAddress, getParams, sendAlgoToAddress) => {
             const amount = Math.floor(Math.random() * 10); 
 
@@ -313,9 +321,6 @@ describe('Basic dApp Tests', () => {
     console.log(getTxId)
 })
 
-    // test('just sit there', async () => {
-    //     await appPage.waitFor(9000)
-    // })
 })
 
 
