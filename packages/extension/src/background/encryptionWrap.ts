@@ -110,6 +110,5 @@ export default class EncryptionWrap {
     catch(e) {
       logging.log(e);         
     }
-    
   }
 }

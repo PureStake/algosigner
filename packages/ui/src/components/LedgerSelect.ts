@@ -5,10 +5,12 @@ import { useObserver } from 'mobx-react-lite';
 import { route } from 'preact-router';
 
 import { StoreContext } from '../index'
+import WalletDetails from 'components/WalletDetails'
 
 const LedgerSelect: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const [active, setActive] = useState<boolean>(false);
+  const [showDetails, setShowDetails] = useState<boolean>(false)
 
   let ddClass: string = "dropdown is-right";
   if (active)
@@ -52,9 +54,24 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
             class="dropdown-item">
             MainNet
           </a>
+          <a id="showWalletDetails"
+            onClick=${() => setShowDetails(true)}
+            class="dropdown-item">
+            Wallet settings
+          </a>
         </div>
       </div>
     </div>
+
+    ${ showDetails && html`
+      <div class="modal is-active">
+        <div class="modal-background" onClick=${()=>setShowDetails(false)}></div>
+        <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
+          <${WalletDetails} />
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowDetails(false)} />
+      </div>
+    `}
   `));
 };
 

@@ -324,6 +324,9 @@ export class Task {
                 [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse)
                 },
+                [JsonRpcMethod.DeleteWallet]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.DeleteWallet](request, sendResponse)
+                },
                 [JsonRpcMethod.CreateAccount]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.CreateAccount](request, sendResponse)
                 },
