@@ -148,7 +148,7 @@ describe('Basic dApp Tests', () => {
                     }))
             
         })
-        expect(getAccounts[0].name).toMatch(testNetAccount)
+        expect(getAccounts[0].address).toMatch(testAccountAddress)
     })
 
     test('Get params', async () => {
