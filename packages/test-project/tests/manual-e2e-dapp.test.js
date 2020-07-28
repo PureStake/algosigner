@@ -147,7 +147,7 @@ describe('Basic dApp Tests', () => {
                     }))
             
         })
-        expect(getAccounts[0].name).toMatch(testNetAccount)
+        expect(getAccounts[0].address).toMatch(testAccountAddress)
     })
 
     test('Get params', async () => {
@@ -179,93 +179,6 @@ describe('Basic dApp Tests', () => {
 
     })
 
-    test('Get Status', async () => {
-        getStatus = await appPage.evaluate( () => {
-            
-            return Promise.resolve(
-                AlgoSigner.algod({
-                    ledger: 'TestNet',
-                    path: '/v2/status'
-                })
-                .then((d) => {
-                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                    return d;
-                })
-                .catch((e) => {
-                    console.error(e);
-                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-                }));
-        })
-
-        expect(getStatus).toHaveProperty('time-since-last-round')
-        expect(getStatus).toHaveProperty('last-round')
-        expect(getStatus).toHaveProperty('last-version') 
-        expect(getStatus).toHaveProperty('next-version') 
-        expect(getStatus).toHaveProperty('next-version-round') 
-        expect(getStatus).toHaveProperty('next-version-supported') 
-        expect(getStatus).toHaveProperty('stopped-at-unsupported-round') 
-        expect(getStatus).toHaveProperty('catchup-time')        
-    })
-
-    test('Get Ledger Supply', async () => {
-        const getLedgerSupply = await appPage.evaluate( () => {
-
-            return Promise.resolve(
-                AlgoSigner.algod({
-                    ledger: 'TestNet',
-                    path: '/v2/ledger/supply'
-                })
-                .then((d) => {
-                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                    return d;
-                })
-                .catch((e) => {
-                    console.error(e);
-                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-                }));
-        })
-
-        expect(getLedgerSupply).toHaveProperty('current_round')
-        expect(getLedgerSupply).toHaveProperty('online-money')
-        expect(getLedgerSupply).toHaveProperty('total-money')
-
-    })
-
-    test('Get Asset', async () => {
-        const ownerAccount = 'Q2SLSQTBMVJYVT2AANUAXY4A5G7A3Y6L2M6L3WIXKNYBTMMQFGUOQGKSRQ'
-        const assetIndex = 150821
-
-        const getAnAsset = await appPage.evaluate( () => {
-
-            return Promise.resolve(
-                AlgoSigner.indexer({
-                    ledger: 'TestNet',
-                    path: '/v2/assets/150821'
-                })
-                .then((d) => {
-                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                    return d;
-                })
-                .catch((e) => {
-                    console.error(e);
-                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-                }));
-        })
-        
-        await appPage.waitFor(2000)
-        expect(getAnAsset['asset']['params']['unit-name']).toMatch('dectest')
-        expect(getAnAsset.asset.params.name).toMatch('decimal Test')
-        expect(getAnAsset['asset']['params']['default-frozen']).toBe(false)
-        expect(getAnAsset.asset.params.total).toEqual(1000)
-        expect(getAnAsset.asset.params.decimals).toEqual(15)
-        expect(getAnAsset.asset.params.clawback).toMatch(ownerAccount)
-        expect(getAnAsset.asset.params.creator).toMatch(ownerAccount)
-        expect(getAnAsset.asset.params.freeze).toMatch(ownerAccount)
-        expect(getAnAsset.asset.params.manager).toMatch(ownerAccount)
-        expect(getAnAsset.asset.params.reserve).toMatch(ownerAccount)
-        expect(getAnAsset.asset.index).toEqual(assetIndex)
-        
-    })
 
     test('Send Tx', async () => {
 

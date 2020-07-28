@@ -130,6 +130,7 @@ describe('Basic dApp Tests', () => {
         const popup = pages[pages.length-1];
         await popup.waitForSelector("#grantAccess");
         await popup.click("#grantAccess");
+
     })
 
     test('Get TestNet accounts', async () => {
@@ -147,7 +148,7 @@ describe('Basic dApp Tests', () => {
                     }))
             
         })
-        expect(getAccounts[0].name).toMatch(testNetAccount)
+        expect(getAccounts[0].address).toMatch(testAccountAddress)
     })
 
     test('Get params', async () => {
@@ -231,7 +232,7 @@ describe('Basic dApp Tests', () => {
 
     })
 
-    test('Get Asset', async () => {
+    test('Get an Asset', async () => {
         const ownerAccount = 'Q2SLSQTBMVJYVT2AANUAXY4A5G7A3Y6L2M6L3WIXKNYBTMMQFGUOQGKSRQ'
         const assetIndex = 150821
 
@@ -264,9 +265,64 @@ describe('Basic dApp Tests', () => {
         expect(getAnAsset.asset.params.manager).toMatch(ownerAccount)
         expect(getAnAsset.asset.params.reserve).toMatch(ownerAccount)
         expect(getAnAsset.asset.index).toEqual(assetIndex)
+
+        console.log(getAnAsset)
         
     })
 
+    test('POST: Compile Teal', async () => {
+
+        const tealCompiled = await appPage.evaluate( () => {
+
+            return Promise.resolve(
+                AlgoSigner.algod({
+                    ledger: 'TestNet',
+                    path: '/v2/teal/compile',
+                    body: 'int 0',
+                    method: 'POST',
+                    contentType: 'text/plain'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
+
+        })
+
+        await appPage.waitFor(200)
+        console.log(tealCompiled)
+        expect(tealCompiled.result).toMatch("ASABACI=")
+    })
+
+
+    test('GET: Asset list limited', async () =>{
+        const shortAssetList = await appPage.evaluate( () => {
+
+            return Promise.resolve(
+                AlgoSigner.indexer({
+                    ledger: 'TestNet',
+                    path: '/v2/assets?limit=2'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
+
+        })
+    
+        await appPage.waitFor(200)
+        console.log(shortAssetList)
+        expect(shortAssetList.assets.length).toEqual(2)
+        expect(shortAssetList.assets[0].index).toEqual(185)
+    })
 
 })
 
