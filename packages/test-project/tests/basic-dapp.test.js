@@ -101,6 +101,7 @@ describe('Basic dApp Tests', () => {
     let connected
     let getStatus
     let getSignedBlob
+    let getTxId
 
     jest.setTimeout(10000);
 
@@ -292,7 +293,7 @@ describe('Basic dApp Tests', () => {
 
     test('Post Signed Blob', async () => {
         
-        const getTxId = await appPage.evaluate( (getSignedBlob) => {
+        getTxId = await appPage.evaluate( (getSignedBlob) => {
 
             return Promise.resolve(
                 AlgoSigner.send({
