@@ -93,6 +93,7 @@ export class InternalMethods {
             } else {
                 new ExtensionStorage().clearStorageLocal((res) => {
                     if (res){
+                        helper.session = {};
                         sendResponse({response: res});
                     } else {
                         sendResponse({error: 'Storage could not be cleared'});
