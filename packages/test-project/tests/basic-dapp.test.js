@@ -5,6 +5,8 @@
  */
 
 const testNetAccount = "E2E-Tests"     // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
+const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
+const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
 
 
 describe('Basic Happy Path Tests', () => {
@@ -13,8 +15,6 @@ describe('Basic Happy Path Tests', () => {
     const extensionPopupHtml = 'index.html'
     const unsafePassword = 'c5brJp5f'
     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
-    const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
-    const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
     const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
 
@@ -100,6 +100,7 @@ describe('Basic dApp Tests', () => {
     let appPage
     let connected
     let getStatus
+    let txResponse
 
     jest.setTimeout(10000);
 
@@ -198,45 +199,98 @@ describe('Basic dApp Tests', () => {
     })
 
     test('Get Ledger Supply', async () => {
-        getStatus = await appPage.evaluate( () => {
+        const getLedgerSupply = await appPage.evaluate( () => {
 
-            AlgoSigner.algod({
-                ledger: 'TestNet',
-                path: '/v2/ledger/supply'
-            })
-            .then((d) => {
-                document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                txParams = d;
-            })
-            .catch((e) => {
-                console.error(e);
-                document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-            });
+            return Promise.resolve(
+                AlgoSigner.algod({
+                    ledger: 'TestNet',
+                    path: '/v2/ledger/supply'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
         })
 
-        await appPage.waitFor(2000)
+        expect(getLedgerSupply).toHaveProperty('current_round')
+        expect(getLedgerSupply).toHaveProperty('online-money')
+        expect(getLedgerSupply).toHaveProperty('total-money')
+
     })
 
     test('Get Asset', async () => {
-        getStatus = await appPage.evaluate( () => {
+        const ownerAccount = 'Q2SLSQTBMVJYVT2AANUAXY4A5G7A3Y6L2M6L3WIXKNYBTMMQFGUOQGKSRQ'
+        const assetIndex = 150821
 
-            AlgoSigner.indexer({
-                ledger: 'TestNet',
-                path: '/v2/assets/3797'
-            })
-            .then((d) => {
-                document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-                txParams = d;
-            })
-            .catch((e) => {
-                console.error(e);
-                document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-            });
+        const getAnAsset = await appPage.evaluate( () => {
+
+            return Promise.resolve(
+                AlgoSigner.indexer({
+                    ledger: 'TestNet',
+                    path: '/v2/assets/150821'
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
         })
-
+        
         await appPage.waitFor(2000)
+        expect(getAnAsset['asset']['params']['unit-name']).toMatch('dectest')
+        expect(getAnAsset.asset.params.name).toMatch('decimal Test')
+        expect(getAnAsset['asset']['params']['default-frozen']).toBe(false)
+        expect(getAnAsset.asset.params.total).toEqual(1000)
+        expect(getAnAsset.asset.params.decimals).toEqual(15)
+        expect(getAnAsset.asset.params.clawback).toMatch(ownerAccount)
+        expect(getAnAsset.asset.params.creator).toMatch(ownerAccount)
+        expect(getAnAsset.asset.params.freeze).toMatch(ownerAccount)
+        expect(getAnAsset.asset.params.manager).toMatch(ownerAccount)
+        expect(getAnAsset.asset.params.reserve).toMatch(ownerAccount)
+        expect(getAnAsset.asset.index).toEqual(assetIndex)
+        
     })
 
+    // test('Send Tx', async () => {
+    //     const amount = Math.floor(Math.random() * 10); 
+
+    //     const getAnAsset = await appPage.evaluate( () => {
+
+    //         let txn = {
+    //             "from": testAccountAddress,
+    //             "to": sendAlgoToAddress,
+    //             "fee": getParams['min-fee'],
+    //             "ledger": "TestNet",
+    //             "amount": amount,
+    //             "firstRound": getParams['last-round'],
+    //             "lastRound": getParams['last-round'] + 1000,
+    //             "genesisID": getParams['genesis-id'],
+    //             "genesisHash": getParams['genesis-hash'],
+    //             "note": new Uint8Array(0)
+    //           };
+
+    //     return Promise.resolve(
+    //         AlgoSigner.sign(tx)
+    //         .then((d) => {
+    //             document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+    //             return d;
+    //         })
+    //         .catch((e) => {
+    //             console.error(e);
+    //             document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+    //         }));
+    //     }, {testAccountAddress, getParams, sendAlgoToAddress} )
+        
+    //     await appPage.waitFor(2000)
+
+    // })
     // test('just sit there', async () => {
     //     await appPage.waitFor(9000)
     // })
