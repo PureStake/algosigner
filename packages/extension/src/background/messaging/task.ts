@@ -235,7 +235,6 @@ export class Task {
                     const { from,
                         to,
                         fee,
-                        ledger,
                         amount,
                         firstRound,
                         lastRound,
@@ -243,7 +242,17 @@ export class Task {
                         genesisHash,
                         note } = message.body.params;
                     const { passphrase } = request.body.params;
-                    console.log('signing, or at least trying')
+
+                    let ledger
+                    switch (genesisID) {
+                        case "mainnet-v1.0":
+                            ledger = Ledger.MainNet
+                            break;
+                        case "testnet-v1.0":
+                            ledger = Ledger.TestNet
+                            break;
+                    }
+
                     const params = Settings.getBackendParams(ledger, API.Algod);
                     const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
 
@@ -293,9 +302,6 @@ export class Task {
                             txID: signedTxn.txID,
                             blob: btoa(String.fromCharCode(...signedTxn.blob))
                         };
-                        // message.response = algosdk.encodeObj(signedTxn);
-                        // message.response = signedTxn;
-                        console.log('RESPONSING WITH MESSAGE', message)
                         MessageApi.send(message);
                     });
                     return true;
