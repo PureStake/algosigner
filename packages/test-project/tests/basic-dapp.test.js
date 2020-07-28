@@ -7,13 +7,13 @@
 const testNetAccount = "E2E-Tests"     // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
 const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
 const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
+const unsafePassword = 'c5brJp5f'
 
 
 describe('Basic Happy Path Tests', () => {
     
     const extensionName = 'AlgoSigner' 
     const extensionPopupHtml = 'index.html'
-    const unsafePassword = 'c5brJp5f'
     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
     const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
@@ -100,7 +100,7 @@ describe('Basic dApp Tests', () => {
     let appPage
     let connected
     let getStatus
-    let txResponse
+    let getSignedBlob
 
     jest.setTimeout(10000);
 
@@ -258,39 +258,40 @@ describe('Basic dApp Tests', () => {
         
     })
 
-    // test('Send Tx', async () => {
-    //     const amount = Math.floor(Math.random() * 10); 
+    test('Send Tx', async () => {
 
-    //     const getAnAsset = await appPage.evaluate( () => {
+       // have to manually intervene for now
+        const getSignedBlob = await appPage.evaluate( (testAccountAddress, getParams, sendAlgoToAddress) => {
+            const amount = Math.floor(Math.random() * 10); 
 
-    //         let txn = {
-    //             "from": testAccountAddress,
-    //             "to": sendAlgoToAddress,
-    //             "fee": getParams['min-fee'],
-    //             "ledger": "TestNet",
-    //             "amount": amount,
-    //             "firstRound": getParams['last-round'],
-    //             "lastRound": getParams['last-round'] + 1000,
-    //             "genesisID": getParams['genesis-id'],
-    //             "genesisHash": getParams['genesis-hash'],
-    //             "note": new Uint8Array(0)
-    //           };
+            let txn = {
+                "from": testAccountAddress,
+                "to": sendAlgoToAddress,
+                "fee": getParams['fee'],
+                "amount": amount,
+                "firstRound": getParams['last-round'],
+                "lastRound": getParams['last-round'] + 1000,
+                "genesisID": getParams['genesis-id'],
+                "genesisHash": getParams['genesis-hash'],
+                "note": new Uint8Array(0)
+            };
+            
+        return Promise.resolve(
+            AlgoSigner.sign(txn)
+            .then((d) => {
+                document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                return d;
+            })
+            .catch((e) => {
+                console.error(e);
+                document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+            }));
+        }, testAccountAddress, getParams, sendAlgoToAddress)
 
-    //     return Promise.resolve(
-    //         AlgoSigner.sign(tx)
-    //         .then((d) => {
-    //             document.getElementById("log").value += JSON.stringify(d) + "\n\n";
-    //             return d;
-    //         })
-    //         .catch((e) => {
-    //             console.error(e);
-    //             document.getElementById("log").value += JSON.stringify(e) + "\n\n";
-    //         }));
-    //     }, {testAccountAddress, getParams, sendAlgoToAddress} )
-        
-    //     await appPage.waitFor(2000)
+    })
 
-    // })
+    // test('Send Signed Blob in', )
+
     // test('just sit there', async () => {
     //     await appPage.waitFor(9000)
     // })
