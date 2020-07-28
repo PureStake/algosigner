@@ -8,6 +8,7 @@ class Wrapper {
     
     public connect: Function = this.task.connect;
     public sign: Function = this.task.sign;
+    public send: Function = this.task.send;
     public accounts: Function = this.task.accounts;
     public algod: Function = this.task.algod;
     public indexer: Function = this.task.indexer;
