@@ -10,7 +10,7 @@ const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVF
 const unsafePassword = 'c5brJp5f'
 
 
-describe('Basic Happy Path Tests', () => {
+describe('Wallet Setup', () => {
     
     const extensionName = 'AlgoSigner' 
     const extensionPopupHtml = 'index.html'
@@ -261,7 +261,7 @@ describe('Basic dApp Tests', () => {
     test('Send Tx', async () => {
 
        // have to manually intervene for now
-        const getSignedBlob = await appPage.evaluate( (testAccountAddress, getParams, sendAlgoToAddress) => {
+        getSignedBlob = await appPage.evaluate( (testAccountAddress, getParams, sendAlgoToAddress) => {
             const amount = Math.floor(Math.random() * 10); 
 
             let txn = {
@@ -290,7 +290,27 @@ describe('Basic dApp Tests', () => {
 
     })
 
-    // test('Send Signed Blob in', )
+    test('Post Signed Blob', async () => {
+        
+        const getTxId = await appPage.evaluate( (getSignedBlob) => {
+
+            return Promise.resolve(
+                AlgoSigner.send({
+                    ledger: 'TestNet',
+                    tx: getSignedBlob.blob
+                })
+                .then((d) => {
+                    document.getElementById("log").value += JSON.stringify(d) + "\n\n";
+                    return d;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    document.getElementById("log").value += JSON.stringify(e) + "\n\n";
+                }));
+    }, getSignedBlob)
+
+    console.log(getTxId)
+})
 
     // test('just sit there', async () => {
     //     await appPage.waitFor(9000)
