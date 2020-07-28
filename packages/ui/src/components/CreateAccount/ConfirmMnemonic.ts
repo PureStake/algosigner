@@ -36,8 +36,15 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
     setTestMnemonicArray(newMnemonic.split(' '));
   };
 
+  let copyTestMnemonic = [...testMnemonicArray];
+
   const hasWord = (word) => {
-    return testMnemonic.includes(word)
+    const idx = copyTestMnemonic.indexOf(word);
+    if (idx >= 0){
+      copyTestMnemonic.splice(idx, 1);
+      return true;
+    }
+    return false
   }
 
   // 5x5 grid
@@ -51,13 +58,11 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
       ${word}
     </button>
   `);
-  // let buttons : Array<any> = shuffledMnemonic.map(word => html`<code>is-three-quarters-mobile</code><br />`);
 
   while (buttons.length) {
     grid.push(buttons.splice(0, 5));
   }
 
-  const notEqual = testMnemonic != account.mnemonic;
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action=${prevStep}
@@ -72,7 +77,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
       <div style="padding: 1em;">
         <button class="button is-primary is-fullwidth"
           id="nextStep"
-          disabled=${notEqual}
+          disabled=${testMnemonic !== account.mnemonic}
           onClick=${nextStep}>
           Continue
         </button>
