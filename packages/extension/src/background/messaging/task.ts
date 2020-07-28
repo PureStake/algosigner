@@ -195,7 +195,14 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-                    d.response = InternalMethods.getHelperSession()[d.body.params.ledger];
+                    const accounts = InternalMethods.getHelperSession()[d.body.params.ledger];
+                    let res = [];
+                    for (var i = 0; i < accounts.length; i++) {
+                        res.push({
+                            address: accounts[i].address
+                        });
+                    }
+                    d.response = res;
                     resolve(d);
                 },
             },
@@ -323,6 +330,9 @@ export class Task {
                 },
                 [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse)
+                },
+                [JsonRpcMethod.DeleteWallet]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.DeleteWallet](request, sendResponse)
                 },
                 [JsonRpcMethod.CreateAccount]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.CreateAccount](request, sendResponse)

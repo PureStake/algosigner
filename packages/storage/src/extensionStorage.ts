@@ -54,6 +54,24 @@ export class ExtensionStorage {
         });
     }
 
+
+    ///
+    // Clear storage.local extension data.
+    // Callback: Callback will return true if successful, false if there is an error. 
+    ///
+    public clearStorageLocal(callback: Function) {
+      extensionBrowser.storage.local.clear(() => {
+          if(!extensionBrowser.runtime.lastError) {
+            console.log('Clearing of local data successful.');
+            callback && callback(true);
+          }
+          else {
+            console.log('Clearing of local data faiiled.');
+            callback && callback(false);
+          }
+      });
+    }
+
     ///
     // **Testing Method** 
     // View raw storage.local extension data.
@@ -63,24 +81,6 @@ export class ExtensionStorage {
       extensionBrowser.storage.local.get(null, (result: any)=> {
           if(!extensionBrowser.runtime.lastError){
             callback(JSON.stringify(result));
-          }
-      });
-    }
-
-    ///
-    // **Testing Method** 
-    // Clear storage.local extension data.
-    // Callback: Callback will return true if successful, false if there is an error. 
-    ///
-    protected clearStorageLocal(callback: Function) {
-      extensionBrowser.storage.local.clear(() => {
-          if(!extensionBrowser.runtime.lastError) {
-            console.log('Clearing of local data successful.');
-            callback && callback(true);
-          }
-          else {
-            console.log('Clearing of local data faiiled.');
-            callback && callback(false);
           }
       });
     }
