@@ -70,13 +70,15 @@ const Account: FunctionalComponent = (props: any) => {
 
     <${TransactionsList} address=${address} ledger=${ledger}/>
 
-    <div class=${`modal ${showDetails ? 'is-active' : ''}`}>
-      <div class="modal-background" onClick=${()=>setShowDetails(false)}></div>
-      <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
-        <${AccountDetails} account=${account} ledger=${ledger} />
+    ${ showDetails && html`
+      <div class="modal is-active">
+        <div class="modal-background" onClick=${()=>setShowDetails(false)}></div>
+        <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
+          <${AccountDetails} account=${account} ledger=${ledger} />
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowDetails(false)} />
       </div>
-      <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowDetails(false)} />
-    </div>
+    `}
   `
 };
 

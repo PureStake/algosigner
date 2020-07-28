@@ -1,6 +1,7 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
+import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import Helper from '../utils/helper';
 import encryptionWrap from "../encryptionWrap";
 const algosdk = require("algosdk");
@@ -77,6 +78,26 @@ export class InternalMethods {
                 sendResponse(helper.session);
             } else {
                 sendResponse({error: 'Lock failed'});
+            }
+        });
+        return true;
+    }
+
+    public static [JsonRpcMethod.DeleteWallet](request: any, sendResponse: Function) {
+        const { passphrase } = request.body.params;
+        this._encryptionWrap = new encryptionWrap(passphrase);
+
+        this._encryptionWrap.unlock((unlockedValue: any) => {
+            if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+            } else {
+                new ExtensionStorage().clearStorageLocal((res) => {
+                    if (res){
+                        sendResponse({response: res});
+                    } else {
+                        sendResponse({error: 'Storage could not be cleared'});
+                    }
+                })
             }
         });
         return true;

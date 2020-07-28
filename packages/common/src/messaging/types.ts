@@ -14,6 +14,7 @@ export enum JsonRpcMethod {
     Accounts = "accounts",
     // UI methods
     CreateWallet = "create-wallet",
+    DeleteWallet = "delete-wallet",
     CreateAccount = "create-account",
     SaveAccount = "save-account",
     ImportAccount = "import-account",
