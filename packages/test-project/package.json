@@ -11,8 +11,9 @@
   },
   "scripts": {
     "github-test": "jest --group=github",
-    "dapp-test": "jest --group=dapp",
-    "test": "jest --group=puppeteer",
-    "start": "node server.js"
+    "basic-dapp": "jest --group=basic-dapp",
+    "basic-ui": "jest --group=basic-ui",
+    "manual-dapp": "jest --group=manual-dapp",
+    "test": "jest --maxWorkers=1 --group=-manual-dapp"
   }
 }
