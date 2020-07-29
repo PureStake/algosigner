@@ -25,7 +25,7 @@ const Wallet: FunctionalComponent = (props) => {
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div class="px-4 py-4" style="flex: 1">
           ${ store[ledger].map((x: Account) => html`
-            <${AccountPreview} ledger=${ledger} account=${x} />
+            <${AccountPreview} key=${ledger+x} ledger=${ledger} account=${x} />
           `)}
         </div>
 
