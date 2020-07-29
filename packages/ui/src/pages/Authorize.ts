@@ -48,13 +48,12 @@ const Authorize: FunctionalComponent = (props) => {
 
           <section class="section pt-4">
             <h3>
-              This will grant the following priviliges
+            This will grant the dApp the following privileges:
             </h3>
-            <p>
-              Algosign is your new way sign and create transactions on the Algorand network.
-            </p>
+            <p class="mt-4">Read the list of accounts in this wallet per supported ledger.</p> 
+            <p class="mt-4">Send you requests for transactions.</p> 
             <p class="mt-4">
-              AlgoSign is also a hot wallet for Algorand currency, and can manage assets on the network.
+            You will have the chance to review all transactions and will need to sign each with your wallet’s password.
             </p>
           </section>
         </div>

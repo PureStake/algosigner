@@ -1,0 +1,6 @@
+*
+* Copyright (C) PureStake, Inc - All Rights Reserved
+* Unauthorized copying of any contents of this repository, via any medium is strictly prohibited
+* Proprietary and confidential
+* Written by PureStake Development  <google_developer@purestake.com>, 2020
+*
