@@ -100,6 +100,11 @@ AlgoSigner.indexer({
 ### AlgoSigner.sign()
 Send a transaction object, conforming to the Algorand JS SDK, to AlgoSigner for approval. The network is determined from the ‘genesis-id’ property. If approved, response is a signed transaction object, with the binary blob field base64 encoded to prevent transmission issues. 
 
+#### Transaction Requirements
+- Must have a valid type (pay, keyreg, acfg, axfer, afrz)
+- Must not be a clawback
+- Must not have a fee above 10000 Micro Algos
+
 Example where txParams is set by a previous call to AlgoSigner.algod().
 
 **Request**        

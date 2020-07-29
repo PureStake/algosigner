@@ -191,6 +191,7 @@ describe('Basic dApp Tests', () => {
                 "to": sendAlgoToAddress,
                 "fee": getParams['fee'],
                 "amount": amount,
+                "type": "pay",
                 "firstRound": getParams['last-round'],
                 "lastRound": getParams['last-round'] + 1000,
                 "genesisID": getParams['genesis-id'],
