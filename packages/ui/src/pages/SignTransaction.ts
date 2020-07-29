@@ -6,6 +6,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import Authenticate from 'components/Authenticate'
 import { sendMessage } from 'services/Messaging'
+import logotype from 'assets/logotype.png'
 
 function deny() {
   sendMessage(JsonRpcMethod.SignDeny, {}, function() {});
@@ -17,17 +18,19 @@ const SignTransaction: FunctionalComponent = (props) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [tx, setTx] = useState<string>('');
+  const [request, setRequest] = useState<any>({});
 
-  chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
+  useEffect(() => {
+    chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
       if(request.body.method == JsonRpcMethod.SignTransaction) {
+        setRequest(request);
         let txParams = request.body.params;
         delete txParams.__;
         delete txParams.__b;
-          setTx(JSON.stringify(txParams, null, 2));
+        setTx(JSON.stringify(txParams, null, 2));
       }
-  });
+    });
 
-  useEffect(() => {
     window.addEventListener("beforeunload", deny);
     return () => window.removeEventListener("beforeunload", deny);
   }, []);
@@ -63,11 +66,17 @@ const SignTransaction: FunctionalComponent = (props) => {
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+      <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
+        <img src=${logotype} width="130" />
+      </div>
       <div style="flex: 1">
         <section class="hero">
           <div class="hero-body">
-            <h1 class="title">
-              dApp wants to sign a transaction!
+            ${request.favIconUrl && html`
+              <img src=${request.favIconUrl} width="48" style="float:left"/>
+            `}
+            <h1 class="title is-size-4" style="margin-left: 58px;">
+              ${request.originTitle} dApp wants to sign a transaction!
             </h1>
           </div>
         </section>
