@@ -1,35 +1,47 @@
-const algosdk = require("algosdk");
-import { Pay } from "@algosigner/common/interfaces/pay";
+//const algosdk = require("algosdk");
+import { PaymentTx } from "@algosigner/common/interfaces/pay";
+import { AssetConfigTx } from "@algosigner/common/interfaces/acfg";
+import { AssetFreezeTx } from "@algosigner/common/interfaces/afrz";
+import { AssetTransferTx } from "@algosigner/common/interfaces/axfer";
+import { KeyRegistrationTx } from "@algosigner/common/interfaces/keyreg";
 import { PayTransaction } from "./payTransaction";
+import { AcfgTransaction } from "./acfgTransaction";
+import { AfrzTransaction } from "./afrzTransaction";
+import { AxferTransaction } from "./axferTransaction";
+import { KeyregTransaction } from "./keyregTransaction";
 import { TransactionType } from "@algosigner/common/types/transaction";
-
-
-// TEMPORARY - testing with account generation
-function getPrivateKey(){
-    var account = algosdk.generateAccount();
-    return account;
-}
 
 ///
 // Sign transaction and return. 
 ///
-export function signTransaction(txn: object, type: TransactionType){
-    console.log(`Transaction in sign transaction method: \n${JSON.stringify(txn)}`);
-    let signedTxn: any;
+export function validateTransaction(txn: object, type: string) {
+    let validatedTxn: any;
 
-    switch(type){
+    switch(type.toLowerCase()){
         case TransactionType.Pay:
-            let tmptx = new PayTransaction(txn as Pay);
-            let tmpsk = getPrivateKey().sk;
-            console.log(`Transaction: ${JSON.stringify(tmptx)}`);
-            console.log(`Account sk: ${tmpsk as Uint8Array}`);
-            signedTxn = algosdk.signTransaction(tmptx, tmpsk);
+            validatedTxn = new PayTransaction(txn as PaymentTx);
             break;
-            
+        case TransactionType.Acfg:
+            validatedTxn = new AcfgTransaction(txn as AssetConfigTx);
+            break;    
+        case TransactionType.Afrz:
+            validatedTxn = new AfrzTransaction(txn as AssetFreezeTx);
+            break;
+        case TransactionType.Axfer:
+            validatedTxn = new AxferTransaction(txn as AssetTransferTx);
+            break;
+        case TransactionType.Keyreg:
+            validatedTxn = new KeyregTransaction(txn as KeyRegistrationTx);
+            break;
         default:
-            throw new Error("Type of transaction not specified.");
+            throw new Error("Type of transaction not specified or known.");
     }
 
-    return signedTxn;
+    if(validatedTxn){
+         return true; 
+    }
+    else {
+         return false;
+    }
 }
 
