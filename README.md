@@ -1,12 +1,14 @@
 # Introduction
-This project is designed to provide an Algorand Wallet and extension based access to sign Algorand transactions in common web browsers.
+This project is designed to provide an Algorand Wallet and extension based access to sign Algorand transactions in common web browsers. 
+
+AlgoSigner is in a pre-launch beta status.
 
 ## Project Structure
 There are multiple packages in the project that combine to build the overall extension. Each component package is designed so that it's functionality doesn't require the rebuild of other packages and will be combined to build the deployable extension. 
 
 *https://github.com/PureStake*
 * algosigner->							// Base project folder
-    * dist->                            // Folder containing the combined distribution components, used to install the extension
+    * dist->                            // Folder containing the combined distribution components, used to install the extension, created on build
 	* packages->						// Folder for scripts compents that support the extension
 	    * common->                      // Contains core elements used in other packages
         * crypto->                      // Wrapper for encrypting and decrypting account information
@@ -22,7 +24,21 @@ There are multiple packages in the project that combine to build the overall ext
 	* LICENSE.md						// License for this repository
 
 ## Installation
-The ./dist/ folder is the only required folder to install the extension. This can be rebuilt using 'npm run build' from the project root after 'npm install'. This will rebuild the packages and move their output to the ./dist/ folder. To install in Chrome, from chrome://extensions/, with developer mode active, on the top right of the screen you can select 'Load Unpacked' and choose the dist folder. This will add an icon to the browser toolbar.
+The ./dist/ folder is the only required folder to install the extension and must be built. 
+
+- Clone the repository locally
+- Run `npm install` in the root folder
+- Run `npm run build` in the root folder - this creates the `dist` folder
+- Open Chrome Browser - go to `chrome://extensions/`
+- Enable developer mode
+- Select `Load Unpacked` and choose the just created `dist` folder
+- AlgoSigner is now installed and available 
+
+## Developing a dApp 
+
+- Read [dApp Integration Guide](docs/dApp-integration.md)
+- Read [Sample dApp project](https://github.com/PureStake/algosigner-dapp-example)
+- Try [Interactive dApp](https://purestake.github.io/algosigner-dapp-example/)
 
 
 ## License
