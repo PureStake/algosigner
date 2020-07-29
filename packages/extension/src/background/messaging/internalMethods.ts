@@ -4,6 +4,7 @@ import { Ledger, Backend, API } from './types';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import Session from '../utils/session';
 import encryptionWrap from "../encryptionWrap";
+import { validateTransaction } from "../transaction/actions";
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -93,7 +94,7 @@ export class InternalMethods {
             } else {
                 new ExtensionStorage().clearStorageLocal((res) => {
                     if (res){
-                        session.clearSession()
+                        session.clearSession();
                         sendResponse({response: res});
                     } else {
                         sendResponse({error: 'Storage could not be cleared'});
@@ -274,6 +275,7 @@ export class InternalMethods {
             let params = await algod.getTransactionParams().do();
 
             let txn = {
+              "type": "pay",
               "from": address,
               "to": to,
               "fee": params.fee,
@@ -288,6 +290,20 @@ export class InternalMethods {
             const txHeaders = {
                 'Content-Type' : 'application/x-binary'
             }
+            
+            var isTxnValid = false;
+            try {
+                isTxnValid = validateTransaction(txn, txn["type"]);
+            }
+            catch(e) {
+                console.log(`Validation failed.\n${JSON.stringify(e)}`);
+            }
+
+            if(!isTxnValid){
+                console.log('error', 'Validation failed for transaction. Please verify the properties are valid.');
+                return;
+            }
+
             let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
             algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
@@ -298,8 +314,8 @@ export class InternalMethods {
         });
 
         return true;
-    }
-
+    }    
+    
     public static [JsonRpcMethod.ChangeLedger](request: any, sendResponse: Function) {
         session.ledger = request.body.params['ledger']
         sendResponse({ledger: session.ledger});
