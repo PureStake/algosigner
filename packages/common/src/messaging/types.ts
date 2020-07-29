@@ -25,6 +25,7 @@ export enum JsonRpcMethod {
     Transactions = "transactions",
     AssetDetails = "asset-details",
     SignSendTransaction = "sign-send-transaction",
+    ChangeLedger = "change-ledger",
 
 }
 

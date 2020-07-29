@@ -3,9 +3,11 @@ import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { route } from 'preact-router';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { StoreContext } from '../index'
 import WalletDetails from 'components/WalletDetails'
+import { sendMessage } from 'services/Messaging'
 
 const LedgerSelect: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
@@ -21,9 +23,14 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
   }
 
   const setLedger = (ledger) => {
-    store.setLedger(ledger);
-    flip();
-    route('/wallet');
+    const params = {
+      ledger: ledger
+    };
+    sendMessage(JsonRpcMethod.ChangeLedger, params, function(response) {
+      store.setLedger(ledger);
+      flip();
+      route('/wallet');
+    });
   }
 
   return useObserver(() => (html`

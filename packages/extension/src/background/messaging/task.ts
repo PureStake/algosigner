@@ -60,7 +60,6 @@ export class Task {
                                     message:d
                                 };
                                 setTimeout(function(){
-                                    console.log('SENDING MESSAGE AFTER WINDOW CREATION', d)
                                     extensionBrowser.runtime.sendMessage(d);
                                 }, 300);
                             }
@@ -195,7 +194,8 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-                    const accounts = InternalMethods.getHelperSession()[d.body.params.ledger];
+                    const session = InternalMethods.getHelperSession();
+                    const accounts = session.wallet[d.body.params.ledger];
                     let res = [];
                     for (var i = 0; i < accounts.length; i++) {
                         res.push({
@@ -305,9 +305,6 @@ export class Task {
                         // Clean class saved request
                         Task.request = {};
 
-                        console.log('signedTxn.blob', signedTxn.blob);
-                        console.log('signedTxn.blob', algosdk.decodeObj(signedTxn.blob));
-
                         message.response = {
                             txID: signedTxn.txID,
                             blob: btoa(String.fromCharCode(...signedTxn.blob))
@@ -363,6 +360,9 @@ export class Task {
                 },
                 [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse)
+                },
+                [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse)
                 }
             }
         }

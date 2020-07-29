@@ -33,7 +33,8 @@ const SetPassword: FunctionalComponent = (props) => {
       if ('error' in response){
         setError(response.error);
       } else {
-        store.updateWallet(response);
+        store.updateWallet(response.wallet);
+        store.setLedger(response.ledger);
         route('/wallet');
       }
     });
