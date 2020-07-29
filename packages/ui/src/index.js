@@ -39,7 +39,13 @@ const StoreProvider = ({children}) => {
     updateWallet: (newWallet) => {
       store.TestNet = newWallet.TestNet;
       store.MainNet = newWallet.MainNet;
-    }
+    },
+    saveRequest: (request) => {
+      store.savedRequest = request;
+    },
+    clearSavedRequest: () => {
+      delete store.savedRequest;
+    },
   }));
 
   autorun(() => {
