@@ -3,6 +3,7 @@ const algosdk = require("algosdk");
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
 import { Ledger, API } from './types';
+import { validateTransaction } from "../transaction/actions";
 import {InternalMethods} from './internalMethods';
 import {MessageApi} from './api';
 import encryptionWrap from "../encryptionWrap";
@@ -71,24 +72,39 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-                    extensionBrowser.windows.create({
-                        url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
-                        type: "popup",
-                        focused: true,
-                        width: 400 + 12,
-                        height: 550 + 34
-                    }, function (w) {
-                        if(w) {
-                            Task.request = {
-                                window_id: w.id,
-                                message: d
-                            };
-                            // Send message with tx info
-                            setTimeout(function(){
-                                extensionBrowser.runtime.sendMessage(d);
-                            }, 500);
-                        }
-                    });
+
+                    var isTxnValid = false;
+                    try {
+                        isTxnValid = validateTransaction(d.body.params, d.body.params["type"]);
+                    }
+                    catch(e) {
+                        console.log(`Validation failed.\n${JSON.stringify(e)}`);
+                    }
+                    if(!isTxnValid){                        
+                        console.log('error', 'Validation failed for transaction. Please verify the properties are valid.');
+                        reject('Validation failed for transaction. Please verify the properties are valid.');
+                    }
+                    else{
+
+                        extensionBrowser.windows.create({
+                            url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
+                            type: "popup",
+                            focused: true,
+                            width: 400 + 12,
+                            height: 550 + 34
+                        }, function (w) {
+                            if(w) {
+                                Task.request = {
+                                    window_id: w.id,
+                                    message: d
+                                };
+                                // Send message with tx info
+                                setTimeout(function(){
+                                    extensionBrowser.runtime.sendMessage(d);
+                                }, 500);
+                            }
+                        });
+                    }
                 },
                 // algod
                 [JsonRpcMethod.SendTransaction]: (
