@@ -38,8 +38,8 @@ const Login: FunctionalComponent = (props: any) => {
         setLoading(false);
         setError('Wrong password!');
       } else {
-        store.updateWallet(response);
-        console.log('redirect', redirect);
+        store.updateWallet(response.wallet);
+        store.setLedger(response.ledger);
         if (redirect.length > 0)
           route(`/${redirect}`)
         else

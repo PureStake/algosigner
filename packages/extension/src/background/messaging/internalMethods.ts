@@ -2,11 +2,11 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
-import Helper from '../utils/helper';
+import Session from '../utils/session';
 import encryptionWrap from "../encryptionWrap";
 const algosdk = require("algosdk");
 
-const helper = new Helper;
+const session = new Session;
 
 export class InternalMethods {
     private static _encryptionWrap: encryptionWrap|undefined;
@@ -44,7 +44,7 @@ export class InternalMethods {
     }
 
     public static getHelperSession() {
-        return helper.session;
+        return session.session;
     }
 
 
@@ -55,12 +55,11 @@ export class InternalMethods {
             if (!exist) {
                 sendResponse({exist: false});
             } else {
-                if (helper.session)
-                    sendResponse({exist: true, session: helper.session});
+                if (session.wallet)
+                    sendResponse({exist: true, session: session.session});
                 else
                     sendResponse({exist: true});
             }
-
         });
         return true;
     }
@@ -74,8 +73,9 @@ export class InternalMethods {
         this._encryptionWrap?.lock(JSON.stringify(newWallet),
             (isSuccessful: any) => {
             if (isSuccessful) {
-                helper.session = this.safeWallet(newWallet); 
-                sendResponse(helper.session);
+                session.wallet = this.safeWallet(newWallet),
+                session.ledger = Ledger.MainNet
+                sendResponse(session.session);
             } else {
                 sendResponse({error: 'Lock failed'});
             }
@@ -93,7 +93,7 @@ export class InternalMethods {
             } else {
                 new ExtensionStorage().clearStorageLocal((res) => {
                     if (res){
-                        helper.session = {};
+                        session.clearSession()
                         sendResponse({response: res});
                     } else {
                         sendResponse({error: 'Storage could not be cleared'});
@@ -110,8 +110,9 @@ export class InternalMethods {
             if ('error' in response){
                 sendResponse(response);
             } else {
-                helper.session = this.safeWallet(response); 
-                sendResponse(helper.session);
+                session.wallet = this.safeWallet(response),
+                session.ledger = Ledger.MainNet,
+                sendResponse(session.session);
             }
 
         });
@@ -142,8 +143,8 @@ export class InternalMethods {
                 this._encryptionWrap?.lock(JSON.stringify(unlockedValue),
                 (isSuccessful: any) => {
                     if (isSuccessful) {
-                        helper.session = this.safeWallet(unlockedValue); 
-                        sendResponse(helper.session);
+                        session.wallet = this.safeWallet(unlockedValue); 
+                        sendResponse(session.wallet);
                     } else {
                         sendResponse({error: 'Lock failed'});
                     }
@@ -171,8 +172,8 @@ export class InternalMethods {
                 this._encryptionWrap?.lock(JSON.stringify(unlockedValue),                                                                                               
                 (isSuccessful: any) => {
                     if (isSuccessful) {
-                        helper.session = this.safeWallet(unlockedValue); 
-                        sendResponse(helper.session);
+                        session.wallet = this.safeWallet(unlockedValue); 
+                        sendResponse(session.wallet);
                     } else {
                         sendResponse({error: 'Lock failed'});
                     }
@@ -207,8 +208,8 @@ export class InternalMethods {
                 this._encryptionWrap?.lock(JSON.stringify(unlockedValue),
                 (isSuccessful: any) => {
                     if(isSuccessful) {
-                        helper.session = this.safeWallet(unlockedValue); 
-                        sendResponse(helper.session);
+                        session.wallet = this.safeWallet(unlockedValue); 
+                        sendResponse(session.wallet);
                     } else {
                         sendResponse({error: 'Lock failed'});
                     }
@@ -292,11 +293,15 @@ export class InternalMethods {
             algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                 sendResponse({txId: resp.txId});
             }).catch((e: any) => {
-              console.log('error', e.message);
               sendResponse({error: e.message});
             });
         });
 
         return true;
+    }
+
+    public static [JsonRpcMethod.ChangeLedger](request: any, sendResponse: Function) {
+        session.ledger = request.body.params['ledger']
+        sendResponse({ledger: session.ledger});
     }
 }
