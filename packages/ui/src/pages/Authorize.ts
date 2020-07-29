@@ -1,7 +1,11 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { Link } from 'preact-router';
+
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+
+import logotype from 'assets/logotype.png'
 
 function deny() {
   chrome.runtime.sendMessage({
@@ -16,7 +20,15 @@ function deny() {
 }
 
 const Authorize: FunctionalComponent = (props) => {
+  const [request, setRequest] = useState<any>({});
+
   useEffect(() => {
+    chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
+      if(request.body.method == JsonRpcMethod.Authorization) {
+        setRequest(request);
+      }
+    });
+
     window.addEventListener("beforeunload", deny);
     return () => window.removeEventListener("beforeunload", deny);
   }, []);
@@ -37,24 +49,31 @@ const Authorize: FunctionalComponent = (props) => {
 
   return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+        <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
+          <img src=${logotype} width="130" />
+        </div>
         <div style="flex: 1">
           <section class="hero">
-            <div class="hero-body">
-              <h1 class="title">
-                dApp requested access to your wallet!
+            <div class="hero-body py-5">
+              ${request.favIconUrl && html`
+                <img src=${request.favIconUrl} width="48" style="float:left"/>
+              `}
+              <h1 class="title is-size-4" style="margin-left: 58px;">
+                ${request.originTitle} requested access to your wallet!
               </h1>
             </div>
           </section>
 
-          <section class="section pt-4">
+          <section class="section py-0">
             <h3>
-            This will grant the dApp the following privileges:
+              This will grant ${request.originTitle} the following privileges:
             </h3>
-            <p class="mt-4">Read the list of accounts in this wallet per supported ledger.</p> 
-            <p class="mt-4">Send you requests for transactions.</p> 
-            <p class="mt-4">
-            You will have the chance to review all transactions and will need to sign each with your wallet’s password.
-            </p>
+            <ul class="pl-5 mt-5" style="list-style: disc;">
+              <li><b>Read</b> the list of <b>accounts</b> in this wallet per supported ledger.</li> 
+              <li class="mt-4">
+                <b>Send you requests for transactions.</b> You will have the chance to review all transactions and will need to sign each with your wallet’s password.
+              </li>
+            </ul>
           </section>
         </div>
 
