@@ -71,18 +71,18 @@ const SignTransaction: FunctionalComponent = (props) => {
       </div>
       <div style="flex: 1">
         <section class="hero">
-          <div class="hero-body">
+          <div class="hero-body py-5">
             ${request.favIconUrl && html`
               <img src=${request.favIconUrl} width="48" style="float:left"/>
             `}
             <h1 class="title is-size-4" style="margin-left: 58px;">
-              ${request.originTitle} dApp wants to sign a transaction!
+              ${request.originTitle} wants to sign a transaction
             </h1>
           </div>
         </section>
 
         <section class="section pt-4">
-          <pre>
+          <pre style="background: #EFF4F7; border-radius: 5px;">
             <code>${tx}</code>
           </pre>
         </section>
