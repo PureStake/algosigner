@@ -30,24 +30,9 @@ import '@fortawesome/fontawesome-free/js/solid'
 export const StoreContext = createContext();
 
 const StoreProvider = ({children}) => {
-        console.log('PATHNAME1',window.location.hash);
   const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
-    addAccount: (ledger, address, name) => {
-      store[ledger].push({
-        address: address,
-        name: name
-      })
-    },
-    deleteAccount: (ledger, account) => {
-      for (var i = store[ledger].length - 1; i >= 0; i--) {
-        if (store[ledger][i].address == account.address) {
-          store[ledger].splice(i, 1)
-          break;
-        }
-      }
-    },
     setLedger: (ledger) => {
       store.ledger = ledger;
     },
@@ -64,24 +49,20 @@ const StoreProvider = ({children}) => {
   // Try to retrieve session from background
   sendMessage(JsonRpcMethod.GetSession, {}, function(response) {
     // Object.assign(store, JSON.parse(existingStore));
-    console.log('GETSESSION', response)
     if (response && response.exist){
       let hashPath = "";
       if (window.location.hash.length > 0)
          // Remove # from hash
         hashPath = window.location.hash.slice(2);
-      console.log('hashpath', hashPath)
       if ('session' in response) {
-        store.updateWallet(response.session);
+        store.updateWallet(response.session.wallet);
+        store.setLedger(response.session.ledger);
         if (hashPath.length > 0) {
-          console.log('1', hashPath)
           route(`/${hashPath}`)
         } else {
-          console.log('2', hashPath)
           route('/wallet')
         }
       } else {
-        console.log('3', hashPath)
         route('/login/'+hashPath);
       }
     }
