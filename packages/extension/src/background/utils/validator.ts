@@ -1,44 +1,86 @@
+const algosdk = require("algosdk");
+
 ///
-// Allowed field types.
+// Validation responses.
 ///
-export enum FieldType {
-    Any,
-    Address,
-    Uint64,
-    Uint32,
-    String,
-    ByteArray,
-    Boolean
+export enum ValidationResponse {
+    Valid = 0,      // Field is valid or not one of the validated fields
+    Invalid = 1,    // Field value is invalid and should not be used
+    Warning = 2,    // Field is out of normal parameters and should be inspected closely
+    Dangerous = 3   // Field has risky or costly fields with values and should be inspected very closely
 }
 
 ///
 // Return field if valid based on type.
 ///
-export function validate(field: any, value: any, type: FieldType): boolean {
-    var isValid = true;
-    switch(type) {
-        // Check by field expected type 
-
-        default:
-            break;
-    }
-
+export function Validate(field: any, value: any): ValidationResponse {
     switch(field) {
-        // Check by individual field names
+        // Validate the address is accurate
+        case "to":
+            if(!algosdk.isValidAddress(value)) {
+                return ValidationResponse.Invalid; 
+            }
+            else {
+                return ValidationResponse.Valid;  
+            }
 
-        // Question: Verify the address?
-        // TODO: Warn/Error on fee amount? Threshold?
+        case "amount":
+        case "assetIndex":
+        case "firstRound":
+        case "lastRound":
+        case "voteFirst":
+        case "voteLast":
+        case "voteKeyDilution":
+            if (value && (!Number.isSafeInteger(value) || value < 0)){
+                return ValidationResponse.Invalid;
+            }
+            else {
+                return ValidationResponse.Valid;  
+            }
+
+        // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
         case "fee":
-            if(value && parseInt(value) > 10000) { return false; }
-            break;
-        // TODO: Warn/Error on rounds already past or out too far out for current genesisHash? 
-        // TODO: Warn/Error on closeto? Threshold?
+            try {
+                if(value && (!Number.isSafeInteger(value) || value < 0)) {
+                    return ValidationResponse.Invalid;
+                } 
+                else if(value && parseInt(value) > 1000) { 
+                    return ValidationResponse.Warning; 
+                }
+                else if(value && parseInt(value) > 1000000) {
+                    return ValidationResponse.Dangerous; 
+                }
+                else {
+                    return ValidationResponse.Valid;  
+                }
+            }
+            catch {
+                // For any case where the parse int may fail.
+                return ValidationResponse.Invalid; 
+            }
+
+        // Close to types should issue a Dangerous validation warning if they contain values.
         case "closeRemainderTo":
-            if(value) { return false; }
-            break;
+            if(value) { 
+                return ValidationResponse.Dangerous; 
+            }
+            else {
+                return ValidationResponse.Valid;  
+            }
+
+        case "assetCloseTo":
+            if(value) { 
+                return ValidationResponse.Dangerous;  
+            }
+            else {
+                return ValidationResponse.Valid;  
+            }
+
         default:
-            break;
+            // Our field isn't one of the listed ones, so we can mark it as valid
+            return ValidationResponse.Valid;
     }
 
-    return isValid;
+    // If for some reason the case falls through mark the field invalid.
+    return ValidationResponse.Invalid;
 }

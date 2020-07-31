@@ -1,7 +1,7 @@
 ///
 // Mapping interface of allowable base fields for transactions.
 ///
-export interface BaseTx {
+export interface IBaseTx {
     //ledger?: string,
     from?: string,	        //Address	"snd"	The address of the account that pays the fee and amount. (Auto set by algosdk as the from.publicKey)
     fee: number,	        //uint64	"fee"	Paid by the sender to the FeeSink to prevent denial-of-service. The minimum fee on Algorand is currently 1000 microAlgos.

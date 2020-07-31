@@ -4,7 +4,9 @@ import { Ledger, Backend, API } from './types';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import Session from '../utils/session';
 import encryptionWrap from "../encryptionWrap";
-import { validateTransaction } from "../transaction/actions";
+import { getValidatedTxnWrap } from "../transaction/actions";
+import { ValidationResponse } from '../utils/validator';
+import {logging} from '@algosigner/common/logging';
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -290,27 +292,46 @@ export class InternalMethods {
             const txHeaders = {
                 'Content-Type' : 'application/x-binary'
             }
-            
-            var isTxnValid = false;
+
+            var transactionWrap = undefined;
             try {
-                isTxnValid = validateTransaction(txn, txn["type"]);
+                transactionWrap = getValidatedTxnWrap(txn, txn["type"]);
             }
             catch(e) {
-                console.log(`Validation failed.\n${JSON.stringify(e)}`);
+                logging.log(`Validation failed. ${e}`);
             }
-
-            if(!isTxnValid){
-                console.log('error', 'Validation failed for transaction. Please verify the properties are valid.');
+            if(!transactionWrap) {     
+                // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
+                logging.log('A transaction has failed because of an inability to build the specified transaction type.');
                 return;
             }
+            else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
+                // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+                // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+                return;
+            }
+            else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
+                || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
+                // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
+                // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
+                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
-            let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
+                    sendResponse({txId: resp.txId});
+                }).catch((e: any) => {
+                  sendResponse({error: e.message});
+                });
+            }
+            else {
+                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
-            algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
-                sendResponse({txId: resp.txId});
-            }).catch((e: any) => {
-              sendResponse({error: e.message});
-            });
+                algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
+                    sendResponse({txId: resp.txId});
+                }).catch((e: any) => {
+                  sendResponse({error: e.message});
+                });
+            }
+
         });
 
         return true;
