@@ -102,8 +102,12 @@ Send a transaction object, conforming to the Algorand JS SDK, to AlgoSigner for 
 
 #### Transaction Requirements
 - Must have a valid type (pay, keyreg, acfg, axfer, afrz)
-- Must not be a clawback
-- Must not have a fee above 10000 Micro Algos
+- Must not have additional unknown fields
+- When provided, address "to" must be a valid address
+- Numeric fields must have values that are considered safe and non-negative
+- Fees above 1000 Micro Algos and close fields will have internal warnings created for display purposes
+
+These restrictions can be seen in https://github.com/PureStake/algosigner/blob/master/packages/extension/src/background/utils/validator.ts
 
 Example where txParams is set by a previous call to AlgoSigner.algod().
 
