@@ -76,6 +76,14 @@ export function Validate(field: any, value: any): ValidationResponse {
                 return ValidationResponse.Valid;  
             }
 
+        case "rekey":
+            if(value) { 
+                return ValidationResponse.Invalid;  
+            }
+            else {
+                return ValidationResponse.Valid;  
+            }
+            
         default:
             // Our field isn't one of the listed ones, so we can mark it as valid
             return ValidationResponse.Valid;

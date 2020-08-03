@@ -13,7 +13,7 @@ class AssetFreezeTx implements IAssetFreezeTx{
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;
-    note?: any = undefined;
+    note?: string = undefined;
     genesisID: string = undefined;
     genesisHash: any = undefined;
     group?: any = undefined;
