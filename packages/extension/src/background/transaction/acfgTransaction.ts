@@ -1,52 +1,39 @@
-import { AssetConfigTx } from "@algosigner/common/interfaces/acfg";
-import { FieldType, validate } from "../utils/validator";
+import { IAssetConfigTx } from "@algosigner/common/interfaces/acfg";
+import { BaseValidatedTxnWrap } from "./baseValidatedTxnWrap";
 
 ///
 // Mapping, validation and error checking for transaction acfg transactions prior to sign.
 ///
-export class AcfgTransaction implements AssetConfigTx {
-    type: string;
-    from?: string;
-    fee: number;
-    firstRound: number;
-    lastRound: number;
-    note?: any;
-    genesisID: string;
-    genesisHash: any;
-    group?: any;
-    lease?: any;
-    assetIndex?: number;
-    assetTotal?: number;
-    assetDecimals?: number;
-    assetDefaultFrozen?: boolean;
-    assetUnitName?: string;
-    assetName?: string;
-    assetURL?: string;
-    assetMetadataHash?: any;
-    assetManager?: string;
-    assetReserve?: string;
-    assetFreeze?: string;
-    assetClawback?: string;
+class AssetConfigTx implements IAssetConfigTx {
+    type: string = undefined;
+    assetIndex?: number = undefined;
+    assetTotal?: number = undefined;
+    assetDecimals?: number = undefined;
+    assetDefaultFrozen?: boolean = undefined;
+    assetUnitName?: string = undefined;
+    assetName?: string = undefined;
+    assetURL?: string = undefined;
+    assetMetadataHash?: any = undefined;
+    assetManager?: string = undefined;
+    assetReserve?: string = undefined;
+    assetFreeze?: string = undefined;
+    assetClawback?: string = undefined;
+    from?: string = undefined;
+    fee: number = undefined;
+    firstRound: number = undefined;
+    lastRound: number = undefined;
+    note?: string = undefined;
+    genesisID: string = undefined;
+    genesisHash: any = undefined;
+    group?: any = undefined;
+    lease?: any = undefined;
+};
 
-
-    constructor(params: AcfgTransaction){
-        for (let prop in params){
-            // Verify there are no additional properties beyond the known property types
-            var validProperties = ["type","from","fee","firstRound","lastRound","note","genesisID","genesisHash","group","lease","assetIndex","assetTotal","assetDecimals","assetDefaultFrozen","assetUnitName","assetName","assetURL","assetMetadataHash","assetManager","assetReserve","assetFreeze","assetClawback"];
-
-            if(!(validProperties.includes(prop))){
-                throw new Error(`Transaction has additional unknown fields.`);
-            }
-            
-            // Validate the property type
-            let propValid = validate(prop, params[prop], FieldType.Any);
-            if(!propValid)
-            {
-                throw Error(`Property ${prop} is not valid with a value of ${params[prop]}.`);
-            }
-
-            // Assign the property
-            this[prop] = params[prop];
-        }
+///
+// Mapping, validation and error checking for transaction pay transactions prior to sign.
+///
+export class AcfgTransaction  extends BaseValidatedTxnWrap {
+    constructor(params: IAssetConfigTx){   
+        super(params, AssetConfigTx);
     }
-}
+} 

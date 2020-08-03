@@ -1,9 +1,9 @@
-import { BaseTx } from "./baseTx";
+import { IBaseTx } from "./baseTx";
 
 ///
 // Mapping interface of allowable fields for acfg transactions.
 ///
-export interface AssetConfigTx extends BaseTx {
+export interface IAssetConfigTx extends IBaseTx {
     type: string,                   //"acfg"
     assetIndex?: number,            //uint64	"caid"	For re-configure or destroy transactions, this is the unique asset ID. On asset creation, the ID is set to zero.
     assetTotal?: number,            //uint64	"t"	    The total number of base units of the asset to create. This number cannot be changed.

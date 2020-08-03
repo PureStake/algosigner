@@ -3,12 +3,16 @@ const algosdk = require("algosdk");
 import {RequestErrors} from '@algosigner/common/types';
 import {JsonRpcMethod} from '@algosigner/common/messaging/types';
 import { Ledger, API } from './types';
-import { validateTransaction } from "../transaction/actions";
+import { getValidatedTxnWrap } from "../transaction/actions";
+import { ValidationResponse } from '../utils/validator';
 import {InternalMethods} from './internalMethods';
 import {MessageApi} from './api';
 import encryptionWrap from "../encryptionWrap";
 import { Settings } from '../config';
 import {extensionBrowser} from '@algosigner/common/chrome';
+import {logging} from '@algosigner/common/logging';
+
+
 
 export class Task {
 
@@ -73,19 +77,51 @@ export class Task {
                     resolve: Function, reject: Function
                 ) => {
 
-                    var isTxnValid = false;
+                    var transactionWrap = undefined;
                     try {
-                        isTxnValid = validateTransaction(d.body.params, d.body.params["type"]);
+                        transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params["type"]);
                     }
                     catch(e) {
-                        console.log(`Validation failed.\n${JSON.stringify(e)}`);
+                        logging.log(`Validation failed. ${e}`);
                     }
-                    if(!isTxnValid){                        
-                        console.log('error', 'Validation failed for transaction. Please verify the properties are valid.');
+
+                    if(!transactionWrap) {     
+                        // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
+                        logging.log('A transaction has failed because of an inability to build the specified transaction type.');
                         reject('Validation failed for transaction. Please verify the properties are valid.');
                     }
-                    else{
-
+                    else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value  === ValidationResponse.Invalid)) {
+                        // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+                        // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+                        reject('Validation failed for transaction because of invalid properties.');
+                    }
+                    else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
+                        || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
+                        d.body.params = transactionWrap.transaction;
+                        // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
+                        // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
+                        extensionBrowser.windows.create({
+                            url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
+                            type: "popup",
+                            focused: true,
+                            width: 400 + 12,
+                            height: 550 + 34
+                        }, function (w) {
+                            if(w) {
+                                Task.request = {
+                                    window_id: w.id,
+                                    message: d
+                                };
+                                // Send message with tx info
+                                setTimeout(function(){
+                                    extensionBrowser.runtime.sendMessage(d);
+                                }, 500);
+                            }
+                        });
+                    }
+                    else {
+                        d.body.params = transactionWrap.transaction;
+                        // We have a transaction which appears to be valid. Show the popup as normal.
                         extensionBrowser.windows.create({
                             url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
                             type: "popup",
@@ -302,19 +338,13 @@ export class Task {
                         }
 
                         var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
-                        let params = await algod.getTransactionParams().do();
 
-                        let txn = {
-                            "from": from,
-                            "to": to,
-                            "fee": fee,
-                            "amount": +amount,
-                            "firstRound": firstRound,
-                            "lastRound": lastRound,
-                            "genesisID": genesisID,
-                            "genesisHash": genesisHash,
-                            "note": new Uint8Array(0)
-                        };
+                        let txn = {...message.body.params};
+
+                        if ('note' in txn) {
+                            const enc = new TextEncoder();
+                            txn.note = enc.encode(txn.note);
+                        }
 
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 

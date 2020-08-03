@@ -1,9 +1,9 @@
-import { BaseTx } from "./baseTx";
+import { IBaseTx } from "./baseTx";
 
 ///
 // Mapping interface of allowable fields for keyreg transactions.
 ///
-export interface KeyRegistrationTx extends BaseTx {
+export interface IKeyRegistrationTx extends IBaseTx {
     type: string,               //"keyreg"
     voteKey: string,	        //ed25519PublicKey	"votekey"	The root participation public key. See Generate a Participation Key to learn more.
     selectionKey: string,	    //VrfPubkey	        "selkey"	The VRF public key.

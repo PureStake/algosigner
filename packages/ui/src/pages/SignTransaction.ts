@@ -1,11 +1,17 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useContext } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
+import TxAcfg from 'components/SignTransaction/TxAcfg'
+import TxPay from 'components/SignTransaction/TxPay'
+import TxKeyreg from 'components/SignTransaction/TxKeyreg'
+import TxAxfer from 'components/SignTransaction/TxAxfer'
+import TxAfrz from 'components/SignTransaction/TxAfrz'
 import Authenticate from 'components/Authenticate'
 import { sendMessage } from 'services/Messaging'
+import { StoreContext } from 'index'
 import logotype from 'assets/logotype.png'
 
 function deny() {
@@ -13,22 +19,20 @@ function deny() {
 }
 
 const SignTransaction: FunctionalComponent = (props) => {
+  const store:any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [tx, setTx] = useState<string>('');
+  const [account, setAccount] = useState<string>('');
   const [request, setRequest] = useState<any>({});
+  const [showTx, setShowTx] = useState<any>(null);
+  const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
-      if(request.body.method == JsonRpcMethod.SignTransaction) {
+      if(request.body.method == JsonRpcMethod.SignTransaction)
         setRequest(request);
-        let txParams = request.body.params;
-        delete txParams.__;
-        delete txParams.__b;
-        setTx(JSON.stringify(txParams, null, 2));
-      }
     });
 
     window.addEventListener("beforeunload", deny);
@@ -63,6 +67,23 @@ const SignTransaction: FunctionalComponent = (props) => {
     });
   }
 
+  if (request.body) {
+    let tx = request.body.params;
+    // Search for account
+    let txLedger;
+    if (tx.genesisID === "mainnet-v1.0")
+      txLedger = 'MainNet';
+    else if (tx.genesisID === "testnet-v1.0")
+      txLedger = 'TestNet';
+
+    for (var i = store[txLedger].length - 1; i >= 0; i--) {
+      if (store[txLedger][i].address === tx.from){
+        setAccount(store[txLedger][i].name);
+        break;
+      }
+    }
+    setLedger(txLedger);
+  }
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
@@ -70,26 +91,40 @@ const SignTransaction: FunctionalComponent = (props) => {
         <img src=${logotype} width="130" />
       </div>
       <div style="flex: 1">
-        <section class="hero">
-          <div class="hero-body py-5">
-            ${request.favIconUrl && html`
-              <img src=${request.favIconUrl} width="48" style="float:left"/>
-            `}
-            <h1 class="title is-size-4" style="margin-left: 58px;">
-              ${request.originTitle} wants to sign a transaction
-            </h1>
-          </div>
-        </section>
+        ${ request.body && html`
+          <section class="hero">
+            <div class="hero-body py-5">
+              ${request.favIconUrl && html`
+                <img src=${request.favIconUrl} width="48" style="float:left"/>
+              `}
+              <h1 class="title is-size-4" style="margin-left: 58px;">
+                ${request.originTitle} wants to sign a transaction
+              </h1>
+            </div>
+          </section>
 
-        <section class="section pt-4">
-          <pre style="background: #EFF4F7; border-radius: 5px;">
-            <code>${tx}</code>
-          </pre>
-        </section>
+          <section class="section py-0">
+          ${ request.body.params.type==="pay" && html`
+            <${TxPay} tx=${request.body.params} account=${account} ledger=${ledger} />
+          `}
+          ${ request.body.params.type==="keyreg" && html`
+            <${TxKeyreg} tx=${request.body.params} account=${account} ledger=${ledger} />
+          `}
+          ${ request.body.params.type==="acfg" && html`
+            <${TxAcfg} tx=${request.body.params} account=${account} ledger=${ledger} />
+          `}
+          ${ request.body.params.type==="axfer" && html`
+            <${TxAxfer} tx=${request.body.params} account=${account} ledger=${ledger} />
+          `}
+          ${ request.body.params.type==="afrz" && html`
+            <${TxAfrz} tx=${request.body.params} account=${account} ledger=${ledger} />
+          `}
+          </section>
+        `}
       </div>
 
       <div class="mx-5 mb-3" style="display: flex;">
-        <button id="rejectTx" class="button is-link is-outlined px-6"
+        <button id="rejectTx" class="button is-danger is-outlined px-6"
           onClick=${deny}>
           Reject
         </button>

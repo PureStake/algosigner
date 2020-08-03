@@ -1,43 +1,32 @@
-import { AssetTransferTx } from "@algosigner/common/interfaces/axfer";
-import { FieldType, validate } from "../utils/validator";
+import { IAssetTransferTx } from "@algosigner/common/interfaces/axfer";
+import { BaseValidatedTxnWrap } from "./baseValidatedTxnWrap";
+
+///
+// Base implementation of the transactions type interface, for use in the export wrapper class below.
+///
+class AssetTransferTx implements IAssetTransferTx {
+    type: string = undefined;
+    assetIndex: number = undefined;
+    amount?: number = undefined;
+    to: string = undefined;
+    assetCloseTo?: string = undefined;
+    from?: string = undefined;
+    fee: number = undefined;
+    firstRound: number = undefined;
+    lastRound: number = undefined;
+    note?: string = undefined;
+    genesisID: string = undefined;
+    genesisHash: any = undefined;
+    group?: any = undefined;
+    lease?: any = undefined;
+
+}
 
 ///
 // Mapping, validation and error checking for transaction axfer transactions prior to sign.
 ///
-export class AxferTransaction implements AssetTransferTx {
-    type: string;
-    assetIndex: number;
-    amount?: number;
-    to: string;
-    assetCloseTo?: string;
-    from?: string;
-    fee: number;
-    firstRound: number;
-    lastRound: number;
-    note?: any;
-    genesisID: string;
-    genesisHash: any;
-    group?: any;
-    lease?: any;
-
-    constructor(params: AxferTransaction){
-        for (let prop in params){
-            // Verify there are no additional properties beyond the known property types
-            var validProperties = ["type","assetIndex","to","amount","assetCloseTo","from","fee","firstRound","lastRound","note","genesisID","genesisHash","group","lease"];
-
-            if(!(validProperties.includes(prop))){
-                throw new Error(`Transaction has additional unknown fields.`);
-            }
-            
-            // Validate the property type
-            let propValid = validate(prop, params[prop], FieldType.Any);
-            if(!propValid)
-            {
-                throw Error(`Property ${prop} is not valid with a value of ${params[prop]}.`);
-            }
-
-            // Assign the property
-            this[prop] = params[prop];
-        }
+export class AxferTransaction   extends BaseValidatedTxnWrap {
+    constructor(params: IAssetTransferTx){   
+        super(params, AssetTransferTx);
     }
 }
