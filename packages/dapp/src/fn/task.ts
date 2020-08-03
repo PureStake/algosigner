@@ -10,10 +10,6 @@ export class Task extends Runtime implements ITask {
 
     static subscriptions: {[key: string]: Function} = {};
 
-    static get inPayloadSign(): Array<string> {
-        return ['amount','to']
-    }
-
     connect(): Promise<JsonPayload> {
         return MessageBuilder.promise(
             JsonRpcMethod.Authorization, 
@@ -36,9 +32,6 @@ export class Task extends Runtime implements ITask {
         params: Transaction, 
         error: RequestErrors = RequestErrors.None
     ): Promise<JsonPayload> {
-        if(!super.requiredArgs(Task.inPayloadSign,Object.keys(params))){
-            error = RequestErrors.InvalidTransactionParams;
-        }
         return MessageBuilder.promise(
             JsonRpcMethod.SignTransaction, 
             params,
