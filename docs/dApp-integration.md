@@ -101,11 +101,13 @@ AlgoSigner.indexer({
 Send a transaction object, conforming to the Algorand JS SDK, to AlgoSigner for approval. The network is determined from the ‘genesis-id’ property. If approved, response is a signed transaction object, with the binary blob field base64 encoded to prevent transmission issues. 
 
 #### Transaction Requirements
-- Must have a valid type (pay, keyreg, acfg, axfer, afrz)
+- Must have a valid type ('pay', 'keyreg', 'acfg', 'axfer', 'afrz')
 - Must not have additional unknown fields
-- When provided, address "to" must be a valid address
+- Must not have any value in the 'rekey' field
+- When provided, address 'to' must be a valid address
 - Numeric fields must have values that are considered safe and non-negative
-- Fees above 1000 Micro Algos and close fields will have internal warnings created for display purposes
+- Fees above 1000 Micro Algos and any usage of 'close' fields ('AssetCloseTo' or 'CloseRemainderTo') will have internal warnings created for display purposes 
+- Note field must be a string (you may encrypt it) - not an Uint8, in order to prevent transmission errors
 
 These restrictions can be seen in https://github.com/PureStake/algosigner/blob/master/packages/extension/src/background/utils/validator.ts
 
