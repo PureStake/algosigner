@@ -338,19 +338,13 @@ export class Task {
                         }
 
                         var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
-                        let params = await algod.getTransactionParams().do();
 
-                        let txn = {
-                            "from": from,
-                            "to": to,
-                            "fee": fee,
-                            "amount": +amount,
-                            "firstRound": firstRound,
-                            "lastRound": lastRound,
-                            "genesisID": genesisID,
-                            "genesisHash": genesisHash,
-                            "note": new Uint8Array(0)
-                        };
+                        let txn = {...message.body.params};
+
+                        if ('note' in txn) {
+                            const enc = new TextEncoder();
+                            txn.note = enc.encode(txn.note);
+                        }
 
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
