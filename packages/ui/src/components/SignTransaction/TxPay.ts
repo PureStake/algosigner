@@ -15,12 +15,12 @@ const TxPay: FunctionalComponent = (props: any) => {
           <b>${account}</b>
         </div>
         <div class="is-size-7 has-text-right">
-          <b>YOU</b>
+          <b class="has-text-link">YOU</b>
         </div>
       </div>
     </div>
 
-    <p class="has-text-centered has-text-weight-bold"><i class="fas fa-arrow-down"></i> Payment</p>
+    <p class="has-text-centered has-text-weight-bold"><i class="fas fa-arrow-down mr-3"></i> Payment</p>
 
     <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
       <div style="display: flex; justify-content: space-between;">
@@ -30,7 +30,7 @@ const TxPay: FunctionalComponent = (props: any) => {
       </div>
     </div>
 
-    <div class="tabs is-centered">
+    <div class="tabs is-centered mb-2">
       <ul>
         <li class=${tab==="overview" ? "is-active" : ""}
           onClick=${() => setTab('overview')}>
@@ -45,13 +45,22 @@ const TxPay: FunctionalComponent = (props: any) => {
 
     ${ tab==="overview" && html`
       <div>
-        <p>Sending: <span style="float: right; margin-right: 11em;">${tx.amount/1e6} Algos</span></p>
-        <p>Fee: <span style="float: right; margin-right: 11em;">${tx.fee/1e6} Algos</span></p>
-        <p><b>Total:</b> <span style="float: right; margin-right: 11em;">${(tx.fee + tx.amount)/1e6} Algos</span></p>
+        <div class="is-flex">
+          <p style="width: 30%;">Sending:</p>
+          <p style="width: 70%;">${tx.amount/1e6} Algos</p>
+        </div>
+        <div class="is-flex">
+          <p style="width: 30%;">Fee:</p>
+          <p style="width: 70%;">${tx.fee/1e6} Algos</p>
+        </div>
+        <div class="is-flex">
+          <p style="width: 30%;"><b>Total:</b></p>
+          <p style="width: 70%;">${(tx.fee + tx.amount)/1e6} Algos</p>
+        </div>
       </div>
     `}
     ${ tab==="details" && html`
-      <div style="height: 160px; overflow: auto;">
+      <div style="height: 170px; overflow: auto;">
         <pre style="background: #EFF4F7; border-radius: 5px;">
           <code>${txText}</code>
         </pre>

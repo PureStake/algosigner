@@ -15,14 +15,14 @@ const TxAcfg: FunctionalComponent = (props: any) => {
           <b>${account}</b>
         </div>
         <div class="is-size-7 has-text-right">
-          <b>YOU</b>
+          <b class="has-text-link">YOU</b>
         </div>
       </div>
     </div>
 
     <p class="has-text-centered has-text-weight-bold">Asset configuration</p>
 
-    <div class="tabs is-centered">
+    <div class="tabs is-centered mb-2">
       <ul>
         <li class=${tab==="overview" ? "is-active" : ""}
           onClick=${() => setTab('overview')}>
@@ -38,35 +38,40 @@ const TxAcfg: FunctionalComponent = (props: any) => {
     ${ tab==="overview" && html`
       <div>
         ${tx.assetIndex && html`
-          <p>Asset ID:
-            <span style="float: right; margin-right: 11em;">${tx.assetIndex}</span>
-          </p>
+          <div class="is-flex">
+            <p style="width: 30%;">Asset:</p>
+            <p style="width: 70%;">${tx.assetIndex}</p>
+          </div>
         `}
         ${tx.assetName && html`
-          <p>Asset Name:
-            <span style="float: right; margin-right: 11em;">${tx.assetName}</span>
-          </p>
+          <div class="is-flex">
+            <p style="width: 30%;">Asset Name:</p>
+            <p style="width: 70%;">${tx.assetName}</p>
+          </div>
         `}
         ${tx.assetUnitName && html`
-          <p>Asset Unit Name:
-            <span style="float: right; margin-right: 11em;">${tx.assetUnitName}</span>
-          </p>
+          <div class="is-flex">
+            <p style="width: 30%;">Unit Name:</p>
+            <p style="width: 70%;">${tx.assetUnitName}</p>
+          </div>
         `}
         ${tx.assetURL && html`
-          <p>Asset URL:
-            <span style="float: right; margin-right: 11em;">${tx.assetURL}</span>
-          </p>
+          <div class="is-flex">
+            <p style="width: 30%;">Asset URL:</p>
+            <p style="width: 70%;">${tx.assetURL}</p>
+          </div>
         `}
         ${tx.assetTotal && html`
-          <p>Asset Total:
-            <span style="float: right; margin-right: 11em;">${tx.assetTotal}</span>
-          </p>
+          <div class="is-flex">
+            <p style="width: 30%;">Asset Total:</p>
+            <p style="width: 70%;">${tx.assetTotal}</p>
+          </div>
         `}
         <p>Fee: <span style="float: right; margin-right: 11em;">${tx.fee/1e6} Algos</span></p>
       </div>
     `}
     ${ tab==="details" && html`
-      <div style="height: 200px; overflow: auto;">
+      <div style="height: 245px; overflow: auto;">
         <pre style="background: #EFF4F7; border-radius: 5px;">
           <code>${txText}</code>
         </pre>

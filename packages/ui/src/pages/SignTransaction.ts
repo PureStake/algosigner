@@ -27,6 +27,7 @@ const SignTransaction: FunctionalComponent = (props) => {
   const [account, setAccount] = useState<string>('');
   const [request, setRequest] = useState<any>({});
   const [showTx, setShowTx] = useState<any>(null);
+  const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
@@ -68,20 +69,20 @@ const SignTransaction: FunctionalComponent = (props) => {
 
   if (request.body) {
     let tx = request.body.params;
-    console.log('TX', tx)
     // Search for account
-    let ledger;
+    let txLedger;
     if (tx.genesisID === "mainnet-v1.0")
-      ledger = 'MainNet';
+      txLedger = 'MainNet';
     else if (tx.genesisID === "testnet-v1.0")
-      ledger = 'TestNet';
+      txLedger = 'TestNet';
 
-    for (var i = store[ledger].length - 1; i >= 0; i--) {
-      if (store[ledger][i].address === tx.from){
-        setAccount(store[ledger][i].name);
+    for (var i = store[txLedger].length - 1; i >= 0; i--) {
+      if (store[txLedger][i].address === tx.from){
+        setAccount(store[txLedger][i].name);
         break;
       }
     }
+    setLedger(txLedger);
   }
 
   return html`
@@ -104,26 +105,26 @@ const SignTransaction: FunctionalComponent = (props) => {
 
           <section class="section py-0">
           ${ request.body.params.type==="pay" && html`
-            <${TxPay} tx=${request.body.params} account=${account} />
+            <${TxPay} tx=${request.body.params} account=${account} ledger=${ledger} />
           `}
           ${ request.body.params.type==="keyreg" && html`
-            <${TxKeyreg} tx=${request.body.params} account=${account} />
+            <${TxKeyreg} tx=${request.body.params} account=${account} ledger=${ledger} />
           `}
           ${ request.body.params.type==="acfg" && html`
-            <${TxAcfg} tx=${request.body.params} account=${account} />
+            <${TxAcfg} tx=${request.body.params} account=${account} ledger=${ledger} />
           `}
           ${ request.body.params.type==="axfer" && html`
-            <${TxAxfer} tx=${request.body.params} account=${account} />
+            <${TxAxfer} tx=${request.body.params} account=${account} ledger=${ledger} />
           `}
           ${ request.body.params.type==="afrz" && html`
-            <${TxAfrz} tx=${request.body.params} account=${account} />
+            <${TxAfrz} tx=${request.body.params} account=${account} ledger=${ledger} />
           `}
           </section>
         `}
       </div>
 
       <div class="mx-5 mb-3" style="display: flex;">
-        <button id="rejectTx" class="button is-link is-outlined px-6"
+        <button id="rejectTx" class="button is-danger is-outlined px-6"
           onClick=${deny}>
           Reject
         </button>

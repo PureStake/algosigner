@@ -15,22 +15,14 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
           <b>${account}</b>
         </div>
         <div class="is-size-7 has-text-right">
-          <b>YOU</b>
+          <b class="has-text-link">YOU</b>
         </div>
       </div>
     </div>
 
-    <p class="has-text-centered has-text-weight-bold"><i class="fas fa-arrow-down"></i> Payment</p>
+    <p class="has-text-centered has-text-weight-bold">Key Registration</p>
 
-    <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
-      <div style="display: flex; justify-content: space-between;">
-        <div>
-          <b style="word-break: break-all;">${tx.to}</b>
-        </div>
-      </div>
-    </div>
-
-    <div class="tabs is-centered">
+    <div class="tabs is-centered mb-2">
       <ul>
         <li class=${tab==="overview" ? "is-active" : ""}
           onClick=${() => setTab('overview')}>
@@ -45,13 +37,22 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
 
     ${ tab==="overview" && html`
       <div>
-        <p>Vote Key: <span style="float: right; margin-right: 11em;">${tx.voteKey}</span></p>
-        <p>Selection Key: <span style="float: right; margin-right: 11em;">${tx.selectionKey}</span></p>
-        <p><b>Total:</b> <span style="float: right; margin-right: 11em;">${(tx.fee + tx.amount)/1e6} Algos</span></p>
+        <div class="is-flex">
+          <p style="width: 30%;">Vote Key:</p>
+          <p style="width: 70%; word-break: break-word;">${tx.voteKey}</p>
+        </div>
+        <div class="is-flex">
+          <p style="width: 30%;">Selection Key:</p>
+          <p style="width: 70%; word-break: break-word;">${tx.selectionKey}</p>
+        </div>
+        <div class="is-flex">
+          <p style="width: 30%;">Fee:</p>
+          <p style="width: 70%;">${tx.fee/1e6} Algos</p>
+        </div>
       </div>
     `}
     ${ tab==="details" && html`
-      <div style="height: 160px; overflow: auto;">
+      <div style="height: 245px; overflow: auto;">
         <pre style="background: #EFF4F7; border-radius: 5px;">
           <code>${txText}</code>
         </pre>
