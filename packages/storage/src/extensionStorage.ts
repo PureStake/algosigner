@@ -4,7 +4,8 @@
  * =========================================
 */
 
-import {extensionBrowser} from '@algosigner/common/chrome';
+import { extensionBrowser } from '@algosigner/common/chrome';
+import { logging } from '@algosigner/common/logging';
 
 ///
 // Handles the setting and retrieval of data into the browser storage.local location. 
@@ -17,12 +18,10 @@ export class ExtensionStorage {
     // Callback: Callback will return a boolean of true if storage sets without error or false otherwise. 
     ///
     public setStorage(objectName: string, saveObject: object, callback: Function){
-      console.log(`Setting storage with an object that is a type of ${typeof saveObject} and value: \n{${objectName}:${saveObject}}`);
       extensionBrowser.storage.local.set({ [objectName]: saveObject }, () => {
           let isSuccessful = !extensionBrowser.runtime.lastError;
           if(!isSuccessful) {
-            //TODO: How to handle save failures?
-            console.log(extensionBrowser.runtime.lastError && `Chrome error: ${extensionBrowser.runtime.lastError.message}`);
+            logging.log(extensionBrowser.runtime.lastError && `Chrome error: ${extensionBrowser.runtime.lastError.message}`);
           }
           
           callback && callback(isSuccessful);
@@ -62,11 +61,9 @@ export class ExtensionStorage {
     public clearStorageLocal(callback: Function) {
       extensionBrowser.storage.local.clear(() => {
           if(!extensionBrowser.runtime.lastError) {
-            console.log('Clearing of local data successful.');
             callback && callback(true);
           }
           else {
-            console.log('Clearing of local data faiiled.');
             callback && callback(false);
           }
       });

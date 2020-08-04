@@ -18,7 +18,6 @@ export class ContextSecurity {
     // Passphrase required, nIterations and version can be overridden or left as defaults.
     constructor(passphrase: ArrayBuffer, params?: any) {
         if(!(passphrase instanceof ArrayBuffer || ArrayBuffer.isView(passphrase))){
-            console.log(typeof(passphrase));
             throw new SyntaxError("The provided passphrase parameter is not an instance of ArrayBuffer.");
         }
         this.passphrase = passphrase;
