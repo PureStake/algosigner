@@ -78,7 +78,7 @@ export default class EncryptionWrap {
         await this._localEncryption.unlock(blob).then((decryptedObject) => {
           if(Array.isArray(decryptedObject)) {
             let returnValues: any = [];
-            console.log('youdsf');
+  
             decryptedObject.forEach(value => { returnValues.push(EncryptionHelpers.arrayBufferToString(value)); });
             callback && callback(returnValues);
           }
