@@ -7,16 +7,27 @@ import ToClipboard from 'components/ToClipboard'
 
 const AccountKeys: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
+  const [recorded, setRecorded] = useState<boolean>(false);
 
   let grid : Array<any[]> = [[], [], [], [], []];
-  const blocks : Array<any> = account.mnemonic.split(" ").map((word, idx) => html`
-    <div class="mb-2" style="position: relative;" id="div_${idx+1}">
-      <div class="has-text-link"
-        style="position: absolute; text-align: right; left: -1.2em; top: -0.2em; width: 1em; font-size: 0.6em;">
+  const blocks : Array<any> = account.mnemonic.split(" ").map((word, idx) => {
+    if (idx % 5 === 0)
+      return html`
+        <div class="mb-1" style="position: relative;" id="div_${idx+1}">
+          <div class="has-text-link"
+            style="position: absolute; text-align: right; left: -1.2em; top: -0.2em; width: 1em; font-size: 0.6em;">
+            ${idx+1}
+          </div>
+          ${word}
+        </div>
+      `
+
+    return html`
+      <div class="mb-1" style="position: relative;" id="div_${idx+1}">
+        ${word}
       </div>
-      ${word}
-    </div>
-  `);
+    `
+  });
 
   for (var i = 0; i < blocks.length; i++) {
     grid[i%5].push(blocks[i]);
@@ -26,7 +37,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action=${prevStep} title="Save your keys!" />
       <div class="px-3" style="flex: 1;">
-        <div class="mb-4" style="background: #EFF4F7; padding: 1em">
+        <div class="mb-4 px-4 py-2" style="background: #EFF4F7; border-radius: 5px;">
           <div>
             <b>Account address</b>
             <${ToClipboard} class="is-pulled-right" data=${account.address} />
@@ -42,12 +53,22 @@ const AccountKeys: FunctionalComponent = (props: any) => {
             `)}
           </div>
         </div>
-        <p class="mb-4">Make sure you have the entire 25-word mnemonic, or you will lose access to this account forever.</p>
+        <p class="mb-4">Make sure you have the entire <b>25-word mnemonic</b>, or you will <b>lose access to this account forever</b>.</p>
         <p>You will <b>not</b> be able to recover it.</p>
       </div>
       <div style="padding: 1em;">
-        <button class="button is-primary is-fullwidth" id="nextStep"
-            onClick=${nextStep}>
+        <label class="checkbox mb-4">
+          <input type="checkbox"
+            class="mr-2"
+            value=${recorded}
+            onClick=${() => setRecorded(!recorded)} />
+          I’ve securely recorded my & mnemonic
+        </label>
+
+        <button class="button is-primary is-fullwidth"
+          disabled=${!recorded}
+          id="nextStep"
+          onClick=${nextStep}>
           Continue
         </button>
       </div>
