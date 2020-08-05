@@ -1,6 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
+import { useState, useContext, useRef, useEffect } from 'preact/hooks';
 
 import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
@@ -8,6 +8,7 @@ import logo from 'assets/logo-inverted.svg';
 const Authenticate: FunctionalComponent = (props: any) => {
   const { nextStep, error, loading } = props;
   const [pwd, setPwd] = useState<String>('');
+  const inputRef = useRef<HTMLHeadingElement>(null);
 
   const disabled : boolean = pwd.length === 0;
 
@@ -16,6 +17,12 @@ const Authenticate: FunctionalComponent = (props: any) => {
       nextStep(pwd);
     }
   }
+
+  useEffect(() => {
+    if (inputRef !== null) {
+       inputRef.current.focus();
+    }
+  }, [])
 
   return html`
     <div class="section has-text-white has-text-centered py-0">
@@ -31,6 +38,7 @@ const Authenticate: FunctionalComponent = (props: any) => {
         placeholder="Password"
         value=${pwd}
         onKeyDown=${handleEnter}
+        ref=${inputRef}
         onInput=${(e)=>setPwd(e.target.value)}/>
 
       <p class="mb-3 has-text-danger has-text-centered" style="height: 1.5em;">
