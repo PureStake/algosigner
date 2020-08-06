@@ -39,10 +39,10 @@ const AccountKeys: FunctionalComponent = (props: any) => {
       <div class="px-3" style="flex: 1;">
         <div class="mb-4 px-4 py-2" style="background: #EFF4F7; border-radius: 5px;">
           <div>
-            <b>Account address</b>
+            <b>Public Account address</b>
             <${ToClipboard} class="is-pulled-right" style="font-size: 0.9em;" data=${account.address} />
           </div>
-          <p style="word-break: break-all;" id="accountAddress">${account.address}</p>
+          <p style="word-break: break-all; font-size: 0.9em" id="accountAddress">${account.address}</p>
           <div style="display: flow-root;">
             <b>Mnemonic </b>
             <${ToClipboard} class="is-pulled-right" style="font-size: 0.9em;" data=${account.mnemonic} />
