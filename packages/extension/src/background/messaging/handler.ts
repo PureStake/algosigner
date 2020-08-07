@@ -26,15 +26,17 @@ class RequestValidation {
 export class OnMessageHandler extends RequestValidation {
     static events: {[key: string]: any} = {};
     static handle(request: any, sender: any, sendResponse: any) {
-        console.log('HANDLIG MESSAGE', request, sender, sendResponse);
+        console.log('HANDLIG MESSAGE', request, sender);
         
+        if ('tab' in sender){
+            request.originTabID = sender.tab.id;
+            request.originTitle = sender.tab.title;
+            if ('favIconUrl' in sender.tab)
+                request.favIconUrl = sender.tab.favIconUrl;
+        }
+
         try {
             request.origin = new URL(sender.url).origin;
-            if ('tab' in sender){
-                request.originTitle = sender.tab.title;
-                if ('favIconUrl' in sender.tab)
-                    request.favIconUrl = sender.tab.favIconUrl;
-            }
         } catch(e) {
             request.error = RequestErrors.NotAuthorized;
             MessageApi.send(request);

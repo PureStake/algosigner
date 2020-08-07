@@ -25,10 +25,6 @@
     },
     "web_accessible_resources": ["AlgoSigner.min.js"],
     "permissions": [
-        "notifications",
-        "storage",
-        "tabs",
-        "management",
-        "activeTab"
+        "storage"
     ]
 }
