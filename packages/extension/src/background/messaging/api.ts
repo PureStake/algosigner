@@ -13,17 +13,7 @@ export class MessageApi {
         }
     }
     public static send(d: any,active_tab: boolean = true) {
-        switch(PLATFORM) {
-            case 'chrome':
-                if(active_tab) {
-                    extensionBrowser.tabs.query({active: true, currentWindow: true}, function(tabs){
-                        var tab_id = tabs[0].id || 0;
-                        extensionBrowser.tabs.sendMessage(tab_id,d);
-                    });
-                } else {
-                    // TODO all tabs?
-                }
-                break;
-        }
+        var tab_id = d.originTabID || 0;
+        extensionBrowser.tabs.sendMessage(tab_id, d);
     }
 }
