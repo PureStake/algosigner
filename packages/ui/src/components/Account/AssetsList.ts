@@ -7,6 +7,11 @@ import AssetDetails from 'components/Account/AssetDetails'
 const AssetPreview: FunctionalComponent = (props: any) => {
   const { asset, setShowAsset } = props;
 
+  const getAmount = () => {
+    const dec = asset.decimals || 0;
+    return asset.amount/Math.pow(10, dec)
+  }
+
   return html`
     <div class="py-2 px-4"
       style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
@@ -19,9 +24,9 @@ const AssetPreview: FunctionalComponent = (props: any) => {
         ${ asset['asset-id'] }
       `}
       <span style="float: right;">
-        <b>${asset.amount}</b>
+        <b>${getAmount()}</b>
         ${ asset.unitname && asset.unitname.length > 0 && html`
-          <span> ${asset.unitname}</span<
+          <span class="has-text-grey-light"> ${asset.unitname}</span>
         `}
       </span>
     </div>

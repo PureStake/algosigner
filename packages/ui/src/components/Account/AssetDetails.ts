@@ -20,8 +20,13 @@ const AssetDetails: FunctionalComponent = (props: any) => {
     sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
       asset.name = response.asset.params.name;
       asset.unitname = response.asset.params['unit-name'];
+      asset.decimals = response.asset.params['decimals'];
       setResults(response.asset.params);
     });
+  }
+
+  const toDecimal = (num) => {
+    return num/Math.pow(10, asset.decimals)
   }
 
   useEffect(() => {
@@ -40,14 +45,14 @@ const AssetDetails: FunctionalComponent = (props: any) => {
         <p>
           <b>Your balance</b>
           <span class="is-pulled-right">
-            ${asset.amount} <b>${results['unit-name']}</b>
+            <b>${toDecimal(asset.amount)}</b> <span class="has-text-grey-light">${results['unit-name']}</span>
           </span>
         </p>
         <hr class="my-2" />
         <p>
           <b>Total units</b>
           <span class="is-pulled-right">
-            ${results.total} <b>${results['unit-name']}</b>
+            <b>${toDecimal(results.total)}</b> <span class="has-text-grey-light">${results['unit-name']}</span>
           </span>
         </p>
         <p>
