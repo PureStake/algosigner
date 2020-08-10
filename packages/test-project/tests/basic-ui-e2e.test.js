@@ -218,18 +218,24 @@ describe('Create Account', () => {
         for(let i=1; i<=25; i++) {
             mnemonicArray[i] = await extensionPage.$eval('#div_'+i, e => e.innerText) 
         }
-
+        await extensionPage.waitForSelector('#recordCheckbox')
+        await extensionPage.click('#recordCheckbox')
         await extensionPage.click('#nextStep')
     })
 
     test('Create An Account, Step 3 - Use Mnemonic', async () => {
         await extensionPage.waitForSelector('#enterMnemonic')
-        await extensionPage.waitForSelector('#'+mnemonicArray[1])
 
         for(let i=1; i<=25; i++) {
-            await extensionPage.click('#'+mnemonicArray[i])
+    
+            // ugly but works
+            if(mnemonicArray[i].search('\n') != -1) {
+                let actualWord = mnemonicArray[i].split('\n');
+                mnemonicArray[i] = actualWord[1];
+            }
+                await extensionPage.waitForSelector('#'+mnemonicArray[i])
+                await extensionPage.click('#'+mnemonicArray[i]) 
         }
-
         await extensionPage.click('#nextStep')
 
     })
