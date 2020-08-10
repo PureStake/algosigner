@@ -59,10 +59,10 @@ const AccountKeys: FunctionalComponent = (props: any) => {
       <div style="padding: 1em;">
         <label class="checkbox mb-4">
           <input type="checkbox"
-            class="mr-2"
+            class="mr-2" id="recordCheckbox" name="recordCheckbox"
             value=${recorded}
             onClick=${() => setRecorded(!recorded)} />
-          I’ve securely recorded my & mnemonic
+          I’ve securely recorded my mnemonic
         </label>
 
         <button class="button is-primary is-fullwidth"
