@@ -13,10 +13,9 @@ import {extensionBrowser} from '@algosigner/common/chrome';
 import {logging} from '@algosigner/common/logging';
 
 
-
 export class Task {
 
-    private static request: {[key: string]: any} = {};
+    private static requests: {[key: string]: any} = {};
     private static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
@@ -29,13 +28,29 @@ export class Task {
     public static build(request: any) {
         let body = request.body;
         let method = body.method;
-        return new Promise((resolve,reject) => {
+
+        // Check if there's a previous request from the same origin
+        if (request.originTabID in Task.requests)
+            return new Promise((resolve,reject) => {
+                request.error = 'Another query processing';
+                reject(request);
+            });
+        else
+            Task.requests[request.originTabID] = request;
+
+        let prom = new Promise((resolve,reject) => {
             Task.methods().public[method](
                 request,
                 resolve,
                 reject
             );
+        })
+
+        prom.finally(() => {
+            delete Task.requests[request.originTabID];
         });
+
+        return prom
     }
 
     public static methods(): {
@@ -47,6 +62,10 @@ export class Task {
             'public': {
                 // authorization
                 [JsonRpcMethod.Authorization]: (d: any) => {
+                    // Delete any previous request made from the Tab that it's
+                    // trying to connect.
+                    delete Task.requests[d.originTabID];
+
                     // If access was already granted, authorize connection.
                     if(Task.isAuthorized(d.origin)){
                         d.response = {};
@@ -60,7 +79,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w: any) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message:d
                                 };
@@ -108,7 +127,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message: d
                                 };
@@ -130,7 +149,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message: d
                                 };
@@ -260,13 +279,14 @@ export class Task {
             },
             'private': {
                 // authorization-allow
-                [JsonRpcMethod.AuthorizationAllow]: () => {
-                    let auth = Task.request;
+                [JsonRpcMethod.AuthorizationAllow]: (d) => {
+                    const { responseOriginTabID } = d.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     extensionBrowser.windows.remove(auth.window_id);
                     Task.authorized_pool.push(message.origin);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         // Response needed
@@ -275,13 +295,14 @@ export class Task {
                     }, 100);
                 },
                 // authorization-deny
-                [JsonRpcMethod.AuthorizationDeny]: () => {
-                    let auth = Task.request;
+                [JsonRpcMethod.AuthorizationDeny]: (d) => {
+                    const { responseOriginTabID } = d.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     auth.message.error = RequestErrors.NotAuthorized;
                     extensionBrowser.windows.remove(auth.window_id);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         MessageApi.send(message);
@@ -291,7 +312,8 @@ export class Task {
             'extension' : {
                 // sign-allow
                 [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
-                    let auth = Task.request;
+                    const { passphrase, responseOriginTabID } = request.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     const { from,
@@ -303,7 +325,6 @@ export class Task {
                         genesisID,
                         genesisHash,
                         note } = message.body.params;
-                    const { passphrase } = request.body.params;
 
                     let ledger
                     switch (genesisID) {
@@ -349,7 +370,7 @@ export class Task {
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
                         // Clean class saved request
-                        Task.request = {};
+                        delete Task.requests[responseOriginTabID];
 
                         message.response = {
                             txID: signedTxn.txID,
@@ -360,12 +381,13 @@ export class Task {
                     return true;
                 },
                 [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
-                    let auth = Task.request;
+                    const { responseOriginTabID } = request.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     auth.message.error = RequestErrors.NotAuthorized;
                     extensionBrowser.windows.remove(auth.window_id);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         MessageApi.send(message);

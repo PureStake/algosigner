@@ -29,10 +29,6 @@ export enum JsonRpcMethod {
 
 }
 
-export enum SupportedAlgod {
-    Status = "status"
-}
-
 export type JsonPayload = {[key: string]: string | number | JsonPayload | undefined};
 
 export type JsonRpcBody = {

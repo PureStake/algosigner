@@ -10,15 +10,18 @@ import logotype from 'assets/logotype.png'
 
 function deny() {
   chrome.runtime.sendMessage({
-      source:'extension',
-      body:{
-          jsonrpc: '2.0',
-          method:'authorization-deny',
-          params:[],
-          id: (+new Date).toString(16)
+    source: 'extension',
+    body: {
+      jsonrpc: '2.0',
+      method:'authorization-deny',
+      params: {
+        responseOriginTabID: responseOriginTabID
       }
+    }
   });
 }
+
+let responseOriginTabID;
 
 const Authorize: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
@@ -29,6 +32,7 @@ const Authorize: FunctionalComponent = (props) => {
       if(request.body.method == JsonRpcMethod.Authorization) {
         setRequest(request);
         store.saveRequest(request);
+        responseOriginTabID = request.originTabID;
       }
     });
 
@@ -46,13 +50,14 @@ const Authorize: FunctionalComponent = (props) => {
   const grant = () => {
     window.removeEventListener("beforeunload", deny);
     chrome.runtime.sendMessage({
-        source:'extension',
-        body:{
-            jsonrpc: '2.0',
-            method:'authorization-allow',
-            params:[],
-            id: (+new Date).toString(16)
+      source:'extension',
+      body: {
+        jsonrpc: '2.0',
+        method: 'authorization-allow',
+        params: {
+          responseOriginTabID: responseOriginTabID
         }
+      }
     });
   }
 
