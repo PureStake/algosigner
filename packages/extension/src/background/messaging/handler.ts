@@ -1,8 +1,9 @@
-import {MessageApi} from './api';
-import {Task} from './task';
-import {extensionBrowser} from '@algosigner/common/chrome';
-import {RequestErrors} from '@algosigner/common/types';
-import {JsonRpcMethod,MessageSource} from '@algosigner/common/messaging/types';
+import { MessageApi } from './api';
+import { Task } from './task';
+import { extensionBrowser } from '@algosigner/common/chrome';
+import { isFromExtension } from '@algosigner/common/utils';
+import { RequestErrors } from '@algosigner/common/types';
+import { JsonRpcMethod, MessageSource } from '@algosigner/common/messaging/types';
 
 const auth_methods = [
     JsonRpcMethod.Authorization,
@@ -49,8 +50,7 @@ export class OnMessageHandler extends RequestValidation {
         const id = body.id;
 
         // Check if the message comes from the extension
-        // TODO: Change to a more secure way
-        if (sender.origin.includes(extensionBrowser.runtime.id)) {
+        if (isFromExtension(sender.origin)) {
             // Message from extension
             switch(source) {
                 // Message from extension to dapp

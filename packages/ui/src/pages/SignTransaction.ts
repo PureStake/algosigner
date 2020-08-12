@@ -3,6 +3,7 @@ import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { isFromExtension } from '@algosigner/common/utils';
 
 import TxAcfg from 'components/SignTransaction/TxAcfg'
 import TxPay from 'components/SignTransaction/TxPay'
@@ -30,8 +31,10 @@ const SignTransaction: FunctionalComponent = (props) => {
   const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
-    chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
-      if(request.body.method == JsonRpcMethod.SignTransaction)
+
+    chrome.runtime.onMessage.addListener((request, sender: any) => {
+      // Check if the message is coming from the background script
+      if(isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction)
         setRequest(request);
     });
 
