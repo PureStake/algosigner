@@ -3,7 +3,7 @@ import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { extensionBrowser } from '@algosigner/common/chrome';
+import { isFromExtension } from '@algosigner/common/utils';
 
 import TxAcfg from 'components/SignTransaction/TxAcfg'
 import TxPay from 'components/SignTransaction/TxPay'
@@ -43,7 +43,7 @@ const SignTransaction: FunctionalComponent = (props) => {
         return false;
 
       // Check if the message is coming from the background script
-      if(sender.origin.split("//")[1] === extensionBrowser.runtime.id && request.body.method == JsonRpcMethod.SignTransaction){
+      if(isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction)
         setRequest(request);
         responseOriginTabID = request.originTabID;
       }
