@@ -53,6 +53,10 @@ export class Task {
         return prom
     }
 
+    public static clearPool() {
+        Task.authorized_pool = [];
+    }
+
     public static methods(): {
         [key: string]: {
             [JsonRpcMethod: string]: Function
