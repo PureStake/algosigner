@@ -43,7 +43,7 @@ const SignTransaction: FunctionalComponent = (props) => {
         return false;
 
       // Check if the message is coming from the background script
-      if(isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction)
+      if(isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction) {
         setRequest(request);
         responseOriginTabID = request.originTabID;
       }
