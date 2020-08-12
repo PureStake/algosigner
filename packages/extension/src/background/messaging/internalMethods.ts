@@ -2,6 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
+import { Task } from './task';
 import Session from '../utils/session';
 import encryptionWrap from "../encryptionWrap";
 import { getValidatedTxnWrap } from "../transaction/actions";
@@ -97,6 +98,7 @@ export class InternalMethods {
                 new ExtensionStorage().clearStorageLocal((res) => {
                     if (res){
                         session.clearSession();
+                        Task.clearPool();
                         sendResponse({response: res});
                     } else {
                         sendResponse({error: 'Storage could not be cleared'});

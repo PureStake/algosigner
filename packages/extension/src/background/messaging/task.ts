@@ -38,6 +38,10 @@ export class Task {
         });
     }
 
+    public static clearPool() {
+        Task.authorized_pool = [];
+    }
+
     public static methods(): {
         [key: string]: {
             [JsonRpcMethod: string]: Function
