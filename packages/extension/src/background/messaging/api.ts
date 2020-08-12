@@ -12,7 +12,8 @@ export class MessageApi {
                 break;
         }
     }
-    public static send(d: any,active_tab: boolean = true) {
+    public static send(d: any) {
+        console.log('SENDING', d)
         var tab_id = d.originTabID || 0;
         extensionBrowser.tabs.sendMessage(tab_id, d);
     }

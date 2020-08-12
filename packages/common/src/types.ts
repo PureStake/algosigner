@@ -1,5 +1,3 @@
-import {SupportedAlgod} from './messaging/types';
-
 export enum RequestErrors {
     None,
     NotAuthorized = '[RequestErrors.NotAuthorized] The extension user does not authorize the request.',
@@ -20,9 +18,4 @@ export type Transaction = {
     readonly from: TAccount;
     readonly note?: Note;
     readonly to: TAccount;
-}
-
-export type AlgodRequest = {
-    readonly method: SupportedAlgod;
-    readonly params: {[key: string]: string | number | undefined};
 }

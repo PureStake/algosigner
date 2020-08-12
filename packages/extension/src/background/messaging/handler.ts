@@ -96,15 +96,6 @@ export class OnMessageHandler extends RequestValidation {
                         }
                     }
                     break;
-                // A response message for a extension to dapp request
-                case MessageSource.Router:
-                    if(Task.isAuthorized(request.origin) && id in OnMessageHandler.events){
-                        OnMessageHandler.events[id]();
-                        setTimeout(function(){
-                            delete OnMessageHandler.events[id];
-                        },1000);
-                    }
-                    break;
             }
         }
     }
