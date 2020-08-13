@@ -367,18 +367,18 @@ export class Task {
                         let txn = {...message.body.params};
 
                         if ('note' in txn) {
-                            const enc = new TextEncoder();
-                            txn.note = enc.encode(txn.note);
+                            txn.note = Buffer.from(txn.note, "base64");
                         }
 
                         let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
                         // Clean class saved request
                         delete Task.requests[responseOriginTabID];
+                        let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
                         message.response = {
                             txID: signedTxn.txID,
-                            blob: btoa(String.fromCharCode(...signedTxn.blob))
+                            blob: b64Obj
                         };
                         MessageApi.send(message);
                     });

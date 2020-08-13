@@ -58,11 +58,11 @@ module.exports = {
   ],
   resolve: {
     extensions: [ '.tsx', '.ts', '.js' ],
-    "alias": { 
+    alias: { 
       "react": "preact/compat",
       "react-dom/test-utils": "preact/test-utils",
       "react-dom": "preact/compat",
-      "@algosigner/common": srcPath('../common/src'),
+      "@algosigner/common": path.resolve(__dirname, '../common/src'),
     },
     modules: [
       path.resolve('./src'),

@@ -31,7 +31,7 @@ export function Validate(field: any, value: any): ValidationResponse {
         case "voteFirst":
         case "voteLast":
         case "voteKeyDilution":
-            if (value && (!Number.isSafeInteger(value) || value < 0)){
+            if (value && (!Number.isSafeInteger(value) || parseInt(value) < 0)){
                 return ValidationResponse.Invalid;
             }
             else {
@@ -41,15 +41,15 @@ export function Validate(field: any, value: any): ValidationResponse {
         // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
         case "fee":
             try {
-                if(value && (!Number.isSafeInteger(value) || value < 0)) {
+                if(value && (!Number.isSafeInteger(value) || parseInt(value) < 0)) {
                     return ValidationResponse.Invalid;
                 } 
-                else if(value && parseInt(value) > 1000) { 
-                    return ValidationResponse.Warning; 
-                }
                 else if(value && parseInt(value) > 1000000) {
                     return ValidationResponse.Dangerous; 
                 }
+                else if(value && parseInt(value) > 1000) { 
+                    return ValidationResponse.Warning; 
+                }      
                 else {
                     return ValidationResponse.Valid;  
                 }

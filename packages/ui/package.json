@@ -17,7 +17,8 @@
     "mobx-react-lite": "^2.0.6",
     "preact": "^10.4.0",
     "preact-router": "^3.2.1",
-    "qrcode-generator": "^1.4.4"
+    "qrcode-generator": "^1.4.4",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@types/chrome": "0.0.116",
