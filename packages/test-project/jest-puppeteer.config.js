@@ -1,13 +1,17 @@
-const pathToExtension = require('path').join('../..', 'dist');
+const path = require('path');
+
+function srcPath(subpath) {
+  return path.resolve(__dirname, '../../' + subpath);
+}
 
 module.exports = {
   launch: {
-    executablePath: process.env.PUPPETEER_EXEC_PATH,
+    executablePath: process.env.PUPPETEER_EXEC_PATH || '',
     headless: false,
     args: [
       `--no-sandbox`,
-      `--disable-extensions-except=${pathToExtension}`,
-      `--load-extension=${pathToExtension}`
+      `--disable-extensions-except=${srcPath('dist')}`,
+      `--load-extension=${srcPath('dist')}`
     ]
   },
   server: {
