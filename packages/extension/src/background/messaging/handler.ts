@@ -1,6 +1,7 @@
 import { MessageApi } from './api';
 import { Task } from './task';
 import { extensionBrowser } from '@algosigner/common/chrome';
+import encryptionWrap from "../encryptionWrap";
 import { isFromExtension } from '@algosigner/common/utils';
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod, MessageSource } from '@algosigner/common/messaging/types';
@@ -26,9 +27,10 @@ class RequestValidation {
 
 export class OnMessageHandler extends RequestValidation {
     static events: {[key: string]: any} = {};
+
     static handle(request: any, sender: any, sendResponse: any) {
         console.log('HANDLIG MESSAGE', request, sender);
-        
+
         if ('tab' in sender){
             request.originTabID = sender.tab.id;
             request.originTitle = sender.tab.title;
@@ -44,6 +46,10 @@ export class OnMessageHandler extends RequestValidation {
             return;
         }
 
+        return this.processMessage(request, sender, sendResponse);
+    }
+
+    static processMessage(request: any, sender: any, sendResponse: any) {
         const source : MessageSource = request.source;
         const body = request.body;
         const method = body.method;
@@ -71,32 +77,36 @@ export class OnMessageHandler extends RequestValidation {
                     break;
             }
         } else {
-            switch(source) {
-                // Message from dapp to extension
-                case MessageSource.DApp:
-                    if(OnMessageHandler.isAuthorization(method) 
+            // Reject message if there's no wallet
+            new encryptionWrap("").checkStorage((exist: boolean) => {
+                if (!exist) {
+                    request.error = RequestErrors.NotAuthorized;
+                    MessageApi.send(request);
+                } else {
+                    if (OnMessageHandler.isAuthorization(method)
                         && OnMessageHandler.isPublic(method)) {
                         // Is a public authorization message, dapp is asking to connect
                         Task.methods().public[method](request);
                     } else {
                         // Other requests from dapp fall here
-                        if(Task.isAuthorized(request.origin)){
+                        if (Task.isAuthorized(request.origin)) {
                             // If the origin is authorized, build a promise
                             Task.build(request)
-                            .then(function(d){
-                                MessageApi.send(d);
-                            })
-                            .catch(function(d){
-                                MessageApi.send(d);
-                            });
+                                .then(function(d) {
+                                    MessageApi.send(d);
+                                })
+                                .catch(function(d) {
+                                    MessageApi.send(d);
+                                });
                         } else {
                             // Origin is not authorized
                             request.error = RequestErrors.NotAuthorized;
                             MessageApi.send(request);
                         }
                     }
-                    break;
-            }
+                }
+            });
+            return true;
         }
     }
 }
