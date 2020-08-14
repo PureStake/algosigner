@@ -124,7 +124,7 @@ let txn = {
                     "lastRound": txParams['last-round'] + 1000,
                     "genesisID": txParams['genesis-id'],
                     "genesisHash": txParams['genesis-hash'],
-                    "note": new Uint8Array(0)
+                    "note": "NOTE is a string"
                 };
                 AlgoSigner.sign(txn)
 ```
@@ -162,3 +162,5 @@ The following errors may be returned by the dApp in case of users rejecting requ
     UnsupportedLedger = '[RequestErrors.UnsupportedLedger] The provided ledger is not supported.',
     Undefined = '[RequestErrors.Undefined] An undefined error occurred.',
 ```
+
+Errors may be passed back to the dApp from the Algorand JS SDK if a transaction is valid, but has some other issue - for example insufficient funds in the sending account. 
