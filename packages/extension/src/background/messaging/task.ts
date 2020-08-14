@@ -367,19 +367,23 @@ export class Task {
                         let txn = {...message.body.params};
 
                         if ('note' in txn) {
-                            txn.note = Buffer.from(txn.note, "base64");
+                            txn.note = new Uint8Array(Buffer.from(txn.note));
                         }
 
-                        let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                        try {
+                            let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                            let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                            message.response = {
+                                txID: signedTxn.txID,
+                                blob: b64Obj
+                            };
+                        } catch(e) {
+                            message.error = e.message;
+                        }
 
                         // Clean class saved request
                         delete Task.requests[responseOriginTabID];
-                        let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
-
-                        message.response = {
-                            txID: signedTxn.txID,
-                            blob: b64Obj
-                        };
                         MessageApi.send(message);
                     });
                     return true;

@@ -288,7 +288,7 @@ export class InternalMethods {
               "lastRound": params.lastRound,
               "genesisID": params.genesisID,
               "genesisHash": params.genesisHash,
-              "note": new Uint8Array(Buffer.from(note, "base64"))
+              "note": new Uint8Array(Buffer.from(note))
             };
 
             const txHeaders = {
@@ -315,7 +315,7 @@ export class InternalMethods {
             else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                 || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
                 // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
-                // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
+                // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
                 let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
 
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
