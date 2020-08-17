@@ -39,6 +39,8 @@ describe('Wallet Setup', () => {
         baseUrl = `chrome-extension://${extensionID}/${extensionPopupHtml}`;
 
         extensionPage = await browser.newPage();
+        extensionPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
+        dummyPage.close();
         await extensionPage.goto(baseUrl);
     })
     
@@ -196,7 +198,7 @@ describe('Basic dApp Tests', () => {
                 "lastRound": getParams['last-round'] + 1000,
                 "genesisID": getParams['genesis-id'],
                 "genesisHash": getParams['genesis-hash'],
-                "note": new Uint8Array(0)
+                "note": "test string note"
             };
             
         return Promise.resolve(

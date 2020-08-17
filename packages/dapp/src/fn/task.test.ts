@@ -9,7 +9,7 @@ jest.mock('../messaging/builder');
 describe('task tests', () => {
   beforeEach(() => {
     // Clear all instances and calls to constructor and all methods:
-    MessageBuilder.mockClear();
+    jest.clearAllMocks();
   });
 
   test('connect must call MessageBuilder once', () => {

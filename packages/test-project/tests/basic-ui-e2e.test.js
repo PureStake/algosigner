@@ -37,6 +37,8 @@ describe('Basic Happy Path Tests', () => {
         baseUrl = `chrome-extension://${extensionID}/${extensionPopupHtml}`;
 
         extensionPage = await browser.newPage();
+        extensionPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
+        dummyPage.close();
         await extensionPage.goto(baseUrl);
     })
     
