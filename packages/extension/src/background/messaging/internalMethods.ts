@@ -229,7 +229,25 @@ export class InternalMethods {
         const { ledger, address } = request.body.params;
         const algod = this.getAlgod(ledger);
         algod.accountInformation(address).do().then((res: any) => {
-          sendResponse(res);
+            // Check for asset details saved in storage if needed
+            if ('assets' in res && res.assets.length > 0){
+                new ExtensionStorage().getStorage('assets', (savedAssets: any) => {
+                    if (savedAssets) {
+                        for (var i = res.assets.length - 1; i >= 0; i--) {
+                            const assetId = res.assets[i]['asset-id'];
+                            if (assetId in savedAssets)
+                                res.assets[i] = {
+                                    ...res.assets[i],
+                                    ...savedAssets[assetId]
+                                };
+                        }
+                    }
+                    res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
+                    sendResponse(res);
+                });
+            } else {
+                sendResponse(res);
+            }
         });
         return true;
     }
@@ -248,9 +266,19 @@ export class InternalMethods {
     }
 
     public static [JsonRpcMethod.AssetDetails](request: any, sendResponse: Function) {
+        const assetId = request.body.params['asset-id'];
         let indexer = this.getIndexer(request.body.params.ledger);
-        indexer.lookupAssetByID(request.body.params['asset-id']).do().then((res: any) => {
-          sendResponse(res);
+        indexer.lookupAssetByID(assetId).do().then((res: any) => {
+            sendResponse(res);
+            // Save asset details in storage if needed
+            let extensionStorage = new ExtensionStorage();
+            extensionStorage.getStorage('assets', (savedAssets: any) => {
+                let assets = savedAssets || {};
+                if (!(assetId in assets)) {
+                    assets[assetId] = res.asset.params;
+                    extensionStorage.setStorage('assets', assets, null);
+                }
+            });
         });
         return true;
     }
