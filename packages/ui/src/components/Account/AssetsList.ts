@@ -8,8 +8,9 @@ const AssetPreview: FunctionalComponent = (props: any) => {
   const { asset, setShowAsset } = props;
 
   const getAmount = () => {
-    const amount = asset.amount/Math.pow(10, asset.decimals);
-    return amount.toLocaleString('en-US', {maximumFractionDigits: asset.decimals});
+    const decimals = asset.decimals || 0;
+    const amount = asset.amount/Math.pow(10, decimals);
+    return amount.toLocaleString('en-US', {maximumFractionDigits: decimals});
   }
 
   return html`
