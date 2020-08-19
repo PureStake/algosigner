@@ -13,9 +13,5 @@ module.exports = {
       `--disable-extensions-except=${srcPath('dist')}`,
       `--load-extension=${srcPath('dist')}`
     ]
-  },
-  server: {
-    command: 'node server.js',
-    port: 9000
   }
 }
