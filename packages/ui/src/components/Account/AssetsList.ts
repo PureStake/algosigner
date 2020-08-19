@@ -8,8 +8,9 @@ const AssetPreview: FunctionalComponent = (props: any) => {
   const { asset, setShowAsset } = props;
 
   const getAmount = () => {
-    const dec = asset.decimals || 0;
-    return asset.amount/Math.pow(10, dec)
+    const decimals = asset.decimals || 0;
+    const amount = asset.amount/Math.pow(10, decimals);
+    return amount.toLocaleString('en-US', {maximumFractionDigits: decimals});
   }
 
   return html`
@@ -25,8 +26,8 @@ const AssetPreview: FunctionalComponent = (props: any) => {
       `}
       <span style="float: right;">
         <b>${getAmount()}</b>
-        ${ asset.unitname && asset.unitname.length > 0 && html`
-          <span class="has-text-grey-light"> ${asset.unitname}</span>
+        ${ asset['unit-name'] && asset['unit-name'].length > 0 && html`
+          <span class="has-text-grey-light"> ${asset['unit-name']}</span>
         `}
       </span>
     </div>

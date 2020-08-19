@@ -10,23 +10,32 @@ import ToClipboard from 'components/ToClipboard'
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<number>(0);
 
   const fetchApi = async () => {
     const params = {
       'ledger': ledger,
       'asset-id': asset['asset-id']
     };
-    sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
-      asset.name = response.asset.params.name;
-      asset.unitname = response.asset.params['unit-name'];
-      asset.decimals = response.asset.params['decimals'];
-      setResults(response.asset.params);
-    });
+    if (!('name' in asset)) {
+      sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
+        const keys = Object.keys(response.asset.params);
+        for (var i = keys.length - 1; i >= 0; i--) {
+          asset[keys[i]] = response.asset.params[keys[i]];
+        }
+        setResults(1);
+      });
+    }
   }
 
-  const toDecimal = (num) => {
-    return num/Math.pow(10, asset.decimals)
+  const toDecimal = (num, full=false) => {
+    let params: any = {
+      maximumFractionDigits: asset.decimals
+    }
+    const amount = num/Math.pow(10, asset.decimals);
+    if (full)
+      params.minimumFractionDigits = asset.decimals;
+    return amount.toLocaleString('en-US', params);
   }
 
   useEffect(() => {
@@ -36,29 +45,29 @@ const AssetDetails: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      ${ results && html`
+      ${ asset.name && html`
         <div class="has-text-centered mb-2">
-          <b>${results.name}</b>
+          <b>${asset.name}</b>
           <br />
           <span class="has-text-grey-light">${asset['asset-id']}</span>
         </div>
         <p>
           <b>Your balance</b>
           <span class="is-pulled-right">
-            <b>${toDecimal(asset.amount)}</b> <span class="has-text-grey-light">${results['unit-name']}</span>
+            <b>${toDecimal(asset.amount)}</b> <span class="has-text-grey-light">${asset['unit-name']}</span>
           </span>
         </p>
         <hr class="my-2" />
         <p>
           <b>Total units</b>
           <span class="is-pulled-right">
-            <b>${toDecimal(results.total)}</b> <span class="has-text-grey-light">${results['unit-name']}</span>
+            <b>${toDecimal(asset.total, true)}</b> <span class="has-text-grey-light">${asset['unit-name']}</span>
           </span>
         </p>
         <p>
-          <b>Creator</b> (<${ToClipboard} data=${results.creator} />)
+          <b>Creator</b> (<${ToClipboard} data=${asset.creator} />)
           <span class="is-pulled-right">
-            ${results.creator.slice(0, 8)}.....${results.creator.slice(-8)}
+            ${asset.creator.slice(0, 8)}.....${asset.creator.slice(-8)}
           </span>
         </p>
         <div class="has-text-centered mt-3">
