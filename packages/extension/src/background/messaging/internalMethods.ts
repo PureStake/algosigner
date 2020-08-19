@@ -235,10 +235,10 @@ export class InternalMethods {
                     if (savedAssets) {
                         for (var i = res.assets.length - 1; i >= 0; i--) {
                             const assetId = res.assets[i]['asset-id'];
-                            if (assetId in savedAssets)
+                            if (assetId in savedAssets[ledger])
                                 res.assets[i] = {
                                     ...res.assets[i],
-                                    ...savedAssets[assetId]
+                                    ...savedAssets[ledger][assetId]
                                 };
                         }
                     }
@@ -267,15 +267,20 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.AssetDetails](request: any, sendResponse: Function) {
         const assetId = request.body.params['asset-id'];
-        let indexer = this.getIndexer(request.body.params.ledger);
+        const { ledger } = request.body.params;
+        let indexer = this.getIndexer(ledger);
         indexer.lookupAssetByID(assetId).do().then((res: any) => {
             sendResponse(res);
             // Save asset details in storage if needed
             let extensionStorage = new ExtensionStorage();
             extensionStorage.getStorage('assets', (savedAssets: any) => {
-                let assets = savedAssets || {};
-                if (!(assetId in assets)) {
-                    assets[assetId] = res.asset.params;
+                console.log('assets', savedAssets)
+                let assets = savedAssets || {
+                    TestNet: {},
+                    MainNet: {}
+                };
+                if (!(assetId in assets[ledger])) {
+                    assets[ledger][assetId] = res.asset.params;
                     extensionStorage.setStorage('assets', assets, null);
                 }
             });
