@@ -60,7 +60,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             break;
         }
       } else {
-        console.log('setting txid', response.txId)
         setAskAuth(false);
         setTxId(response.txId);
       }
@@ -117,7 +116,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           onInput=${(e) => setNote(e.target.value)}/>
 
         <p class="has-text-danger">
-          ${error!==undefined && error.length > 0 && error}
+          ${(error!==undefined && error.length > 0) && html`
+            Error: ${error}
+          `}
         </p>
 
       </div>
@@ -125,7 +126,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button
           id="submitSendAlgos"
           class="button is-primary is-fullwidth"
-          disabled=${to.length === 0 || +amount === 0}
+          disabled=${to.length === 0 || +amount <= 0}
           onClick=${() => setAskAuth(true)}>
           Send!
         </button>
