@@ -248,6 +248,8 @@ export class InternalMethods {
             } else {
                 sendResponse(res);
             }
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
@@ -261,6 +263,8 @@ export class InternalMethods {
             txs.nextToken(request.body.params['next-token']);
         txs.do().then((res: any) => {
             sendResponse(res);
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
@@ -284,6 +288,8 @@ export class InternalMethods {
                     extensionStorage.setStorage('assets', assets, null);
                 }
             });
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
