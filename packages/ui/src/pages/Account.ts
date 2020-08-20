@@ -6,6 +6,7 @@ import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
 
 import { sendMessage } from 'services/Messaging'
+import { numFormat } from 'services/common';
 
 import { StoreContext } from 'index'
 import TransactionsList from 'components/Account/TransactionsList'
@@ -63,7 +64,7 @@ const Account: FunctionalComponent = (props: any) => {
       </p>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
-        ${ results && html`${results.amount/1e6} <span class="has-text-grey-light">Algos</span>` }
+        ${ results && html`${numFormat(results.amount/1e6, 6)} <span class="has-text-grey-light">Algos</span>` }
       </span>
     </div>
     <div class="px-4">
