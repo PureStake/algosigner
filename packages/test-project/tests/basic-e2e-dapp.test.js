@@ -174,7 +174,7 @@ describe('Basic dApp Tests', () => {
 
         expect(getParams).toHaveProperty('consensus-version')
         expect(getParams).toHaveProperty('fee')
-        expect(getParams.fee).toEqual(1)
+        expect(getParams.fee).toEqual(0)
         expect(getParams).toHaveProperty('min-fee')        
         expect(getParams).toHaveProperty('genesis-hash')
         expect(getParams).toHaveProperty('genesis-id')
