@@ -334,31 +334,45 @@ export class InternalMethods {
             }
             catch(e) {
                 logging.log(`Validation failed. ${e}`);
+                sendResponse({error: `Validation failed. ${e}`});
+                return;
             }
             if(!transactionWrap) {     
                 // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
                 logging.log('A transaction has failed because of an inability to build the specified transaction type.');
+                sendResponse({error: 'A transaction has failed because of an inability to build the specified transaction type.'});
                 return;
             }
             else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-                // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+                sendResponse({error: 'Invalid fields'});
                 return;
             }
             else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                 || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
                 // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
                 // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
-                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                let signedTxn;
+                try {
+                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                } catch(e) {
+                    sendResponse({error: e.message});
+                    return;
+                }
 
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
                   sendResponse({error: e.message});
                 });
-            }
-            else {
-                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+            } else {
+                let signedTxn;
+                try {
+                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                } catch(e) {
+                    sendResponse({error: e.message});
+                    return;
+                }
 
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
