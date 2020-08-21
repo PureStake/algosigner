@@ -1,7 +1,29 @@
-# Introduction
-This project is designed to provide an Algorand Wallet and extension based access to sign Algorand transactions in common web browsers. 
+ # ![AlgoSigner](media/algosigner-wallet-banner-3.png)
 
-AlgoSigner is in a pre-launch beta status.
+An open-source Algorand wallet browser extension that permits dApp communication for signing Algorand transactions - available for Chrome initially. 
+
+## Chrome Extension Store
+The extension is available on the Chrome Extension Store at: 
+
+_This is the preferred solution for end-users, updates will be automatically installed after review by the extension store_
+
+Developers working with dApps may also install directly from the release package, or by downloading the project and building it. 
+
+## Decentralized Applications
+As a browser extension, AlgoSigner opens the door for developers to build DeFi applications on Algorand by providing a secure way to add transaction capabilities. This enables developers to initiate transactions and accept ALGOs seamlessly, without jeopardizing the security of their users’ secrets.
+
+For end users, AlgoSigner also makes it easy to use Algorand-based applications on the web. Simply create or import your Algorand account, visit a compatible dApp, and approve or deny transactions — all from within your browser.
+
+DApp users can trust AlgoSigner to:
+- Securely store and encrypt account secrets
+- Authorize transactions without giving dApps direct access to their keys
+- Sign and approve transactions when using dApps
+
+### Developing a dApp 
+
+- Read [dApp Integration Guide](docs/dApp-integration.md)
+- Read [Sample dApp project](https://github.com/PureStake/algosigner-dapp-example)
+- Try [Interactive dApp](https://purestake.github.io/algosigner-dapp-example/)
 
 ## Project Structure
 There are multiple packages in the project that combine to build the overall extension. Each component package is designed so that it's functionality doesn't require the rebuild of other packages and will be combined to build the deployable extension. 
@@ -20,11 +42,13 @@ There are multiple packages in the project that combine to build the overall ext
 	* manifest.json						// Extension definition file
 	* package.json						// Algosigner package, required packages, and scripts to build the project
 	* readme.md							// Project overview
-	* dApp-integration.md				// Guide to integrating dApps with AlgoSigner
-	* LICENSE.md						// License for this repository
+	* docs ->							// Guides and how-to's
+		* dApp-integration.md			// Guide to integrating dApps with AlgoSigner
+	* media ->							// Supporting images for this repository
+	* LICENSE.txt						// License for this repository
 
-## Installation
-The ./dist/ folder is the only required folder to install the extension and must be built. 
+## Build and Install
+The ./dist/ folder is the only required folder to install the extension yourself from code and must be built. 
 
 - Clone the repository locally
 - Run `npm install` in the root folder
@@ -34,13 +58,11 @@ The ./dist/ folder is the only required folder to install the extension and must
 - Select `Load Unpacked` and choose the just created `dist` folder
 - AlgoSigner is now installed and available 
 
-## Developing a dApp 
+## Install from zip
+The latest built zip is available for download on the releases page - 
 
-- Read [dApp Integration Guide](docs/dApp-integration.md)
-- Read [Sample dApp project](https://github.com/PureStake/algosigner-dapp-example)
-- Try [Interactive dApp](https://purestake.github.io/algosigner-dapp-example/)
-
+Note - this is not recommended for non-developers and never for production purposes, extreme caution should be taken with installing any wallet. 
 
 ## License
-Until initial development is complete and the product is launched, this repository is private and the contents confidential. 
+This project is under the MIT License
 
