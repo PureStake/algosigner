@@ -25,6 +25,7 @@
     "bundle": "webpack",
     "clean": "rm -rf ./dist/*",
     "copy": "cp manifest.json ./dist/ && cp -r ./src/public/images/* ./dist/",
-    "test": "jest"
+    "test": "jest",
+    "test-watch": "jest --watch"
   }
 }
