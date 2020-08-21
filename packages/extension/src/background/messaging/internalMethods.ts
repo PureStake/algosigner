@@ -369,7 +369,10 @@ export class InternalMethods {
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
-                  sendResponse({error: e.message});
+                    if (e.body.message.includes('overspend'))
+                        sendResponse({error: "Overspending"});
+                    else
+                        sendResponse({error: e.body.message});
                 });
             } else {
                 let signedTxn;
@@ -383,7 +386,10 @@ export class InternalMethods {
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
-                  sendResponse({error: e.message});
+                    if (e.body.message.includes('overspend'))
+                        sendResponse({error: "Overspending"});
+                    else
+                        sendResponse({error: e.body.message});
                 });
             }
 
