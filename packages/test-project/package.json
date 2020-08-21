@@ -7,13 +7,16 @@
     "jest": "^26.1.0",
     "jest-puppeteer": "^4.4.0",
     "jest-runner-groups": "^2.0.1",
-    "puppeteer": "^5.2.1"
+    "jest-webextension-mock": "^3.6.1",
+    "puppeteer": "^5.2.1",
+    "ts-jest": "^26.2.0"
   },
   "scripts": {
     "github-test": "jest --group=github",
     "basic-dapp": "jest --group=basic-dapp",
     "basic-ui": "jest --group=basic-ui",
-    "manual-dapp": "jest --group=manual-dapp",
+    "manual-dapp": "jest --group=manual-dapp --runInBand",
+    "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && echo \"Test info at: ./test-project/coverage/locv-report/index.html\"",
     "test": "jest --maxWorkers=1 --group=-manual-dapp"
   }
 }
