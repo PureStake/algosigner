@@ -31,7 +31,7 @@ There are multiple packages in the project that combine to build the overall ext
 *https://github.com/PureStake*
 * algosigner->							// Base project folder
     * dist->                            // Folder containing the combined distribution components, used to install the extension, created on build
-	* packages->						// Folder for scripts compents that support the extension
+	* packages->						// Folder for scripts components that support the extension
 	    * common->                      // Contains core elements used in other packages
         * crypto->                      // Wrapper for encrypting and decrypting account information
         * dapp->                        // AlgoSigner library that gets injected in dApps
@@ -62,6 +62,19 @@ The ./dist/ folder is the only required folder to install the extension yourself
 The latest built zip is available for download on the releases page - 
 
 Note - this is not recommended for non-developers and never for production purposes, extreme caution should be taken with installing any wallet. 
+
+### Prerequisites
+- Installation of the Chrome Browser
+- File unzip program
+- Local file system write permissions
+- Access to set developer mode in Chrome and install unpacked extensions
+
+### Process
+- Unzip `AlgoSigner.zip` file to local file system
+- Open Chrome Browser and go to `chrome://extensions/`
+- Enable developer mode
+- Select `Load Unpacked` and choose the unzipped `dist` folder
+- AlgoSigner is now installed and available 
 
 ## License
 This project is under the MIT License
