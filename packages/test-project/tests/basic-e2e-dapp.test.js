@@ -15,7 +15,7 @@ describe('Wallet Setup', () => {
     const extensionName = 'AlgoSigner' 
     const extensionPopupHtml = 'index.html'
     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
-    const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
+    const amount = Math.floor((Math.random() * 10)+.1); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
 
     let baseUrl // set in beforeAll
