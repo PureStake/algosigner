@@ -1,6 +1,10 @@
 name: Tests
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - release
+      - release-test
 
 jobs:
   end_to_end_tests:
