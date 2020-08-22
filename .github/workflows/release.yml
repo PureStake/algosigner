@@ -3,6 +3,8 @@ on:
   create:
     tags:
     - v0.9-*
+    - v1.*
+    - v2.*
 
 jobs:
   generate:

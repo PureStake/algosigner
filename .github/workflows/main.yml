@@ -4,8 +4,6 @@ on:
   push:
     branches-ignore:
       - release
-      - release-test
-      - tdb/add-release
 
 jobs:
   end_to_end_tests:
@@ -17,10 +15,6 @@ jobs:
     - uses: actions/setup-node@v2-beta
       with:
         node-version: '12.15'
-    # - name: Build project
-    #   run: npm run prebuild && npm run build
-    # - name: Build ui
-    #   run: npm run buildui
     - name: Delete all dist
       run: npm run clean
     - name: Install testing dependencies
