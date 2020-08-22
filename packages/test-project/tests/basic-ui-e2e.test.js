@@ -13,7 +13,7 @@ describe('Basic Happy Path Tests', () => {
     const testNetAccount = "E2E-Tests" // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
     const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
     const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
-    const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
+    const amount = Math.floor((Math.random() * 10) + .1); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
 
     let baseUrl // set in beforeAll
