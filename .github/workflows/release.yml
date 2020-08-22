@@ -1,8 +1,8 @@
 name: Release build
 on: 
-  push:
-    branches:
-    - release-test
+  create:
+    tags:
+    - v0.9-*
 
 jobs:
   generate:
