@@ -5,6 +5,7 @@ on:
     branches-ignore:
       - release
       - release-test
+      - tdb/add-release
 
 jobs:
   end_to_end_tests:
