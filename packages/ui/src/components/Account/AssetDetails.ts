@@ -45,7 +45,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      ${ asset.decimals && html`
+      ${ "decimals" in asset && html`
         <div class="has-text-centered mb-2">
           <b>${asset.name}</b>
           <br />
