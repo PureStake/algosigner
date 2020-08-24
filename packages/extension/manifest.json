@@ -3,7 +3,7 @@
     "name": "AlgoSigner",
     "author": "https://developer.purestake.io",
     "version": "1.0.0",
-    "description": "Sign Algorand transactions in your browser with PureStake.",
+    "description": "Algorand Wallet Extension | Send & Receive ALGOs | Sign dApp Transactions",
     "icons": { 
         "48": "icon.png"
     },
