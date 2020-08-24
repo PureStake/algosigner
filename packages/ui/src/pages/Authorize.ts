@@ -10,15 +10,18 @@ import logotype from 'assets/logotype.png'
 
 function deny() {
   chrome.runtime.sendMessage({
-      source:'extension',
-      body:{
-          jsonrpc: '2.0',
-          method:'authorization-deny',
-          params:[],
-          id: (+new Date).toString(16)
+    source: 'extension',
+    body: {
+      jsonrpc: '2.0',
+      method:'authorization-deny',
+      params: {
+        responseOriginTabID: responseOriginTabID
       }
+    }
   });
 }
+
+let responseOriginTabID;
 
 const Authorize: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
@@ -29,6 +32,7 @@ const Authorize: FunctionalComponent = (props) => {
       if(request.body.method == JsonRpcMethod.Authorization) {
         setRequest(request);
         store.saveRequest(request);
+        responseOriginTabID = request.originTabID;
       }
     });
 
@@ -46,13 +50,14 @@ const Authorize: FunctionalComponent = (props) => {
   const grant = () => {
     window.removeEventListener("beforeunload", deny);
     chrome.runtime.sendMessage({
-        source:'extension',
-        body:{
-            jsonrpc: '2.0',
-            method:'authorization-allow',
-            params:[],
-            id: (+new Date).toString(16)
+      source:'extension',
+      body: {
+        jsonrpc: '2.0',
+        method: 'authorization-allow',
+        params: {
+          responseOriginTabID: responseOriginTabID
         }
+      }
     });
   }
 
@@ -88,13 +93,13 @@ const Authorize: FunctionalComponent = (props) => {
 
       <div class="mx-5 mb-3" style="display: flex;">
         <button id="denyAccess" class="button is-link is-outlined px-6"
-          onClick=${deny}>
+          onClick=${() => {deny()}}>
           Reject
         </button>
         <button class="button is-primary ml-3"
           id="grantAccess"
           style="flex: 1;"
-          onClick=${grant}>
+          onClick=${() => {grant()}}>
           Grant access
         </button>
       </div>

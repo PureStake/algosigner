@@ -15,7 +15,7 @@ describe('Wallet Setup', () => {
     const extensionName = 'AlgoSigner' 
     const extensionPopupHtml = 'index.html'
     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
-    const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
+    const amount = Math.floor((Math.random() * 10)+.1); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
 
     let baseUrl // set in beforeAll
@@ -39,6 +39,8 @@ describe('Wallet Setup', () => {
         baseUrl = `chrome-extension://${extensionID}/${extensionPopupHtml}`;
 
         extensionPage = await browser.newPage();
+        extensionPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
+        dummyPage.close();
         await extensionPage.goto(baseUrl);
     })
     
@@ -172,7 +174,7 @@ describe('Basic dApp Tests', () => {
 
         expect(getParams).toHaveProperty('consensus-version')
         expect(getParams).toHaveProperty('fee')
-        expect(getParams.fee).toEqual(1)
+        expect(getParams.fee).toEqual(0)
         expect(getParams).toHaveProperty('min-fee')        
         expect(getParams).toHaveProperty('genesis-hash')
         expect(getParams).toHaveProperty('genesis-id')

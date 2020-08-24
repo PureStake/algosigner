@@ -1,6 +1,6 @@
 # dApp integration through AlgoSigner
 
-AlogSigner injects a JavaScript library for interacting with the extension into every web page the browser user visits. dApp’s may use the injected library to connect to the user’s wallet, discover account addresses, send transactions to the wallet user for signing approval, send signed transactions to the network and query the network. 
+AlgoSigner injects a JavaScript library for interacting with the extension into every web page the browser user visits. dApp’s may use the injected library to connect to the user’s wallet, discover account addresses, send transactions to the wallet user for signing approval, send signed transactions to the network and query the network. 
 
 The sample dApp at https://purestake.github.io/algosigner-dapp-example/ demonstrates these interactions. Instructions here - https://github.com/PureStake/algosigner-dapp-example.
 
@@ -124,7 +124,7 @@ let txn = {
                     "lastRound": txParams['last-round'] + 1000,
                     "genesisID": txParams['genesis-id'],
                     "genesisHash": txParams['genesis-hash'],
-                    "note": new Uint8Array(0)
+                    "note": "NOTE is a string"
                 };
                 AlgoSigner.sign(txn)
 ```
@@ -134,6 +134,9 @@ let txn = {
 {"txID":"4F6GE5EBTBJ7DOTWKA3GK4JYARFDCVR5CYEXP6O27FUCE5SGFDYQ",
 "blob":"gqNzaWfEQL6mW/7ss2HKAqsuHN/7ePx11wKSAvFocw5QEDvzSvrvJdzWYvT7ua8Lc0SS0zOmUDDaHQC/pGJ0PNqnu7W3qQKjdHhuiaNhbXQGo2ZlZc4AA7U4omZ2zgB+OrujZ2VurHRlc3RuZXQtdjEuMKJnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAH4+o6NyY3bEIHhydylNDQQhpD9QdKWejLCMBgb5UYJTGCfDW3KgLsI+o3NuZMQgZM5ZNuFgR8pz2dHBgDlmHolfGgF96zX/X4x2bnAJ3aqkdHlwZaNwYXk="}
 ```
+
+Interrogation of the blob if needed can be accomplished with a basic example shown for NodeJS and Python in the associated sub folders of the example dapp. 
+
 ### AlgoSigner.send()
 Send a base64 encoded signed transaction blob to AlgoSigner to transmit to the network.
 
@@ -162,3 +165,5 @@ The following errors may be returned by the dApp in case of users rejecting requ
     UnsupportedLedger = '[RequestErrors.UnsupportedLedger] The provided ledger is not supported.',
     Undefined = '[RequestErrors.Undefined] An undefined error occurred.',
 ```
+
+Errors may be passed back to the dApp from the Algorand JS SDK if a transaction is valid, but has some other issue - for example insufficient funds in the sending account. 

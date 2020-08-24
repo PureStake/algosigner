@@ -2,6 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Settings } from '../config';
 import { Ledger, Backend, API } from './types';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
+import { Task } from './task';
 import Session from '../utils/session';
 import encryptionWrap from "../encryptionWrap";
 import { getValidatedTxnWrap } from "../transaction/actions";
@@ -97,6 +98,7 @@ export class InternalMethods {
                 new ExtensionStorage().clearStorageLocal((res) => {
                     if (res){
                         session.clearSession();
+                        Task.clearPool();
                         sendResponse({response: res});
                     } else {
                         sendResponse({error: 'Storage could not be cleared'});
@@ -227,7 +229,27 @@ export class InternalMethods {
         const { ledger, address } = request.body.params;
         const algod = this.getAlgod(ledger);
         algod.accountInformation(address).do().then((res: any) => {
-          sendResponse(res);
+            // Check for asset details saved in storage if needed
+            if ('assets' in res && res.assets.length > 0){
+                new ExtensionStorage().getStorage('assets', (savedAssets: any) => {
+                    if (savedAssets) {
+                        for (var i = res.assets.length - 1; i >= 0; i--) {
+                            const assetId = res.assets[i]['asset-id'];
+                            if (assetId in savedAssets[ledger])
+                                res.assets[i] = {
+                                    ...res.assets[i],
+                                    ...savedAssets[ledger][assetId]
+                                };
+                        }
+                    }
+                    res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
+                    sendResponse(res);
+                });
+            } else {
+                sendResponse(res);
+            }
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
@@ -241,14 +263,32 @@ export class InternalMethods {
             txs.nextToken(request.body.params['next-token']);
         txs.do().then((res: any) => {
             sendResponse(res);
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
 
     public static [JsonRpcMethod.AssetDetails](request: any, sendResponse: Function) {
-        let indexer = this.getIndexer(request.body.params.ledger);
-        indexer.lookupAssetByID(request.body.params['asset-id']).do().then((res: any) => {
-          sendResponse(res);
+        const assetId = request.body.params['asset-id'];
+        const { ledger } = request.body.params;
+        let indexer = this.getIndexer(ledger);
+        indexer.lookupAssetByID(assetId).do().then((res: any) => {
+            sendResponse(res);
+            // Save asset details in storage if needed
+            let extensionStorage = new ExtensionStorage();
+            extensionStorage.getStorage('assets', (savedAssets: any) => {
+                let assets = savedAssets || {
+                    TestNet: {},
+                    MainNet: {}
+                };
+                if (!(assetId in assets[ledger])) {
+                    assets[ledger][assetId] = res.asset.params;
+                    extensionStorage.setStorage('assets', assets, null);
+                }
+            });
+        }).catch((e: any) => {
+            sendResponse({error: e.message});
         });
         return true;
     }
@@ -286,7 +326,7 @@ export class InternalMethods {
               "lastRound": params.lastRound,
               "genesisID": params.genesisID,
               "genesisHash": params.genesisHash,
-              "note": new Uint8Array(Buffer.from(note, "base64"))
+              "note": new Uint8Array(Buffer.from(note))
             };
 
             const txHeaders = {
@@ -299,36 +339,56 @@ export class InternalMethods {
             }
             catch(e) {
                 logging.log(`Validation failed. ${e}`);
+                sendResponse({error: `Validation failed. ${e}`});
+                return;
             }
             if(!transactionWrap) {     
                 // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
                 logging.log('A transaction has failed because of an inability to build the specified transaction type.');
+                sendResponse({error: 'A transaction has failed because of an inability to build the specified transaction type.'});
                 return;
             }
             else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-                // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+                sendResponse({error: 'Invalid fields'});
                 return;
             }
             else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                 || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
                 // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
-                // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
-                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
+                let signedTxn;
+                try {
+                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                } catch(e) {
+                    sendResponse({error: e.message});
+                    return;
+                }
 
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
-                  sendResponse({error: e.message});
+                    if (e.body.message.includes('overspend'))
+                        sendResponse({error: "Overspending"});
+                    else
+                        sendResponse({error: e.body.message});
                 });
-            }
-            else {
-                let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+            } else {
+                let signedTxn;
+                try {
+                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                } catch(e) {
+                    sendResponse({error: e.message});
+                    return;
+                }
 
                 algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
-                  sendResponse({error: e.message});
+                    if (e.body.message.includes('overspend'))
+                        sendResponse({error: "Overspending"});
+                    else
+                        sendResponse({error: e.body.message});
                 });
             }
 

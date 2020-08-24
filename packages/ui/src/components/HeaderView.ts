@@ -7,7 +7,11 @@ const HeaderView: FunctionalComponent = (props: any) => {
   return html`
     <div class="px-4 py-3 has-text-weight-bold is-size-5">
       <p style="overflow: hidden; text-overflow: ellipsis;">
-        <a class="icon mr-2" onClick=${action}>${'\u003C'}</a>
+        <a class="mr-2" onClick=${action}>
+          <span>
+            <i class="fas fa-chevron-left"></i>
+          </span>
+        </a>
         ${title}
       </p>
     </div>

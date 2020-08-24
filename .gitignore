@@ -5,3 +5,4 @@
 **/packages/dapp/lib
 .DS_Store
 test*.png
+**/coverage

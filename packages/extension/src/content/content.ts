@@ -47,7 +47,7 @@ class Content {
                 }
             }
             catch {
-                console.log(`Unable to determine source from message. \n${d}`);
+                //console.log(`Unable to determine source from message. \n${d}`);
             } 
         });
     }

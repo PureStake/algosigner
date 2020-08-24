@@ -10,7 +10,7 @@ The zip file contains everything necessary to install and use the AlgoSigner ext
 - Access to set developer mode in Chrome and install unpacked extensions
 
 ## Process
-- Unzip provided `AlgoSigner.version.zip` file to local file system
+- Unzip provided `AlgoSigner.zip` file to local file system
 - Open Chrome Browser and go to `chrome://extensions/`
 - Enable developer mode
 - Select `Load Unpacked` and choose the unzipped `dist` folder

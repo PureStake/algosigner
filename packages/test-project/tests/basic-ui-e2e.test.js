@@ -13,7 +13,7 @@ describe('Basic Happy Path Tests', () => {
     const testNetAccount = "E2E-Tests" // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
     const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
     const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
-    const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
+    const amount = Math.floor((Math.random() * 10) + .1); // txn size, modify multiplier for bulk
     const secondTestNetAccount = "Created-Account"
 
     let baseUrl // set in beforeAll
@@ -21,6 +21,7 @@ describe('Basic Happy Path Tests', () => {
     let txId // returned tx id from send txn 
 
     jest.setTimeout(10000);
+    // todo - switch tests to single page object
 
     beforeAll( async () => {
         const dummyPage = await browser.newPage();
@@ -37,6 +38,8 @@ describe('Basic Happy Path Tests', () => {
         baseUrl = `chrome-extension://${extensionID}/${extensionPopupHtml}`;
 
         extensionPage = await browser.newPage();
+        extensionPage.on('console', msg => console.log('PAGE LOG:', msg.text()));
+        dummyPage.close();
         await extensionPage.goto(baseUrl);
     })
     
@@ -123,6 +126,51 @@ describe('Basic Happy Path Tests', () => {
 
     })
 
+    test('Transaction Errors: OverSpend', async () => {
+        await extensionPage.click('#sendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#amountAlgos', '900000');
+        await extensionPage.type('#to-address',sendAlgoToAddress);
+        await extensionPage.type('#note', "AutoTest Overspend Algo");
+        await extensionPage.click('#submitSendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#enterPassword',unsafePassword);
+        await extensionPage.waitFor(200)
+        await extensionPage.click('#authButton')
+        await extensionPage.waitFor(2000)
+        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitFor(2000)
+
+        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
+        await expect(pageError).toMatch('Error: Overspending')
+
+        await extensionPage.click('svg.fa-chevron-left')
+        await extensionPage.waitFor(3000)
+    })
+
+    test('Transaction Errors: Invalid Field - Amount', async () => {
+        await extensionPage.click('#sendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#amountAlgos', '900000000000');
+        await extensionPage.type('#to-address',sendAlgoToAddress);
+        await extensionPage.type('#note', "AutoTest Invalid Amount");
+        await extensionPage.click('#submitSendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#enterPassword',unsafePassword);
+        await extensionPage.waitFor(200)
+        await extensionPage.click('#authButton')
+        await extensionPage.waitFor(2000)
+        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitFor(2000)
+
+        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
+        expect(pageError).toMatch('Error: Invalid fields')
+
+        await extensionPage.click('svg.fa-chevron-left')
+        await extensionPage.waitFor(3000)
+
+    })
+
     test('Load Account Details', async () => {
         await extensionPage.click('#showDetails')
         await extensionPage.waitForSelector('#accountAddress')
@@ -147,7 +195,7 @@ describe('Basic Happy Path Tests', () => {
 })
 
 
-// Create a new account in AlgoSigner
+// // Create a new account in AlgoSigner
 describe('Create Account', () => {
     
     const extensionName = 'AlgoSigner' 
@@ -187,20 +235,8 @@ describe('Create Account', () => {
     })
 
     beforeEach(async () => {
-        // turns out we should not re-open the page, as the wallet is gone
-        // extensionPage = await browser.newPage();
-        // await extensionPage.goto(baseUrl);
+
     })
-
-    // test('Welcome Page Title', async () => {
-    //     await extensionPage.waitForSelector('#enterPassword')
-    //     await expect(extensionPage.title()).resolves.toMatch(extensionName)
-    // })
-
-    // test('Create Wallet with Password', async () => {
-    //     await extensionPage.type('#enterPassword',unsafePassword);
-    //     await extensionPage.click('#login')
-    // })
 
     test('Create An Account, Step 1 - Enter Account Name', async () => {
         await extensionPage.waitForSelector('#addAccount')
@@ -218,18 +254,24 @@ describe('Create Account', () => {
         for(let i=1; i<=25; i++) {
             mnemonicArray[i] = await extensionPage.$eval('#div_'+i, e => e.innerText) 
         }
-
+        await extensionPage.waitForSelector('#recordCheckbox')
+        await extensionPage.click('#recordCheckbox')
         await extensionPage.click('#nextStep')
     })
 
     test('Create An Account, Step 3 - Use Mnemonic', async () => {
         await extensionPage.waitForSelector('#enterMnemonic')
-        await extensionPage.waitForSelector('#'+mnemonicArray[1])
 
         for(let i=1; i<=25; i++) {
-            await extensionPage.click('#'+mnemonicArray[i])
+    
+            // ugly but works
+            if(mnemonicArray[i].search('\n') != -1) {
+                let actualWord = mnemonicArray[i].split('\n');
+                mnemonicArray[i] = actualWord[1];
+            }
+                await extensionPage.waitForSelector('#'+mnemonicArray[i])
+                await extensionPage.click('#'+mnemonicArray[i]) 
         }
-
         await extensionPage.click('#nextStep')
 
     })

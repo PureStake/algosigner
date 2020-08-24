@@ -78,7 +78,7 @@ export default class EncryptionWrap {
         await this._localEncryption.unlock(blob).then((decryptedObject) => {
           if(Array.isArray(decryptedObject)) {
             let returnValues: any = [];
-            console.log('youdsf');
+  
             decryptedObject.forEach(value => { returnValues.push(EncryptionHelpers.arrayBufferToString(value)); });
             callback && callback(returnValues);
           }
@@ -99,7 +99,6 @@ export default class EncryptionWrap {
 
   public async checkStorage(callback: Function): Promise<void> {
     try {
-      // Retrieve the object from the storage location, then attempt to decrypt the value.
       this._extensionStorage.getStorage(this._walletName, async (result: { account: string, params: { salt: string, iv: string, iterations: number } }) => {
         if(!result)
           callback(false);

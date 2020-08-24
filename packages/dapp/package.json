@@ -1,6 +1,6 @@
 {
   "name": "@algosigner/dapp",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "https://developer.purestake.io",
   "description": "Sample DAPP for use with AlgoSigner.",
   "scripts": {
@@ -15,5 +15,8 @@
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/jest": "^26.0.9",
+    "ts-jest": "^26.2.0"
+  }
 }

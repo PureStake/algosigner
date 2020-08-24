@@ -6,11 +6,13 @@ import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
 
 import { sendMessage } from 'services/Messaging'
+import { numFormat } from 'services/common';
 
 import { StoreContext } from 'index'
 import TransactionsList from 'components/Account/TransactionsList'
 import AssetsList from 'components/Account/AssetsList'
 import AccountDetails from 'components/Account/AccountDetails'
+import algo from 'assets/algo.png';
 
 
 const Account: FunctionalComponent = (props: any) => {
@@ -45,17 +47,24 @@ const Account: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
-      <p id="accountName" class="is-size-5" style="overflow: hidden; text-overflow: ellipsis;">
-        <a class="icon mr-2" onClick=${() => route('/wallet')}>${'\u003C'}</a>
-        ${account.name} Account
+      <div id="accountName" class="is-flex is-size-5 mb-1">
+        <a class="mr-2" onClick=${() => route('/wallet')}>
+          <span>
+            <i class="fas fa-chevron-left"></i>
+          </span>
+        </a>
+        <p style="width: 305px;">${account.name} Account</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
           onClick=${()=>setShowDetails(true)}>
-          ${'\u22EE'}
+          <span class="icon">
+            <i class="fas fa-ellipsis-v"></i>
+          </span>
         </button>
       </p>
       <span>
-        Balance: ${ results && html`${results.amount/1e6} <span class="has-text-grey-light">Algos</span>` }
+        <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
+        ${ results && html`${numFormat(results.amount/1e6, 6)} <span class="has-text-grey-light">Algos</span>` }
       </span>
     </div>
     <div class="px-4">

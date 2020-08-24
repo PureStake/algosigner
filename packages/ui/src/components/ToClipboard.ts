@@ -11,11 +11,13 @@ const ToClipboard: FunctionalComponent = (props: any) => {
     textField.remove()
   }
 
-  let classCSS = props.class || '';
+  const classCSS = props.class || '';
+  const styleCSS = props.style || '';
 
   return html`
     <a onClick=${copyToClipboard}
-      class=${classCSS}>
+      class=${classCSS}
+      style=${styleCSS}>
       copy
     </a>
   `

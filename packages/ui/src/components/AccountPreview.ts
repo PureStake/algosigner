@@ -5,6 +5,7 @@ import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
+import { numFormat } from 'services/common';
 
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
@@ -34,7 +35,7 @@ const AccountPreview: FunctionalComponent = (props: any) => {
         <div class="is-size-7 has-text-right">
           ${ results && html`
             <b>${results.assets.length}</b> ASAs<br />
-            <b>${results.amount}</b> MAlgos
+            <b>${numFormat(results.amount/1e6, 6)}</b> Algos
           `}
           ${ results===null && html`
             <span class="loader"></span>

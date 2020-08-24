@@ -13,29 +13,66 @@ import {extensionBrowser} from '@algosigner/common/chrome';
 import {logging} from '@algosigner/common/logging';
 
 
-
 export class Task {
 
-    private static request: {[key: string]: any} = {};
+    private static requests: {[key: string]: any} = {};
     private static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
-        if(Task.authorized_pool.indexOf(origin) > -1 ){
-            return true;
-        }
-        return false;
+        return Task.authorized_pool.indexOf(origin) > -1;
+    }
+
+    private static fetchAPI(url, params) {
+        return new Promise((resolve, reject) => {
+            fetch(url, params)
+            .then((response) => {
+                return response.json().then((json) =>{
+                    if (response.ok) {
+                        return json;
+                    } else {
+                        return Promise.reject(json);
+                    }
+                })
+            }).then((json) => {
+                resolve(json);
+            }).catch((error) => {
+                let res : Object = {
+                    message: error.message,
+                    data: error.data
+                };
+                reject(res);
+            });
+        });
     }
 
     public static build(request: any) {
         let body = request.body;
         let method = body.method;
+
+        // Check if there's a previous request from the same origin
+        if (request.originTabID in Task.requests)
+            return new Promise((resolve,reject) => {
+                request.error = {
+                    message: 'Another query processing'
+                };
+                reject(request);
+            });
+        else
+            Task.requests[request.originTabID] = request;
+
         return new Promise((resolve,reject) => {
             Task.methods().public[method](
                 request,
                 resolve,
                 reject
             );
+        }).finally(() => {
+            delete Task.requests[request.originTabID];
         });
+    }
+
+    public static clearPool() {
+        Task.authorized_pool = [];
     }
 
     public static methods(): {
@@ -47,6 +84,10 @@ export class Task {
             'public': {
                 // authorization
                 [JsonRpcMethod.Authorization]: (d: any) => {
+                    // Delete any previous request made from the Tab that it's
+                    // trying to connect.
+                    delete Task.requests[d.originTabID];
+
                     // If access was already granted, authorize connection.
                     if(Task.isAuthorized(d.origin)){
                         d.response = {};
@@ -60,7 +101,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w: any) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message:d
                                 };
@@ -76,7 +117,6 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-
                     var transactionWrap = undefined;
                     try {
                         transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params["type"]);
@@ -88,12 +128,18 @@ export class Task {
                     if(!transactionWrap) {     
                         // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
                         logging.log('A transaction has failed because of an inability to build the specified transaction type.');
-                        reject('Validation failed for transaction. Please verify the properties are valid.');
+                        d.error = {
+                            message: 'Validation failed for transaction. Please verify the properties are valid.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value  === ValidationResponse.Invalid)) {
                         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                         // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-                        reject('Validation failed for transaction because of invalid properties.');
+                        d.error = {
+                            message: 'Validation failed for transaction because of invalid properties.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                         || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
@@ -108,7 +154,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message: d
                                 };
@@ -130,7 +176,7 @@ export class Task {
                             height: 550 + 34
                         }, function (w) {
                             if(w) {
-                                Task.request = {
+                                Task.requests[d.originTabID] = {
                                     window_id: w.id,
                                     message: d
                                 };
@@ -165,15 +211,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-
-                    fetch(`${url}${sendPath}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${sendPath}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // algod
                 [JsonRpcMethod.Algod]: (
@@ -199,14 +244,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${params.path}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // Indexer
                 [JsonRpcMethod.Indexer]: (
@@ -232,14 +277,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${params.path}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // Accounts
                 [JsonRpcMethod.Accounts]: (
@@ -260,13 +305,14 @@ export class Task {
             },
             'private': {
                 // authorization-allow
-                [JsonRpcMethod.AuthorizationAllow]: () => {
-                    let auth = Task.request;
+                [JsonRpcMethod.AuthorizationAllow]: (d) => {
+                    const { responseOriginTabID } = d.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     extensionBrowser.windows.remove(auth.window_id);
                     Task.authorized_pool.push(message.origin);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         // Response needed
@@ -275,13 +321,16 @@ export class Task {
                     }, 100);
                 },
                 // authorization-deny
-                [JsonRpcMethod.AuthorizationDeny]: () => {
-                    let auth = Task.request;
+                [JsonRpcMethod.AuthorizationDeny]: (d) => {
+                    const { responseOriginTabID } = d.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         MessageApi.send(message);
@@ -291,7 +340,8 @@ export class Task {
             'extension' : {
                 // sign-allow
                 [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
-                    let auth = Task.request;
+                    const { passphrase, responseOriginTabID } = request.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
                     const { from,
@@ -303,7 +353,6 @@ export class Task {
                         genesisID,
                         genesisHash,
                         note } = message.body.params;
-                    const { passphrase } = request.body.params;
 
                     let ledger
                     switch (genesisID) {
@@ -342,30 +391,37 @@ export class Task {
                         let txn = {...message.body.params};
 
                         if ('note' in txn) {
-                            const enc = new TextEncoder();
-                            txn.note = enc.encode(txn.note);
+                            txn.note = new Uint8Array(Buffer.from(txn.note));
                         }
 
-                        let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                        try {
+                            let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                            let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                            message.response = {
+                                txID: signedTxn.txID,
+                                blob: b64Obj
+                            };
+                        } catch(e) {
+                            message.error = e.message;
+                        }
 
                         // Clean class saved request
-                        Task.request = {};
-
-                        message.response = {
-                            txID: signedTxn.txID,
-                            blob: btoa(String.fromCharCode(...signedTxn.blob))
-                        };
+                        delete Task.requests[responseOriginTabID];
                         MessageApi.send(message);
                     });
                     return true;
                 },
                 [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
-                    let auth = Task.request;
+                    const { responseOriginTabID } = request.body.params;
+                    let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
-                    Task.request = {};
+                    delete Task.requests[responseOriginTabID];
 
                     setTimeout(() => {
                         MessageApi.send(message);

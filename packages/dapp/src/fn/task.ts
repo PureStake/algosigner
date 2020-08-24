@@ -2,9 +2,9 @@ import {ITask} from './interfaces';
 
 import {MessageBuilder} from '../messaging/builder'; 
 
-import {AlgodRequest,Transaction,RequestErrors} from '@algosigner/common/types';
-import {JsonRpcMethod,JsonPayload,SupportedAlgod} from '@algosigner/common/messaging/types';
-import {Runtime} from '@algosigner/common/runtime/runtime';
+import { Transaction, RequestErrors } from '@algosigner/common/types';
+import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
+import { Runtime } from '@algosigner/common/runtime/runtime';
 
 export class Task extends Runtime implements ITask {
 

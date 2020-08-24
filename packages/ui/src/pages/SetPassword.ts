@@ -11,6 +11,8 @@ import { StoreContext } from 'index'
 import background from 'assets/background.png';
 import walletLock from 'assets/wallet-lock.png';
 
+var zxcvbn = require('zxcvbn');
+
 const SetPassword: FunctionalComponent = (props) => {
   const [pwd, setPwd] = useState<String>('');
   const [confirmPwd, setConfirmPwd] = useState<String>('');
@@ -21,14 +23,15 @@ const SetPassword: FunctionalComponent = (props) => {
     if (pwd !== confirmPwd){
       setError("Confirmation doesn't match!");
       return false;
-    } else if (pwd.length < 8){
-      setError("Password needs at least 8 characters!");
+    } else if (pwd.length < 8 || pwd.length > 64){
+      setError("Password needs to be 8-64 characters long!");
       return false;
     }
 
     const params = {
       passphrase: pwd
     };
+
     sendMessage(JsonRpcMethod.CreateWallet, params, function(response) {
       if ('error' in response){
         setError(response.error);
@@ -45,7 +48,7 @@ const SetPassword: FunctionalComponent = (props) => {
         <div style="flex: 1">
           <section class="has-text-centered py-3"
             style="background:url(${background}); background-size: cover;">
-            <img src=${walletLock} width="200" />
+            <img src=${walletLock} width="150" />
           </section>
 
           <section class="section pt-4 pb-0">
@@ -61,20 +64,33 @@ const SetPassword: FunctionalComponent = (props) => {
               id="setPassword"
               type="password"
               value=${pwd}
-              onInput=${(e)=>setPwd(e.target.value)}/>
+              onInput=${(e)=> {setPwd(e.target.value); setError('');}} />
             <input
               class="input mt-4"
               id="confirmPassword"
               type="password"
               placeholder="Confirm password"
               value=${confirmPwd}
-              onInput=${(e)=>setConfirmPwd(e.target.value)}/>
-
+              onInput=${(e)=> {setConfirmPwd(e.target.value); setError('');}}/>
             ${ error.length > 0 && html`
               <p class="mt-4 has-text-danger has-text-centered">
                 ${error}
               </p>
             `}
+            <div class="mt-3 has-text-centered  fa-sm">
+            ${ error.length == 0 
+              && html`
+                <div style="display:flex; color:rgb(${255-((zxcvbn(pwd).score+1)*50)},${zxcvbn(pwd).score*50},50);">            
+                  <div class="mx-2 mt-2 mb-2" style="order: 1; align-self: center;">
+                    <span>
+                      <i class="fas fa-lock fa-2x" aria-hidden="true"></i>                  
+                    </span>   
+                  </div> 
+                  ${zxcvbn(pwd).score < 3 && html`<div style="order: 2;">${zxcvbn(pwd).feedback.suggestions.join("\n")}</div>`} 
+                  ${zxcvbn(pwd).score > 2 && html`<div style="order: 2;">Complexity acceptable. Estimated guesses: ${zxcvbn(pwd).guesses}</div>`} 
+                </div>` 
+            }
+            </div>
           </section>
         </div>
 

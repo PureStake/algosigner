@@ -60,7 +60,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             break;
         }
       } else {
-        console.log('setting txid', response.txId)
         setAskAuth(false);
         setTxId(response.txId);
       }
@@ -74,23 +73,35 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         title="Send Algos" />
 
       <div class="px-4" style="flex: 1">
-        <input class="input mb-4"
-          id="amountAlgos"
-          placeholder="Algos"
-          type="number"
-          value=${amount}
-          onInput=${(e) => setAmount(e.target.value)} />
+        <div class="control has-icons-right mb-4">
+          <input class="input pr-6"
+            id="amountAlgos"
+            placeholder="0.0"
+            type="number"
+            value=${amount}
+            onInput=${(e) => setAmount(e.target.value)} />
+          <span class="icon is-right mr-2 mt-2 has-text-grey">Algos</span>
+        </div>
         
         <b>From</b>
-        <div class="box py-2"
-          style="overflow: hidden; text-overflow: ellipsis; background: #EFF4F7; box-shadow: none;">
-          <h6 class="title is-6">${ account.name }</h6>
-          <h6 class="subtitle is-6">${ account.address }</h6>
+        <div class="box py-2 mt-2 mb-0 is-flex"
+          style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;">
+          <div>
+            <h6 class="title is-6">${ account.name }</h6>
+            <h6 class="subtitle is-6">${account.address.slice(0, 8)}.....${account.address.slice(-8)}</h6>
+          </div>
+          <b class="has-text-link">YOU</b>
+        </div>
+
+        <div class="has-text-centered has-text-weight-bold my-2">
+          <span><i class="fas fa-arrow-down mr-3"></i></span>
+          <span>Payment</span>
         </div>
 
         <textarea
           placeholder="To address"
           class="textarea mb-4"
+          style="resize: none;"
           id="to-address"
           value=${to}
           rows="2"
@@ -98,20 +109,24 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <textarea
           placeholder="Note"
           class="textarea mb-4"
+          style="resize: none;"
           id="note"
           value=${note}
           rows="2"
           onInput=${(e) => setNote(e.target.value)}/>
 
-        <p class="mt-3 has-text-danger">
-          ${error!==undefined && error.length > 0 && error}
+        <p class="has-text-danger">
+          ${(error!==undefined && error.length > 0) && html`
+            Error: ${error}
+          `}
         </p>
 
       </div>
       <div class="px-4 py-4">
         <button
           id="submitSendAlgos"
-          class="button is-link is-outlined is-fullwidth"
+          class="button is-primary is-fullwidth"
+          disabled=${to.length === 0 || +amount <= 0}
           onClick=${() => setAskAuth(true)}>
           Send!
         </button>
@@ -142,7 +157,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               id="backToWallet"
               class="button is-success is-outlined is-fullwidth mt-4"
               onClick=${() => route(`/${matches.ledger}/${matches.address}`)}>
-              Back to wallet!
+              Back to account!
             </button>
           </div>
         </div>

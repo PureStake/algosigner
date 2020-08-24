@@ -3,6 +3,7 @@ import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { isFromExtension } from '@algosigner/common/utils';
 
 import TxAcfg from 'components/SignTransaction/TxAcfg'
 import TxPay from 'components/SignTransaction/TxPay'
@@ -15,8 +16,13 @@ import { StoreContext } from 'index'
 import logotype from 'assets/logotype.png'
 
 function deny() {
-  sendMessage(JsonRpcMethod.SignDeny, {}, function() {});
+  const params = {
+    responseOriginTabID: responseOriginTabID
+  };
+  sendMessage(JsonRpcMethod.SignDeny, params, function() {});
 }
+
+let responseOriginTabID = 0;
 
 const SignTransaction: FunctionalComponent = (props) => {
   const store:any = useContext(StoreContext);
@@ -30,9 +36,17 @@ const SignTransaction: FunctionalComponent = (props) => {
   const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
-    chrome.runtime.onMessage.addListener((request,sender,sendResponse) => {
-      if(request.body.method == JsonRpcMethod.SignTransaction)
+
+    chrome.runtime.onMessage.addListener((request, sender: any) => {
+      // Check if a message has already been recieved
+      if (Object.keys(request).length === 0)
+        return false;
+
+      // Check if the message is coming from the background script
+      if(isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction) {
         setRequest(request);
+        responseOriginTabID = request.originTabID;
+      }
     });
 
     window.addEventListener("beforeunload", deny);
@@ -43,13 +57,14 @@ const SignTransaction: FunctionalComponent = (props) => {
   const sign = (pwd: string) => {
     const params = {
       passphrase: pwd,
+      responseOriginTabID: responseOriginTabID
     };
     setLoading(true);
     setAuthError('');
     setError('');
     window.removeEventListener("beforeunload", deny);
 
-
+    //console.log('SIGNINg', 'params', params)
     sendMessage(JsonRpcMethod.SignAllow, params, function(response) {
       if ('error' in response) { 
         window.addEventListener("beforeunload", deny);
