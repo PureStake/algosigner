@@ -55,7 +55,9 @@ export class Task {
         // Check if there's a previous request from the same origin
         if (request.originTabID in Task.requests)
             return new Promise((resolve,reject) => {
-                request.error = 'Another query processing';
+                request.error = {
+                    message: 'Another query processing'
+                };
                 reject(request);
             });
         else
@@ -129,12 +131,18 @@ export class Task {
                     if(!transactionWrap) {     
                         // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
                         logging.log('A transaction has failed because of an inability to build the specified transaction type.');
-                        reject('Validation failed for transaction. Please verify the properties are valid.');
+                        d.error = {
+                            message: 'Validation failed for transaction. Please verify the properties are valid.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value  === ValidationResponse.Invalid)) {
                         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                         // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-                        reject('Validation failed for transaction because of invalid properties.');
+                        d.error = {
+                            message: 'Validation failed for transaction because of invalid properties.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                         || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
@@ -321,7 +329,9 @@ export class Task {
                     let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
                     delete Task.requests[responseOriginTabID];
 
@@ -410,7 +420,9 @@ export class Task {
                     let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
                     delete Task.requests[responseOriginTabID];
 

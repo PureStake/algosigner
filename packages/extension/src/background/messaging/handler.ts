@@ -80,7 +80,9 @@ export class OnMessageHandler extends RequestValidation {
             // Reject message if there's no wallet
             new encryptionWrap("").checkStorage((exist: boolean) => {
                 if (!exist) {
-                    request.error = RequestErrors.NotAuthorized;
+                    request.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     MessageApi.send(request);
                 } else {
                     if (OnMessageHandler.isAuthorization(method)
@@ -92,10 +94,10 @@ export class OnMessageHandler extends RequestValidation {
                         if (Task.isAuthorized(request.origin)) {
                             // If the origin is authorized, build a promise
                             Task.build(request)
-                                .then(function(d) {
+                                .then((d) => {
                                     MessageApi.send(d);
                                 })
-                                .catch(function(d) {
+                                .catch((d) => {
                                     MessageApi.send(d);
                                 });
                         } else {
