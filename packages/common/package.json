@@ -1,6 +1,6 @@
 {
   "name": "@algosigner/common",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "https://developer.purestake.io",
   "description": "Common library functions for AlgoSigner.",
   "devDependencies": {
