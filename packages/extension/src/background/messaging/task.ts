@@ -19,10 +19,30 @@ export class Task {
     private static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
-        if(Task.authorized_pool.indexOf(origin) > -1 ){
-            return true;
-        }
-        return false;
+        return Task.authorized_pool.indexOf(origin) > -1;
+    }
+
+    private static fetchAPI(url, params) {
+        return new Promise((resolve, reject) => {
+            fetch(url, params)
+            .then((response) => {
+                return response.json().then((json) =>{
+                    if (response.ok) {
+                        return json;
+                    } else {
+                        return Promise.reject(json);
+                    }
+                })
+            }).then((json) => {
+                resolve(json);
+            }).catch((error) => {
+                let res : Object = {
+                    message: error.message,
+                    data: error.data
+                };
+                reject(res);
+            });
+        });
     }
 
     public static build(request: any) {
@@ -32,25 +52,23 @@ export class Task {
         // Check if there's a previous request from the same origin
         if (request.originTabID in Task.requests)
             return new Promise((resolve,reject) => {
-                request.error = 'Another query processing';
+                request.error = {
+                    message: 'Another query processing'
+                };
                 reject(request);
             });
         else
             Task.requests[request.originTabID] = request;
 
-        let prom = new Promise((resolve,reject) => {
+        return new Promise((resolve,reject) => {
             Task.methods().public[method](
                 request,
                 resolve,
                 reject
             );
-        })
-
-        prom.finally(() => {
+        }).finally(() => {
             delete Task.requests[request.originTabID];
         });
-
-        return prom
     }
 
     public static clearPool() {
@@ -99,7 +117,6 @@ export class Task {
                     d: any,
                     resolve: Function, reject: Function
                 ) => {
-
                     var transactionWrap = undefined;
                     try {
                         transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params["type"]);
@@ -111,12 +128,18 @@ export class Task {
                     if(!transactionWrap) {     
                         // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
                         logging.log('A transaction has failed because of an inability to build the specified transaction type.');
-                        reject('Validation failed for transaction. Please verify the properties are valid.');
+                        d.error = {
+                            message: 'Validation failed for transaction. Please verify the properties are valid.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value  === ValidationResponse.Invalid)) {
                         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                         // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-                        reject('Validation failed for transaction because of invalid properties.');
+                        d.error = {
+                            message: 'Validation failed for transaction because of invalid properties.'
+                        };
+                        reject(d);
                     }
                     else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
                         || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
@@ -188,15 +211,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-
-                    fetch(`${url}${sendPath}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${sendPath}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // algod
                 [JsonRpcMethod.Algod]: (
@@ -222,14 +244,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${params.path}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // Indexer
                 [JsonRpcMethod.Indexer]: (
@@ -255,14 +277,14 @@ export class Task {
                     if (conn.port.length > 0)
                         url += ':' + conn.port;
 
-                    fetch(`${url}${params.path}`, fetchParams)
-                    .then(async (response) => {
-                        d.response = await response.json();
+                    Task.fetchAPI(`${url}${params.path}`, fetchParams)
+                    .then((response) => {
+                        d.response = response;
                         resolve(d);
                     }).catch((error) => {
-                        d.error = error.message;
+                        d.error = error;
                         reject(d);
-                    })
+                    });
                 },
                 // Accounts
                 [JsonRpcMethod.Accounts]: (
@@ -304,7 +326,9 @@ export class Task {
                     let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
                     delete Task.requests[responseOriginTabID];
 
@@ -393,7 +417,9 @@ export class Task {
                     let auth = Task.requests[responseOriginTabID];
                     let message = auth.message;
 
-                    auth.message.error = RequestErrors.NotAuthorized;
+                    auth.message.error = {
+                        message: RequestErrors.NotAuthorized
+                    };
                     extensionBrowser.windows.remove(auth.window_id);
                     delete Task.requests[responseOriginTabID];
 
