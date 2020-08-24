@@ -19,10 +19,7 @@ export class Task {
     private static authorized_pool: Array<string> = [];
 
     public static isAuthorized(origin: string): boolean {
-        if(Task.authorized_pool.indexOf(origin) > -1 ){
-            return true;
-        }
-        return false;
+        return Task.authorized_pool.indexOf(origin) > -1;
     }
 
     private static fetchAPI(url, params) {
