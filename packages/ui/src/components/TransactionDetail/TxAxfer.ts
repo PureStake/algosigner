@@ -5,7 +5,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
   //TODO more details in close to and clawbacks
 
-  console.log('tadfad', tx)
+  //console.log('tadfad', tx)
   return html`
     <div class="box" style="overflow-wrap: break-word;">
       <p class="has-text-centered has-text-weight-bold">Asset transfer</p>

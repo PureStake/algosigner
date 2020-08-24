@@ -278,7 +278,7 @@ export class InternalMethods {
             // Save asset details in storage if needed
             let extensionStorage = new ExtensionStorage();
             extensionStorage.getStorage('assets', (savedAssets: any) => {
-                console.log('assets', savedAssets)
+                //console.log('assets', savedAssets)
                 let assets = savedAssets || {
                     TestNet: {},
                     MainNet: {}
