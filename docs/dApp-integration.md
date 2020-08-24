@@ -1,6 +1,6 @@
 # dApp integration through AlgoSigner
 
-AlogSigner injects a JavaScript library for interacting with the extension into every web page the browser user visits. dApp’s may use the injected library to connect to the user’s wallet, discover account addresses, send transactions to the wallet user for signing approval, send signed transactions to the network and query the network. 
+AlgoSigner injects a JavaScript library for interacting with the extension into every web page the browser user visits. dApp’s may use the injected library to connect to the user’s wallet, discover account addresses, send transactions to the wallet user for signing approval, send signed transactions to the network and query the network. 
 
 The sample dApp at https://purestake.github.io/algosigner-dapp-example/ demonstrates these interactions. Instructions here - https://github.com/PureStake/algosigner-dapp-example.
 

@@ -64,7 +64,7 @@ const SignTransaction: FunctionalComponent = (props) => {
     setError('');
     window.removeEventListener("beforeunload", deny);
 
-    console.log('SIGNINg', 'params', params)
+    //console.log('SIGNINg', 'params', params)
     sendMessage(JsonRpcMethod.SignAllow, params, function(response) {
       if ('error' in response) { 
         window.addEventListener("beforeunload", deny);

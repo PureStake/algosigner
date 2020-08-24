@@ -29,7 +29,7 @@ export class OnMessageHandler extends RequestValidation {
     static events: {[key: string]: any} = {};
 
     static handle(request: any, sender: any, sendResponse: any) {
-        console.log('HANDLIG MESSAGE', request, sender);
+        //console.log('HANDLIG MESSAGE', request, sender);
 
         if ('tab' in sender){
             request.originTabID = sender.tab.id;

@@ -21,6 +21,7 @@ describe('Basic Happy Path Tests', () => {
     let txId // returned tx id from send txn 
 
     jest.setTimeout(10000);
+    // todo - switch tests to single page object
 
     beforeAll( async () => {
         const dummyPage = await browser.newPage();
@@ -125,6 +126,51 @@ describe('Basic Happy Path Tests', () => {
 
     })
 
+    test('Transaction Errors: OverSpend', async () => {
+        await extensionPage.click('#sendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#amountAlgos', '900000');
+        await extensionPage.type('#to-address',sendAlgoToAddress);
+        await extensionPage.type('#note', "AutoTest Overspend Algo");
+        await extensionPage.click('#submitSendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#enterPassword',unsafePassword);
+        await extensionPage.waitFor(200)
+        await extensionPage.click('#authButton')
+        await extensionPage.waitFor(2000)
+        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitFor(2000)
+
+        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
+        await expect(pageError).toMatch('Error: Overspending')
+
+        await extensionPage.click('svg.fa-chevron-left')
+        await extensionPage.waitFor(3000)
+    })
+
+    test('Transaction Errors: Invalid Field - Amount', async () => {
+        await extensionPage.click('#sendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#amountAlgos', '900000000000');
+        await extensionPage.type('#to-address',sendAlgoToAddress);
+        await extensionPage.type('#note', "AutoTest Invalid Amount");
+        await extensionPage.click('#submitSendAlgos')
+        await extensionPage.waitFor(100)
+        await extensionPage.type('#enterPassword',unsafePassword);
+        await extensionPage.waitFor(200)
+        await extensionPage.click('#authButton')
+        await extensionPage.waitFor(2000)
+        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitFor(2000)
+
+        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
+        expect(pageError).toMatch('Error: Invalid fields')
+
+        await extensionPage.click('svg.fa-chevron-left')
+        await extensionPage.waitFor(3000)
+
+    })
+
     test('Load Account Details', async () => {
         await extensionPage.click('#showDetails')
         await extensionPage.waitForSelector('#accountAddress')
@@ -149,7 +195,7 @@ describe('Basic Happy Path Tests', () => {
 })
 
 
-// Create a new account in AlgoSigner
+// // Create a new account in AlgoSigner
 describe('Create Account', () => {
     
     const extensionName = 'AlgoSigner' 
@@ -189,20 +235,8 @@ describe('Create Account', () => {
     })
 
     beforeEach(async () => {
-        // turns out we should not re-open the page, as the wallet is gone
-        // extensionPage = await browser.newPage();
-        // await extensionPage.goto(baseUrl);
+
     })
-
-    // test('Welcome Page Title', async () => {
-    //     await extensionPage.waitForSelector('#enterPassword')
-    //     await expect(extensionPage.title()).resolves.toMatch(extensionName)
-    // })
-
-    // test('Create Wallet with Password', async () => {
-    //     await extensionPage.type('#enterPassword',unsafePassword);
-    //     await extensionPage.click('#login')
-    // })
 
     test('Create An Account, Step 1 - Enter Account Name', async () => {
         await extensionPage.waitForSelector('#addAccount')

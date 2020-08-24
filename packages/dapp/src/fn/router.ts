@@ -37,7 +37,7 @@ export class Router {
                 }         
             }
             catch {
-                console.log(`Unable to determine source from message. \nEvent:${JSON.stringify(event)}`);
+                //console.log(`Unable to determine source from message. \nEvent:${JSON.stringify(event)}`);
             }    
 
 
