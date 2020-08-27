@@ -3,7 +3,7 @@
 An open-source Algorand wallet browser extension that permits dApp communication for signing Algorand transactions - available for Chrome initially. 
 
 ## Chrome Extension Store
-The extension is available on the Chrome Extension Store at: 
+The extension is available on the [Chrome Extension Store](https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm)
 
 _This is the preferred solution for end-users, updates will be automatically installed after review by the extension store_
 
