@@ -100,7 +100,7 @@ describe('Wallet Setup', () => {
 
 describe('Basic dApp Tests', () => {
 
-    const sampleDapp = 'https://purestake.github.io/algosigner-dapp-example/'
+    const sampleDapp = 'https://purestake.github.io/algosigner-dapp-example/legacy/index.html'
     const samplePage = 'https://purestake.com'
     let getParams
     let appPage
