@@ -25,7 +25,7 @@ Proxied requests are passed through to an API service - currently set to the Pur
 ### AlgoSigner.connect()
 Requests access to the Wallet for the dApp, may be rejected or approved. Every access to the extension begins with a connect request, which if approved by the user, allows the dApp to follow-up with other requests.
 
-<img src="https://github.com/albertov19/algosigner/blob/develop/docs/dApp_int_images/req-access.png" height="500" />
+<img src="dApp_int_images/req-access.png" height="500" />
 
 ### AlgoSigner.accounts({ ledger: ‘MainNet|TestNet’ }) 
 Returns an array of accounts present in the Wallet for the given Network. 
