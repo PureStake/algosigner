@@ -149,6 +149,7 @@ let txn = {
    from: accounts[0].address,
    to: 'PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4',
    fee: txParams['min-fee'],
+   type: 'pay',
    amount: amount,
    firstRound: txParams['last-round'],
    lastRound: txParams['last-round'] + 1000,
