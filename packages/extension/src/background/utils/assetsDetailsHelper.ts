@@ -2,6 +2,8 @@ import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import { InternalMethods } from '../messaging/internalMethods';
 import { Ledger } from "../messaging/types"
 
+const TIMEOUT = 500;
+
 ///
 // Helper class for getting and saving the details of assets in an ordered fashion
 ///
@@ -19,7 +21,7 @@ export default class AssetsDetailsHelper {
     public static add(assets: Array<number>, ledger: Ledger) {
         this.assetsToAdd[ledger] = this.assetsToAdd[ledger].concat(assets);
         if (this.timeouts[ledger] === null && this.assetsToAdd[ledger].length > 0)
-            this.timeouts[ledger] = setTimeout(() => this.run(ledger), 500);
+            this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
     }
 
     private static run(ledger: Ledger) {
@@ -48,7 +50,7 @@ export default class AssetsDetailsHelper {
                 assets[ledger][assetId] = res.asset.params;
                 extensionStorage.setStorage('assets', assets, null);
             }).finally(() => {
-                this.timeouts[ledger] = setTimeout(() => this.run(ledger), 500);
+                this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
             });
         });
     }
