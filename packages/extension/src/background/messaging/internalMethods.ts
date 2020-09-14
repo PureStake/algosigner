@@ -373,7 +373,7 @@ export class InternalMethods {
             }
             else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-                sendResponse({error: 'Invalid fields'});
+                sendResponse({error: 'One or more fields are not valid. Please check and try again.'});
                 return;
             }
             else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
@@ -392,7 +392,7 @@ export class InternalMethods {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
                     if (e.body.message.includes('overspend'))
-                        sendResponse({error: "Overspending"});
+                        sendResponse({error: "Overspending. Your account doesn't have sufficient funds."});
                     else
                         sendResponse({error: e.body.message});
                 });
@@ -409,7 +409,7 @@ export class InternalMethods {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
                     if (e.body.message.includes('overspend'))
-                        sendResponse({error: "Overspending"});
+                        sendResponse({error: "Overspending. Your account doesn't have sufficient funds."});
                     else
                         sendResponse({error: e.body.message});
                 });
