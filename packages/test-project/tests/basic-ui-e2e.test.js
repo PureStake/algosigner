@@ -138,12 +138,14 @@ describe('Basic Happy Path Tests', () => {
         await extensionPage.waitFor(200)
         await extensionPage.click('#authButton')
         await extensionPage.waitFor(2000)
-        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitForSelector('#tx-error')
         await extensionPage.waitFor(2000)
 
-        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
-        await expect(pageError).toMatch('Error: Overspending')
+        let pageError = await extensionPage.$eval('#tx-error', e => e.innerText)
+        await expect(pageError).toMatch("Overspending. Your account doesn't have sufficient funds.")
 
+        await extensionPage.click('button.modal-close')
+        await extensionPage.waitFor(200)
         await extensionPage.click('svg.fa-chevron-left')
         await extensionPage.waitFor(3000)
     })
@@ -160,12 +162,14 @@ describe('Basic Happy Path Tests', () => {
         await extensionPage.waitFor(200)
         await extensionPage.click('#authButton')
         await extensionPage.waitFor(2000)
-        await extensionPage.waitForSelector('p.has-text-danger')
+        await extensionPage.waitForSelector('#tx-error')
         await extensionPage.waitFor(2000)
 
-        let pageError = await extensionPage.$eval('p.has-text-danger', e => e.innerText)
-        expect(pageError).toMatch('Error: Invalid fields')
+        let pageError = await extensionPage.$eval('#tx-error', e => e.innerText)
+        expect(pageError).toMatch('One or more fields are not valid. Please check and try again.')
 
+        await extensionPage.click('button.modal-close')
+        await extensionPage.waitFor(200)
         await extensionPage.click('svg.fa-chevron-left')
         await extensionPage.waitFor(3000)
 
