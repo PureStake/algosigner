@@ -26,7 +26,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  const matches = mnemonic.match(/\w+/g) || [];
+  const matches = mnemonic.trim().split(/[\s\t\r\n]+/) || [];
   const disabled = name.length === 0 || matches.length !== 25;
 
   const importAccount = (pwd: string) => {
