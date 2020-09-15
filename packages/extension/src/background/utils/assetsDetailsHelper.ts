@@ -40,8 +40,10 @@ export default class AssetsDetailsHelper {
             let assetId = this.assetsToAdd[ledger][0];
             while (assetId in assets[ledger]) {
                 this.assetsToAdd[ledger].shift();
-                if (this.assetsToAdd[ledger].length === 0)
+                if (this.assetsToAdd[ledger].length === 0) {
+                    this.timeouts[ledger] = null;
                     return;
+                }
                 assetId = this.assetsToAdd[ledger][0];
             }
 
