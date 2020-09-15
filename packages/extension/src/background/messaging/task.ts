@@ -390,7 +390,7 @@ export class Task {
 
                         let txn = {...message.body.params};
 
-                        if ('note' in txn) {
+                        if ('note' in txn && txn.note !== undefined) {
                             txn.note = new Uint8Array(Buffer.from(txn.note));
                         }
 
