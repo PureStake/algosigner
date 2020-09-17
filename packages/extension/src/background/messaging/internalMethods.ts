@@ -48,6 +48,15 @@ export class InternalMethods {
         return safeWallet;
     }
 
+    // Checks if an address is a valid user account for a given ledger.
+    public static checkValidAccount(address: string, ledger: Ledger) {
+        for (var i = session.wallet[ledger].length - 1; i >= 0; i--) {
+            if (session.wallet[ledger][i].address === address)
+                return true;
+        }
+        return false;
+    }
+
     private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
         const algod = this.getAlgod(ledger);
         algod.accountInformation(address).do().then((res: any) => {
