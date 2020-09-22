@@ -1,6 +1,6 @@
 {
   "name": "algosigner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "https://developer.purestake.io",
   "description": "Sign Algorand transactions in your browser with PureStake.",
   "keywords": [
@@ -16,7 +16,7 @@
     "postinstall": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install); (cd ./packages/test-project && npm install);",
     "prebuild": "rm -rf ./dist/*",
     "coveragetest": "cd ./packages/test-project && npm run coveragetest",
-    "test": "(cd ./packages/crypto && npm run test); (cd ./packages/extension && npm run test); (cd ./packages/ui && npm run test); (cd ./packages/dapp && npm run test); (cd ./packages/common && npm run test); (cd ./packages/test-project && npm run github-test);"
+    "test": "(cd ./packages/crypto && npm run test); (cd ./packages/extension && npm run test); (cd ./packages/ui && npm run test); (cd ./packages/dapp && npm run test); (cd ./packages/common && npm run test); (cd ./packages/test-project && npm run test);"
   },
   "devDependencies": {}
 }
