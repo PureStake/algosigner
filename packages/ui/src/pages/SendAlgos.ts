@@ -115,12 +115,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           rows="2"
           onInput=${(e) => setNote(e.target.value)}/>
 
-        <p class="has-text-danger">
-          ${(error!==undefined && error.length > 0) && html`
-            Error: ${error}
-          `}
-        </p>
-
       </div>
       <div class="px-4 py-4">
         <button
@@ -155,12 +149,27 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p id="txId" style="word-break: break-all;">${txId}</p>
             <button
               id="backToWallet"
-              class="button is-success is-outlined is-fullwidth mt-4"
+              class="button is-primary is-fullwidth mt-4"
               onClick=${() => route(`/${matches.ledger}/${matches.address}`)}>
               Back to account!
             </button>
           </div>
         </div>
+      </div>
+    `}
+
+    ${ error !== undefined && error.length > 0 && html`
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-content" style="padding: 0 15px;">
+          <div class="box">
+            <p class="has-text-danger has-text-weight-bold mb-2">
+              Transaction failed with the following error:
+            </p>
+            <p id="tx-error">${error}</p>
+          </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close" onClick=${()=>setError('')} />
       </div>
     `}
 

@@ -141,51 +141,86 @@ export class Task {
                         };
                         reject(d);
                     }
-                    else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
-                        || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
-                        d.body.params = transactionWrap.transaction;
-                        // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
-                        // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
-                        extensionBrowser.windows.create({
-                            url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
-                            type: "popup",
-                            focused: true,
-                            width: 400 + 12,
-                            height: 550 + 34
-                        }, function (w) {
-                            if(w) {
-                                Task.requests[d.originTabID] = {
-                                    window_id: w.id,
-                                    message: d
-                                };
-                                // Send message with tx info
-                                setTimeout(function(){
-                                    extensionBrowser.runtime.sendMessage(d);
-                                }, 500);
-                            }
-                        });
-                    }
                     else {
-                        d.body.params = transactionWrap.transaction;
-                        // We have a transaction which appears to be valid. Show the popup as normal.
-                        extensionBrowser.windows.create({
-                            url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
-                            type: "popup",
-                            focused: true,
-                            width: 400 + 12,
-                            height: 550 + 34
-                        }, function (w) {
-                            if(w) {
-                                Task.requests[d.originTabID] = {
-                                    window_id: w.id,
-                                    message: d
-                                };
-                                // Send message with tx info
-                                setTimeout(function(){
-                                    extensionBrowser.runtime.sendMessage(d);
-                                }, 500);
+                        // Check for the validity of the from field.
+                        let tx = d.body.params;
+                        if (tx.from === undefined) {
+                            d.error = {
+                                message: 'from property is required.'
                             }
-                        });
+                            reject(d);
+                            return;
+                        }
+                        if (tx.genesisID === undefined) {
+                            d.error = {
+                                message: 'genesisID property is required.'
+                            }
+                            reject(d);
+                            return;
+                        }
+
+                        let txLedger;
+                        if (tx.genesisID === "mainnet-v1.0")
+                            txLedger = Ledger.MainNet;
+                        else if (tx.genesisID === "testnet-v1.0")
+                            txLedger = Ledger.TestNet;
+
+                        if (!InternalMethods.checkValidAccount(tx.from, txLedger)){
+                            d.error = {
+                                message: 'from is not a valid user account.'
+                            }
+                            reject(d);
+                            return;
+                        }
+
+                        if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
+                            || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
+                            d.body.params = transactionWrap.transaction;
+                            // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
+                            // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny. 
+
+                            extensionBrowser.windows.create({
+                                url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
+                                type: "popup",
+                                focused: true,
+                                width: 400 + 12,
+                                height: 550 + 34
+                            }, function (w) {
+                                if(w) {
+                                    Task.requests[d.originTabID] = {
+                                        window_id: w.id,
+                                        message: d
+                                    };
+                                    // Send message with tx info
+                                    setTimeout(function(){
+                                        extensionBrowser.runtime.sendMessage(d);
+                                    }, 500);
+                                }
+                            });
+                        }
+                        else {
+                            d.body.params = transactionWrap.transaction;
+                            // We have a transaction which appears to be valid. Show the popup as normal.
+
+                            extensionBrowser.windows.create({
+                                url: extensionBrowser.runtime.getURL("index.html#/sign-transaction"),
+                                type: "popup",
+                                focused: true,
+                                width: 400 + 12,
+                                height: 550 + 34
+                            }, function (w) {
+                                if(w) {
+                                    Task.requests[d.originTabID] = {
+                                        window_id: w.id,
+                                        message: d
+                                    };
+                                    // Send message with tx info
+                                    setTimeout(function(){
+                                        extensionBrowser.runtime.sendMessage(d);
+                                    }, 500);
+                                }
+                            });
+                        }
                     }
                 },
                 // algod
@@ -390,7 +425,7 @@ export class Task {
 
                         let txn = {...message.body.params};
 
-                        if ('note' in txn) {
+                        if ('note' in txn && txn.note !== undefined) {
                             txn.note = new Uint8Array(Buffer.from(txn.note));
                         }
 

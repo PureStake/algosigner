@@ -9,14 +9,14 @@
     "test": "jest"
   },
   "devDependencies": {
+    "jest": "^26.4.2",
     "ts-loader": "^7.0.5",
-    "jest": "^26.0.1",
-    "typescript": "^3.7.5",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "typescript": "^3.9.7",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "@types/jest": "^26.0.9",
-    "ts-jest": "^26.2.0"
+    "@types/jest": "^26.0.14",
+    "ts-jest": "^26.3.0"
   }
 }

@@ -6,21 +6,21 @@ export class Settings {
         [Backend.PureStake]: {
             [Ledger.TestNet]: {
                 [API.Algod] : {
-                    url: "https://algosigner.api.purestake.run/testnet/algod",
+                    url: "https://algosigner.api.purestake.io/testnet/algod",
                     port: ""
                 },
                 [API.Indexer] : {
-                    url: "https://algosigner.api.purestake.run/testnet/indexer",
+                    url: "https://algosigner.api.purestake.io/testnet/indexer",
                     port: ""
                 }
             },
             [Ledger.MainNet]: {
                 [API.Algod] : {
-                    url: "https://algosigner.api.purestake.run/mainnet/algod",
+                    url: "https://algosigner.api.purestake.io/mainnet/algod",
                     port: ""
                 },
                 [API.Indexer] : {
-                    url: "https://algosigner.api.purestake.run/mainnet/indexer",
+                    url: "https://algosigner.api.purestake.io/mainnet/indexer",
                     port: ""
                 },
             },

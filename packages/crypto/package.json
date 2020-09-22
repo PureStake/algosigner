@@ -9,12 +9,12 @@
   },
   "license": "",
   "devDependencies": {
-    "@types/jest": "^26.0.8",
-    "jest": "^26.2.2",
-    "ts-jest": "^26.1.4",
+    "@types/jest": "^26.0.14",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.3.0",
     "ts-loader": "^7.0.5",
-    "typescript": "^3.7.5",
-    "webpack": "^4.42.1",
+    "typescript": "^3.9.7",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {},
