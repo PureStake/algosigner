@@ -2,7 +2,7 @@ name: Deployment
 on:
   release:
     types:
-      - created
+      - released
 jobs:
   test_zip_upload:
     runs-on: ubuntu-latest
