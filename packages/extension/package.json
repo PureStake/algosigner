@@ -1,6 +1,6 @@
 {
   "name": "algosigner-extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "https://developer.purestake.io",
   "description": "Sign Algorand transactions in your browser with PureStake.",
   "keywords": [
