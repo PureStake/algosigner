@@ -4,9 +4,9 @@
   "author": "https://developer.purestake.io",
   "description": "Storage wrapper for saving and retrieving extention information in Algosigner.",
   "devDependencies": {
-    "typescript": "^3.7.5",
     "ts-loader": "^7.0.5",
-    "webpack": "^4.42.1",
+    "typescript": "^3.9.7",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {},

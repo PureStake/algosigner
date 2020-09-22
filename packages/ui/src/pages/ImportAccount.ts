@@ -26,14 +26,14 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  const disabled = false;
-  // const disabled = name.length === 0 || mnemonic.split(" ").length < 25;
+  const matches = mnemonic.trim().split(/[\s\t\r\n]+/) || [];
+  const disabled = name.trim().length === 0 || matches.length !== 25;
 
   const importAccount = (pwd: string) => {
     const params = {
       passphrase: pwd,
-      mnemonic: mnemonic,
-      name: name,
+      mnemonic: matches.join(" "),
+      name: name.trim(),
       ledger: ledger
     };
     setLoading(true);

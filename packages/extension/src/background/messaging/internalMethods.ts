@@ -1,13 +1,14 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Settings } from '../config';
-import { Ledger, Backend, API } from './types';
+import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import { Task } from './task';
-import Session from '../utils/session';
+import { Ledger, Backend, API } from './types';
+import { Settings } from '../config';
 import encryptionWrap from "../encryptionWrap";
-import { getValidatedTxnWrap } from "../transaction/actions";
+import Session from '../utils/session';
+import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { ValidationResponse } from '../utils/validator';
-import {logging} from '@algosigner/common/logging';
+import { getValidatedTxnWrap } from "../transaction/actions";
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -15,11 +16,11 @@ const session = new Session;
 export class InternalMethods {
     private static _encryptionWrap: encryptionWrap|undefined;
 
-    private static getAlgod(ledger: Ledger) {
+    public static getAlgod(ledger: Ledger) {
         const params = Settings.getBackendParams(ledger, API.Algod);
         return new algosdk.Algodv2(params.apiKey, params.url, params.port);
     }
-    private static getIndexer(ledger: Ledger) {
+    public static getIndexer(ledger: Ledger) {
         const params = Settings.getBackendParams(ledger, API.Indexer);
         return new algosdk.Indexer(params.apiKey, params.url, params.port);
     }
@@ -45,6 +46,26 @@ export class InternalMethods {
             });
         }
         return safeWallet;
+    }
+
+    // Checks if an address is a valid user account for a given ledger.
+    public static checkValidAccount(address: string, ledger: Ledger) {
+        for (var i = session.wallet[ledger].length - 1; i >= 0; i--) {
+            if (session.wallet[ledger][i].address === address)
+                return true;
+        }
+        return false;
+    }
+
+    private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
+        const algod = this.getAlgod(ledger);
+        algod.accountInformation(address).do().then((res: any) => {
+            if ('assets' in res && res.assets.length > 0) {
+                AssetsDetailsHelper.add(res.assets.map(x => x['asset-id']), ledger);
+            }
+        }).catch((e: any) => {
+            console.error(e);
+        });
     }
 
     public static getHelperSession() {
@@ -213,6 +234,7 @@ export class InternalMethods {
                 this._encryptionWrap?.lock(JSON.stringify(unlockedValue),
                 (isSuccessful: any) => {
                     if(isSuccessful) {
+                        this.loadAccountAssetsDetails(newAccount.address, ledger);
                         session.wallet = this.safeWallet(unlockedValue); 
                         sendResponse(session.wallet);
                     } else {
@@ -232,16 +254,26 @@ export class InternalMethods {
             // Check for asset details saved in storage if needed
             if ('assets' in res && res.assets.length > 0){
                 new ExtensionStorage().getStorage('assets', (savedAssets: any) => {
+                    let missingAssets = [];
                     if (savedAssets) {
                         for (var i = res.assets.length - 1; i >= 0; i--) {
                             const assetId = res.assets[i]['asset-id'];
-                            if (assetId in savedAssets[ledger])
+                            if (assetId in savedAssets[ledger]) {
                                 res.assets[i] = {
                                     ...res.assets[i],
                                     ...savedAssets[ledger][assetId]
                                 };
+                            } else {
+                                missingAssets.push(assetId);
+                            }
                         }
+                    } else {
+                        missingAssets = res.assets.map(x => x['asset-id']);
                     }
+
+                    if (missingAssets.length > 0)
+                        AssetsDetailsHelper.add(missingAssets, ledger);
+
                     res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
                     sendResponse(res);
                 });
@@ -350,7 +382,7 @@ export class InternalMethods {
             }
             else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-                sendResponse({error: 'Invalid fields'});
+                sendResponse({error: 'One or more fields are not valid. Please check and try again.'});
                 return;
             }
             else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
@@ -369,7 +401,7 @@ export class InternalMethods {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
                     if (e.body.message.includes('overspend'))
-                        sendResponse({error: "Overspending"});
+                        sendResponse({error: "Overspending. Your account doesn't have sufficient funds."});
                     else
                         sendResponse({error: e.body.message});
                 });
@@ -386,7 +418,7 @@ export class InternalMethods {
                     sendResponse({txId: resp.txId});
                 }).catch((e: any) => {
                     if (e.body.message.includes('overspend'))
-                        sendResponse({error: "Overspending"});
+                        sendResponse({error: "Overspending. Your account doesn't have sufficient funds."});
                     else
                         sendResponse({error: e.body.message});
                 });
