@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Login should match snapshot 1`] = `
+<div
+  className="main-view"
+  style="flex-direction: column; justify-content: space-between; background:url(test-file-stub); background-size: cover; color: white;"
+>
+  <div
+    style="flex: 1"
+  >
+    <section
+      className="hero has-text-centered mb-6"
+    >
+      <div
+        className="hero-body"
+      >
+        <img
+          className="mb-3"
+          src="test-file-stub"
+          width="120"
+        />
+      </div>
+    </section>
+    <section
+      className="section pt-4"
+    >
+      <input
+        className="input"
+        id="enterPassword"
+        onInput={[Function]}
+        onKeyDown={[Function]}
+        placeholder="Password"
+        type="password"
+        value=""
+      />
+      <p
+        className="mt-5 has-text-centered is-size-7"
+      >
+        AlgoSigner does not store your password. If you’ve forgotten your password, you’ll need to create a new wallet and re-link your accounts.
+      </p>
+    </section>
+  </div>
+  <div
+    className="mx-5 mb-3"
+  >
+    <button
+      className="button is-link is-fullwidth is-loading"
+      disabled={true}
+      id="login"
+      onClick={[Function]}
+    >
+      Login
+    </button>
+  </div>
+</div>
+`;
