@@ -54,6 +54,11 @@ describe('TxAfrz', () => {
     expect(component.contains(html`<span>${tx['asset-freeze-transaction']['asset-id'].toString()}</span>`)).toBe(true);
   });
 
+  it('should display freeze status', () => {
+    const freezed = tx['asset-freeze-transaction']['new-freeze-status'] ? 'Freeze' : 'Unfreeze';
+    expect(component.contains(html`<span>${freezed}</span>`)).toBe(true);
+  });
+
   it('should display confirmed round', () => {
     expect(component.contains(html`<span>${tx['confirmed-round'].toString()}</span>`)).toBe(true);
   });

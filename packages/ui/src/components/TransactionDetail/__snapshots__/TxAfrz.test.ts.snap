@@ -52,7 +52,9 @@ exports[`TxAfrz should match snapshot 1`] = `
       Action:
     </b>
      
-    Freeze
+    <span>
+      Freeze
+    </span>
   </p>
   <p>
     <b>
