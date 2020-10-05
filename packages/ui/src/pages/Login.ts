@@ -6,7 +6,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
 
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 
 import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';

@@ -4,7 +4,7 @@ import { useEffect, useState, useContext } from 'preact/hooks';
 import { Link } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { StoreContext } from '../index'
+import { StoreContext } from 'services/StoreContext'
 
 import logotype from 'assets/logotype.png'
 
