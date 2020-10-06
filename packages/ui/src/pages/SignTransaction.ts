@@ -12,7 +12,7 @@ import TxAxfer from 'components/SignTransaction/TxAxfer'
 import TxAfrz from 'components/SignTransaction/TxAfrz'
 import Authenticate from 'components/Authenticate'
 import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 import logotype from 'assets/logotype.png'
 
 function deny() {

@@ -8,7 +8,7 @@ import { Link, route } from 'preact-router';
 import { sendMessage } from 'services/Messaging'
 import { numFormat } from 'services/common';
 
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 import TransactionsList from 'components/Account/TransactionsList'
 import AssetsList from 'components/Account/AssetsList'
 import AccountDetails from 'components/Account/AccountDetails'

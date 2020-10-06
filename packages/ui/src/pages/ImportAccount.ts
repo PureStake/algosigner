@@ -4,7 +4,7 @@ import { useState, useContext } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { StoreContext } from '../index'
+import { StoreContext } from 'services/StoreContext'
 import HeaderView from 'components/HeaderView'
 import Authenticate from 'components/Authenticate'
 
