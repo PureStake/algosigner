@@ -325,8 +325,70 @@ export class InternalMethods {
         return true;
     }
 
+    public static [JsonRpcMethod.AssetsAPIList](request: any, sendResponse: Function) {
+        function searchAssets(assets, indexer, nextToken, filter) {
+            const req = indexer.searchForAssets().limit(30).name(filter);
+            if (nextToken)
+                req.nextToken(nextToken);
+            req.do().then((res: any) => {
+                let newAssets = assets.concat(res.assets);
+                for (var i = newAssets.length - 1; i >= 0; i--) {
+                    newAssets[i] = {
+                        "asset_id": newAssets[i].index,
+                        "name": newAssets[i]['params']['name'],
+                        "unit_name": newAssets[i]['params']['unit-name'],
+                    };
+                }
+                res.assets = newAssets;
+
+                sendResponse(res);
+            }).catch((e: any) => {
+                sendResponse({error: e.message});
+            });
+        }
+
+        const { ledger, filter, nextToken } = request.body.params;
+        let indexer = this.getIndexer(ledger);
+        // Do the search for asset id (if filter value is integer)
+        // and asset name and concat them.
+        if (filter.length > 0 && !isNaN(filter) && (!nextToken || nextToken.length === 0)) {
+            indexer.searchForAssets().index(filter).do().then((res: any) => {
+                searchAssets(res.assets, indexer, nextToken, filter);
+            }).catch((e: any) => {
+                sendResponse({error: e.message});
+            });
+        } else {
+            searchAssets([], indexer, nextToken, filter);
+        }
+        return true;
+    }
+
+    public static [JsonRpcMethod.AssetsVerifiedList](request: any, sendResponse: Function) {
+        const { ledger } = request.body.params;
+
+        if (ledger === Ledger.MainNet){
+            fetch("https://mobile-api.algorand.com/api/assets/?status=verified")
+            .then((response) => {
+                return response.json().then((json) =>{
+                    if (response.ok) {
+                        sendResponse(json);
+                    } else {
+                        sendResponse({error: json});
+                    }
+                })
+            }).catch((e) => {
+                sendResponse({error: e.message});
+            });
+        } else {
+            sendResponse({
+                results: []
+            });
+        }
+        return true;
+    }
+
     public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
-        const { ledger, address, to, amount, note, passphrase } = request.body.params;
+        const { ledger, address, passphrase, txnParams } = request.body.params;
         this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
         var algod = this.getAlgod(ledger);
 
@@ -349,21 +411,20 @@ export class InternalMethods {
             let params = await algod.getTransactionParams().do();
 
             let txn = {
-              "type": "pay",
-              "from": address,
-              "to": to,
-              "fee": params.fee,
-              "amount": +amount,
-              "firstRound": params.firstRound,
-              "lastRound": params.lastRound,
-              "genesisID": params.genesisID,
-              "genesisHash": params.genesisHash,
-              "note": new Uint8Array(Buffer.from(note))
+              ...txnParams,
+              fee: params.fee,
+              firstRound: params.firstRound,
+              lastRound: params.lastRound,
+              genesisID: params.genesisID,
+              genesisHash: params.genesisHash,
             };
+
+            if ('note' in txn)
+              txn.note = new Uint8Array(Buffer.from(txn.note));
 
             const txHeaders = {
                 'Content-Type' : 'application/x-binary'
-            }
+            };
 
             var transactionWrap = undefined;
             try {
