@@ -14,9 +14,9 @@ import Authenticate from 'components/Authenticate'
 
 const SendAlgos: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
-  const { matches, path, url, ledger, address } = props;
+  const { matches, ledger, address } = props;
 
-  const [askAuth, setAskAuth] = useState(false);
+  const [askAuth, setAskAuth] = useState<boolean>(false);
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -41,12 +41,17 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
     const params = {
       ledger: ledger,
+      passphrase: pwd,
       address: account.address,
-      amount: +amount*1e6,
-      note: note,
-      to: to,
-      passphrase: pwd
+      txnParams: {
+        type: "pay",
+        from: account.address,
+        to: to,
+        note: note,
+        amount: +amount*1e6,
+      }
     };
+
     sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
       if ('error' in response) { 
         setLoading(false);

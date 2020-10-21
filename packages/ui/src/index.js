@@ -19,6 +19,7 @@ import ImportAccount from 'pages/ImportAccount'
 import Wallet from 'pages/Wallet'
 import Account from 'pages/Account'
 import SendAlgos from 'pages/SendAlgos'
+import AddAsset from 'pages/AddAsset'
 import SignTransaction from 'pages/SignTransaction'
 
 import { StoreProvider } from 'services/StoreContext'
@@ -51,6 +52,7 @@ const App = () => {
                   <${CreateAccount} path="/:ledger/create-account" />
                   <${ImportAccount} path="/:ledger/import-account" />
                   <${Account} path="/:ledger/:address" />
+                  <${AddAsset} path="/:ledger/:address/add-asset" />
                   <${SendAlgos} path="/:ledger/:address/send" />
                 </${Router}>
               </div>

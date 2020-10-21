@@ -73,9 +73,17 @@ const Account: FunctionalComponent = (props: any) => {
       </${Link}>
     </div>
 
-    ${ results && results.assets.length > 0 && html`
-      <${AssetsList} assets=${results.assets} ledger=${ledger}/>
-    `}
+    <div class="py-2">
+      <div class="px-4">
+        <span class="has-text-weight-bold is-size-5">Assets</span>
+        <${Link} id="sendAlgos" style="font-size: 0.9em" class="is-pulled-right" href=${`${url}/add-asset`}>
+          <span class="icon"><i class="fas fa-plus-circle"></i></span> Add new asset
+        </${Link}>
+      </div>
+      ${ results && results.assets.length > 0 && html`
+        <${AssetsList} assets=${results.assets} ledger=${ledger}/>
+      `}
+    </div>
 
     <${TransactionsList} address=${address} ledger=${ledger}/>
 

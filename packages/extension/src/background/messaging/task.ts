@@ -495,6 +495,12 @@ export class Task {
                 [JsonRpcMethod.AssetDetails]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.AssetDetails](request, sendResponse)
                 },
+                [JsonRpcMethod.AssetsAPIList]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AssetsAPIList](request, sendResponse)
+                },
+                [JsonRpcMethod.AssetsVerifiedList]: (request: any, sendResponse: Function) => {
+                    return InternalMethods[JsonRpcMethod.AssetsVerifiedList](request, sendResponse)
+                },
                 [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
                     return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse)
                 },
