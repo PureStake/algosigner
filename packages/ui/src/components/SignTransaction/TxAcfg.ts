@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 
 const TxAcfg: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account } = props;
+  const { tx, account, vo, dt } = props;
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -20,7 +20,7 @@ const TxAcfg: FunctionalComponent = (props: any) => {
       </div>
     </div>
 
-    <p class="has-text-centered has-text-weight-bold">Asset configuration</p>
+    <p class="has-text-centered has-text-weight-bold"> ${dt || 'Asset Configuration'}</p>
 
     <div class="tabs is-centered mb-2">
       <ul>
@@ -67,7 +67,7 @@ const TxAcfg: FunctionalComponent = (props: any) => {
             <p style="width: 70%;">${tx.assetTotal}</p>
           </div>
         `}
-        <p>Fee: <span style="float: right; margin-right: 11em;">${tx.fee/1e6} Algos</span></p>
+        <p class="${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">Fee: <span style="float: right; margin-right: 11em;">${tx.fee/1e6} Algos</span></p>
       </div>
     `}
     ${ tab==="details" && html`

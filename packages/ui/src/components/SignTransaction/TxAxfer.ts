@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, ledger } = props;
+  const { tx, account, ledger, vo, dt } = props;
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -20,7 +20,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       </div>
     </div>
 
-    <p class="has-text-centered has-text-weight-bold"><i class="fas fa-arrow-down mr-3"></i> Asset Transfer</p>
+    <p class="has-text-centered has-text-weight-bold"><span><i class="fas fa-arrow-down mr-3"></i></span> ${dt || "Asset Transfer"}</p>
 
     <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
       <div style="display: flex; justify-content: space-between;">
@@ -53,7 +53,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
             ${tx.assetIndex}
           </a>
         </div>
-        <div class="is-flex">
+        <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
           <p style="width: 30%;">Fee:</p>
           <p style="width: 70%;">${tx.fee/1e6} Algos</p>
         </div>

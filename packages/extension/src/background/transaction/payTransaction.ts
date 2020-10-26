@@ -8,23 +8,24 @@ class PaymentTx implements IPaymentTx{
     type: string = undefined;
     to: string = undefined;
     amount: number = undefined;
-    closeRemainderTo?: string = undefined;
-    rekey?: any = undefined;
-    from?: string = undefined;
+    closeRemainderTo?: string = null;
+    rekey?: any = null;
+    from: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;
-    note?: string = undefined;
+    note?: string = null;
     genesisID: string = undefined;
     genesisHash: any = undefined;
-    group?: any = undefined;
-    lease?: any = undefined;
+    group?: any = null;
+    lease?: any = null;
 };
 
 ///
-// Mapping, validation and error checking for transaction pay transactions prior to sign.
+// Mapping, validation and error checking for pay transactions prior to sign.
 ///
 export class PayTransaction extends BaseValidatedTxnWrap {
+    txDerivedTypeText: string = 'Pay Algos';
     constructor(params: IPaymentTx){   
         super(params, PaymentTx);
     }
