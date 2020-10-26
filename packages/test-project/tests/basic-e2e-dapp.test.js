@@ -627,7 +627,63 @@ describe('dApp Asset Txn Tests', () => {
         }
         else {
             expect(getTxId.txId).toMatch(assetTxId) }
-
     })
+
+    test('Asset Transfer Tx', async () => {   
+        await appPage.waitForTimeout(1000);
+        getSignedBlob = await appPage.evaluate(async (optInAddress, getParams, assetIndex, testAccountAddress) => {
+            let txn = {
+                "from": testAccountAddress,
+                "to": optInAddress,
+                "amount": Math.round(Math.floor(Math.random() * 10)),
+                "fee": getParams['fee'],
+                "assetIndex": assetIndex,
+                "type": "axfer",
+                "firstRound": getParams['last-round'],
+                "lastRound": getParams['last-round'] + 1000,
+                "genesisID": getParams['genesis-id'],
+                "genesisHash": getParams['genesis-hash'],
+                "note": "Asset Tx"
+            };      
+
+            // Get only the promise first
+            var signPromise = AlgoSigner.sign(txn);
+
+            // Initialize the sign process
+            await window.autosign();
+            
+            // Return the final result of promise
+            return await signPromise;
+            
+        }, optInAddress, getParams, assetIndex, testAccountAddress);
+
+        expect(getSignedBlob).toHaveProperty("txID");
+        expect(getSignedBlob).toHaveProperty("blob");
+        console.log(JSON.stringify(getSignedBlob))
+        assetTxId = getSignedBlob.txID
+    })
+
+    test('Post Asset Opt-in Blob', async () => {  
+        getTxId = await appPage.evaluate( (getSignedBlob) => {
+            return AlgoSigner.send({
+                    ledger: 'TestNet',
+                    tx: getSignedBlob.blob
+                })
+                .then((d) => {
+                    return d;
+                })
+                .catch((e) => {
+                    return(e)
+                });
+        }, getSignedBlob);
+        
+        if("message" in getTxId) {
+            console.log(JSON.stringify(getTxId))
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetTxId) }
+    })
+
+    // tbd Asset Destroy! 
 
 })
