@@ -410,7 +410,6 @@ export class Task {
                         let txn = {...message.body.params.transaction};
 
                         Object.keys({...message.body.params.transaction}).forEach(key => {
-                            console.log(`Key: ${key}, Value:: ${txn[key]}`);
                             if(txn[key] === undefined || txn[key] === null){
                                 delete txn[key];
                             }

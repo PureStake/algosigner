@@ -8,8 +8,9 @@ class AssetClawbackTx implements IAssetClawbackTx {
     type: string = undefined;
     assetIndex: number = undefined;
     amount: number = undefined;
-    assetCloseTo?: string = undefined;
+    assetCloseTo?: string = null;
     from: string = undefined;
+    to: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;

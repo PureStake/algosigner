@@ -26,14 +26,13 @@ export class BaseValidatedTxnWrap {
         // Check required values in the case where one of a set is required.
         if(requiredParamsSet && requiredParamsSet.length > 0){
             var foundValue = false;
-            for(let key in requiredParamsSet){
+            requiredParamsSet.forEach(key => {
                 if(params[key] !== undefined && params[key] !== null){
                     foundValue = true;
-                    break;
                 }
-            }
+            });
             if(!foundValue){
-                missingFields.push('params');
+                missingFields.push(`Transaction requires one parameter from:[${requiredParamsSet}]`);
             }
         }
 
