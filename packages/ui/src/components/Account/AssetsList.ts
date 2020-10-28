@@ -19,7 +19,7 @@ const AssetPreview: FunctionalComponent = (props: any) => {
       onClick=${() => setShowAsset(asset)}>
       ${ asset.name && asset.name.length > 0 && html`
         ${ asset.name }
-        <small class="has-text-grey-light"> ${asset['asset-id']}</small>
+        <small class="has-text-grey-light" id="asset_${asset['asset-id']}"> ${asset['asset-id']}</small>
       `}
       ${ (!asset.name || asset.name.length === 0) && html`
         ${ asset['asset-id'] }
