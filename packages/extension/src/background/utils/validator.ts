@@ -111,7 +111,7 @@ export function Validate(field: any, value: any): ValidationResponse {
                 return new ValidationResponse({status:ValidationStatus.Valid}); 
             }
 
-        case "rekey":
+        case "reKeyTo":
             if(value) { 
                 return new ValidationResponse({status:ValidationStatus.Invalid, info:'Rekey transactions are not currently accepted in AlgoSigner.'}); 
             }

@@ -26,7 +26,7 @@ class AssetCreateTx implements IAssetCreateTx {
     assetClawback?: string = null;
     group?: any = null;
     lease?: any = null;
-    rekey?: any = null;
+    reKeyTo?: any = null;
 };
 
 ///

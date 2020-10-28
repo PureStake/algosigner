@@ -145,12 +145,12 @@ export class Task {
                     else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status']  === ValidationStatus.Invalid)) {
                         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                         // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-                        let invalidKeys = [];
-                        for (const [key, value] of Object.entries(transactionWrap.validityObject)) {
-                            if(value===ValidationStatus.Invalid){
+                        var invalidKeys = [];
+                        Object.entries(transactionWrap.validityObject).forEach(([key,value]) => {
+                            if(value['status']===ValidationStatus.Invalid){
                                 invalidKeys.push(`${key}`);
                             }
-                        }
+                        })
                         d.error = {
                             message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(',')}].`
                         };
