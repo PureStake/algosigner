@@ -17,7 +17,7 @@ class AssetConfigTx implements IAssetConfigTx {
     genesisHash: any = undefined;
     group?: any = null;
     lease?: any = null;
-    rekey?: any = null;
+    reKeyTo?: any = null;
 
     // Modifications must include one of these
     assetTotal?: number = null;
