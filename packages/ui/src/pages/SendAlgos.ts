@@ -1,10 +1,11 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
+import { useState, useContext, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
+import { assetFormat, numFormat } from 'services/common';
 
 import { StoreContext } from 'services/StoreContext'
 
@@ -16,6 +17,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { matches, ledger, address } = props;
 
+  const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [ddActive, setDdActive] = useState<boolean>(false);
   // Asset {} is Algos
@@ -28,14 +30,14 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  let account;
-
-  for (var i = store[ledger].length - 1; i >= 0; i--) {
-    if (store[ledger][i].address === address) {
-      account = store[ledger][i];
-      break;
+  useEffect(() => {
+    for (var i = store[ledger].length - 1; i >= 0; i--) {
+      if (store[ledger][i].address === address) {
+        setAccount(store[ledger][i]);
+        break;
+      }
     }
-  }
+  }, []);
 
   let ddClass: string = "dropdown is-right";
   if (ddActive)
@@ -44,13 +46,13 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const selectAsset = (selectAsset) => {
     setDdActive(false);
 
-    // Load details if they are not present in the session. 
-    if ('decimals' in selectAsset) {
+    // Load details if they are not present in the session or is an empty object (algos). 
+    if (Object.keys(selectAsset).length === 0 || 'decimals' in selectAsset) {
       setAsset(selectAsset)
     } else {
       const params = {
         'ledger': ledger,
-        'asset-id': asset['asset-id']
+        'asset-id': selectAsset['asset-id']
       };
 
       sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
@@ -153,17 +155,23 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               <div class="dropdown-content">
                 <a id="asset-0"
                   onClick=${()=>selectAsset({})}
-                  class="dropdown-item">
-                  Algos
+                  class="dropdown-item is-flex px-4"
+                  style="justify-content: space-between;">
+                  <span>Algos</span>
+                  <span class="ml-4 has-text-grey">
+                    ${account.details && numFormat(account.details.amount/1e6, 6)} Algos
+                  </span>
                 </a>
-                ${account.details.assets.map((x => html`
+                ${account.details && account.details.assets.map((x => html`
                   <a id=${`asset-${x['asset-id']}`}
                     title=${x['asset-id']}
                     onClick=${()=>selectAsset(x)}
                     class="dropdown-item is-flex px-4"
                     style="justify-content: space-between;">
                     <span>${x['name'] || x['asset-id']}</span>
-                    <span class="ml-4 has-text-grey">${x['unit-name'] }</span>
+                    <span class="ml-4 has-text-grey">
+                      ${assetFormat(x.amount, x.decimals)} ${x['unit-name']}
+                    </span>
                   </a>
                 `))}
               </div>
@@ -173,14 +181,16 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
         
         <b>From</b>
-        <div class="box py-2 mt-2 mb-0 is-flex"
-          style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;">
-          <div>
-            <h6 class="title is-6">${ account.name }</h6>
-            <h6 class="subtitle is-6">${account.address.slice(0, 8)}.....${account.address.slice(-8)}</h6>
+        ${account.details && html`
+          <div class="box py-2 mt-2 mb-0 is-flex"
+            style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;">
+            <div>
+              <h6 class="title is-6">${ account.name }</h6>
+              <h6 class="subtitle is-6">${account.address.slice(0, 8)}.....${account.address.slice(-8)}</h6>
+            </div>
+            <b class="has-text-link">YOU</b>
           </div>
-          <b class="has-text-link">YOU</b>
-        </div>
+        `}
 
         <div class="has-text-centered has-text-weight-bold my-2">
           <span><i class="fas fa-arrow-down mr-3"></i></span>
