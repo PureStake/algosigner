@@ -9,7 +9,7 @@ class PaymentTx implements IPaymentTx{
     to: string = undefined;
     amount: number = undefined;
     closeRemainderTo?: string = null;
-    rekey?: any = null;
+    reKeyTo?: any = null;
     from: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
