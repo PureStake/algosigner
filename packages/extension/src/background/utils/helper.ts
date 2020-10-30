@@ -12,8 +12,8 @@ export function getIndexer(ledger: Ledger) {
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
 }
 
-// Helper functino 
-export function initializeCache(c: Cache | undefined, ledger: Ledger | undefined) : Cache {
+// Helper function to initialize Cache
+export function initializeCache(c: Cache | undefined, ledger: Ledger | undefined=undefined) : Cache {
     let cache : Cache;
     if (c === undefined) {
         cache = {
