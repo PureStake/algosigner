@@ -17,6 +17,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const { matches, ledger, address } = props;
 
   const [askAuth, setAskAuth] = useState<boolean>(false);
+  const [ddActive, setDdActive] = useState<boolean>(false);
+  // Asset {} is Algos
+  const [asset, setAsset] = useState({});
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -34,23 +37,59 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     }
   }
 
+  let ddClass: string = "dropdown is-right";
+  if (ddActive)
+    ddClass += " is-active";
+
+  const selectAsset = (selectAsset) => {
+    setDdActive(false);
+
+    // Load details if they are not present in the session. 
+    if ('decimals' in selectAsset) {
+      setAsset(selectAsset)
+    } else {
+      const params = {
+        'ledger': ledger,
+        'asset-id': asset['asset-id']
+      };
+
+      sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
+        const keys = Object.keys(response.asset.params);
+        for (var i = keys.length - 1; i >= 0; i--) {
+          selectAsset[keys[i]] = response.asset.params[keys[i]];
+        }
+        setAsset(selectAsset)
+      });
+    }
+  };
+
+  const checkAndSubmit = () => {
+
+  };
+
   const sendTx = async (pwd: string) => {
     setLoading(true);
     setAuthError('');
     setError('');
 
-    const params = {
+    let params : any = {
       ledger: ledger,
       passphrase: pwd,
       address: account.address,
       txnParams: {
-        type: "pay",
         from: account.address,
         to: to,
         note: note,
-        amount: +amount*1e6,
+        amount: amount
       }
     };
+
+    if ('asset-id' in asset) {
+      params.txnParams.type = 'axfer';
+      params.txnParams.assetIndex = asset['asset-id'];
+    } else {
+      params.txnParams.type = 'pay';
+    }
 
     sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
       if ('error' in response) { 
@@ -75,18 +114,63 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
-        title="Send Algos" />
+        title="Send Algos or ASAs" />
 
       <div class="px-4" style="flex: 1">
-        <div class="control has-icons-right mb-4">
-          <input class="input pr-6"
-            id="amountAlgos"
-            placeholder="0.0"
-            type="number"
-            value=${amount}
-            onInput=${(e) => setAmount(e.target.value)} />
-          <span class="icon is-right mr-2 mt-2 has-text-grey">Algos</span>
+        <div class="is-flex mb-3" style="justify-content: space-between;">
+          <div class="control">
+            <input class="input"
+              id="amountAlgos"
+              placeholder="0.000"
+              style="width: 245px;"
+              value=${amount}
+              onInput=${(e) => setAmount(e.target.value)} />
+            ${'decimals' in asset && html`
+              <p class="has-text-grey has-text-centered mt-1" style="font-size: 0.9em;">
+                This asset allows for ${asset['decimals']} decimal(s)
+              </p>
+            `}
+          </div>
+          <div class=${ddClass}>
+            <div class="dropdown-trigger">
+              <button
+                id="selectAsset"
+                class="button pr-1 pl-0"
+                onClick=${() => setDdActive(!ddActive)}
+                aria-haspopup="true"
+                aria-controls="dropdown-menu"
+                style="border: none; width: 120px; justify-content: flex-end;">
+                <span style="text-overflow: ellipsis; overflow: hidden;">
+                  ${asset['unit-name'] || asset['name'] || asset['asset-id'] || 'Algos'}
+                </span>
+                <span class="icon is-small">
+                  <i class="fas fa-caret-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu" role="menu"
+              style="max-height: 330px; overflow: auto;">
+              <div class="dropdown-content">
+                <a id="asset-0"
+                  onClick=${()=>selectAsset({})}
+                  class="dropdown-item">
+                  Algos
+                </a>
+                ${account.details.assets.map((x => html`
+                  <a id=${`asset-${x['asset-id']}`}
+                    title=${x['asset-id']}
+                    onClick=${()=>selectAsset(x)}
+                    class="dropdown-item is-flex px-4"
+                    style="justify-content: space-between;">
+                    <span>${x['name'] || x['asset-id']}</span>
+                    <span class="ml-4 has-text-grey">${x['unit-name'] }</span>
+                  </a>
+                `))}
+              </div>
+            </div>
+          </div>
         </div>
+
         
         <b>From</b>
         <div class="box py-2 mt-2 mb-0 is-flex"
@@ -100,7 +184,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
         <div class="has-text-centered has-text-weight-bold my-2">
           <span><i class="fas fa-arrow-down mr-3"></i></span>
-          <span>Payment</span>
+          ${'asset-id' in asset && html`
+            <span>Asset transfer</span>
+          `}
+          ${!('asset-id' in asset) && html`
+            <span>Payment</span>
+          `}
         </div>
 
         <textarea
