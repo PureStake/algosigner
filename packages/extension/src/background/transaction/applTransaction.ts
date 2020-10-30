@@ -34,7 +34,7 @@ export class ApplTx implements IApplTx {
 ///
 // Mapping, validation and error checking for appl transactions prior to sign.
 ///
-export class ApplTransaction  extends BaseValidatedTxnWrap {
+export class ApplTransaction extends BaseValidatedTxnWrap {
     txDerivedTypeText: string = 'Application';
     constructor(params: IApplTx){   
         super(params, ApplTx);
