@@ -2,11 +2,12 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import { Task } from './task';
-import { Ledger, Backend, API } from './types';
+import { API, Backend, Cache, Ledger } from './types';
 import { Settings } from '../config';
 import encryptionWrap from "../encryptionWrap";
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
+import { initializeCache } from '../utils/helper';
 import { ValidationResponse } from '../utils/validator';
 import { getValidatedTxnWrap } from "../transaction/actions";
 const algosdk = require("algosdk");
@@ -251,35 +252,46 @@ export class InternalMethods {
         const { ledger, address } = request.body.params;
         const algod = this.getAlgod(ledger);
         algod.accountInformation(address).do().then((res: any) => {
-            // Check for asset details saved in storage if needed
-            if ('assets' in res && res.assets.length > 0){
-                new ExtensionStorage().getStorage('assets', (savedAssets: any) => {
+            let extensionStorage = new ExtensionStorage();
+            extensionStorage.getStorage('cache', (storedCache: any) => {
+                let cache: Cache = initializeCache(storedCache, ledger);
+
+                // Check for asset details saved in storage, if needed
+                if ('assets' in res && res.assets.length > 0){
                     let missingAssets = [];
-                    if (savedAssets) {
-                        for (var i = res.assets.length - 1; i >= 0; i--) {
-                            const assetId = res.assets[i]['asset-id'];
-                            if (assetId in savedAssets[ledger]) {
-                                res.assets[i] = {
-                                    ...res.assets[i],
-                                    ...savedAssets[ledger][assetId]
-                                };
-                            } else {
-                                missingAssets.push(assetId);
-                            }
+                    for (var i = res.assets.length - 1; i >= 0; i--) {
+                        const assetId = res.assets[i]['asset-id'];
+                        if (assetId in cache.assets[ledger]) {
+                            res.assets[i] = {
+                                ...res.assets[i],
+                                ...cache.assets[ledger][assetId]
+                            };
+                        } else {
+                            missingAssets.push(assetId);
                         }
-                    } else {
-                        missingAssets = res.assets.map(x => x['asset-id']);
                     }
 
                     if (missingAssets.length > 0)
                         AssetsDetailsHelper.add(missingAssets, ledger);
 
                     res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
-                    sendResponse(res);
-                });
-            } else {
+                }
+
                 sendResponse(res);
-            }
+
+                // Save account updated account details in cache
+                cache.accounts[ledger][address] = res;
+                extensionStorage.setStorage('cache', cache, null);
+
+                // Add details to session
+                let wallet = session.wallet;
+                for (var i = wallet[ledger].length - 1; i >= 0; i--) {
+                    if (!('details' in wallet[ledger][i])){
+                        wallet[ledger][i].details = res;
+                    }
+                }
+                
+            });
         }).catch((e: any) => {
             sendResponse({error: e.message});
         });
@@ -309,14 +321,15 @@ export class InternalMethods {
             sendResponse(res);
             // Save asset details in storage if needed
             let extensionStorage = new ExtensionStorage();
-            extensionStorage.getStorage('assets', (savedAssets: any) => {
-                let assets = savedAssets || {
-                    TestNet: {},
-                    MainNet: {}
-                };
-                if (!(assetId in assets[ledger])) {
-                    assets[ledger][assetId] = res.asset.params;
-                    extensionStorage.setStorage('assets', assets, null);
+            extensionStorage.getStorage('cache', (cache: any) => {
+                if (cache === undefined)
+                    cache = new Cache;
+                if (!(ledger in cache.assets))
+                    cache.assets[ledger] = {};
+
+                if (!(assetId in cache.assets[ledger])) {
+                    cache.assets[ledger][assetId] = res.asset.params;
+                    extensionStorage.setStorage('cache', cache, null);
                 }
             });
         }).catch((e: any) => {
