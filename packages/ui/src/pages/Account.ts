@@ -69,7 +69,7 @@ const Account: FunctionalComponent = (props: any) => {
     </div>
     <div class="px-4">
       <${Link} id="sendAlgos" class="button is-primary is-fullwidth py-2" href=${`${url}/send`}>
-        Send Algos or ASAs
+        Send
       </${Link}>
     </div>
 
