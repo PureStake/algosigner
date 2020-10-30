@@ -137,9 +137,27 @@ export class InternalMethods {
             if ('error' in response){
                 sendResponse(response);
             } else {
-                session.wallet = this.safeWallet(response),
-                session.ledger = Ledger.MainNet,
-                sendResponse(session.session);
+                let wallet = this.safeWallet(response);
+                // Load Accounts details from Cache
+                new ExtensionStorage().getStorage('cache', (storedCache: any) => {
+                    let cache: Cache = initializeCache(storedCache);
+                    let cachedLedgers = Object.keys(cache.accounts);
+
+                    console.log('cached', cachedLedgers);
+                    for (var j = cachedLedgers.length - 1; j >= 0; j--) {
+                        const ledger = cachedLedgers[j];
+                        console.log('cached', cachedLedgers);
+                        for (var i = wallet[ledger].length - 1; i >= 0; i--) {
+                            if (wallet[ledger][i].address in cache.accounts[ledger]){
+                                wallet[ledger][i].details = cache.accounts[ledger][wallet[ledger][i].address];
+                            }
+                        }
+                    }
+
+                    session.wallet = wallet,
+                    session.ledger = Ledger.MainNet,
+                    sendResponse(session.session);
+                })
             }
 
         });
