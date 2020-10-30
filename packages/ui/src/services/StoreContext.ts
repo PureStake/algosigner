@@ -23,6 +23,15 @@ export const StoreProvider = ({children}) => {
       store.TestNet = newWallet.TestNet;
       store.MainNet = newWallet.MainNet;
     },
+    updateAccountDetails: (ledger, details) => {
+      console.log(details);
+      for (var i = store[ledger].length - 1; i >= 0; i--) {
+        if(store[ledger][i].address === details.address) {
+          store[ledger][i].details = details;
+          break;
+        }
+      }
+    },
     saveRequest: (request) => {
       store.savedRequest = request;
     },
@@ -32,8 +41,8 @@ export const StoreProvider = ({children}) => {
   }));
 
   autorun(() => {
-    sessionStorage.setItem('wallet', JSON.stringify(store))
-  })
+    sessionStorage.setItem('wallet', JSON.stringify(store));
+  });
 
   // Try to retrieve session from background
   sendMessage(JsonRpcMethod.GetSession, {}, function(response) {
