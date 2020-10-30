@@ -7,6 +7,7 @@ export enum TransactionType {
     Keyreg = "keyreg",
     Axfer = "axfer",
     Afrz = "afrz",
-    Acfg = "acfg"
+    Acfg = "acfg",
+    Appl = "appl", 
 };
 

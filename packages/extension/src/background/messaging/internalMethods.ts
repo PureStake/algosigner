@@ -8,7 +8,7 @@ import encryptionWrap from "../encryptionWrap";
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache } from '../utils/helper';
-import { ValidationResponse } from '../utils/validator';
+import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from "../transaction/actions";
 const algosdk = require("algosdk");
 
@@ -439,7 +439,6 @@ export class InternalMethods {
 
             var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
             let params = await algod.getTransactionParams().do();
-
             let txn = {
               ...txnParams,
               fee: params.fee,
@@ -471,13 +470,13 @@ export class InternalMethods {
                 sendResponse({error: 'A transaction has failed because of an inability to build the specified transaction type.'});
                 return;
             }
-            else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Invalid)) {
+            else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                 sendResponse({error: 'One or more fields are not valid. Please check and try again.'});
                 return;
             }
-            else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Warning ))
-                || (Object.values(transactionWrap.validityObject).some(value => value === ValidationResponse.Dangerous))) {
+            else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Warning ))
+            || (Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Dangerous))) {
                 // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
                 // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
                 let signedTxn;

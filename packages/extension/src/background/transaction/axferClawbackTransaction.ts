@@ -1,16 +1,16 @@
-import { IAssetTransferTx } from "@algosigner/common/interfaces/axfer";
+import { IAssetClawbackTx } from "@algosigner/common/interfaces/axfer_clawback";
 import { BaseValidatedTxnWrap } from "./baseValidatedTxnWrap";
 
 ///
 // Base implementation of the transactions type interface, for use in the export wrapper class below.
 ///
-class AssetTransferTx implements IAssetTransferTx {
+class AssetClawbackTx implements IAssetClawbackTx {
     type: string = undefined;
     assetIndex: number = undefined;
     amount: number = undefined;
-    to: string = undefined;
     assetCloseTo?: string = null;
     from: string = undefined;
+    to: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;
@@ -20,14 +20,15 @@ class AssetTransferTx implements IAssetTransferTx {
     group?: any = null;
     lease?: any = null;
     reKeyTo?: any = null;
+    assetRevocationTarget: string = undefined;
 }
 
 ///
-// Mapping, validation and error checking for axfer transactions prior to sign.
+// Mapping, validation and error checking for axfer clawback transactions prior to sign.
 ///
-export class AssetTransferTransaction extends BaseValidatedTxnWrap {
-    txDerivedTypeText: string = 'Asset Transfer';
-        constructor(params: IAssetTransferTx){   
-        super(params, AssetTransferTx);
+export class AssetClawbackTransaction extends BaseValidatedTxnWrap {
+    txDerivedTypeText: string = 'Asset Clawback';
+    constructor(params: IAssetClawbackTx){   
+        super(params, AssetClawbackTx);
     }
 }
