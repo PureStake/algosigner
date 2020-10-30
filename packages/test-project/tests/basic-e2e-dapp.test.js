@@ -866,6 +866,66 @@ describe('dApp Asset Txn Tests', () => {
 
         console.log(`Finished verify asset clawback tx: ${assetTxId} of Asset Index ${assetIndex}`)
     })
+    
+    test('Asset Config Tx', async () => {   
+        console.log(`Entering Asset Config Tx ${assetIndex} for ${transferAmount}`)
+
+        let txn = {
+            "from": testAccountAddress,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "acfg",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "assetManager": testAccountAddress,
+            "assetReserve": testAccountAddress,
+            "assetFreeze": optInAddress,
+            "assetClawback": testAccountAddress,
+            "note": "Asset Config Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage)
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+            assetTxId = localSignedBlob.txID
+            getSignedBlob = localSignedBlob
+            console.log(`Exiting Asset Config Create/Sign Tx ${getSignedBlob.txID} for ${assetIndex}`)
+        }
+    })
+
+    test('Post Asset Config Blob', async () => {  
+        console.log(`Entering Post Asset Config Tx for ${getSignedBlob.txID} for ${assetIndex}`)
+
+        getTxId = await postTransaction(getSignedBlob, appPage)
+        
+        if("message" in getTxId) {
+            console.log('Error - see message') 
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetTxId) 
+        }
+
+        console.log(`Exiting Post Asset Config ${JSON.stringify(getTxId)}`) 
+    })
+
+    test('Verify Asset Config Tx', async () => {  
+        console.log(`Starting Verify Asset Config Tx: ${assetTxId} for ${assetIndex}`)
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+        expect(pendingTx["txn"]["txn"]["apar"]["f"]).toMatch(optInAddress)
+
+        console.log(`Finished verify asset Config tx: ${assetTxId} of Asset Index ${assetIndex}`)
+    })
 
     test('Asset Destroy Tx', async () => {   
         console.log(`Entering Asset Destroy Tx ${assetIndex} for ${transferAmount}`)
