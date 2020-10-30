@@ -1,10 +1,11 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
+import { useState, useContext, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
+import { assetFormat, numFormat } from 'services/common';
 
 import { StoreContext } from 'services/StoreContext'
 
@@ -16,7 +17,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { matches, ledger, address } = props;
 
+  const [, forceUpdate] = useState<boolean>(false);
+  const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
+  const [ddActive, setDdActive] = useState<boolean>(false);
+  // Asset {} is Algos
+  const [asset, setAsset] = useState<any>({});
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -25,13 +31,57 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  let account;
-
-  for (var i = store[ledger].length - 1; i >= 0; i--) {
-    if (store[ledger][i].address === address) {
-      account = store[ledger][i];
-      break;
+  useEffect(() => {
+    for (var i = store[ledger].length - 1; i >= 0; i--) {
+      if (store[ledger][i].address === address) {
+        setAccount(store[ledger][i]);
+        break;
+      }
     }
+  }, []);
+
+  let ddClass: string = "dropdown is-right";
+  if (ddActive)
+    ddClass += " is-active";
+
+  const selectAsset = (selectedAsset) => {
+    setDdActive(false);
+
+    // Load details if they are not present in the session or is an empty object (algos). 
+    if (Object.keys(selectedAsset).length === 0 || 'decimals' in selectedAsset) {
+      setAsset(selectedAsset);
+      handleAmountChange(amount, selectedAsset);
+    } else {
+      const params = {
+        'ledger': ledger,
+        'asset-id': selectedAsset['asset-id']
+      };
+
+      sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
+        const keys = Object.keys(response.asset.params);
+        for (var i = keys.length - 1; i >= 0; i--) {
+          selectedAsset[keys[i]] = response.asset.params[keys[i]];
+        }
+        setAsset(selectedAsset);
+        handleAmountChange(amount, selectedAsset);
+      });
+    }
+  };
+
+  const handleAmountChange = (val, ass) => {
+    const decimals = 'decimals' in ass ? ass.decimals : 6;
+    let re;
+    if (decimals > 0) 
+      re = new RegExp(`\\d{1,10}(\\.\\d{0,${decimals}})?`);
+    else 
+      re = new RegExp(`\\d{1,10}`);
+
+    const finalVal = val.match(re);
+    if (finalVal)
+      setAmount(finalVal[0]);
+    else
+      setAmount('');
+    forceUpdate(n => !n);
   }
 
   const sendTx = async (pwd: string) => {
@@ -39,18 +89,27 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     setAuthError('');
     setError('');
 
-    const params = {
+    const decimals = 'decimals' in asset ? asset.decimals : 6;
+    const amountToSend = +amount*Math.pow(10, decimals);
+
+    let params : any = {
       ledger: ledger,
       passphrase: pwd,
       address: account.address,
       txnParams: {
-        type: "pay",
         from: account.address,
         to: to,
         note: note,
-        amount: +amount*1e6,
+        amount: +amountToSend
       }
     };
+
+    if ('asset-id' in asset) {
+      params.txnParams.type = 'axfer';
+      params.txnParams.assetIndex = asset['asset-id'];
+    } else {
+      params.txnParams.type = 'pay';
+    }
 
     sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
       if ('error' in response) { 
@@ -75,32 +134,89 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
-        title="Send Algos" />
+        title="Send" />
 
       <div class="px-4" style="flex: 1">
-        <div class="control has-icons-right mb-4">
-          <input class="input pr-6"
-            id="amountAlgos"
-            placeholder="0.0"
-            type="number"
-            value=${amount}
-            onInput=${(e) => setAmount(e.target.value)} />
-          <span class="icon is-right mr-2 mt-2 has-text-grey">Algos</span>
+        <div class="is-flex mb-2" style="justify-content: space-between;">
+          <div class="control">
+            <input class="input"
+              id="amountAlgos"
+              placeholder="0.000"
+              style="width: 245px;"
+              value=${amount}
+              onInput=${(e) => handleAmountChange(e.target.value, asset)} />
+            ${'decimals' in asset && html`
+              <p class="has-text-grey has-text-centered mt-1" style="font-size: 0.9em;">
+                This asset allows for ${asset.decimals} decimal${asset.decimals !== 1 && 's'}
+              </p>
+            `}
+          </div>
+          <div class=${ddClass}>
+            <div class="dropdown-trigger">
+              <button
+                id="selectAsset"
+                class="button pr-1 pl-0"
+                onClick=${() => setDdActive(!ddActive)}
+                aria-haspopup="true"
+                aria-controls="dropdown-menu"
+                style="border: none; width: 120px; justify-content: flex-end;">
+                <span style="text-overflow: ellipsis; overflow: hidden;">
+                  ${asset['unit-name'] || asset['name'] || asset['asset-id'] || 'Algos'}
+                </span>
+                <span class="icon is-small">
+                  <i class="fas fa-caret-down" aria-hidden="true"></i>
+                </span>
+              </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+              <div class="dropdown-content" style="max-height: 330px; overflow: auto;">
+                <a id="asset-0"
+                  onClick=${()=>selectAsset({})}
+                  class="dropdown-item is-flex px-4"
+                  style="justify-content: space-between;">
+                  <span>Algos</span>
+                  <span class="ml-4 has-text-grey">
+                    ${account.details && numFormat(account.details.amount/1e6, 6)} Algos
+                  </span>
+                </a>
+                ${account.details && account.details.assets.map((x => html`
+                  <a id=${`asset-${x['asset-id']}`}
+                    title=${x['asset-id']}
+                    onClick=${()=>selectAsset(x)}
+                    class="dropdown-item is-flex px-4"
+                    style="justify-content: space-between;">
+                    <span>${x['name'] || x['asset-id']}</span>
+                    <span class="ml-4 has-text-grey">
+                      ${assetFormat(x.amount, x.decimals)} ${x['unit-name']}
+                    </span>
+                  </a>
+                `))}
+              </div>
+            </div>
+          </div>
         </div>
+
         
         <b>From</b>
-        <div class="box py-2 mt-2 mb-0 is-flex"
-          style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;">
-          <div>
-            <h6 class="title is-6">${ account.name }</h6>
-            <h6 class="subtitle is-6">${account.address.slice(0, 8)}.....${account.address.slice(-8)}</h6>
+        ${account.details && html`
+          <div class="box py-2 mt-2 mb-0 is-flex"
+            style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;">
+            <div>
+              <h6 class="title is-6">${ account.name }</h6>
+              <h6 class="subtitle is-6">${account.address.slice(0, 8)}.....${account.address.slice(-8)}</h6>
+            </div>
+            <b class="has-text-link">YOU</b>
           </div>
-          <b class="has-text-link">YOU</b>
-        </div>
+        `}
 
         <div class="has-text-centered has-text-weight-bold my-2">
           <span><i class="fas fa-arrow-down mr-3"></i></span>
-          <span>Payment</span>
+          ${'asset-id' in asset && html`
+            <span>Asset transfer</span>
+          `}
+          ${!('asset-id' in asset) && html`
+            <span>Payment</span>
+          `}
         </div>
 
         <textarea
@@ -177,7 +293,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button class="modal-close is-large" aria-label="close" onClick=${()=>setError('')} />
       </div>
     `}
-
   `
 };
 

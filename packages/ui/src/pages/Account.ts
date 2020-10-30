@@ -18,32 +18,32 @@ import algo from 'assets/algo.png';
 const Account: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { url, ledger, address } = props;
+  const [account, setAccount] = useState<any>({});
+  const [details, setDetails] = useState<any>({});
   const [showDetails, setShowDetails] = useState<boolean>(false)
   const [showAssets, setShowAssets] = useState<boolean>(false);
-  const [results, setResults] = useState<any>(null);
 
-  let account;
-
-  for (var i = store[ledger].length - 1; i >= 0; i--) {
-    if (store[ledger][i].address === address) {
-      account = store[ledger][i];
-      break;
+  useEffect(() => {
+    for (var i = store[ledger].length - 1; i >= 0; i--) {
+      if (store[ledger][i].address === address) {
+        setAccount(store[ledger][i]);
+        setDetails(store[ledger][i].details);
+        break;
+      }
     }
-  }
+    fetchApi();
+  }, []);
 
-  const fetchApi = async () => {
+  const fetchApi = () => {
     const params = {
       ledger: ledger,
       address: address
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
-      setResults(response);
+      setDetails(response);
+      store.updateAccountDetails(ledger, response);
     });
   }
-
-  useEffect(() => {
-    fetchApi();
-  }, []);
 
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
@@ -53,7 +53,7 @@ const Account: FunctionalComponent = (props: any) => {
             <i class="fas fa-chevron-left"></i>
           </span>
         </a>
-        <p style="width: 305px;">${account.name} Account</p>
+        <p style="width: 305px;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
           onClick=${()=>setShowDetails(true)}>
@@ -64,12 +64,12 @@ const Account: FunctionalComponent = (props: any) => {
       </p>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
-        ${ results && html`${numFormat(results.amount/1e6, 6)} <span class="has-text-grey-light">Algos</span>` }
+        ${ details && html`${numFormat(details.amount/1e6, 6)} <span class="has-text-grey-light">Algos</span>` }
       </span>
     </div>
     <div class="px-4">
       <${Link} id="sendAlgos" class="button is-primary is-fullwidth py-2" href=${`${url}/send`}>
-        Send Algos
+        Send
       </${Link}>
     </div>
 
@@ -80,8 +80,8 @@ const Account: FunctionalComponent = (props: any) => {
           <span class="icon"><i class="fas fa-plus-circle"></i></span> Add new asset
         </${Link}>
       </div>
-      ${ results && results.assets.length > 0 && html`
-        <${AssetsList} assets=${results.assets} ledger=${ledger}/>
+      ${ details.assets && details.assets.length > 0 && html`
+        <${AssetsList} assets=${details.assets} ledger=${ledger}/>
       `}
     </div>
 
