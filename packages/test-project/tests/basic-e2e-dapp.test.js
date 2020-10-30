@@ -572,7 +572,6 @@ describe('dApp Asset Txn Tests', () => {
     let getTxId
     let assetTxId
     let assetIndex
-    let transferAmount
 
     test('Asset Create Tx', async () => {    
         console.log(`Starting Asset Create for ${testAccountAddress} using ${JSON.stringify(getParams)}`);
