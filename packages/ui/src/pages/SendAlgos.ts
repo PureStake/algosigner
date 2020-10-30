@@ -17,11 +17,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const store:any = useContext(StoreContext);
   const { matches, ledger, address } = props;
 
+  const [, forceUpdate] = useState<boolean>(false);
   const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [ddActive, setDdActive] = useState<boolean>(false);
   // Asset {} is Algos
-  const [asset, setAsset] = useState({});
+  const [asset, setAsset] = useState<any>({});
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -43,36 +44,53 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   if (ddActive)
     ddClass += " is-active";
 
-  const selectAsset = (selectAsset) => {
+  const selectAsset = (selectedAsset) => {
     setDdActive(false);
 
     // Load details if they are not present in the session or is an empty object (algos). 
-    if (Object.keys(selectAsset).length === 0 || 'decimals' in selectAsset) {
-      setAsset(selectAsset)
+    if (Object.keys(selectedAsset).length === 0 || 'decimals' in selectedAsset) {
+      setAsset(selectedAsset);
+      handleAmountChange(amount, selectedAsset);
     } else {
       const params = {
         'ledger': ledger,
-        'asset-id': selectAsset['asset-id']
+        'asset-id': selectedAsset['asset-id']
       };
 
       sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
         const keys = Object.keys(response.asset.params);
         for (var i = keys.length - 1; i >= 0; i--) {
-          selectAsset[keys[i]] = response.asset.params[keys[i]];
+          selectedAsset[keys[i]] = response.asset.params[keys[i]];
         }
-        setAsset(selectAsset)
+        setAsset(selectedAsset);
+        handleAmountChange(amount, selectedAsset);
       });
     }
   };
 
-  const checkAndSubmit = () => {
+  const handleAmountChange = (val, ass) => {
+    const decimals = 'decimals' in ass ? ass.decimals : 6;
+    let re;
+    if (decimals > 0) 
+      re = new RegExp(`\\d{1,10}(\\.\\d{0,${decimals}})?`);
+    else 
+      re = new RegExp(`\\d{1,10}`);
 
-  };
+    const finalVal = val.match(re);
+    if (finalVal)
+      setAmount(finalVal[0]);
+    else
+      setAmount('');
+    forceUpdate(n => !n);
+  }
 
   const sendTx = async (pwd: string) => {
     setLoading(true);
     setAuthError('');
     setError('');
+
+    const decimals = 'decimals' in asset ? asset.decimals : 6;
+    const amountToSend = +amount*Math.pow(10, decimals);
 
     let params : any = {
       ledger: ledger,
@@ -82,7 +100,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         from: account.address,
         to: to,
         note: note,
-        amount: amount
+        amount: +amountToSend
       }
     };
 
@@ -116,20 +134,20 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
-        title="Send Algos or ASAs" />
+        title="Send" />
 
       <div class="px-4" style="flex: 1">
-        <div class="is-flex mb-3" style="justify-content: space-between;">
+        <div class="is-flex mb-2" style="justify-content: space-between;">
           <div class="control">
             <input class="input"
               id="amountAlgos"
               placeholder="0.000"
               style="width: 245px;"
               value=${amount}
-              onInput=${(e) => setAmount(e.target.value)} />
+              onInput=${(e) => handleAmountChange(e.target.value, asset)} />
             ${'decimals' in asset && html`
               <p class="has-text-grey has-text-centered mt-1" style="font-size: 0.9em;">
-                This asset allows for ${asset['decimals']} decimal(s)
+                This asset allows for ${asset.decimals} decimal${asset.decimals !== 1 && 's'}
               </p>
             `}
           </div>
@@ -150,9 +168,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                 </span>
               </button>
             </div>
-            <div class="dropdown-menu" id="dropdown-menu" role="menu"
-              style="max-height: 330px; overflow: auto;">
-              <div class="dropdown-content">
+            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+              <div class="dropdown-content" style="max-height: 330px; overflow: auto;">
                 <a id="asset-0"
                   onClick=${()=>selectAsset({})}
                   class="dropdown-item is-flex px-4"
@@ -276,7 +293,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button class="modal-close is-large" aria-label="close" onClick=${()=>setError('')} />
       </div>
     `}
-
   `
 };
 
