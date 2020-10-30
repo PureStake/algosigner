@@ -286,11 +286,10 @@ export class InternalMethods {
                 // Add details to session
                 let wallet = session.wallet;
                 for (var i = wallet[ledger].length - 1; i >= 0; i--) {
-                    if (!('details' in wallet[ledger][i])){
+                    if (wallet[ledger][i].address === address){
                         wallet[ledger][i].details = res;
                     }
                 }
-                
             });
         }).catch((e: any) => {
             sendResponse({error: e.message});
