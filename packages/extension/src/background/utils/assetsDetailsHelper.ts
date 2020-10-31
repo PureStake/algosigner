@@ -1,6 +1,7 @@
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import { InternalMethods } from '../messaging/internalMethods';
-import { Ledger } from "../messaging/types"
+import { Cache, Ledger } from "../messaging/types"
+import { initializeCache } from './helper';
 
 const TIMEOUT = 500;
 
@@ -31,14 +32,11 @@ export default class AssetsDetailsHelper {
         }
 
         let extensionStorage = new ExtensionStorage();
-        extensionStorage.getStorage('assets', (savedAssets: any) => {
-            let assets = savedAssets || {
-                [Ledger.TestNet]: {},
-                [Ledger.MainNet]: {}
-            };
+        extensionStorage.getStorage('cache', (storedCache: any) => {
+            let cache: Cache = initializeCache(storedCache, ledger);
 
             let assetId = this.assetsToAdd[ledger][0];
-            while (assetId in assets[ledger]) {
+            while (assetId in cache.assets[ledger]) {
                 this.assetsToAdd[ledger].shift();
                 if (this.assetsToAdd[ledger].length === 0) {
                     this.timeouts[ledger] = null;
@@ -49,8 +47,8 @@ export default class AssetsDetailsHelper {
 
             let indexer = InternalMethods.getIndexer(ledger);
             indexer.lookupAssetByID(assetId).do().then((res: any) => {
-                assets[ledger][assetId] = res.asset.params;
-                extensionStorage.setStorage('assets', assets, null);
+                cache.assets[ledger][assetId] = res.asset.params;
+                extensionStorage.setStorage('cache', cache, null);
             }).finally(() => {
                 this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
             });
