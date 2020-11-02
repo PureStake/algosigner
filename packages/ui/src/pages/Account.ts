@@ -80,7 +80,7 @@ const Account: FunctionalComponent = (props: any) => {
           <span class="icon"><i class="fas fa-plus-circle"></i></span> Add new asset
         </${Link}>
       </div>
-      ${ details.assets && details.assets.length > 0 && html`
+      ${ details && details.assets && details.assets.length > 0 && html`
         <${AssetsList} assets=${details.assets} ledger=${ledger}/>
       `}
     </div>
