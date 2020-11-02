@@ -103,14 +103,6 @@ export function Validate(field: any, value: any): ValidationResponse {
                 return new ValidationResponse({status:ValidationStatus.Valid}); 
             }
 
-        case "assetCloseTo":
-            if(value) { 
-                return new ValidationResponse({status:ValidationStatus.Dangerous, info:'A close to address is associated to this transaction.'}); 
-            }
-            else {
-                return new ValidationResponse({status:ValidationStatus.Valid}); 
-            }
-
         case "reKeyTo":
             if(value) { 
                 return new ValidationResponse({status:ValidationStatus.Invalid, info:'Rekey transactions are not currently accepted in AlgoSigner.'}); 
