@@ -4,8 +4,6 @@
  * @group basic-dapp
  */
 
-// TODO Move pending function to window and re-use
-// TODO Move post function to window and re-use
 
  // Globals 
  const testNetAccount = "E2E-Tests"      // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
@@ -15,7 +13,8 @@
  const optInAddress = "BIJNS6AUZEQJL5KOM74UQ3TBJXHBV5ANS4FQJYTYXFKEGG6QXCI7KSDEVE"
  const unsafePassword = 'c5brJp5f'
  const samplePage = 'https://google.com/' // Prefer about:blank, bug in puppeteer
- 
+ const shortApiTimeout = 250 // API calls are capped
+
  // Set in one test and re-used in later tests
  let getParams   // holds the parameters for all txn
  let appPage     // re-using one window to run exercise dApp
@@ -568,255 +567,406 @@
  })
  
  describe('dApp Asset Txn Tests', () => {   
-     let getSignedBlob
-     let getTxId
-     let assetTxId
-     let assetIndex
-     let transferAmount
- 
-     test('Asset Create Tx', async () => {    
-         console.log(`Starting Asset Create for ${testAccountAddress} using ${JSON.stringify(getParams)}`);
- 
-         let txn = {
-             "from": testAccountAddress,
-             "fee": getParams['fee'],
-             "assetName": 'AutoTest',
-             "assetUnitName": 'AT',
-             "assetTotal": 1000 + Math.round(Math.floor(Math.random() * 30)),
-             "assetDecimals": 1,
-             "type": "acfg",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "assetManager": testAccountAddress,
-             "assetReserve": testAccountAddress,
-             "assetFreeze": testAccountAddress,
-             "assetClawback": testAccountAddress,
-             "note": "Asset create"
-         }      
- 
-         localSignedBlob = await signTransaction(txn, appPage);
-         
-         if("message" in localSignedBlob) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob
-             console.log(`Exiting Asset Create ${localSignedBlob.txID}`)
-         }
-         
-     })
- 
-     test('Post Asset Create Blob', async () => {  
-         console.log(`Posting Asset Create ${getSignedBlob.txID}`);
- 
-         getTxId = await postTransaction(getSignedBlob, appPage);
-         if("message" in getTxId) { 
-             console.log(`Error: ${JSON.stringify(getTxId)}`);
-         }
-         else {
-             expect(getTxId.txId).toMatch(getSignedBlob.txID);
-             console.log(`Exiting Asset Create ${getTxId.txId}`);
-         }
-     })
- 
-     test('Verify Asset Pending Tx', async () => {  
-         console.log(`Verifying Asset Create`)
- 
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         assetIndex = pendingTx["asset-index"]
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
- 
-         console.log(`Exiting Verify Asset Create ${pendingTx["asset-index"]}`)
-     })
- 
-     test('Asset Opt-in Tx', async () => {   
-         console.log(`Entering Asset Create/Sign Opt-in Tx: ${assetIndex}`)
-     
-         let txn = {
-             "from": optInAddress,
-             "to": optInAddress,
-             "amount": 0,
-             "fee": getParams['fee'],
-             "assetIndex": assetIndex,
-             "type": "axfer",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "note": "Asset Opt-In"
-         };      
- 
-         localSignedBlob = await signTransaction(txn, appPage);
-         
-         if("message" in localSignedBlob) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID    // Update the asset Tx that gets passed around
-             getSignedBlob = localSignedBlob; // Update the blob that gets passed around
-             console.log(`Exiting Asset Create/Sign Opt-in Tx: ${getSignedBlob.txID}`)
-         }
-     })
- 
-     test('Post Asset Opt-in Blob', async () => {  
-         console.log(`Entering Post Asset Opt-in Tx`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage);
-         
-         if("message" in getTxId) { 
-             console.log(`Error: ${JSON.stringify(getTxId)}`);
-         }
-         else {
-             expect(getTxId.txId).toMatch(assetTxId)
-             
-             console.log(`Exiting Post Asset Opt-in ${JSON.stringify(getTxId)}`)     
-         }
-     })
- 
-     test('Verify Asset Opt-in Pending Tx', async () => {  
-         console.log(`Verifying Asset Opt-in ${assetTxId}`)
- 
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
- 
-         console.log(`Exiting Verify Asset Opt-in ${pendingTx["confirmed-round"]}`)
-     })
- 
-     test('Asset Transfer Tx', async () => {   
-         console.log(`Entering Asset Transfer Create/Sign Tx ${assetIndex}`)
- 
-         let txn = {
-             "from": testAccountAddress,
-             "to": optInAddress,
-             "amount": 2 + Math.round(Math.floor(Math.random() * 10)),
-             "fee": getParams['fee'],
-             "assetIndex": assetIndex,
-             "type": "axfer",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "note": "Asset Tx"
-         };      
- 
-         localSignedBlob = await signTransaction(txn, appPage);
- 
-         if("message" in getTxId) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob // Subtle easy to miss
-             transferAmount = txn.amount -2; 
-             console.log(`Exiting Asset Transfer Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex}`)
-         }
-         })
- 
-     test('Post Asset Transfer Blob', async () => {  
-         console.log(`Entering Post Asset Transfer Tx for ${getSignedBlob.txID} for ${assetIndex}`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage);
-         
-         if("message" in getTxId) {
-             console.log(`Error: ${JSON.stringify(getTxId)}`);
-         }
-         else {
-             expect(getTxId.txId).toMatch(assetTxId) 
-             console.log(`Exiting Post Asset Transfer ${JSON.stringify(getTxId)}`)
-         }
- 
-     })
- 
-     test('Verify Asset Transfer Tx', async () => {  
-         console.log(`Starting Verify Asset Tx: ${assetTxId} for ${assetIndex}`)
- 
-         let lastRound = getParams['last-round']
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
-         expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(optInAddress)
-         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(transferAmount+2)
- 
-         console.log(`Finished verify asset tx: ${assetTxId} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
-     })
- 
-     test('Asset Clawback Tx', async () => {   
-         console.log(`Entering Asset Clawback Tx ${assetIndex} for ${transferAmount}`)
- 
-         let txn = {
-             "from": testAccountAddress,
-             "to": testAccountAddress,
-             "assetRevocationTarget": optInAddress,
-             "amount": transferAmount,
-             "fee": getParams['fee'],
-             "assetIndex": assetIndex,
-             "type": "axfer",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "note": "Asset Clawback Tx"
-         };      
- 
-         localSignedBlob = await signTransaction(txn, appPage)
- 
-         if("message" in localSignedBlob) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob
-             console.log(`Exiting Asset Clawback Create/Sign Tx ${getSignedBlob.txID} for ${assetIndex} for ${transferAmount}`)
-         }
-     })
- 
-     test('Post Asset Clawback Blob', async () => {  
-         console.log(`Entering Post Asset Clawback Tx for ${getSignedBlob.txID} for ${assetIndex}`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage)
-         
-         if("message" in getTxId) {
-             console.log('Error - see message') 
-         }
-         else {
-             expect(getTxId.txId).toMatch(assetTxId) 
-         }
- 
-         console.log(`Exiting Post Asset Clawback ${JSON.stringify(getTxId)}`) 
-     })
- 
-     test('Verify Asset Clawback Tx', async () => {  
-         console.log(`Starting Verify Asset Clawback Tx: ${assetTxId} for ${assetIndex}`)
- 
-         let lastRound = getParams['last-round']
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
-         transferAmount = pendingTx["txn"]["txn"]["aamt"] // set 
- 
-         console.log(`Finished verify asset clawback tx: ${assetTxId} of Asset Index ${assetIndex}`)
-     })
- 
-     test('Asset Close-to Tx', async () => {   
+    const getSignedBlob = null
+    const assetTxId = null
+
+    // Removed single blob, scope mistakes
+    let assetCreateBlob
+    let assetOptInBlob
+    let assetTransferBlob
+    let assetClawBlob
+    let assetCloseBlob
+    let assetFrzBlob
+    let assetUnFrzBlob
+    let assetDestroyBlob
+
+    let assetIndex
+    let transferAmount
+
+    test('Asset Create Tx', async () => {    
+        console.log(`Starting Asset Create for ${testAccountAddress} using ${JSON.stringify(getParams)}`);
+
+        let txn = {
+            "from": testAccountAddress,
+            "fee": getParams['fee'],
+            "assetName": 'AutoTest',
+            "assetUnitName": 'AT',
+            "assetTotal": 1000 + Math.round(Math.floor(Math.random() * 30)),
+            "assetDecimals": 1,
+            "type": "acfg",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "assetManager": testAccountAddress,
+            "assetReserve": testAccountAddress,
+            "assetFreeze": testAccountAddress,
+            "assetClawback": testAccountAddress,
+            "note": "Asset create"
+        }      
+
+        localSignedBlob = await signTransaction(txn, appPage);
+        
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+            
+            assetCreateBlob = localSignedBlob // test section scope
+            
+            console.log(`Exiting Asset Create ${localSignedBlob.txID}`)
+        }
+        
+    })
+
+    test('Post Asset Create Blob', async () => {  
+        console.log(`Posting Asset Create ${assetCreateBlob.txID}`);
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetCreateBlob, appPage);
+        if("message" in getTxId) { 
+            console.log(`Error: ${JSON.stringify(getTxId)}`);
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetCreateBlob.txID);
+            console.log(`Exiting Asset Create ${getTxId.txId}`);
+        }
+    })
+
+    test('Verify Asset Pending Tx', async () => {  
+        console.log(`Verifying Asset Create ${assetCreateBlob.txID}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let pendingTx = await verifyTransaction(assetCreateBlob.txID, getParams['last-round'] , appPage)
+        
+        assetIndex = pendingTx["asset-index"] // test section scope
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+
+        console.log(`Exiting Verify Asset Create ${pendingTx["asset-index"]}`)
+    })
+
+    test('Asset Opt-in Tx', async () => {   
+        console.log(`Entering Asset Create/Sign Opt-in Tx: ${assetIndex} `)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": optInAddress,
+            "to": optInAddress,
+            "amount": 0,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "axfer",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Opt-In"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage);
+        
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetOptInBlob = localSignedBlob; // test section scope
+
+            console.log(`Exiting Asset Create/Sign Opt-in Tx: ${assetOptInBlob.txID} for ${assetIndex}`)
+        }
+    })
+
+    test('Post Asset Opt-in Blob', async () => {  
+        console.log(`Entering Post Asset Opt-in Tx`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetOptInBlob, appPage);
+        
+        if("message" in getTxId) { 
+            console.log(`Error: ${JSON.stringify(getTxId)}`);
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetOptInBlob.txID)
+            
+            console.log(`Exiting Post Asset Opt-in ${JSON.stringify(getTxId)}`)     
+        }
+    })
+
+    test('Verify Asset Opt-in Pending Tx', async () => {  
+        console.log(`Verifying Asset Opt-in ${assetOptInBlob.txID}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let pendingTx = await verifyTransaction(assetOptInBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+
+        console.log(`Exiting Verify Asset Opt-in ${pendingTx["confirmed-round"]} for ${assetOptInBlob.txID}`)
+    })
+
+    test('Asset Transfer Tx', async () => {   
+        console.log(`Entering Asset Transfer Create/Sign Tx ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": testAccountAddress,
+            "to": optInAddress,
+            "amount": 2 + Math.round(Math.floor(Math.random() * 10)), // 2 because 1 is not always divisible 
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "axfer",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage);
+
+        if("message" in getTxId) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetTransferBlob = localSignedBlob // test section scope
+            transferAmount = txn.amount -2;    // test section scope  
+
+            console.log(`Exiting Asset Transfer Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex}`)
+        }
+        })
+
+    test('Post Asset Transfer Blob', async () => {  
+        console.log(`Entering Post Asset Transfer Tx for ${assetTransferBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetTransferBlob, appPage);
+        
+        if("message" in getTxId) {
+            console.log(`Error: ${JSON.stringify(getTxId)}`);
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetTransferBlob.txID) 
+            console.log(`Exiting Post Asset Transfer ${JSON.stringify(getTxId)}`)
+        }
+
+    })
+
+    test('Verify Asset Transfer Tx', async () => {  
+        console.log(`Starting Verify Asset Tx: ${assetTransferBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetTransferBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+        expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(optInAddress)
+        expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(transferAmount+2)
+
+        console.log(`Finished verify asset tx: ${assetTransferBlob.txID} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
+    })
+
+    test('Asset Clawback Tx', async () => {   
+        console.log(`Entering Asset Clawback Tx ${assetIndex} for ${transferAmount}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": testAccountAddress,
+            "to": testAccountAddress,
+            "assetRevocationTarget": optInAddress,
+            "amount": transferAmount,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "axfer",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Clawback Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage)
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetClawBlob = localSignedBlob; // test section scope
+
+            console.log(`Exiting Asset Clawback Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex} for ${transferAmount}`)
+        }
+    })
+
+    test('Post Asset Clawback Blob', async () => {  
+        console.log(`Entering Post Asset Clawback Tx for ${assetClawBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetClawBlob, appPage)
+        
+        if("message" in getTxId) {
+            console.log('Error - see message') 
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetClawBlob.txID) 
+        }
+
+        console.log(`Exiting Post Asset Clawback ${JSON.stringify(getTxId)}`) 
+    })
+
+    test('Verify Asset Clawback Tx', async () => {  
+        console.log(`Starting Verify Asset Clawback Tx: ${assetClawBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetClawBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+        transferAmount = pendingTx["txn"]["txn"]["aamt"] // set 
+
+        console.log(`Finished verify asset clawback tx: ${assetClawBlob.txID} of Asset Index ${assetIndex}`)
+    })
+
+    test('Asset Freeze Tx', async () => {   
+        console.log(`Entering Asset Freeze Tx ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": testAccountAddress,
+            "freezeAccount": optInAddress,
+            "freezeState": true,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "afrz",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Freeze Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage)
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetFrzBlob = localSignedBlob // test section scope
+
+            console.log(`Exiting Asset Freeze Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex}`)
+        }
+    })
+
+    test('Post Asset Freeze Blob', async () => {  
+        console.log(`Entering Post Asset Freeze Tx for ${assetFrzBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetFrzBlob, appPage)
+        
+        if("message" in getTxId) {
+            console.log('Error - see message') 
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetFrzBlob.txID) 
+        }
+
+        console.log(`Exiting Post Asset Freeze ${JSON.stringify(getTxId)}`) 
+    })
+
+    test('Verify Asset Freeze Tx', async () => {  
+        console.log(`Starting Verify Asset Freeze Tx: ${assetFrzBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetFrzBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+
+        console.log(`Finished verify asset freeze tx: ${assetFrzBlob.txID} of Asset Index ${assetIndex}`)
+
+    })
+
+    test('Asset Un-Freeze Tx', async () => {   
+        console.log(`Entering Asset Un-Freeze Tx ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": testAccountAddress,
+            "freezeAccount": optInAddress,
+            "freezeState": false,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "afrz",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Un-Freeze Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage)
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetUnFrzBlob = localSignedBlob // test section scope
+
+            console.log(`Exiting Asset Un-Freeze Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex}`)
+        }
+    })
+
+    test('Post Asset Un-Freeze Blob', async () => {  
+        console.log(`Entering Post Asset Un-Freeze Tx for ${assetUnFrzBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetUnFrzBlob, appPage)
+        
+        if("message" in getTxId) {
+            console.log('Error - see message') 
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetUnFrzBlob.txID) 
+        }
+
+        console.log(`Exiting Post Un-Asset Freeze ${JSON.stringify(getTxId)}`) 
+    })
+
+    test('Verify Asset Un-Freeze Tx', async () => {  
+        console.log(`Starting Verify Un-Asset Un-Freeze Tx: ${assetUnFrzBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetUnFrzBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+
+        console.log(`Finished verify asset Un-freeze tx: ${assetUnFrzBlob.txID} of Asset Index ${assetIndex}`)
+
+    })
+
+    test('Asset Close-to Tx', async () => {   
          console.log(`Entering Asset Close-to Create/Sign Tx ${assetIndex}`)
- 
+         await appPage.waitForTimeout(shortApiTimeout);
+
          let txn = {
              "from": optInAddress,
              "to": testAccountAddress,
-             "assetCloseTo": testAccountAddress,
+             "closeRemainderTo": testAccountAddress,    // per JS SDK, not txn reference
              "amount": 1,
              "fee": getParams['fee'],
              "assetIndex": assetIndex,
@@ -836,158 +986,106 @@
          else {
              expect(localSignedBlob).toHaveProperty("txID");
              expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob // Subtle easy to miss 
+
+             assetCloseBlob = localSignedBlob // test section scope
+
              console.log(`Exiting Asset Transfer Close-to Tx ${localSignedBlob.txID} for ${assetIndex}`)
          }
          })
- 
-     test('Post Asset Close-to Blob', async () => {  
-         console.log(`Entering Post Asset Close-to Tx for ${getSignedBlob.txID} for ${assetIndex}`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage);
+
+    test('Post Asset Close-to Blob', async () => {  
+         console.log(`Entering Post Asset Close-to Tx for ${assetCloseBlob.txID} for ${assetIndex}`)
+         await appPage.waitForTimeout(shortApiTimeout);
+
+         getTxId = await postTransaction(assetCloseBlob, appPage);
          
          if("message" in getTxId) {
              console.log(`Error: ${JSON.stringify(getTxId)}`);
          }
          else {
-             expect(getTxId.txId).toMatch(assetTxId) 
+             expect(getTxId.txId).toMatch(assetCloseBlob.txID) 
              console.log(`Exiting Post Asset Close-to ${JSON.stringify(getTxId)}`)
          }
  
      })
- 
-     test('Verify Asset Close-to Tx', async () => {  
-         console.log(`Starting Verify Asset Close-to Tx: ${assetTxId} for ${assetIndex}`)
- 
-         let lastRound = getParams['last-round']
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
-         expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(testAccountAddress)
-         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(1)
- 
-         console.log(`Finished verify asset Close-to tx: ${assetTxId} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
-     })
- 
-     test('Asset Freeze Tx', async () => {   
-         console.log(`Entering Asset Freeze Tx ${assetIndex}`)
- 
-         let txn = {
-             "from": testAccountAddress,
-             "freezeAccount": optInAddress,
-             "freezeState": true,
-             "fee": getParams['fee'],
-             "assetIndex": assetIndex,
-             "type": "afrz",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "note": "Asset Freeze Tx"
-         };      
- 
-         localSignedBlob = await signTransaction(txn, appPage)
- 
-         if("message" in localSignedBlob) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob
-             console.log(`Exiting Asset Freeze Create/Sign Tx ${getSignedBlob.txID} for ${assetIndex}`)
-         }
-     })
- 
-     test('Post Asset Freeze Blob', async () => {  
-         console.log(`Entering Post Asset Freeze Tx for ${getSignedBlob.txID} for ${assetIndex}`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage)
-         
-         if("message" in getTxId) {
-             console.log('Error - see message') 
-         }
-         else {
-             expect(getTxId.txId).toMatch(assetTxId) 
-         }
- 
-         console.log(`Exiting Post Asset Freeze ${JSON.stringify(getTxId)}`) 
-     })
- 
-     test('Verify Asset Freeze Tx', async () => {  
-         console.log(`Starting Verify Asset Freeze Tx: ${assetTxId} for ${assetIndex}`)
- 
-         let lastRound = getParams['last-round']
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
- 
-         console.log(`Finished verify asset freeze tx: ${assetTxId} of Asset Index ${assetIndex}`)
-         console.log(`${pendingTx}`)
-     })
- 
- 
-     test('Asset Destroy Tx', async () => {   
-         console.log(`Entering Asset Destroy Tx ${assetIndex} for ${transferAmount}`)
- 
-         let txn = {
-             "from": testAccountAddress,
-             "fee": getParams['fee'],
-             "assetIndex": assetIndex,
-             "type": "acfg",
-             "firstRound": getParams['last-round'],
-             "lastRound": getParams['last-round'] + 1000,
-             "genesisID": getParams['genesis-id'],
-             "genesisHash": getParams['genesis-hash'],
-             "note": "Asset Destroy Tx"
-         };      
- 
-         localSignedBlob = await signTransaction(txn, appPage)
- 
-         if("message" in localSignedBlob) { 
-             console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
-         }
-         else {
-             expect(localSignedBlob).toHaveProperty("txID");
-             expect(localSignedBlob).toHaveProperty("blob");
-             assetTxId = localSignedBlob.txID
-             getSignedBlob = localSignedBlob
-             console.log(`Exiting Asset Destroy Create/Sign Tx ${getSignedBlob.txID} for ${assetIndex}`)
-         }
-     })
- 
-     test('Post Asset Destroy Blob', async () => {  
-         console.log(`Entering Post Asset Destroy Tx for ${getSignedBlob.txID} for ${assetIndex}`)
- 
-         getTxId = await postTransaction(getSignedBlob, appPage)
-         
-         if("message" in getTxId) {
-             console.log('Error - see message') 
-         }
-         else {
-             expect(getTxId.txId).toMatch(assetTxId) 
-         }
- 
-         console.log(`Exiting Post Asset Destroy ${JSON.stringify(getTxId)}`) 
-     })
- 
-     test('Verify Asset Destroy Tx', async () => {  
-         console.log(`Starting Verify Asset Destroy Tx: ${assetTxId} for ${assetIndex}`)
- 
-         let lastRound = getParams['last-round']
-         let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
-         
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
- 
-         console.log(`Finished verify asset Destroy tx: ${assetTxId} of Asset Index ${assetIndex}`)
-     })
- 
+
+    test('Verify Asset Close-to Tx', async () => {  
+        console.log(`Starting Verify Asset Close-to Tx: ${assetCloseBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+        
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetCloseBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+        expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(testAccountAddress)
+        expect(pendingTx["txn"]["txn"]["aamt"]).toEqual(1)
+        expect(pendingTx["txn"]["txn"]["aclose"]).toMatch(testAccountAddress)
+
+        console.log(`Finished verify asset Close-to tx: ${assetCloseBlob.txID} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
+    })
+
+    test('Asset Destroy Tx', async () => {   
+        console.log(`Entering Asset Destroy Tx ${assetIndex} for ${transferAmount}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let txn = {
+            "from": testAccountAddress,
+            "fee": getParams['fee'],
+            "assetIndex": assetIndex,
+            "type": "acfg",
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+            "note": "Asset Destroy Tx"
+        };      
+
+        localSignedBlob = await signTransaction(txn, appPage)
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`);
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+
+            assetDestroyBlob = localSignedBlob // test section scope
+
+            console.log(`Exiting Asset Destroy Create/Sign Tx ${localSignedBlob.txID} for ${assetIndex}`)
+        }
+    })
+
+    test('Post Asset Destroy Blob', async () => {  
+        console.log(`Entering Post Asset Destroy Tx for ${assetDestroyBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(assetDestroyBlob, appPage)
+        
+        if("message" in getTxId) {
+            console.log('Error - see message') 
+        }
+        else {
+            expect(getTxId.txId).toMatch(assetDestroyBlob.txID) 
+        }
+
+        console.log(`Exiting Post Asset Destroy ${JSON.stringify(getTxId)}`) 
+    })
+
+    test('Verify Asset Destroy Tx', async () => {  
+        console.log(`Starting Verify Asset Destroy Tx: ${assetDestroyBlob.txID} for ${assetIndex}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let lastRound = getParams['last-round']
+        let pendingTx = await verifyTransaction(assetDestroyBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+
+        console.log(`Finished verify asset Destroy tx: ${assetDestroyBlob.txID} of Asset Index ${assetIndex}`)
+    })
+
          // // The asset just doesn't appear fast enough for this yet
      // // test('Wallet Verify Asset Transfer', async () => {      
      // //     console.log(`Back in the browser to verify Asset transfer for ${assetIndex}`)
- 
      // //     await appPage.goto(baseUrl);
      // //     await appPage.waitForTimeout(5000) // wait on tx to process 
      // //     await appPage.click('#selectLedger')
@@ -999,7 +1097,6 @@
      // //     await appPage.waitForTimeout(30000)
      // //     await expect(appPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/Opt-In/)
      // //     await expect(appPage.$eval(`#asset_${assetIndex}`, e => e.innerText)).resolves.toMatch(assetIndex)
- 
      // //     console.log(`Exiting Wallet Verify`)
      // // })
  
