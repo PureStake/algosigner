@@ -3,13 +3,14 @@ import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 
-import TxAcfg from 'components/TransactionDetail/TxAcfg'
-import TxPay from 'components/TransactionDetail/TxPay'
-import TxKeyreg from 'components/TransactionDetail/TxKeyreg'
-import TxAxfer from 'components/TransactionDetail/TxAxfer'
-import TxAfrz from 'components/TransactionDetail/TxAfrz'
+import TxAcfg from 'components/TransactionDetail/TxAcfg';
+import TxPay from 'components/TransactionDetail/TxPay';
+import TxKeyreg from 'components/TransactionDetail/TxKeyreg';
+import TxAxfer from 'components/TransactionDetail/TxAxfer';
+import TxAfrz from 'components/TransactionDetail/TxAfrz';
+import TxAppl from 'components/TransactionDetail/TxAppl';
 
 const TransactionsList: FunctionalComponent = (props: any) => {
   const { address, ledger } = props;
@@ -56,6 +57,9 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
       case 'afrz':
         setShowTx(html`<${TxAfrz} tx=${tx} ledger=${ledger} />`);
+        break;
+      case 'appl':
+        setShowTx(html`<${TxAppl} tx=${tx} ledger=${ledger} />`);
         break;
     }
   }
@@ -149,6 +153,15 @@ const TransactionsList: FunctionalComponent = (props: any) => {
           subtitle = "Asset freezed"
         } else {
           subtitle = "Asset unfreezed"
+        }
+        break;
+      case 'appl':     
+        if ('application-id' in tx['application-transaction']) {     
+          subtitle = tx['application-transaction']['application-id'];
+          title = tx['application-transaction']['on-completion'];
+        } else {
+          subtitle = "appl";
+          title = "Application Transaction";
         }
         break;
     }
