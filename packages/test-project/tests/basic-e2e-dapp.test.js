@@ -11,8 +11,8 @@
  const testNetAccount = "E2E-Tests"      // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
  const optInAccount = "Opt-In"           // for now, also hardcoding in the regex match for account info, cannot interpolate variables in toMatch
  const sendAlgoToAddress = "AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA"
- const testAccountAddress = "MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE"
- const optInAddress = "RMY2R35P7PHRBONNKNGDMP75R5DFLRILGESHCNESM22EZ77TQL5GBF75GI"
+ const testAccountAddress = "VWUJHTMF3GS2VGLGUHXREVB3RCT7SUZASLQV3DDHLT4EGDAJBICCDYVEKE"
+ const optInAddress = "BIJNS6AUZEQJL5KOM74UQ3TBJXHBV5ANS4FQJYTYXFKEGG6QXCI7KSDEVE"
  const unsafePassword = 'c5brJp5f'
  const samplePage = 'https://google.com/' // Prefer about:blank, bug in puppeteer
  
@@ -120,8 +120,8 @@
      
      const extensionName = 'AlgoSigner' 
      const extensionPopupHtml = 'index.html'
-     const unsafeMenmonic = 'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy'
-     const unsafeOptInMenmonic = 'space merge shoot airport soup stairs shuffle select absurd remain december neglect unfold portion forward december genuine tonight choice volume gospel save corn about few'
+     const unsafeMenmonic = 'minor special income smoke lobster oblige jump measure bubble spray soccer range devote rookie pull recall doctor limb resist inject absent rather physical abandon chimney'
+     const unsafeOptInMenmonic = 'pilot turkey dumb casino lecture pact extend never obey alarm agree film brush above visual guilt joy truck unique scorpion core cram grab ability bamboo'
      const amount = Math.floor((Math.random() * 10)+.1); // txn size, modify multiplier for bulk
      const secondTestNetAccount = "Created-Account"
  
@@ -519,7 +519,7 @@
      test('Overspend Tx', async () => {   
          await appPage.waitForTimeout(1000);
          getSignedBlob = await appPage.evaluate(async (testAccountAddress, getParams, sendAlgoToAddress) => {
-             const amount = 900000000 + Math.floor(Math.random() * 10); 
+             const amount = 90000000000 + Math.floor(Math.random() * 10); 
              let txn = {
                  "from": testAccountAddress,
                  "to": sendAlgoToAddress,
@@ -746,7 +746,7 @@
          
          expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
          expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(optInAddress)
-         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(transferAmount)
+         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(transferAmount+2)
  
          console.log(`Finished verify asset tx: ${assetTxId} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
      })
@@ -863,9 +863,9 @@
          let lastRound = getParams['last-round']
          let pendingTx = await verifyTransaction(assetTxId, getParams['last-round'] , appPage)
          
-         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
-         expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(optInAddress)
-         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(transferAmount)
+         expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+         expect(pendingTx["txn"]["txn"]["arcv"]).toMatch(testAccountAddress)
+         expect( pendingTx["txn"]["txn"]["aamt"]).toEqual(1)
  
          console.log(`Finished verify asset Close-to tx: ${assetTxId} of Asset Index ${assetIndex} for ${pendingTx["txn"]["txn"]["aamt"]}`)
      })
