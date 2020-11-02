@@ -2,7 +2,7 @@ import { html } from 'htm/preact';
 import { FunctionalComponent } from "preact";
 import { useState } from 'preact/hooks';
 
-const TxPay: FunctionalComponent = (props: any) => {
+const TxAppl: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
   const { tx, account, vo } = props;
 
@@ -126,4 +126,4 @@ const TxPay: FunctionalComponent = (props: any) => {
   `;
 }
 
-export default TxPay
+export default TxAppl

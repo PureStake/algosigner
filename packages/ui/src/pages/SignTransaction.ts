@@ -139,8 +139,8 @@ const SignTransaction: FunctionalComponent = (props) => {
             <${TxAfrz} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
           `}
           ${ request.body.params.transaction.type==="appl" && html`
-          <${TxAppl} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
-        `}
+            <${TxAppl} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
+          `}
           </section>
         `}
       </div>
