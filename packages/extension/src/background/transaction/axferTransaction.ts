@@ -9,7 +9,7 @@ class AssetTransferTx implements IAssetTransferTx {
     assetIndex: number = undefined;
     amount: number = undefined;
     to: string = undefined;
-    assetCloseTo?: string = null;
+    closeRemainderTo?: string = null;
     from: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;

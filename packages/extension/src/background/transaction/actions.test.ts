@@ -5,7 +5,7 @@ import { AssetDestroyTransaction } from "./acfgDestroyTransaction";
 import { AssetTransferTransaction } from "./axferTransaction";
 import { AssetFreezeTransaction } from "./afrzTransaction";
 
-test('Valitdate build of pay transaction', () => {
+test('Validate build of pay transaction', () => {
     let preTransaction = {
         "type": "pay",
         "from": "NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ",
@@ -23,7 +23,7 @@ test('Valitdate build of pay transaction', () => {
     expect(result instanceof BaseValidatedTxnWrap).toBe(true);
 });
 
-test('Valitdate build of keygreg transaction', () => {
+test('Validate build of keygreg transaction', () => {
     let preTransaction = {
         "type": "keyreg",
         "fee": 1000,
@@ -43,7 +43,7 @@ test('Valitdate build of keygreg transaction', () => {
     expect(result instanceof BaseValidatedTxnWrap).toBe(true);
 });
 
-test('Valitdate build of acfg transaction', () => {
+test('Validate build of acfg transaction', () => {
     let preTransaction = {
         "type": "acfg",
         "fee": 1000,
@@ -61,7 +61,7 @@ test('Valitdate build of acfg transaction', () => {
     expect(result instanceof AssetDestroyTransaction).toBe(true);
 });
 
-test('Valitdate build of afrz transaction', () => {
+test('Validate build of afrz transaction', () => {
     let preTransaction = {
         "type": "afrz",
         "from": "NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ",
@@ -81,7 +81,7 @@ test('Valitdate build of afrz transaction', () => {
     expect(result instanceof AssetFreezeTransaction).toBe(true);
 });
 
-test('Valitdate build of axfer transaction', () => {
+test('Validate build of axfer transaction', () => {
     let preTransaction = {
         "type": "axfer",
         "from": "NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ",
@@ -101,14 +101,14 @@ test('Valitdate build of axfer transaction', () => {
     expect(result instanceof AssetTransferTransaction).toBe(true);
 });
 
-test('Valitdate build of transaction', () => {
+test('Validate build of transaction', () => {
     let preTransaction = {
         "type": "faketype"
     }
     expect(() => getValidatedTxnWrap(preTransaction, "faketype")).toThrow();
 });
 // Check missing fields from transactions in all types
-test('Valitdate pay transaction required fields', () => {
+test('Validate pay transaction required fields', () => {
     let preTransaction = {
         "type": "pay"
     }
@@ -128,7 +128,7 @@ test('Valitdate pay transaction required fields', () => {
     expect(errorMessage).toContain("from");
     expect(errorMessage).toContain("amount");
 });
-test('Valitdate clawback transaction required fields', () => {
+test('Validate clawback transaction required fields', () => {
     let preTransaction = {
         "type": "axfer"
     }
@@ -149,7 +149,7 @@ test('Valitdate clawback transaction required fields', () => {
     expect(errorMessage).toContain("assetIndex");
     expect(errorMessage).toContain("assetRevocationTarget");
 });
-test('Valitdate accept transaction required fields', () => {
+test('Validate accept transaction required fields', () => {
     let preTransaction = {
         "type": "axfer"
     }
@@ -168,7 +168,7 @@ test('Valitdate accept transaction required fields', () => {
     expect(errorMessage).toContain("from");
     expect(errorMessage).toContain("assetIndex");
 });
-test('Valitdate create transaction required fields', () => {
+test('Validate create transaction required fields', () => {
     let preTransaction = {
         "type": "acfg"
     }
@@ -188,7 +188,7 @@ test('Valitdate create transaction required fields', () => {
     expect(errorMessage).toContain("assetTotal");
     expect(errorMessage).toContain("assetDecimals");
 });
-test('Valitdate destroy transaction required fields', () => {
+test('Validate destroy transaction required fields', () => {
     let preTransaction = {
         "type": "acfg"
     }
@@ -208,7 +208,7 @@ test('Valitdate destroy transaction required fields', () => {
     expect(errorMessage).toContain("from");
     expect(errorMessage).toContain("assetIndex");
 });
-test('Valitdate modify asset transaction required fields', () => {
+test('Validate modify asset transaction required fields', () => {
     let preTransaction = {
         "type": "acfg"
     }
