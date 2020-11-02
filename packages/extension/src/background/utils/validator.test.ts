@@ -45,11 +45,6 @@ test('Valitdate closeRemainderTo', () => {
     expect(result.status).toBe(ValidationStatus.Dangerous);
 });
 
-test('Valitdate assetCloseTo', () => {
-    let result = Validate("assetCloseTo", "NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ");
-    expect(result.status).toBe(ValidationStatus.Dangerous);
-});
-
 test('Valitdate correct assetIndex', () => {
     let result = Validate("assetIndex", 1);
     expect(result.status).toBe(ValidationStatus.Valid);
