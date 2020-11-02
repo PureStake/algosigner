@@ -157,7 +157,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
       case 'appl':     
         if ('application-id' in tx['application-transaction']) {     
-          subtitle = tx['application-transaction']['application-id'];
+          subtitle = tx['application-transaction']['application-id'] || 'application';
           title = tx['application-transaction']['on-completion'];
         } else {
           subtitle = "appl";
