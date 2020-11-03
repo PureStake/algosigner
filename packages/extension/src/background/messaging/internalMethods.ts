@@ -234,9 +234,15 @@ export class InternalMethods {
         this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
         try {
-          var recoveredAccount = algosdk.mnemonicToSecretKey(mnemonic); 
+          var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr; 
+          var existingAccounts = session.wallet[ledger];
+          for (let i = 0; i < existingAccounts.length; i++) {
+              if (existingAccounts[i].address === recoveredAccountAddress) {
+                throw new Error(`Account already exists in ${ledger} wallet.`);
+              }
+          }
           var newAccount = {
-            address: recoveredAccount.addr,
+            address: recoveredAccountAddress,
             mnemonic: mnemonic,
             name: name
           };
