@@ -323,7 +323,7 @@ describe('Opt-in', () => {
 
     test('Opt-in to Application', async () => { 
 
-        console.log(`Starting Appl Opt-in tx`)
+        console.log(`Starting Appl Create/Sign Opt-in tx`)
 
         let txn = {
             "type" : "appl",
@@ -366,7 +366,7 @@ describe('Opt-in', () => {
         }
         else {
             expect(getTxId.txId).toMatch(applicationOptInBlob.txID);
-            console.log(`Exiting Appl Opt-in ${getTxId.txId}`);
+            console.log(`Exiting Appl Post Opt-in ${getTxId.txId}`);
         }
     })
 
@@ -391,7 +391,7 @@ describe('Opt-in', () => {
             "from": optInAddress,
             "appIndex": applicationIndex,
             "appOnComplete": 0,
-            "appArgs": [0],
+            "appArgs": ["MA=="],
             "note": 'App Call',
             "fee": getParams['fee'],
             "firstRound": getParams['last-round'],
@@ -428,7 +428,7 @@ describe('Opt-in', () => {
         }
         else {
             expect(getTxId.txId).toMatch(applicationCallBlob.txID);
-            console.log(`Exiting Appl Call ${getTxId.txId}`);
+            console.log(`Exiting Appl Post Call ${getTxId.txId}`);
         }
     })
 
@@ -445,10 +445,11 @@ describe('Opt-in', () => {
 
     test('Read App Local State', async () => {
         console.log(`Verifying Appl Local State`)
+        
         await appPage.waitForTimeout(shortApiTimeout);
 
-        getAccountInfo = await appPage.evaluate( (optInAddress) => {
-            return AlgoSigner.send({
+        const getAccountInfo = await appPage.evaluate( (optInAddress) => {
+            return AlgoSigner.algod({
                     ledger: 'TestNet',
                     path: '/v2/accounts/' + optInAddress
                 })
