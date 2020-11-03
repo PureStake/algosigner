@@ -16,9 +16,6 @@ module.exports = {
         "**/__tests__/**/*.[jt]s?(x)",
         "**/?(*.)(spec|test).[jt]s?(x)"
     ],
-    setupFiles: [
-      "jest-webextension-mock"
-    ],
     moduleNameMapper: {
         "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
         "\\.(css|less|scss)$": "identity-obj-proxy",
@@ -34,4 +31,5 @@ module.exports = {
     "roots": [
         "<rootDir>/src"
     ],
+    "snapshotSerializers": ["enzyme-to-json/serializer"]
 }

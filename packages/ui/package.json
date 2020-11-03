@@ -1,13 +1,14 @@
 {
   "name": "algosigner-ui",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "https://developer.purestake.io",
   "description": "User interface built for AlgoSigner.",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server",
     "build": "webpack --progress",
-    "test": ""
+    "test": "jest",
+    "test-watch": "jest --watch"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
@@ -29,6 +30,7 @@
     "enzyme-adapter-preact-pure": "^2.2.3",
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
+    "enzyme-to-json": "^3.6.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.4.2",
     "jest-webextension-mock": "^3.6.1",

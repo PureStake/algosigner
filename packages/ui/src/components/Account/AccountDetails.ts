@@ -6,7 +6,7 @@ import qrcode from 'qrcode-generator';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 
 import Authenticate from 'components/Authenticate'
 
@@ -59,6 +59,7 @@ const AccountDetails: FunctionalComponent = (props: any) => {
 
         <div style="text-align: center;" id="qrCode">
           <img src="${qrImg}"
+            id="accountQR"
             style="padding: 0.5em;
               margin: 0.5em;
               border: 1px solid #9095AF;

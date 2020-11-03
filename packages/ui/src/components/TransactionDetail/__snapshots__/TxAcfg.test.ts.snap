@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TxAcfg should match snapshot 1`] = `
+<div
+  className="box"
+  style="overflow-wrap: break-word;"
+>
+  <p
+    className="has-text-centered has-text-weight-bold"
+  >
+    Asset configuration
+  </p>
+  <p>
+    <strong>
+      TxID:
+    </strong>
+     
+    <span>
+      B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ
+    </span>
+  </p>
+  <p>
+    <strong>
+      From:
+    </strong>
+     
+    <span>
+      RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
+    </span>
+  </p>
+  <p>
+    <strong>
+      Asset name:
+    </strong>
+     
+    <span>
+      non
+    </span>
+  </p>
+  <p>
+    <strong>
+      Total:
+    </strong>
+     
+    12999
+     
+    non
+  </p>
+  <p>
+    <strong>
+      Block:
+    </strong>
+     
+    <span>
+      9265758
+    </span>
+  </p>
+  <div
+    className="has-text-centered"
+  >
+    <a
+      href="https://goalseeker.purestake.io/algorand/testnet/transaction/B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      See details in GoalSeeker
+    </a>
+  </div>
+</div>
+`;

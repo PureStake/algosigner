@@ -33,8 +33,10 @@ const AccountPreview: FunctionalComponent = (props: any) => {
           <b>${ account.name }</b>
         </div>
         <div class="is-size-7 has-text-right">
-          ${ results && html`
+          ${ results && results.assets && html`
             <b>${results.assets.length}</b> ASAs<br />
+          `}
+          ${ results && html`
             <b>${numFormat(results.amount/1e6, 6)}</b> Algos
           `}
           ${ results===null && html`

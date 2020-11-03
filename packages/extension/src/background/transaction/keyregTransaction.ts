@@ -10,22 +10,24 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
     selectionKey: string = undefined;
     voteFirst: number = undefined;
     voteLast: number = undefined;
-    voteKeyDilution: number = undefined;
-    from?: string = undefined;
+    voteKeyDilution?: number = null;
+    from: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;
-    note?: string = undefined;
+    note?: string = null;
     genesisID: string = undefined;
     genesisHash: any = undefined;
-    group?: any = undefined;
-    lease?: any = undefined;
+    group?: any = null;
+    lease?: any = null;
+    reKeyTo?: any = null;
 }
 
 ///
-// Mapping, validation and error checking for transaction keyreg transactions prior to sign.
+// Mapping, validation and error checking for keyreg transactions prior to sign.
 ///
 export class KeyregTransaction  extends BaseValidatedTxnWrap {
+    txDerivedTypeText: string = 'Key Registration';
     constructor(params: IKeyRegistrationTx){   
         super(params, KeyRegistrationTx);
     }

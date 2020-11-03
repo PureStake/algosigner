@@ -13,3 +13,8 @@ export enum API {
     Algod = "Algod",
     Indexer = "Indexer"
 }
+
+export interface Cache {
+    assets: object;
+    accounts: object;
+}

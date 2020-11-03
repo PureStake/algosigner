@@ -5,15 +5,17 @@ import { useState, useEffect, useContext } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { isFromExtension } from '@algosigner/common/utils';
 
-import TxAcfg from 'components/SignTransaction/TxAcfg'
-import TxPay from 'components/SignTransaction/TxPay'
-import TxKeyreg from 'components/SignTransaction/TxKeyreg'
-import TxAxfer from 'components/SignTransaction/TxAxfer'
-import TxAfrz from 'components/SignTransaction/TxAfrz'
-import Authenticate from 'components/Authenticate'
-import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'index'
-import logotype from 'assets/logotype.png'
+import TxAcfg from 'components/SignTransaction/TxAcfg';
+import TxPay from 'components/SignTransaction/TxPay';
+import TxAlert from 'components/SignTransaction/TxAlert';
+import TxKeyreg from 'components/SignTransaction/TxKeyreg';
+import TxAxfer from 'components/SignTransaction/TxAxfer';
+import TxAfrz from 'components/SignTransaction/TxAfrz';
+import TxAppl from 'components/SignTransaction/TxAppl';
+import Authenticate from 'components/Authenticate';
+import { sendMessage } from 'services/Messaging';
+import { StoreContext } from 'services/StoreContext';
+import logotype from 'assets/logotype.png';
 
 function deny() {
   const params = {
@@ -83,7 +85,7 @@ const SignTransaction: FunctionalComponent = (props) => {
   }
 
   if (request.body) {
-    let tx = request.body.params;
+    let tx = request.body.params.transaction;
     // Search for account
     let txLedger;
     if (tx.genesisID === "mainnet-v1.0")
@@ -105,7 +107,7 @@ const SignTransaction: FunctionalComponent = (props) => {
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
       </div>
-      <div style="flex: 1">
+      <div style="flex: 1; overflow:auto; max-height: 400px;">
         ${ request.body && html`
           <section class="hero">
             <div class="hero-body py-5">
@@ -113,26 +115,31 @@ const SignTransaction: FunctionalComponent = (props) => {
                 <img src=${request.favIconUrl} width="48" style="float:left"/>
               `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
-                ${request.originTitle} wants to sign a transaction
+                ${request.originTitle} wants to sign a transaction for ${ledger.toLowerCase() == 'mainnet' ? html`<span style="color:#f16522;">${ledger}</span>` : html`<span style="color:#222b60;">${ledger}</span>`}
               </h1>
             </div>
           </section>
-
+          <section id="txAlerts" class="section py-0">
+            ${ request.body.params.validityObject && html`<${TxAlert} vo=${request.body.params.validityObject} />` }
+          </section>
           <section class="section py-0">
-          ${ request.body.params.type==="pay" && html`
-            <${TxPay} tx=${request.body.params} account=${account} ledger=${ledger} />
+          ${ request.body.params.transaction.type==="pay" && html`
+            <${TxPay} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
           `}
-          ${ request.body.params.type==="keyreg" && html`
-            <${TxKeyreg} tx=${request.body.params} account=${account} ledger=${ledger} />
+          ${ request.body.params.transaction.type==="keyreg" && html`
+            <${TxKeyreg} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
           `}
-          ${ request.body.params.type==="acfg" && html`
-            <${TxAcfg} tx=${request.body.params} account=${account} ledger=${ledger} />
+          ${ request.body.params.transaction.type==="acfg" && html`
+            <${TxAcfg} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} dt=${request.body.params.txDerivedTypeText} account=${account} ledger=${ledger} />
           `}
-          ${ request.body.params.type==="axfer" && html`
-            <${TxAxfer} tx=${request.body.params} account=${account} ledger=${ledger} />
+          ${ request.body.params.transaction.type==="axfer" && html`
+            <${TxAxfer} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} dt=${request.body.params.txDerivedTypeText} account=${account} ledger=${ledger} />
           `}
-          ${ request.body.params.type==="afrz" && html`
-            <${TxAfrz} tx=${request.body.params} account=${account} ledger=${ledger} />
+          ${ request.body.params.transaction.type==="afrz" && html`
+            <${TxAfrz} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
+          `}
+          ${ request.body.params.transaction.type==="appl" && html`
+            <${TxAppl} tx=${request.body.params.transaction} vo=${request.body.params.validityObject} account=${account} ledger=${ledger} />
           `}
           </section>
         `}

@@ -5,7 +5,7 @@ import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 
 import Authenticate from 'components/Authenticate'
 

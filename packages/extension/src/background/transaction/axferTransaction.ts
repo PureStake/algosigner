@@ -7,26 +7,27 @@ import { BaseValidatedTxnWrap } from "./baseValidatedTxnWrap";
 class AssetTransferTx implements IAssetTransferTx {
     type: string = undefined;
     assetIndex: number = undefined;
-    amount?: number = undefined;
+    amount: number = undefined;
     to: string = undefined;
-    assetCloseTo?: string = undefined;
-    from?: string = undefined;
+    closeRemainderTo?: string = null;
+    from: string = undefined;
     fee: number = undefined;
     firstRound: number = undefined;
     lastRound: number = undefined;
-    note?: string = undefined;
+    note?: string = null;
     genesisID: string = undefined;
     genesisHash: any = undefined;
-    group?: any = undefined;
-    lease?: any = undefined;
-
+    group?: any = null;
+    lease?: any = null;
+    reKeyTo?: any = null;
 }
 
 ///
-// Mapping, validation and error checking for transaction axfer transactions prior to sign.
+// Mapping, validation and error checking for axfer transactions prior to sign.
 ///
-export class AxferTransaction   extends BaseValidatedTxnWrap {
-    constructor(params: IAssetTransferTx){   
+export class AssetTransferTransaction extends BaseValidatedTxnWrap {
+    txDerivedTypeText: string = 'Asset Transfer';
+        constructor(params: IAssetTransferTx){   
         super(params, AssetTransferTx);
     }
 }

@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 
 const TxAfrz: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, ledger } = props;
+  const { tx, account, ledger, vo } = props;
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -58,7 +58,7 @@ const TxAfrz: FunctionalComponent = (props: any) => {
             ${tx.assetIndex}
           </a>
         </div>
-        <div class="is-flex">
+        <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
           <p style="width: 30%;">Fee:</p>
           <p style="width: 70%;">${tx.fee/1e6} Algos</p>
         </div>

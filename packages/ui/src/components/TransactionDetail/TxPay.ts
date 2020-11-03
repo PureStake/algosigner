@@ -11,11 +11,11 @@ const TxPay: FunctionalComponent = (props: any) => {
   return html`
     <div class="box" style="overflow-wrap: break-word;">
       <p class="has-text-centered has-text-weight-bold">Payment</p>
-      <p><strong>TxID:</strong> ${tx.id}</p>
-      <p><strong>From:</strong> ${tx.sender}</p>
-      <p><strong>To:</strong> ${tx['payment-transaction'].receiver}</p>
-      <p><strong>Amount:</strong> ${tx['payment-transaction']['amount']/1e6} Algos</p>
-      <p><strong>Block:</strong> ${tx['confirmed-round']}</p>
+      <p><strong>TxID:</strong> <span>${tx.id}</span></p>
+      <p><strong>From:</strong> <span>${tx.sender}</span></p>
+      <p><strong>To:</strong> <span>${tx['payment-transaction'].receiver}</span></p>
+      <p><strong>Amount:</strong> <span>${tx['payment-transaction']['amount']/1e6} Algos</span></p>
+      <p><strong>Block:</strong> <span>${tx['confirmed-round']}</span></p>
       <div class="has-text-centered">
         <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${tx.id}`} target="_blank" rel="noopener noreferrer">
           See details in GoalSeeker

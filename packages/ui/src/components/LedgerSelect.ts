@@ -5,7 +5,7 @@ import { useObserver } from 'mobx-react-lite';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { StoreContext } from '../index'
+import { StoreContext } from 'services/StoreContext'
 import WalletDetails from 'components/WalletDetails'
 import { sendMessage } from 'services/Messaging'
 

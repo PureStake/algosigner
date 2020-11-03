@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AssetDetails should match snapshot 1`] = `
+<div
+  className="box"
+  style="overflow-wrap: break-word;"
+>
+  <div
+    className="has-text-centered mb-2"
+  >
+    <b>
+      Dm-1
+    </b>
+    <br />
+    <span
+      className="has-text-grey-light"
+    >
+      12007988
+    </span>
+  </div>
+  <p>
+    <b>
+      Your balance
+    </b>
+    <span
+      className="is-pulled-right"
+    >
+      <b>
+        1,000
+      </b>
+       
+      <span
+        className="has-text-grey-light"
+      >
+        DsG0I1
+      </span>
+    </span>
+  </p>
+  <hr
+    className="my-2"
+  />
+  <p>
+    <b>
+      Total units
+    </b>
+    <span
+      className="is-pulled-right"
+    >
+      <b>
+        1,000
+      </b>
+       
+      <span
+        className="has-text-grey-light"
+      >
+        DsG0I1
+      </span>
+    </span>
+  </p>
+  <p>
+    <b>
+      Creator
+    </b>
+     (
+    <ToClipboard
+      data="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
+    />
+    )
+    <span
+      className="is-pulled-right"
+    >
+      RCWKH27Q
+      .....
+      CJGRNH7A
+    </span>
+  </p>
+  <div
+    className="has-text-centered mt-3"
+  >
+    <a
+      href="https://goalseeker.purestake.io/algorand/testnet/asset/12007988"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      See details in GoalSeeker
+    </a>
+  </div>
+</div>
+`;

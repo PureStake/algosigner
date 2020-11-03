@@ -2,7 +2,7 @@ name: Deployment
 on:
   release:
     types:
-      - created
+      - released
 jobs:
   test_zip_upload:
     runs-on: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
       id: zip_up
       run: zip -r AlgoSigner.zip ./dist/*
     - name: Upload
-      uses: actions/upload-release-asset@v1.0.1
+      uses: actions/upload-release-asset@v1.1.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
