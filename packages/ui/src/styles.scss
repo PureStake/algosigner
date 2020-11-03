@@ -81,3 +81,27 @@ $modal-close-top: 8px;
 	border-bottom-color: #94b1c3;
 	border-left-color: #94b1c3;
 }
+
+#warning-tx-list {
+	border-left: 5px solid rgb(255,215,0);
+	background-color: rgb(255,215,0,.1);
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
+}
+
+#danger-tx-list {
+	border-left: 5px solid rgb(255,0,0);
+	background-color: rgb(255,0,0,.1);
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
+}
+
+.tx-field-warning {
+	border: solid 1px rgb(255,215,0);
+	background-color: rgb(255,215,0,.1);
+}
+
+.tx-field-danger {
+	border: solid 1px rgb(255,215,0);
+	background-color: rgb(255,0,0,.1);
+}

@@ -8,7 +8,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
 
-import { StoreContext } from 'index'
+import { StoreContext } from 'services/StoreContext'
 
 import SetAccountName from 'components/CreateAccount/SetAccountName'
 import AccountKeys from 'components/CreateAccount/AccountKeys'

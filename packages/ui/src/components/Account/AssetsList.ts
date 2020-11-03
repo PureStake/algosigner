@@ -19,7 +19,7 @@ const AssetPreview: FunctionalComponent = (props: any) => {
       onClick=${() => setShowAsset(asset)}>
       ${ asset.name && asset.name.length > 0 && html`
         ${ asset.name }
-        <small class="has-text-grey-light"> ${asset['asset-id']}</small>
+        <small class="has-text-grey-light" id="asset_${asset['asset-id']}"> ${asset['asset-id']}</small>
       `}
       ${ (!asset.name || asset.name.length === 0) && html`
         ${ asset['asset-id'] }
@@ -43,21 +43,17 @@ const AssetsList: FunctionalComponent = (props: any) => {
   // Only show the first 10 assets, and a link to the assets view
   // if needed.
   return html`
-    <div class="py-2">
-      <span class="px-4 has-text-weight-bold is-size-5">Assets</span>
-      ${ assets.slice(0, 10).map((asset: any) => html`
-        <${AssetPreview} asset=${asset} setShowAsset=${setShowAsset} />
-      `)}
-      ${ assets.length > 10 && html`
-        <div class="py-3 px-4 has-text-centered"
-          style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
-          <a onClick=${() => setFullList(true)}>
-            Show all assets
-          </a>
-        </div>
-      `}
-    </div>
-
+    ${ assets.slice(0, 10).map((asset: any) => html`
+      <${AssetPreview} asset=${asset} setShowAsset=${setShowAsset} />
+    `)}
+    ${ assets.length > 10 && html`
+      <div class="py-3 px-4 has-text-centered"
+        style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
+        <a onClick=${() => setFullList(true)}>
+          Show all assets
+        </a>
+      </div>
+    `}
 
     <div class=${`modal ${fullList ? 'is-active' : ''}`}>
       <div class="modal-background" onClick=${()=>setFullList(false)}></div>

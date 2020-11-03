@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TxAxfer should match snapshot 1`] = `
+<div
+  className="box"
+  style="overflow-wrap: break-word;"
+>
+  <p
+    className="has-text-centered has-text-weight-bold"
+  >
+    Asset transfer
+  </p>
+  <p>
+    <strong>
+      TxID:
+    </strong>
+     
+    <span>
+      5EYWUOBWEEOM4QRE6JNVP3XHEVFCZ7CFNNI32Q5T2SWWUC7QPGIQ
+    </span>
+  </p>
+  <p>
+    <strong>
+      From:
+    </strong>
+     
+    <span>
+      RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
+    </span>
+  </p>
+  <p>
+    <strong>
+      To:
+    </strong>
+     
+    <sspan>
+      RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
+    </sspan>
+  </p>
+  <p>
+    <strong>
+      Amount:
+    </strong>
+     
+    <span>
+      0
+    </span>
+  </p>
+  <p>
+    <strong>
+      Block:
+    </strong>
+     
+    <span>
+      9548799
+    </span>
+  </p>
+  <div
+    className="has-text-centered"
+  >
+    <a
+      href="https://goalseeker.purestake.io/algorand/testnet/transaction/5EYWUOBWEEOM4QRE6JNVP3XHEVFCZ7CFNNI32Q5T2SWWUC7QPGIQ"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      See details in GoalSeeker
+    </a>
+  </div>
+</div>
+`;
