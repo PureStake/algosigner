@@ -50,6 +50,7 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
         </button>
       </div>
       <div class="dropdown-menu" id="dropdown-menu" role="menu">
+        <div class="dropdown-mask" onClick=${flip} />
         <div class="dropdown-content">
           <a id="selectTestNet"
             onClick=${()=>setLedger('TestNet')}
