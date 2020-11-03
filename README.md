@@ -9,6 +9,37 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it. 
 
+## 1.1.0 Update 
+The latest release introduces several key new features for users and dApp developers.
+
+### Asset Support in the UI
+Assets have always been displayed in the UI, now you may find new assets, opt-in to them, and transfer them right in the UI. 
+
+### Asset Support for dApps
+dApps were previously able to send in basic asset transactions to be signed by AlgoSigner. Support has now been added for all asset transaction types with accompanying UI notices. 
+
+* Clawback added
+* Destroy capability allowed for `acfg`
+* Close-to supported in `axfer`
+
+### Application Transaction Support for dApps 
+dApp developers may now send in application transactions to be signed. This support is new and subject to change in subsequent releases. Please read the updated [dApp Integration Guide](docs/dApp-integration.md) for instructions on working with these transaction types. 
+
+### Additional dApp support
+
+* Support has been enabled for `close-to` transactions. 
+* Transaction validation errors will now provide more detailed messages on causes
+
+### UI Transactions
+With the addition of support for `close-to` transactions, new warning messages will display in the UI when dApps send in pay transactions that are potentially dangerous. 
+
+The signing window will also now reflect better the ledger the dApp is asking the user to sign a transaction for. A new label is present in dark blue for Testnet and orange for Mainnet
+
+### Sample dApp and dApp Tests
+
+* Signing app - New sample dApp for [demonstrating transaction signing](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html)
+* Updates to the [existing sample dApp](https://purestake.github.io/algosigner-dapp-example/) demonstrating pending lookup and asset search
+
 ## Decentralized Applications
 As a browser extension, AlgoSigner opens the door for developers to build DeFi applications on Algorand by providing a secure way to add transaction capabilities. This enables developers to initiate transactions and accept ALGOs seamlessly, without jeopardizing the security of their users’ secrets.
 
