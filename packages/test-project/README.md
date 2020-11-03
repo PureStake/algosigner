@@ -8,7 +8,6 @@ Leverages `jest-runner-groups` to split test suite invocation.
 
 Test suites, when run standalone, each load the extension from scratch and create a new Wallet on each run. 
 
-One test series, `manual-dapp`, currently requires manual intervention to execute all the steps. 
 
 ### Prerequisites 
 
@@ -23,6 +22,6 @@ The test suites do not yet play well with each other and are best run standalone
 
 - basic-ui-e2e :  Larger suite of basic tests of the UI, in two blocks. Creates Wallets, Imports and Creates Accounts, sends transactions and deletes the account. Run with `npm run basic-ui`.
 
-- basic-e2e-dapp : Interacts with the sample dApp at https://purestake.github.io/algosigner-dapp-example/ - exercises exposed AlgoSigner functions in page context. Run with `npm run basic-dapp`.  
+- basic-e2e-dapp : Exercises exposed AlgoSigner functions in page context (dApp). Run with `npm run basic-dapp`.  
 
-- manual-e2e-dapp : Interacts with the sample dApp at https://purestake.github.io/algosigner-dapp-example/ - exercises exposed AlgoSigner functions in page context. Run with `npm run manual-dapp`. Requires manual intervention to accept transaction signing and authorize signing. Extends the `basic-e2e-dapp` test suite. 
+- app-e2e-dapp: Short set of tests to exercise application calls through the dApp connection. Run with `npm run app-dapp`
