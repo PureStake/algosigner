@@ -70,11 +70,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
   const handleAmountChange = (val, ass) => {
     const decimals = 'decimals' in ass ? ass.decimals : 6;
+    const integer = decimals >= 16 ? 1 : 16 - decimals;
     let re;
     if (decimals > 0) 
-      re = new RegExp(`\\d{1,10}(\\.\\d{0,${decimals}})?`);
+      re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
     else 
-      re = new RegExp(`\\d{1,10}`);
+      re = new RegExp(`\\d{1,16}`);
 
     const finalVal = val.match(re);
     if (finalVal)
