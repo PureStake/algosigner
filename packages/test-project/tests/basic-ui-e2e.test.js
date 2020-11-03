@@ -25,7 +25,7 @@ describe('Basic Happy Path Tests', () => {
 
     beforeAll( async () => {
         const dummyPage = await browser.newPage();
-        await dummyPage.waitFor(2000); // arbitrary wait time.
+        await dummyPage.waitForTimeout(2000); // arbitrary wait time.
         const targets = await browser.targets();
 
         const extensionTarget = targets.find(({ _targetInfo }) => {
@@ -64,16 +64,16 @@ describe('Basic Happy Path Tests', () => {
         await extensionPage.waitForSelector('#createWallet')
         await extensionPage.type('#setPassword',unsafePassword);
         await extensionPage.type('#confirmPassword',unsafePassword);
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
         await extensionPage.waitForSelector('#createWallet')
         await extensionPage.click('#createWallet')
     })
 
     test('Switch Ledger', async () => {
-        await extensionPage.waitFor(4000)
+        await extensionPage.waitForTimeout(4000)
         await extensionPage.screenshot({path: 'screenshots/test_waiting_for_page.png'})
         await extensionPage.click('#selectLedger')
-        await extensionPage.waitFor(500)
+        await extensionPage.waitForTimeout(500)
         await extensionPage.click('#selectTestNet')
     })
 
@@ -84,94 +84,94 @@ describe('Basic Happy Path Tests', () => {
         await extensionPage.click('#importAccount')
         await extensionPage.waitForSelector('#accountName')
         await extensionPage.type('#accountName',testNetAccount);
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#enterMnemonic', unsafeMenmonic)
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.click('#nextStep')
         await extensionPage.waitForSelector('#enterPassword')
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(1000)
+        await extensionPage.waitForTimeout(1000)
     })
 
     test('Load Home after Account Import', async () => {
-        await extensionPage.waitFor(2000) // loading the account takes time
+        await extensionPage.waitForTimeout(2000) // loading the account takes time
     })
 
     test('Load Account Info', async () => {       
         await extensionPage.waitForSelector('#account_'+testNetAccount)
         await extensionPage.click('#account_'+testNetAccount)
-        await extensionPage.waitFor(1000)
+        await extensionPage.waitForTimeout(1000)
         await expect(extensionPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/E2E-Tests/)
 
     })
 
     test('Send Transaction', async () => {
         await extensionPage.click('#sendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#amountAlgos', amount.toString());
         await extensionPage.type('#to-address',sendAlgoToAddress);
         await extensionPage.type('#note', "AutoTest Send Algo");
         await extensionPage.click('#submitSendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
         await extensionPage.waitForSelector('#txId')
         txId = await extensionPage.$eval('#txId', e => e.innerText) // setup for another test
         await extensionPage.click('#backToWallet')
-        await extensionPage.waitFor(3000)
+        await extensionPage.waitForTimeout(3000)
 
     })
 
     test('Transaction Errors: OverSpend', async () => {
         await extensionPage.click('#sendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#amountAlgos', '900000');
         await extensionPage.type('#to-address',sendAlgoToAddress);
         await extensionPage.type('#note', "AutoTest Overspend Algo");
         await extensionPage.click('#submitSendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
         await extensionPage.waitForSelector('#tx-error')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
 
         let pageError = await extensionPage.$eval('#tx-error', e => e.innerText)
         await expect(pageError).toMatch("Overspending. Your account doesn't have sufficient funds.")
 
         await extensionPage.click('button.modal-close')
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('svg.fa-chevron-left')
-        await extensionPage.waitFor(3000)
+        await extensionPage.waitForTimeout(3000)
     })
 
     test('Transaction Errors: Invalid Field - Amount', async () => {
         await extensionPage.click('#sendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#amountAlgos', '9999999999.999999');
         await extensionPage.type('#to-address',sendAlgoToAddress);
         await extensionPage.type('#note', "AutoTest Invalid Amount");
         await extensionPage.click('#submitSendAlgos')
-        await extensionPage.waitFor(100)
+        await extensionPage.waitForTimeout(100)
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
         await extensionPage.waitForSelector('#tx-error')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
 
         let pageError = await extensionPage.$eval('#tx-error', e => e.innerText)
         expect(pageError).toMatch('One or more fields are not valid. Please check and try again.')
 
         await extensionPage.click('button.modal-close')
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('svg.fa-chevron-left')
-        await extensionPage.waitFor(3000)
+        await extensionPage.waitForTimeout(3000)
 
     })
 
@@ -185,9 +185,9 @@ describe('Basic Happy Path Tests', () => {
     test('Delete Account', async () => {
         await extensionPage.click('#deleteAccount')
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
     })
 
     test('Verify Account Deleted', async () => {
@@ -218,7 +218,7 @@ describe('Create Account', () => {
 
     beforeAll( async () => {
         const dummyPage = await browser.newPage();
-        await dummyPage.waitFor(2000); // arbitrary wait time.
+        await dummyPage.waitForTimeout(2000); // arbitrary wait time.
         const targets = await browser.targets();
 
         const extensionTarget = targets.find(({ _targetInfo }) => {
@@ -283,14 +283,14 @@ describe('Create Account', () => {
     test('Create an Account, Step 4 - Write Account into Storage', async () =>{
         await extensionPage.waitForSelector('#enterPassword')
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
     })
 
     test('Verify Account is Created', async () => {       
         await extensionPage.waitForSelector('#account_'+testNetAccount)
         await extensionPage.click('#account_'+testNetAccount)
-        await extensionPage.waitFor(500)
+        await extensionPage.waitForTimeout(500)
         await expect(extensionPage.$eval('#accountName', e => e.innerText)).resolves.toMatch(/Created-Account/)
     })
 
@@ -304,9 +304,9 @@ describe('Create Account', () => {
     test('Delete Account', async () => {
         await extensionPage.click('#deleteAccount')
         await extensionPage.type('#enterPassword',unsafePassword);
-        await extensionPage.waitFor(200)
+        await extensionPage.waitForTimeout(200)
         await extensionPage.click('#authButton')
-        await extensionPage.waitFor(2000)
+        await extensionPage.waitForTimeout(2000)
     })
 
     test('Verify Account Deleted', async () => {
