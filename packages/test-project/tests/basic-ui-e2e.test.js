@@ -153,7 +153,7 @@ describe('Basic Happy Path Tests', () => {
     test('Transaction Errors: Invalid Field - Amount', async () => {
         await extensionPage.click('#sendAlgos')
         await extensionPage.waitFor(100)
-        await extensionPage.type('#amountAlgos', '900000000000');
+        await extensionPage.type('#amountAlgos', '9999999999.999999');
         await extensionPage.type('#to-address',sendAlgoToAddress);
         await extensionPage.type('#note', "AutoTest Invalid Amount");
         await extensionPage.click('#submitSendAlgos')
