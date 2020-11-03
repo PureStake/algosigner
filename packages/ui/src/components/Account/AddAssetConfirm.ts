@@ -10,13 +10,15 @@ import { StoreContext } from 'services/StoreContext'
 import Authenticate from 'components/Authenticate'
 
 const AddAssetConfirm: FunctionalComponent = (props: any) => {
-  const { asset, ledger, address } = props;
+  const { asset, ledger, address, accountsAssetsIDs } = props;
   const store:any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [txId, setTxId] = useState('');
+
+  const disabled = accountsAssetsIDs.includes(asset['asset_id']);
 
   const addAsset = (pwd: string) => {
     const params = {
@@ -94,8 +96,9 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
         <button
           id="addAsset"
           class="button is-primary is-fullwidth"
-          onClick=${() => setAskAuth(true)}>
-          Add asset!
+          onClick=${() => setAskAuth(true)}
+          disabled=${disabled}>
+          ${disabled ? 'You already added this asset' : 'Add asset!'}
         </button>
       </div>
     `}
