@@ -4,38 +4,36 @@ import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { Router, Route } from 'preact-router';
 import { createHashHistory } from 'history';
-import '@fortawesome/fontawesome-free/js/fontawesome'
-import '@fortawesome/fontawesome-free/js/solid'
+import '@fortawesome/fontawesome-free/js/fontawesome';
+import '@fortawesome/fontawesome-free/js/solid';
 
-import Header from 'components/Header'
-import Footer from 'components/Footer'
+import Header from 'components/Header';
+import Footer from 'components/Footer';
 
-import Authorize from 'pages/Authorize'
-import Welcome from 'pages/Welcome'
-import SetPassword from 'pages/SetPassword'
-import Login from 'pages/Login'
-import CreateAccount from 'pages/CreateAccount'
-import ImportAccount from 'pages/ImportAccount'
-import Wallet from 'pages/Wallet'
-import Account from 'pages/Account'
-import SendAlgos from 'pages/SendAlgos'
-import AddAsset from 'pages/AddAsset'
-import SignTransaction from 'pages/SignTransaction'
+import Authorize from 'pages/Authorize';
+import Welcome from 'pages/Welcome';
+import SetPassword from 'pages/SetPassword';
+import Login from 'pages/Login';
+import CreateAccount from 'pages/CreateAccount';
+import ImportAccount from 'pages/ImportAccount';
+import Wallet from 'pages/Wallet';
+import Account from 'pages/Account';
+import SendAlgos from 'pages/SendAlgos';
+import AddAsset from 'pages/AddAsset';
+import SignTransaction from 'pages/SignTransaction';
 
-import { StoreProvider } from 'services/StoreContext'
+import { StoreProvider } from 'services/StoreContext';
 
 require('./styles.scss');
 
 const mountNode = document.getElementById('root');
 
 const Root = (props) => {
-  return html`
-      ${props.children}
-  `
-}
+  return html` ${props.children} `;
+};
 
 const App = () => {
-    return html`
+  return html`
       <${StoreProvider}>
         <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
@@ -64,4 +62,4 @@ const App = () => {
     `;
 };
 
-render(html`<${App}/>`, mountNode, mountNode.lastChild)
+render(html`<${App} />`, mountNode, mountNode.lastChild);

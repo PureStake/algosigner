@@ -4,9 +4,9 @@ import AccountDetails from './AccountDetails';
 
 let component;
 const account = {
-  address: "PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4"
-}
-const ledger = "TestNet";
+  address: 'PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4',
+};
+const ledger = 'TestNet';
 
 describe('AccountDetails', () => {
   beforeEach(() => {
@@ -16,7 +16,9 @@ describe('AccountDetails', () => {
   });
 
   it('should display account address', () => {
-    expect(component.contains(html`<p id="accountAddress">${account.address}</p>`)).toBe(true);
+    expect(
+      component.contains(html`<p id="accountAddress">${account.address}</p>`)
+    ).toBe(true);
   });
 
   it('should display account address QR', () => {

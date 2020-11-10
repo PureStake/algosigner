@@ -8,9 +8,8 @@
  */
 export function numFormat(val: number, dec: number) {
   if (!isNaN(val))
-    return val.toLocaleString('en-US', {maximumFractionDigits: dec});
-  else
-    return null
+    return val.toLocaleString('en-US', { maximumFractionDigits: dec });
+  else return null;
 }
 
 /**
@@ -22,8 +21,7 @@ export function numFormat(val: number, dec: number) {
  * @return {string|null} Formated number or null if invalid.
  */
 export function assetFormat(val: number, dec: number) {
-	const decimals = dec || 0;
-	const amount = val/Math.pow(10, decimals);
-	return numFormat(amount, decimals);
+  const decimals = dec || 0;
+  const amount = val / Math.pow(10, decimals);
+  return numFormat(amount, decimals);
 }
-

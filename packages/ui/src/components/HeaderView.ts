@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { route } from 'preact-router';
 

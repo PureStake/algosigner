@@ -1,5 +1,5 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { useState } from 'preact/hooks';
 
 const TxKeyreg: FunctionalComponent = (props: any) => {
@@ -24,18 +24,23 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
 
     <div class="tabs is-centered mb-2">
       <ul>
-        <li class=${tab==="overview" ? "is-active" : ""}
-          onClick=${() => setTab('overview')}>
+        <li
+          class=${tab === 'overview' ? 'is-active' : ''}
+          onClick=${() => setTab('overview')}
+        >
           <a>Overview</a>
         </li>
-        <li class=${tab==="details" ? "is-active" : ""}
-          onClick=${() => setTab('details')}>
+        <li
+          class=${tab === 'details' ? 'is-active' : ''}
+          onClick=${() => setTab('details')}
+        >
           <a>Details</a>
         </li>
       </ul>
     </div>
 
-    ${ tab==="overview" && html`
+    ${tab === 'overview' &&
+    html`
       <div>
         <div class="is-flex">
           <p style="width: 30%;">Vote Key:</p>
@@ -47,19 +52,20 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
         </div>
         <div class="is-flex">
           <p style="width: 30%;">Fee:</p>
-          <p style="width: 70%;">${tx.fee/1e6} Algos</p>
+          <p style="width: 70%;">${tx.fee / 1e6} Algos</p>
         </div>
       </div>
     `}
-    ${ tab==="details" && html`
+    ${tab === 'details' &&
+    html`
       <div style="height: 245px; overflow: auto;">
         <pre style="background: #EFF4F7; border-radius: 5px;">
           <code>${txText}</code>
-        </pre>
+        </pre
+        >
       </div>
     `}
-
   `;
-}
+};
 
-export default TxKeyreg
+export default TxKeyreg;

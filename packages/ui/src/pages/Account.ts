@@ -1,26 +1,25 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 import { numFormat } from 'services/common';
 
-import { StoreContext } from 'services/StoreContext'
-import TransactionsList from 'components/Account/TransactionsList'
-import AssetsList from 'components/Account/AssetsList'
-import AccountDetails from 'components/Account/AccountDetails'
+import { StoreContext } from 'services/StoreContext';
+import TransactionsList from 'components/Account/TransactionsList';
+import AssetsList from 'components/Account/AssetsList';
+import AccountDetails from 'components/Account/AccountDetails';
 import algo from 'assets/algo.png';
 
-
 const Account: FunctionalComponent = (props: any) => {
-  const store:any = useContext(StoreContext);
+  const store: any = useContext(StoreContext);
   const { url, ledger, address } = props;
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
-  const [showDetails, setShowDetails] = useState<boolean>(false)
+  const [showDetails, setShowDetails] = useState<boolean>(false);
   const [showAssets, setShowAssets] = useState<boolean>(false);
 
   useEffect(() => {
@@ -37,13 +36,13 @@ const Account: FunctionalComponent = (props: any) => {
   const fetchApi = () => {
     const params = {
       ledger: ledger,
-      address: address
+      address: address,
     };
-    sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
+    sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
       setDetails(response);
       store.updateAccountDetails(ledger, response);
     });
-  }
+  };
 
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
@@ -56,7 +55,7 @@ const Account: FunctionalComponent = (props: any) => {
         <p style="width: 305px;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
-          onClick=${()=>setShowDetails(true)}>
+          onClick=${() => setShowDetails(true)}>
           <span class="icon">
             <i class="fas fa-ellipsis-v"></i>
           </span>
@@ -64,7 +63,11 @@ const Account: FunctionalComponent = (props: any) => {
       </p>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
-        ${ details && html`${numFormat(details.amount/1e6, 6)} <span class="has-text-grey-light">Algos</span>` }
+        ${
+          details &&
+          html`${numFormat(details.amount / 1e6, 6)}
+            <span class="has-text-grey-light">Algos</span>`
+        }
       </span>
     </div>
     <div class="px-4">
@@ -80,23 +83,39 @@ const Account: FunctionalComponent = (props: any) => {
           <span class="icon"><i class="fas fa-plus-circle"></i></span> Add new asset
         </${Link}>
       </div>
-      ${ details && details.assets && details.assets.length > 0 && html`
-        <${AssetsList} assets=${details.assets} ledger=${ledger}/>
-      `}
+      ${
+        details &&
+        details.assets &&
+        details.assets.length > 0 &&
+        html` <${AssetsList} assets=${details.assets} ledger=${ledger} /> `
+      }
     </div>
 
     <${TransactionsList} address=${address} ledger=${ledger}/>
 
-    ${ showDetails && html`
-      <div class="modal is-active">
-        <div class="modal-background" onClick=${()=>setShowDetails(false)}></div>
-        <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
-          <${AccountDetails} account=${account} ledger=${ledger} />
+    ${
+      showDetails &&
+      html`
+        <div class="modal is-active">
+          <div
+            class="modal-background"
+            onClick=${() => setShowDetails(false)}
+          ></div>
+          <div
+            class="modal-content"
+            style="padding: 0 15px; max-height: calc(100vh - 95px);"
+          >
+            <${AccountDetails} account=${account} ledger=${ledger} />
+          </div>
+          <button
+            class="modal-close is-large"
+            aria-label="close"
+            onClick=${() => setShowDetails(false)}
+          />
         </div>
-        <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowDetails(false)} />
-      </div>
-    `}
-  `
+      `
+    }
+  `;
 };
 
 export default Account;

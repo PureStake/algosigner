@@ -1,16 +1,16 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useContext, useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'services/StoreContext'
+import { sendMessage } from 'services/Messaging';
+import { StoreContext } from 'services/StoreContext';
 
-import Authenticate from 'components/Authenticate'
+import Authenticate from 'components/Authenticate';
 
 const WalletDetails: FunctionalComponent = () => {
-  const store:any = useContext(StoreContext);
+  const store: any = useContext(StoreContext);
   const [status, setStatus] = useState<string>('details');
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
@@ -18,15 +18,15 @@ const WalletDetails: FunctionalComponent = () => {
 
   const deleteWallet = (pwd: string) => {
     const params = {
-      passphrase: pwd
+      passphrase: pwd,
     };
     setLoading(true);
     setAuthError('');
-    sendMessage(JsonRpcMethod.DeleteWallet, params, function(response) {
-      if ('error' in response) { 
+    sendMessage(JsonRpcMethod.DeleteWallet, params, function (response) {
+      if ('error' in response) {
         setLoading(false);
         switch (response.error) {
-          case "Login Failed":
+          case 'Login Failed':
             setAuthError('Wrong passphrase');
             break;
           default:
@@ -42,10 +42,12 @@ const WalletDetails: FunctionalComponent = () => {
   };
 
   switch (status) {
-    case "remove":
+    case 'remove':
       return html`
-        <div class="box is-flex"
-          style="overflow-wrap: break-word; height: 450px; flex-direction: column;">
+        <div
+          class="box is-flex"
+          style="overflow-wrap: break-word; height: 450px; flex-direction: column;"
+        >
           <b class="has-text-centered my-5 is-size-5">You sure?</b>
           <div style="flex: 1;">
             <p>Type "REMOVE FOREVER"</p>
@@ -53,26 +55,33 @@ const WalletDetails: FunctionalComponent = () => {
               id="setConfirmText"
               class="input my-4"
               value=${confirmText}
-              onInput=${(e)=>setConfirmText(e.target.value)}/>
-            <p>Deleted wallets cannot be recovered, but your accounts can be restored using their mnemonic.</p>
+              onInput=${(e) => setConfirmText(e.target.value)}
+            />
+            <p>
+              Deleted wallets cannot be recovered, but your accounts can be
+              restored using their mnemonic.
+            </p>
           </div>
 
-          <button id="removeWalletConfirm"
+          <button
+            id="removeWalletConfirm"
             class="button is-danger is-fullwidth"
             disabled=${confirmText !== 'REMOVE FOREVER'}
-            onClick=${() => setStatus('auth')}>
+            onClick=${() => setStatus('auth')}
+          >
             REMOVE WALLET
           </button>
         </div>
-      `
-    case "auth":
+      `;
+    case 'auth':
       return html`
         <${Authenticate}
           error=${authError}
           loading=${loading}
-          nextStep=${deleteWallet} />
-      `
-    case "details":
+          nextStep=${deleteWallet}
+        />
+      `;
+    case 'details':
     default:
       return html`
         <div class="box has-text-centered is-flex"
@@ -87,7 +96,7 @@ const WalletDetails: FunctionalComponent = () => {
             REMOVE WALLET
           </button>
         </div>
-      `
+      `;
   }
 };
 

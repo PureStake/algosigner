@@ -1,14 +1,12 @@
 import { shallow } from 'enzyme';
 import { html } from 'htm/preact';
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 import Login from './Login';
 
 jest.mock('services/Messaging');
 
 describe('Login', () => {
-  let component = shallow(html`
-    <${Login} />
-  `);
+  let component = shallow(html` <${Login} /> `);
 
   it('should display empty input field', () => {
     expect(component.find('input#enterPassword').exists()).toBe(true);
@@ -18,9 +16,9 @@ describe('Login', () => {
   it('should display submit button', () => {
     expect(component.find('button#login').exists()).toBe(true);
     expect(component.find('button#login').props()).toEqual({
-      className: "button is-link is-fullwidth ",
+      className: 'button is-link is-fullwidth ',
       disabled: true,
-      id: "login",
+      id: 'login',
       onClick: expect.any(Function),
     });
   });

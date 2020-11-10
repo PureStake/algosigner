@@ -5,11 +5,11 @@ import { route } from 'preact-router';
 import { autorun } from 'mobx';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 
 export const StoreContext = createContext(undefined);
 
-export const StoreProvider = ({children}) => {
+export const StoreProvider = ({ children }) => {
   const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
@@ -26,7 +26,7 @@ export const StoreProvider = ({children}) => {
     updateAccountDetails: (ledger, details) => {
       console.log(details);
       for (var i = store[ledger].length - 1; i >= 0; i--) {
-        if(store[ledger][i].address === details.address) {
+        if (store[ledger][i].address === details.address) {
           store[ledger][i].details = details;
           break;
         }
@@ -45,9 +45,9 @@ export const StoreProvider = ({children}) => {
   });
 
   // Try to retrieve session from background
-  sendMessage(JsonRpcMethod.GetSession, {}, function(response) {
-    if (response && response.exist){
-      let hashPath = "";
+  sendMessage(JsonRpcMethod.GetSession, {}, function (response) {
+    if (response && response.exist) {
+      let hashPath = '';
       if (window.location.hash.length > 0) {
         // Remove # from hash
         hashPath = window.location.hash.slice(2);
@@ -56,17 +56,17 @@ export const StoreProvider = ({children}) => {
         store.updateWallet(response.session.wallet);
         store.setLedger(response.session.ledger);
         if (hashPath.length > 0) {
-          route(`/${hashPath}`)
+          route(`/${hashPath}`);
         } else {
-          route('/wallet')
+          route('/wallet');
         }
       } else {
-        route('/login/'+hashPath);
+        route('/login/' + hashPath);
       }
     }
   });
 
   return html`
     <${StoreContext.Provider} value=${store}>${children}</${StoreContext.Provider}>
-  `
+  `;
 };
