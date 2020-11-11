@@ -1,6 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -9,7 +9,6 @@ import ToClipboard from 'components/ToClipboard';
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
-  const [results, setResults] = useState<number>(0);
 
   const fetchApi = async () => {
     const params = {
@@ -19,16 +18,15 @@ const AssetDetails: FunctionalComponent = (props: any) => {
     if (!('name' in asset)) {
       sendMessage(JsonRpcMethod.AssetDetails, params, function (response) {
         const keys = Object.keys(response.asset.params);
-        for (var i = keys.length - 1; i >= 0; i--) {
+        for (let i = keys.length - 1; i >= 0; i--) {
           asset[keys[i]] = response.asset.params[keys[i]];
         }
-        setResults(1);
       });
     }
   };
 
   const toDecimal = (num, full = false) => {
-    let params: any = {
+    const params: any = {
       maximumFractionDigits: asset.decimals,
     };
     const amount = num / Math.pow(10, asset.decimals);

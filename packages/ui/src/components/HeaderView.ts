@@ -1,6 +1,5 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { route } from 'preact-router';
 
 const HeaderView: FunctionalComponent = (props: any) => {
   const { title, action } = props;

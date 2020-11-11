@@ -1,13 +1,12 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useContext, useRef, useEffect } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 
-import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
 
 const Authenticate: FunctionalComponent = (props: any) => {
   const { nextStep, error, loading } = props;
-  const [pwd, setPwd] = useState<String>('');
+  const [pwd, setPwd] = useState<string>('');
   const inputRef = useRef<HTMLHeadingElement>(null);
 
   const disabled: boolean = pwd.length === 0;

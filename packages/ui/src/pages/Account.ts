@@ -2,7 +2,6 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
-import { useObserver } from 'mobx-react-lite';
 import { Link, route } from 'preact-router';
 
 import { sendMessage } from 'services/Messaging';
@@ -20,10 +19,9 @@ const Account: FunctionalComponent = (props: any) => {
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
   const [showDetails, setShowDetails] = useState<boolean>(false);
-  const [showAssets, setShowAssets] = useState<boolean>(false);
 
   useEffect(() => {
-    for (var i = store[ledger].length - 1; i >= 0; i--) {
+    for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
         setAccount(store[ledger][i]);
         setDetails(store[ledger][i].details);

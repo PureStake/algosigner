@@ -1,12 +1,11 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useObserver } from 'mobx-react-lite';
 import { route } from 'preact-router';
 
 import HeaderView from 'components/HeaderView';
 
 const SetAccountName: FunctionalComponent = (props: any) => {
-  const { name, setName, ledger, account, nextStep } = props;
+  const { name, setName, ledger, nextStep } = props;
 
   // TODO: Add check if name is already in use
   // let ddClass: string = "dropdown is-right";

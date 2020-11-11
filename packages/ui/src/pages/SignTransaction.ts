@@ -21,20 +21,20 @@ function deny() {
   const params = {
     responseOriginTabID: responseOriginTabID,
   };
-  sendMessage(JsonRpcMethod.SignDeny, params, function () {});
+  sendMessage(JsonRpcMethod.SignDeny, params, function () {
+    // no callback;
+  });
 }
 
 let responseOriginTabID = 0;
 
-const SignTransaction: FunctionalComponent = (props) => {
+const SignTransaction: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [account, setAccount] = useState<string>('');
   const [request, setRequest] = useState<any>({});
-  const [showTx, setShowTx] = useState<any>(null);
   const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
@@ -63,7 +63,6 @@ const SignTransaction: FunctionalComponent = (props) => {
     };
     setLoading(true);
     setAuthError('');
-    setError('');
     window.removeEventListener('beforeunload', deny);
 
     //console.log('SIGNINg', 'params', params)
@@ -76,7 +75,6 @@ const SignTransaction: FunctionalComponent = (props) => {
             setAuthError('Wrong passphrase');
             break;
           default:
-            setError(response.error);
             setAskAuth(false);
             break;
         }
@@ -85,13 +83,13 @@ const SignTransaction: FunctionalComponent = (props) => {
   };
 
   if (request.body) {
-    let tx = request.body.params.transaction;
+    const tx = request.body.params.transaction;
     // Search for account
     let txLedger;
     if (tx.genesisID === 'mainnet-v1.0') txLedger = 'MainNet';
     else if (tx.genesisID === 'testnet-v1.0') txLedger = 'TestNet';
 
-    for (var i = store[txLedger].length - 1; i >= 0; i--) {
+    for (let i = store[txLedger].length - 1; i >= 0; i--) {
       if (store[txLedger][i].address === tx.from) {
         setAccount(store[txLedger][i].name);
         break;

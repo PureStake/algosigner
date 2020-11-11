@@ -2,8 +2,7 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
-import { useObserver } from 'mobx-react-lite';
-import { Link, route } from 'preact-router';
+import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -22,7 +21,7 @@ interface Account {
 }
 
 const CreateAccount: FunctionalComponent = (props: any) => {
-  const { url, ledger } = props;
+  const { ledger } = props;
   const [name, setName] = useState('');
   const [account, setAccount] = useState<Account>({
     address: '',
@@ -50,7 +49,7 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   };
 
   const setAccountName = () => {
-    let newAcc: Account = Object.assign({}, account);
+    const newAcc: Account = Object.assign({}, account);
     newAcc.name = name;
     setAccount(newAcc);
     nextStep();

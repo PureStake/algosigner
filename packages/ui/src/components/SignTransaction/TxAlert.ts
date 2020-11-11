@@ -1,14 +1,13 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent, VNode } from 'preact';
-import logging from '@algosigner/common/logging';
 
 const TxAlert: FunctionalComponent = (props: any) => {
   const { vo } = props;
 
   // Using this structure so that any additional modifications for displaying
   // warning and dangerous alerts separately can be handled more easily
-  var dangerList: Array<VNode<{}>> = [];
-  var warningList: Array<VNode<{}>> = [];
+  const dangerList: Array<VNode<any>> = [];
+  const warningList: Array<VNode<any>> = [];
   if (vo) {
     Object.keys(vo).forEach((key) => {
       if (vo[key]['status'] === 3) {

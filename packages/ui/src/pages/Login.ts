@@ -1,7 +1,7 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useRef, useEffect } from 'preact/hooks';
-import { Link, route } from 'preact-router';
+import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -13,9 +13,9 @@ import logo from 'assets/logo-inverted.svg';
 
 const Login: FunctionalComponent = (props: any) => {
   const { redirect } = props;
-  const [pwd, setPwd] = useState<String>('');
-  const [loading, setLoading] = useState<Boolean>(false);
-  const [error, setError] = useState<String>('');
+  const [pwd, setPwd] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const inputRef = useRef<HTMLHeadingElement>(null);
   const store: any = useContext(StoreContext);
 

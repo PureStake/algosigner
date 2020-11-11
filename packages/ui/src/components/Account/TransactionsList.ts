@@ -1,6 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useContext, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';

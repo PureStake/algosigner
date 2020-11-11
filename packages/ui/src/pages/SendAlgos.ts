@@ -31,7 +31,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    for (var i = store[ledger].length - 1; i >= 0; i--) {
+    for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
         setAccount(store[ledger][i]);
         break;
@@ -39,7 +39,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     }
   }, []);
 
-  let ddClass: string = 'dropdown is-right';
+  let ddClass = 'dropdown is-right';
   if (ddActive) ddClass += ' is-active';
 
   const selectAsset = (selectedAsset) => {
@@ -60,7 +60,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
       sendMessage(JsonRpcMethod.AssetDetails, params, function (response) {
         const keys = Object.keys(response.asset.params);
-        for (var i = keys.length - 1; i >= 0; i--) {
+        for (let i = keys.length - 1; i >= 0; i--) {
           selectedAsset[keys[i]] = response.asset.params[keys[i]];
         }
         setAsset(selectedAsset);
@@ -91,7 +91,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const decimals = 'decimals' in asset ? asset.decimals : 6;
     const amountToSend = +amount * Math.pow(10, decimals);
 
-    let params: any = {
+    const params: any = {
       ledger: ledger,
       passphrase: pwd,
       address: account.address,

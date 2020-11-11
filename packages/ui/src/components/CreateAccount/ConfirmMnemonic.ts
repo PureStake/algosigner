@@ -1,12 +1,11 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect } from 'preact/hooks';
-import { useObserver } from 'mobx-react-lite';
 
 import HeaderView from 'components/HeaderView';
 
 function shuffle(a) {
-  var j, x, i;
+  let j, x, i;
   for (i = a.length - 1; i > 0; i--) {
     j = Math.floor(Math.random() * (i + 1));
     x = a[i];
@@ -34,7 +33,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
     setTestMnemonicArray(newMnemonic.split(' '));
   };
 
-  let copyTestMnemonic = [...testMnemonicArray];
+  const copyTestMnemonic = [...testMnemonicArray];
 
   const hasWord = (word) => {
     const idx = copyTestMnemonic.indexOf(word);
@@ -46,9 +45,9 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   };
 
   // 5x5 grid
-  let grid: Array<any[]> = [];
+  const grid: Array<any[]> = [];
 
-  let buttons: Array<any> = shuffledMnemonic.map(
+  const buttons: Array<any> = shuffledMnemonic.map(
     (word) => html`
       <button
         class="button is-small is-fullwidth mt-3"

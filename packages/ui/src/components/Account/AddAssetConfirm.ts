@@ -1,17 +1,15 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useContext, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
-import { StoreContext } from 'services/StoreContext';
 
 import Authenticate from 'components/Authenticate';
 
 const AddAssetConfirm: FunctionalComponent = (props: any) => {
   const { asset, ledger, address, accountsAssetsIDs } = props;
-  const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');

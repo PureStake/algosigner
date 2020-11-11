@@ -6,7 +6,7 @@ import background from 'assets/background.png';
 import logo from 'assets/logo-inverted.svg';
 import logotype from 'assets/logotype-inverted.svg';
 
-const Welcome: FunctionalComponent = (props) => {
+const Welcome: FunctionalComponent = () => {
   return html`
     <div
       class="main-view has-text-white"

@@ -9,7 +9,7 @@ import { StoreContext } from 'services/StoreContext';
 import WalletDetails from 'components/WalletDetails';
 import { sendMessage } from 'services/Messaging';
 
-const LedgerSelect: FunctionalComponent = (props: any) => {
+const LedgerSelect: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [active, setActive] = useState<boolean>(false);
   const [showDetails, setShowDetails] = useState<boolean>(false);
@@ -25,7 +25,7 @@ const LedgerSelect: FunctionalComponent = (props: any) => {
     const params = {
       ledger: ledger,
     };
-    sendMessage(JsonRpcMethod.ChangeLedger, params, function (response) {
+    sendMessage(JsonRpcMethod.ChangeLedger, params, function () {
       store.setLedger(ledger);
       flip();
       route('/wallet');

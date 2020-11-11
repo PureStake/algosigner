@@ -44,12 +44,12 @@ const AccountDetails: FunctionalComponent = (props: any) => {
     });
   };
 
-  var typeNumber: TypeNumber = 4;
-  var errorCorrectionLevel: ErrorCorrectionLevel = 'L';
-  var qr = qrcode(typeNumber, errorCorrectionLevel);
+  const typeNumber: TypeNumber = 4;
+  const errorCorrectionLevel: ErrorCorrectionLevel = 'L';
+  const qr = qrcode(typeNumber, errorCorrectionLevel);
   qr.addData(account.address);
   qr.make();
-  let qrImg = qr.createDataURL(10, 1);
+  const qrImg = qr.createDataURL(10, 1);
 
   if (!deleting)
     return html`

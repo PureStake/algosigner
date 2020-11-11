@@ -13,7 +13,7 @@ import { StoreContext } from 'services/StoreContext';
 
 const AddAsset: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
-  const { matches, path, url, ledger, address } = props;
+  const { matches, ledger, address } = props;
   const [tab, setTab] = useState<number>(0);
   const [filter, setFilter] = useState<string>('');
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
@@ -82,7 +82,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
   useEffect(() => {
     setLoading(true);
     // Load account's assets
-    for (var i = store[ledger].length - 1; i >= 0; i--) {
+    for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
         if ('details' in store[ledger][i]) {
           const ids = store[ledger][i].details.assets.map((x) => x['asset-id']);
@@ -99,8 +99,8 @@ const AddAsset: FunctionalComponent = (props: any) => {
     sendMessage(JsonRpcMethod.AssetsVerifiedList, params, function (response) {
       setVerifiedResults(response);
       setResults(response.results);
-      let ids: number[] = [];
-      for (var i = response.results.length - 1; i >= 0; i--) {
+      const ids: number[] = [];
+      for (let i = response.results.length - 1; i >= 0; i--) {
         ids.push(response.results[i]['asset_id']);
       }
       setVerifiedIDs(ids);

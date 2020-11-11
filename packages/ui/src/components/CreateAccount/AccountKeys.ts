@@ -9,7 +9,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
   const [recorded, setRecorded] = useState<boolean>(false);
 
-  let grid: Array<any[]> = [[], [], [], [], []];
+  const grid: Array<any[]> = [[], [], [], [], []];
   const blocks: Array<any> = account.mnemonic.split(' ').map((word, idx) => {
     if (idx % 5 === 0)
       return html`
@@ -31,7 +31,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
     `;
   });
 
-  for (var i = 0; i < blocks.length; i++) {
+  for (let i = 0; i < blocks.length; i++) {
     grid[i % 5].push(blocks[i]);
   }
 

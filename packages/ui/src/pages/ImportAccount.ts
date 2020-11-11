@@ -10,12 +10,6 @@ import Authenticate from 'components/Authenticate';
 
 import { sendMessage } from 'services/Messaging';
 
-interface Account {
-  address: string;
-  mnemonic: string;
-  name: string;
-}
-
 const ImportAccount: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
   const { ledger } = props;

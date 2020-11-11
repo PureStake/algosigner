@@ -1,7 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useEffect, useState, useContext } from 'preact/hooks';
-import { Link } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { StoreContext } from 'services/StoreContext';
@@ -23,12 +22,12 @@ function deny() {
 
 let responseOriginTabID;
 
-const Authorize: FunctionalComponent = (props) => {
+const Authorize: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [request, setRequest] = useState<any>({});
 
   useEffect(() => {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((request) => {
       if (request.body.method == JsonRpcMethod.Authorization) {
         setRequest(request);
         store.saveRequest(request);

@@ -6,7 +6,7 @@ import Login from './Login';
 jest.mock('services/Messaging');
 
 describe('Login', () => {
-  let component = shallow(html` <${Login} /> `);
+  const component = shallow(html` <${Login} /> `);
 
   it('should display empty input field', () => {
     expect(component.find('input#enterPassword').exists()).toBe(true);

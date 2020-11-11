@@ -10,7 +10,6 @@ import { sendMessage } from 'services/Messaging';
 export const StoreContext = createContext(undefined);
 
 export const StoreProvider = ({ children }) => {
-  const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
     TestNet: {},
@@ -25,7 +24,7 @@ export const StoreProvider = ({ children }) => {
     },
     updateAccountDetails: (ledger, details) => {
       console.log(details);
-      for (var i = store[ledger].length - 1; i >= 0; i--) {
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
         if (store[ledger][i].address === details.address) {
           store[ledger][i].details = details;
           break;

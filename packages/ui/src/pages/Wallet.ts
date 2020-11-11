@@ -13,7 +13,7 @@ interface Account {
   name: string;
 }
 
-const Wallet: FunctionalComponent = (props) => {
+const Wallet: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 

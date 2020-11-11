@@ -1,8 +1,9 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
-import { Link, route } from 'preact-router';
+import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import zxcvbn from 'zxcvbn';
 
 import { sendMessage } from 'services/Messaging';
 
@@ -11,12 +12,11 @@ import { StoreContext } from 'services/StoreContext';
 import background from 'assets/background.png';
 import walletLock from 'assets/wallet-lock.png';
 
-var zxcvbn = require('zxcvbn');
 
-const SetPassword: FunctionalComponent = (props) => {
-  const [pwd, setPwd] = useState<String>('');
-  const [confirmPwd, setConfirmPwd] = useState<String>('');
-  const [error, setError] = useState<String>('');
+const SetPassword: FunctionalComponent = () => {
+  const [pwd, setPwd] = useState<string>('');
+  const [confirmPwd, setConfirmPwd] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const store: any = useContext(StoreContext);
 
   const createWallet = () => {

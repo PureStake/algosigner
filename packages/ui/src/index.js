@@ -1,7 +1,5 @@
 import { render } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useContext } from 'preact/hooks';
-import { useObserver } from 'mobx-react-lite';
 import { Router, Route } from 'preact-router';
 import { createHashHistory } from 'history';
 import '@fortawesome/fontawesome-free/js/fontawesome';
