@@ -14,7 +14,7 @@ export class MessageBuilder {
   ): Promise<JsonPayload> {
     return new Promise<JsonPayload>((resolve, reject) => {
       if (error == RequestErrors.None) {
-        let api = new MessageApi();
+        const api = new MessageApi();
         api.listen(OnMessageHandler.promise(resolve, reject));
         api.send(JsonRpc.getBody(method, params));
       } else {

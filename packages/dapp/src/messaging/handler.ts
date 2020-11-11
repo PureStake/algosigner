@@ -2,6 +2,7 @@ import { OnMessageListener } from './types';
 import { RequestErrors } from '@algosigner/common/types';
 
 export class OnMessageHandler {
+  /* eslint-disable-next-line @typescript-eslint/ban-types */
   static promise(resolve: Function, reject: Function): OnMessageListener {
     return (event) => {
       if (event.data.error) {

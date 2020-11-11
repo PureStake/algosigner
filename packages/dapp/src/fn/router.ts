@@ -11,16 +11,17 @@ import { MessageApi } from '../messaging/api';
 import { Task } from './task';
 
 export class Router {
+  /* eslint-disable-next-line @typescript-eslint/ban-types */
   handler: Function;
   constructor() {
     this.handler = this.default;
     window.addEventListener('message', (event) => {
-      var d = event.data;
+      const d = event.data;
 
       try {
         if (typeof d === 'string') {
-          let result = JSON.parse(d);
-          let type = Object.prototype.toString.call(result);
+          const result = JSON.parse(d);
+          const type = Object.prototype.toString.call(result);
           if (type === '[object Object]' || type === '[object Array]') {
             // We can display message output here, but as a string object it doesn't match our format and is likely from other sources
           }
@@ -48,7 +49,7 @@ export class Router {
     this.bounce(d);
   }
   bounce(d: any) {
-    let api = new MessageApi();
+    const api = new MessageApi();
     window.postMessage(d, window.location.origin, [api.mc.port2]);
   }
 }

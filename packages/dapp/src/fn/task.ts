@@ -7,6 +7,7 @@ import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
 import { Runtime } from '@algosigner/common/runtime/runtime';
 
 export class Task extends Runtime implements ITask {
+  /* eslint-disable-next-line @typescript-eslint/ban-types */
   static subscriptions: { [key: string]: Function } = {};
 
   connect(): Promise<JsonPayload> {
@@ -52,6 +53,7 @@ export class Task extends Runtime implements ITask {
     return MessageBuilder.promise(JsonRpcMethod.Indexer, params, error);
   }
 
+  /* eslint-disable-next-line @typescript-eslint/ban-types */
   subscribe(eventName: string, callback: Function) {
     Task.subscriptions[eventName] = callback;
   }

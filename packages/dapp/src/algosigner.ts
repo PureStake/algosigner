@@ -6,6 +6,7 @@ class Wrapper {
   private task: Task = new Task();
   private router: Router = new Router();
 
+  /* eslint-disable @typescript-eslint/ban-types */
   public connect: Function = this.task.connect;
   public sign: Function = this.task.sign;
   public send: Function = this.task.send;

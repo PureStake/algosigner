@@ -12,7 +12,7 @@ describe('task tests', () => {
   });
 
   test('connect must call MessageBuilder once', () => {
-    const task = new Task().connect();
+    new Task().connect();
     expect(MessageBuilder.promise).toHaveBeenCalledTimes(1);
   });
 
@@ -24,7 +24,7 @@ describe('task tests', () => {
       to: 'TOACC',
     };
     const error = RequestErrors.None;
-    const task = new Task().sign(transaction, error);
+    new Task().sign(transaction, error);
     expect(MessageBuilder.promise).toHaveBeenLastCalledWith(
       JsonRpcMethod.SignTransaction,
       transaction,

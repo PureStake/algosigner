@@ -16,7 +16,7 @@ export class MessageApi {
   }
 
   send(body: JsonRpcBody, source: MessageSource = MessageSource.DApp) {
-    let msg: MessageBody = {
+    const msg: MessageBody = {
       source: source,
       body: body,
     };
