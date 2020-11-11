@@ -1,6 +1,6 @@
 // import {IClerk} from './interfaces';
 
-// import {MessageBuilder} from '../messaging/builder'; 
+// import {MessageBuilder} from '../messaging/builder';
 
 // import {Transaction,RequestErrors} from '@algosigner/common/types';
 // import {JsonRpcMethod,JsonRpcResponse} from '@algosigner/common/messaging/types';
@@ -16,7 +16,7 @@
 //             error = RequestErrors.InvalidTransactionParams;
 //         }
 //         return MessageBuilder.promise(
-//             JsonRpcMethod.SignTransaction, 
+//             JsonRpcMethod.SignTransaction,
 //             params,
 //             error
 //         );

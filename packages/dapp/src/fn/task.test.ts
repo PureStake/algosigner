@@ -1,10 +1,9 @@
-import {Task} from './task';
-import {MessageBuilder} from '../messaging/builder'; 
-import {RequestErrors} from '@algosigner/common/types';
-import {JsonRpcMethod} from '@algosigner/common/messaging/types';
+import { Task } from './task';
+import { MessageBuilder } from '../messaging/builder';
+import { RequestErrors } from '@algosigner/common/types';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 jest.mock('../messaging/builder');
-
 
 describe('task tests', () => {
   beforeEach(() => {
@@ -20,12 +19,16 @@ describe('task tests', () => {
   test('sign must call MessageBuilder with expected params', () => {
     const transaction = {
       amount: 10,
-      from: "FROMACC",
-      note: "NOTE",
-      to: "TOACC",
-    }
+      from: 'FROMACC',
+      note: 'NOTE',
+      to: 'TOACC',
+    };
     const error = RequestErrors.None;
     const task = new Task().sign(transaction, error);
-    expect(MessageBuilder.promise).toHaveBeenLastCalledWith(JsonRpcMethod.SignTransaction, transaction, error);
+    expect(MessageBuilder.promise).toHaveBeenLastCalledWith(
+      JsonRpcMethod.SignTransaction,
+      transaction,
+      error
+    );
   });
 });
