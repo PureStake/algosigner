@@ -17,6 +17,6 @@ export enum API {
 }
 
 export interface Cache {
-  assets: Record<string, unknown>;
-  accounts: Record<string, unknown>;
+  assets: { [key: string]: any };
+  accounts: { [key: string]: any };
 }

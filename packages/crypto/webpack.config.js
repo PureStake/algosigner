@@ -16,7 +16,7 @@ module.exports = {
     },
     resolve: {
         alias: { "@crypto": srcPath('~/') },
-        extensions: ['.ts', '.tsx', '.js']
+        extensions: ['.ts', '.tsx', '.js'],
     },
     //devtool: 'source-map',
     optimization: {

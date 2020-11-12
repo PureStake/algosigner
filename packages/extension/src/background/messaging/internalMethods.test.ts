@@ -2,7 +2,8 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from './types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
-import algosdk from 'algosdk';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
 
 jest.mock('../encryptionWrap');
 

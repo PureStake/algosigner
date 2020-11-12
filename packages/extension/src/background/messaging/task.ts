@@ -1,4 +1,5 @@
-import algosdk from 'algosdk';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
 
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';

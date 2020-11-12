@@ -1,4 +1,3 @@
-// import { generateAccount, secretKeyToMnemonic } from 'algosdk';
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';

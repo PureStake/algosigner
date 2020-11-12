@@ -1,6 +1,7 @@
 import { Settings } from '../config';
 import { API, Cache, Ledger } from '../messaging/types';
-import algosdk from 'algosdk';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
 
 export function getAlgod(ledger: Ledger) {
   const params = Settings.getBackendParams(ledger, API.Algod);

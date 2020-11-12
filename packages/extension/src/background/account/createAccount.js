@@ -1,4 +1,5 @@
-import algosdk from 'algosdk';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
 
 export default function createNewAccount() {
   let keys = algosdk.generateAccount();

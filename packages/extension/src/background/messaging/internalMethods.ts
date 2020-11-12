@@ -10,7 +10,8 @@ import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from '../transaction/actions';
-import algosdk from 'algosdk';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
 
 const session = new Session();
 
