@@ -10,10 +10,10 @@ module.exports = {
     headless: false,
     //slowMo: 50, // For watching tests more closely in debugging
     args: [
-      `--no-sandbox`, 
+      `--no-sandbox`,
       //`--no-sandbox-and-elevated`, //For Windows
       `--disable-extensions-except=${srcPath('dist')}`,
-      `--load-extension=${srcPath('dist')}`
-    ]
-  }
-}
+      `--load-extension=${srcPath('dist')}`,
+    ],
+  },
+};

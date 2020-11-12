@@ -12,7 +12,6 @@ import { StoreContext } from 'services/StoreContext';
 import background from 'assets/background.png';
 import walletLock from 'assets/wallet-lock.png';
 
-
 const SetPassword: FunctionalComponent = () => {
   const [pwd, setPwd] = useState<string>('');
   const [confirmPwd, setConfirmPwd] = useState<string>('');

@@ -6,3 +6,4 @@
 packages/crypto
 packages/common
 **/tsconfig.json
+.github
