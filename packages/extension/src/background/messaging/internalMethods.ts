@@ -2,7 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Task } from './task';
-import { API, Backend, Cache, Ledger } from './types';
+import { API, Cache, Ledger } from './types';
 import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
@@ -10,10 +10,11 @@ import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from '../transaction/actions';
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 const session = new Session();
 
+/* eslint-disable @typescript-eslint/ban-types */
 export class InternalMethods {
   private static _encryptionWrap: encryptionWrap | undefined;
 
@@ -27,20 +28,20 @@ export class InternalMethods {
   }
 
   private static safeWallet(wallet: any) {
-    let safeWallet: { TestNet: any[]; MainNet: any[] } = {
+    const safeWallet: { TestNet: any[]; MainNet: any[] } = {
       TestNet: [],
       MainNet: [],
     };
 
     for (var i = 0; i < wallet.TestNet.length; i++) {
-      const { address, name } = wallet['TestNet'][i];
+      const { address } = wallet['TestNet'][i];
       safeWallet.TestNet.push({
         address: address,
         name: wallet.TestNet[i].name,
       });
     }
     for (var i = 0; i < wallet.MainNet.length; i++) {
-      const { address, name } = wallet['MainNet'][i];
+      const { address } = wallet['MainNet'][i];
       safeWallet.MainNet.push({
         address: address,
         name: wallet.MainNet[i].name,
@@ -51,7 +52,7 @@ export class InternalMethods {
 
   // Checks if an address is a valid user account for a given ledger.
   public static checkValidAccount(address: string, ledger: Ledger) {
-    for (var i = session.wallet[ledger].length - 1; i >= 0; i--) {
+    for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
       if (session.wallet[ledger][i].address === address) return true;
     }
     return false;
@@ -152,17 +153,17 @@ export class InternalMethods {
       if ('error' in response) {
         sendResponse(response);
       } else {
-        let wallet = this.safeWallet(response);
+        const wallet = this.safeWallet(response);
         // Load Accounts details from Cache
         new ExtensionStorage().getStorage('cache', (storedCache: any) => {
-          let cache: Cache = initializeCache(storedCache);
-          let cachedLedgers = Object.keys(cache.accounts);
+          const cache: Cache = initializeCache(storedCache);
+          const cachedLedgers = Object.keys(cache.accounts);
 
           console.log('cached', cachedLedgers);
-          for (var j = cachedLedgers.length - 1; j >= 0; j--) {
+          for (let j = cachedLedgers.length - 1; j >= 0; j--) {
             const ledger = cachedLedgers[j];
             console.log('cached', cachedLedgers);
-            for (var i = wallet[ledger].length - 1; i >= 0; i--) {
+            for (let i = wallet[ledger].length - 1; i >= 0; i--) {
               if (wallet[ledger][i].address in cache.accounts[ledger]) {
                 wallet[ledger][i].details =
                   cache.accounts[ledger][wallet[ledger][i].address];
@@ -183,8 +184,8 @@ export class InternalMethods {
     request: any,
     sendResponse: Function
   ) {
-    var keys = algosdk.generateAccount();
-    var mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
+    const keys = algosdk.generateAccount();
+    const mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
     sendResponse([mnemonic, keys.addr]);
   }
 
@@ -199,7 +200,7 @@ export class InternalMethods {
       if ('error' in unlockedValue) {
         sendResponse(unlockedValue);
       } else {
-        let newAccount = {
+        const newAccount = {
           address: address,
           mnemonic: mnemonic,
           name: name,
@@ -233,7 +234,7 @@ export class InternalMethods {
         sendResponse(unlockedValue);
       } else {
         // Find address to delete
-        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+        for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
           if (unlockedValue[ledger][i].address === address) {
             unlockedValue[ledger].splice(i, 1);
             break;
@@ -263,8 +264,9 @@ export class InternalMethods {
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
     try {
-      var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
-      var existingAccounts = session.wallet[ledger];
+      const recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic)
+        .addr;
+      const existingAccounts = session.wallet[ledger];
       for (let i = 0; i < existingAccounts.length; i++) {
         if (existingAccounts[i].address === recoveredAccountAddress) {
           throw new Error(`Account already exists in ${ledger} wallet.`);
@@ -312,13 +314,13 @@ export class InternalMethods {
       .accountInformation(address)
       .do()
       .then((res: any) => {
-        let extensionStorage = new ExtensionStorage();
+        const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (storedCache: any) => {
-          let cache: Cache = initializeCache(storedCache, ledger);
+          const cache: Cache = initializeCache(storedCache, ledger);
 
           // Check for asset details saved in storage, if needed
           if ('assets' in res && res.assets.length > 0) {
-            let missingAssets = [];
+            const missingAssets = [];
             for (var i = res.assets.length - 1; i >= 0; i--) {
               const assetId = res.assets[i]['asset-id'];
               if (assetId in cache.assets[ledger]) {
@@ -344,7 +346,7 @@ export class InternalMethods {
           extensionStorage.setStorage('cache', cache, null);
 
           // Add details to session
-          let wallet = session.wallet;
+          const wallet = session.wallet;
           for (var i = wallet[ledger].length - 1; i >= 0; i--) {
             if (wallet[ledger][i].address === address) {
               wallet[ledger][i].details = res;
@@ -362,8 +364,8 @@ export class InternalMethods {
     request: any,
     sendResponse: Function
   ) {
-    let indexer = this.getIndexer(request.body.params.ledger);
-    let txs = indexer.lookupAccountTransactions(request.body.params.address);
+    const indexer = this.getIndexer(request.body.params.ledger);
+    const txs = indexer.lookupAccountTransactions(request.body.params.address);
     if (request.body.params.limit) txs.limit(request.body.params.limit);
     if (request.body.params['next-token'])
       txs.nextToken(request.body.params['next-token']);
@@ -384,14 +386,14 @@ export class InternalMethods {
   ) {
     const assetId = request.body.params['asset-id'];
     const { ledger } = request.body.params;
-    let indexer = this.getIndexer(ledger);
+    const indexer = this.getIndexer(ledger);
     indexer
       .lookupAssetByID(assetId)
       .do()
       .then((res: any) => {
         sendResponse(res);
         // Save asset details in storage if needed
-        let extensionStorage = new ExtensionStorage();
+        const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (cache: any) => {
           if (cache === undefined) cache = new Cache();
           if (!(ledger in cache.assets)) cache.assets[ledger] = {};
@@ -418,8 +420,8 @@ export class InternalMethods {
       req
         .do()
         .then((res: any) => {
-          let newAssets = assets.concat(res.assets);
-          for (var i = newAssets.length - 1; i >= 0; i--) {
+          const newAssets = assets.concat(res.assets);
+          for (let i = newAssets.length - 1; i >= 0; i--) {
             newAssets[i] = {
               asset_id: newAssets[i].index,
               name: newAssets[i]['params']['name'],
@@ -436,7 +438,7 @@ export class InternalMethods {
     }
 
     const { ledger, filter, nextToken } = request.body.params;
-    let indexer = this.getIndexer(ledger);
+    const indexer = this.getIndexer(ledger);
     // Do the search for asset id (if filter value is integer)
     // and asset name and concat them.
     if (
@@ -493,8 +495,8 @@ export class InternalMethods {
     sendResponse: Function
   ) {
     const { ledger, address, passphrase, txnParams } = request.body.params;
-    this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
-    var algod = this.getAlgod(ledger);
+    this._encryptionWrap = new encryptionWrap(passphrase);
+    const algod = this.getAlgod(ledger);
 
     this._encryptionWrap.unlock(async (unlockedValue: any) => {
       if ('error' in unlockedValue) {
@@ -504,16 +506,16 @@ export class InternalMethods {
       let account;
 
       // Find address to send algos from
-      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+      for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
         if (unlockedValue[ledger][i].address === address) {
           account = unlockedValue[ledger][i];
           break;
         }
       }
 
-      var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-      let params = await algod.getTransactionParams().do();
-      let txn = {
+      const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+      const params = await algod.getTransactionParams().do();
+      const txn = {
         ...txnParams,
         fee: params.fee,
         firstRound: params.firstRound,
@@ -528,7 +530,7 @@ export class InternalMethods {
         'Content-Type': 'application/x-binary',
       };
 
-      var transactionWrap = undefined;
+      let transactionWrap = undefined;
       try {
         transactionWrap = getValidatedTxnWrap(txn, txn['type']);
       } catch (e) {

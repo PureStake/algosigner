@@ -1,5 +1,3 @@
-import { Ledger } from '../messaging/types';
-
 export default class Session {
   private _wallet: any;
   private _ledger: any;

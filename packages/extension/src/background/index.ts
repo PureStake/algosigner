@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable */
 const algosdk = require('algosdk');
 import encryptionWrap from './encryptionWrap';
 import createNewAccount from './account/createAccount.js';

@@ -1,8 +1,5 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { OnMessageHandler } from './handler';
-import { extensionBrowser } from '@algosigner/common/chrome';
-import encryptionWrap from '../encryptionWrap';
-import * as utils from '@algosigner/common/utils';
 import { InternalMethods } from './internalMethods';
 import { Task } from './task';
 
@@ -13,6 +10,10 @@ jest.mock('../encryptionWrap', () => {
     return { checkStorage: jest.fn((cb) => cb(true)) };
   });
 });
+
+const noop = () => {
+  // Do nothing
+};
 
 //@ts-ignore
 global.chrome.runtime = {
@@ -35,9 +36,8 @@ test('message from UI goes to internalMethods', () => {
     origin: 'chrome-extension://eecmbplnlbmoeihkjdebklofcmfadjgd',
     url: 'chrome-extension://eecmbplnlbmoeihkjdebklofcmfadjgd/index.html',
   };
-  const sendResponse = () => {};
 
-  OnMessageHandler.handle(request, sender, sendResponse);
+  OnMessageHandler.handle(request, sender, noop);
 
   expect(InternalMethods[JsonRpcMethod.GetSession]).toHaveBeenCalled();
 });
@@ -62,7 +62,6 @@ test('authorization request from dApp goes to public Task methods', () => {
       title: 'https://purestake.github.io/algosigner-dapp-example/',
     },
   };
-  const sendResponse = () => {};
 
   const mockAuthorization = jest.fn();
   const mock = jest.spyOn(Task, 'methods');
@@ -72,7 +71,7 @@ test('authorization request from dApp goes to public Task methods', () => {
     },
   });
 
-  OnMessageHandler.handle(request, sender, sendResponse);
+  OnMessageHandler.handle(request, sender, noop);
 
   expect(mockAuthorization).toHaveBeenCalled();
   mock.mockRestore();

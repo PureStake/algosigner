@@ -15,7 +15,7 @@ export class MessageApi {
     }
   }
   public static send(d: any) {
-    var tab_id = d.originTabID || 0;
+    const tab_id = d.originTabID || 0;
     extensionBrowser.tabs.sendMessage(tab_id, d);
   }
 }

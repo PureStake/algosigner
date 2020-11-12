@@ -20,12 +20,11 @@ import { KeyregTransaction } from './keyregTransaction';
 import { ApplTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import logging from '@algosigner/common/logging';
 
 ///
 // Sign transaction and return.
 ///
-export function getValidatedTxnWrap(txn: object, type: string) {
+export function getValidatedTxnWrap(txn: unknown, type: string) {
   let validatedTxnWrap: BaseValidatedTxnWrap = undefined;
   let error: Error = undefined;
 

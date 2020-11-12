@@ -18,9 +18,9 @@ export default class EncryptionHelpers {
   // Used for data going into the crypto lock components.
   ///
   static stringToUint8ArrayBuffer(rawString: string): ArrayBuffer {
-    var arrBuffer = new ArrayBuffer(rawString.length);
-    var uint8Array = new Uint8Array(arrBuffer);
-    for (var i = 0; i < rawString.length; i++) {
+    const arrBuffer = new ArrayBuffer(rawString.length);
+    const uint8Array = new Uint8Array(arrBuffer);
+    for (let i = 0; i < rawString.length; i++) {
       uint8Array[i] = rawString.charCodeAt(i);
     }
     return arrBuffer;
@@ -41,16 +41,16 @@ export default class EncryptionHelpers {
   // For hex based loading of Uint8Arrays.
   ///
   static hexStringToUint8Array(hexStr: string): Uint8Array {
-    let regexp = /^[0-9a-fA-F]+$/;
+    const regexp = /^[0-9a-fA-F]+$/;
 
     // Validate the object is hex by checking that length is even and the entire string is within the Hexidecimal range.
     if (!(hexStr.length % 2 === 0 && regexp.test(hexStr))) {
       throw new Error(`The provided value is not hexidecimal:${hexStr}`);
     }
 
-    let arrayBuffer = new Uint8Array(hexStr.length / 2);
-    for (var i = 0; i < hexStr.length; i += 2) {
-      var byteValue = parseInt(hexStr.substr(i, 2), 16);
+    const arrayBuffer = new Uint8Array(hexStr.length / 2);
+    for (let i = 0; i < hexStr.length; i += 2) {
+      const byteValue = parseInt(hexStr.substr(i, 2), 16);
       arrayBuffer[i / 2] = byteValue;
     }
     return arrayBuffer;
@@ -60,7 +60,7 @@ export default class EncryptionHelpers {
   // Wapper for hex saving, since only certain fields need modified.
   ///
   static convertEncryptedResultToHex(encryptedValue: Blob) {
-    let returnObject: any = {};
+    const returnObject: any = {};
     Object.entries(encryptedValue).forEach(([key, value]) => {
       if (key === 'salt' || key === 'nonce' || key === 'encryptedObject') {
         returnObject[key] = this.bufferToHex(value);

@@ -1,4 +1,4 @@
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
@@ -13,6 +13,7 @@ import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 
+/* eslint-disable @typescript-eslint/ban-types */
 export class Task {
   private static requests: { [key: string]: any } = {};
   private static authorized_pool: Array<string> = [];
@@ -37,7 +38,7 @@ export class Task {
           resolve(json);
         })
         .catch((error) => {
-          let res: Object = {
+          const res: unknown = {
             message: error.message,
             data: error.data,
           };
@@ -47,8 +48,8 @@ export class Task {
   }
 
   public static build(request: any) {
-    let body = request.body;
-    let method = body.method;
+    const body = request.body;
+    const method = body.method;
 
     // Check if there's a previous request from the same origin
     if (request.originTabID in Task.requests)
@@ -117,8 +118,8 @@ export class Task {
           resolve: Function,
           reject: Function
         ) => {
-          var transactionWrap = undefined;
-          var validationError = undefined;
+          let transactionWrap = undefined;
+          let validationError = undefined;
           try {
             transactionWrap = getValidatedTxnWrap(
               d.body.params,
@@ -158,7 +159,7 @@ export class Task {
           ) {
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            var invalidKeys = [];
+            const invalidKeys = [];
             Object.entries(transactionWrap.validityObject).forEach(
               ([key, value]) => {
                 if (value['status'] === ValidationStatus.Invalid) {
@@ -248,7 +249,7 @@ export class Task {
           const { params } = d.body;
           const conn = Settings.getBackendParams(params.ledger, API.Algod);
           const sendPath = '/v2/transactions';
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
               ...conn.apiKey,
               'Content-Type': 'application/x-binary',
@@ -284,7 +285,7 @@ export class Task {
 
           const contentType = params.contentType ? params.contentType : '';
 
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
               ...conn.apiKey,
               'Content-Type': contentType,
@@ -317,7 +318,7 @@ export class Task {
 
           const contentType = params.contentType ? params.contentType : '';
 
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
               ...conn.apiKey,
               'Content-Type': contentType,
@@ -342,13 +343,13 @@ export class Task {
         // Accounts
         [JsonRpcMethod.Accounts]: (
           d: any,
-          resolve: Function,
-          reject: Function
+          resolve: Function
+          // reject: Function
         ) => {
           const session = InternalMethods.getHelperSession();
           const accounts = session.wallet[d.body.params.ledger];
-          let res = [];
-          for (var i = 0; i < accounts.length; i++) {
+          const res = [];
+          for (let i = 0; i < accounts.length; i++) {
             res.push({
               address: accounts[i].address,
             });
@@ -361,8 +362,8 @@ export class Task {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
           const { responseOriginTabID } = d.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           extensionBrowser.windows.remove(auth.window_id);
           Task.authorized_pool.push(message.origin);
@@ -377,8 +378,8 @@ export class Task {
         // authorization-deny
         [JsonRpcMethod.AuthorizationDeny]: (d) => {
           const { responseOriginTabID } = d.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           auth.message.error = {
             message: RequestErrors.NotAuthorized,
@@ -395,19 +396,19 @@ export class Task {
         // sign-allow
         [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID } = request.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           const {
             from,
-            to,
-            fee,
-            amount,
-            firstRound,
-            lastRound,
+            // to,
+            // fee,
+            // amount,
+            // firstRound,
+            // lastRound,
             genesisID,
-            genesisHash,
-            note,
+            // genesisHash,
+            // note,
           } = message.body.params.transaction;
 
           let ledger;
@@ -420,14 +421,7 @@ export class Task {
               break;
           }
 
-          const params = Settings.getBackendParams(ledger, API.Algod);
-          const algod = new algosdk.Algodv2(
-            params.apiKey,
-            params.url,
-            params.port
-          );
-
-          let context = new encryptionWrap(passphrase);
+          const context = new encryptionWrap(passphrase);
           context.unlock(async (unlockedValue: any) => {
             if ('error' in unlockedValue) {
               sendResponse(unlockedValue);
@@ -439,18 +433,18 @@ export class Task {
             let account;
 
             // Find address to send algos from
-            for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+            for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
               if (unlockedValue[ledger][i].address === from) {
                 account = unlockedValue[ledger][i];
                 break;
               }
             }
 
-            var recoveredAccount = algosdk.mnemonicToSecretKey(
+            const recoveredAccount = algosdk.mnemonicToSecretKey(
               account.mnemonic
             );
 
-            let txn = { ...message.body.params.transaction };
+            const txn = { ...message.body.params.transaction };
 
             Object.keys({ ...message.body.params.transaction }).forEach(
               (key) => {
@@ -477,7 +471,7 @@ export class Task {
                 );
               }
               if ('appArgs' in txn) {
-                var tempArgs = [];
+                const tempArgs = [];
                 txn.appArgs.forEach((element) => {
                   logging.log(element);
                   tempArgs.push(Uint8Array.from(Buffer.from(element)));
@@ -487,8 +481,11 @@ export class Task {
             }
 
             try {
-              let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
-              let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+              const signedTxn = algosdk.signTransaction(
+                txn,
+                recoveredAccount.sk
+              );
+              const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
               message.response = {
                 txID: signedTxn.txID,
@@ -504,10 +501,13 @@ export class Task {
           });
           return true;
         },
-        [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
+        [JsonRpcMethod.SignDeny]: (
+          request: any
+          // sendResponse: Function
+        ) => {
           const { responseOriginTabID } = request.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           auth.message.error = {
             message: RequestErrors.NotAuthorized,

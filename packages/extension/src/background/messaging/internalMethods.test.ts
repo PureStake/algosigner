@@ -2,7 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from './types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 jest.mock('../encryptionWrap');
 
@@ -441,7 +441,7 @@ describe('algosdk methods', () => {
     const fooSpy = jest.spyOn(algosdk, 'Indexer');
     fooSpy.mockImplementationOnce(() => {
       return {
-        lookupAssetByID: (assetId) => {
+        lookupAssetByID: () => {
           return {
             do: () =>
               new Promise((resolve) => {

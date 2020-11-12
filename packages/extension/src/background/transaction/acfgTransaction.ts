@@ -1,6 +1,5 @@
 import { IAssetConfigTx } from '@algosigner/common/interfaces/acfg';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import { InvalidTransactionStructure } from '../../errors/validation';
 
 ///
 // Mapping, validation and error checking for acfg transactions prior to sign.

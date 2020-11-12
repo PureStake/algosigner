@@ -1,12 +1,11 @@
 import { getValidatedTxnWrap } from './actions';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import { AssetConfigTransaction } from './acfgTransaction';
 import { AssetDestroyTransaction } from './acfgDestroyTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
 
 test('Validate build of pay transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'pay',
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     to: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
@@ -19,12 +18,12 @@ test('Validate build of pay transaction', () => {
     note: new Uint8Array(0),
   };
 
-  let result = getValidatedTxnWrap(preTransaction, 'pay');
+  const result = getValidatedTxnWrap(preTransaction, 'pay');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
 });
 
 test('Validate build of keygreg transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'keyreg',
     fee: 1000,
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
@@ -39,12 +38,12 @@ test('Validate build of keygreg transaction', () => {
     note: new Uint8Array(0),
   };
 
-  let result = getValidatedTxnWrap(preTransaction, 'keyreg');
+  const result = getValidatedTxnWrap(preTransaction, 'keyreg');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
 });
 
 test('Validate build of acfg transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'acfg',
     fee: 1000,
     assetIndex: 1,
@@ -56,13 +55,13 @@ test('Validate build of acfg transaction', () => {
     note: new Uint8Array(0),
   };
 
-  let result = getValidatedTxnWrap(preTransaction, 'acfg');
+  const result = getValidatedTxnWrap(preTransaction, 'acfg');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetDestroyTransaction).toBe(true);
 });
 
 test('Validate build of afrz transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'afrz',
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     freezeAccount: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
@@ -76,13 +75,13 @@ test('Validate build of afrz transaction', () => {
     note: new Uint8Array(0),
   };
 
-  let result = getValidatedTxnWrap(preTransaction, 'afrz');
+  const result = getValidatedTxnWrap(preTransaction, 'afrz');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetFreezeTransaction).toBe(true);
 });
 
 test('Validate build of axfer transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'axfer',
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     to: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
@@ -96,20 +95,20 @@ test('Validate build of axfer transaction', () => {
     note: new Uint8Array(0),
   };
 
-  let result = getValidatedTxnWrap(preTransaction, 'axfer');
+  const result = getValidatedTxnWrap(preTransaction, 'axfer');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetTransferTransaction).toBe(true);
 });
 
 test('Validate build of transaction', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'faketype',
   };
   expect(() => getValidatedTxnWrap(preTransaction, 'faketype')).toThrow();
 });
 // Check missing fields from transactions in all types
 test('Validate pay transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'pay',
   };
   let errorMessage: string = undefined;
@@ -128,7 +127,7 @@ test('Validate pay transaction required fields', () => {
   expect(errorMessage).toContain('amount');
 });
 test('Validate clawback transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'axfer',
   };
   let errorMessage: string = undefined;
@@ -148,7 +147,7 @@ test('Validate clawback transaction required fields', () => {
   expect(errorMessage).toContain('assetRevocationTarget');
 });
 test('Validate accept transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'axfer',
   };
   let errorMessage: string = undefined;
@@ -166,7 +165,7 @@ test('Validate accept transaction required fields', () => {
   expect(errorMessage).toContain('assetIndex');
 });
 test('Validate create transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'acfg',
   };
   let errorMessage: string = undefined;
@@ -185,7 +184,7 @@ test('Validate create transaction required fields', () => {
   expect(errorMessage).toContain('assetDecimals');
 });
 test('Validate destroy transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'acfg',
   };
   let errorMessage: string = undefined;
@@ -204,7 +203,7 @@ test('Validate destroy transaction required fields', () => {
   expect(errorMessage).toContain('assetIndex');
 });
 test('Validate modify asset transaction required fields', () => {
-  let preTransaction = {
+  const preTransaction = {
     type: 'acfg',
   };
   let errorMessage: string = undefined;

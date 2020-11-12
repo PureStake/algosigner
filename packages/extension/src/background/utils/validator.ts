@@ -1,9 +1,10 @@
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 import { getSupportedLedgers } from '@algosigner/common/types/ledgers';
 
 ///
 // Validation Status
 ///
+/* eslint-disable no-unused-vars */
 export enum ValidationStatus {
   Valid = 0, // Field is valid or not one of the validated fields
   Invalid = 1, // Field value is invalid and should not be used

@@ -10,9 +10,8 @@ import { logging } from '@algosigner/common/logging';
 ///
 // Handles the setting and retrieval of data into the browser storage.local location.
 ///
+/* eslint-disable @typescript-eslint/ban-types */
 export class ExtensionStorage {
-  constructor() {}
-
   ///
   // Takes an objectName and saveObject and sets or overrides a storage.local instance of this combo.
   // Callback: Callback will return a boolean of true if storage sets without error or false otherwise.
@@ -23,7 +22,7 @@ export class ExtensionStorage {
     callback: Function
   ) {
     extensionBrowser.storage.local.set({ [objectName]: saveObject }, () => {
-      let isSuccessful = !extensionBrowser.runtime.lastError;
+      const isSuccessful = !extensionBrowser.runtime.lastError;
       if (!isSuccessful) {
         logging.log(
           extensionBrowser.runtime.lastError &&

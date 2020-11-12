@@ -16,6 +16,7 @@ import EncryptionHelpers from './utils/encryptionHelpers';
 // Wrapper for the crypto functionality used in AlgoSigner.
 // Allows for locking and unlocking the extention account wallet.
 ///
+/* eslint-disable @typescript-eslint/ban-types*/
 export default class EncryptionWrap {
   private _walletName: string; // Name of wallet to be modified.
   private _localEncryption: SecureStorageContext; // The wrap method of encryption.
@@ -43,7 +44,7 @@ export default class EncryptionWrap {
         .then((encryptedValue) => {
           let index = 0;
           let singleRecord: any = undefined;
-          let multiRecords: any = [];
+          const multiRecords: any = [];
 
           if (!Array.isArray(encryptedValue)) {
             singleRecord = EncryptionHelpers.convertEncryptedResultToHex(
@@ -96,7 +97,7 @@ export default class EncryptionWrap {
             return;
           }
 
-          let blob = new Blob(
+          const blob = new Blob(
             EncryptionHelpers.hexStringToUint8Array(result.encryptedObject),
             EncryptionHelpers.hexStringToUint8Array(result.salt),
             EncryptionHelpers.hexStringToUint8Array(result.nonce),
@@ -108,7 +109,7 @@ export default class EncryptionWrap {
             .unlock(blob)
             .then((decryptedObject) => {
               if (Array.isArray(decryptedObject)) {
-                let returnValues: any = [];
+                const returnValues: any = [];
 
                 decryptedObject.forEach((value) => {
                   returnValues.push(

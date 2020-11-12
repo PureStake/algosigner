@@ -31,9 +31,9 @@ export default class AssetsDetailsHelper {
       return;
     }
 
-    let extensionStorage = new ExtensionStorage();
+    const extensionStorage = new ExtensionStorage();
     extensionStorage.getStorage('cache', (storedCache: any) => {
-      let cache: Cache = initializeCache(storedCache, ledger);
+      const cache: Cache = initializeCache(storedCache, ledger);
 
       let assetId = this.assetsToAdd[ledger][0];
       while (assetId in cache.assets[ledger]) {
@@ -45,7 +45,7 @@ export default class AssetsDetailsHelper {
         assetId = this.assetsToAdd[ledger][0];
       }
 
-      let indexer = InternalMethods.getIndexer(ledger);
+      const indexer = InternalMethods.getIndexer(ledger);
       indexer
         .lookupAssetByID(assetId)
         .do()

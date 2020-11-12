@@ -1,6 +1,5 @@
 import { MessageApi } from './api';
 import { Task } from './task';
-import { extensionBrowser } from '@algosigner/common/chrome';
 import encryptionWrap from '../encryptionWrap';
 import { isFromExtension } from '@algosigner/common/utils';
 import { RequestErrors } from '@algosigner/common/types';

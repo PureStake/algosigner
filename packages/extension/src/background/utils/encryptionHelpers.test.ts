@@ -2,7 +2,7 @@ import EncryptionHelpers from './encryptionHelpers';
 import { Blob } from '@algosigner/crypto/src/secureStorageContext';
 
 test('Validate blob object component conversion to hex', () => {
-  let blob = new Blob(
+  const blob = new Blob(
     EncryptionHelpers.hexStringToUint8Array(
       'e43f3d9951dcc01ff1dff199aac725bd4d'
     ),
@@ -16,7 +16,7 @@ test('Validate blob object component conversion to hex', () => {
     1
   );
 
-  let reHexed = EncryptionHelpers.convertEncryptedResultToHex(blob);
+  const reHexed = EncryptionHelpers.convertEncryptedResultToHex(blob);
   expect(reHexed['salt']).toBe(
     'a835cd8689ccd191c3f0cbaf3cf66aab4af1c017c5a8e37a82b3b001c7d5c3e6'
   );
@@ -27,20 +27,20 @@ test('Validate blob object component conversion to hex', () => {
 });
 
 test('Validate hex conversion to Uint8Array conversion', () => {
-  let uint8 = EncryptionHelpers.hexStringToUint8Array('0102030405');
+  const uint8 = EncryptionHelpers.hexStringToUint8Array('0102030405');
   expect(uint8).toStrictEqual(new Uint8Array([1, 2, 3, 4, 5]));
 });
 
 test('Validate Uint8Array to string conversion', () => {
-  let stringFromUint8Array = EncryptionHelpers.arrayBufferToString(
+  const stringFromUint8Array = EncryptionHelpers.arrayBufferToString(
     new Uint8Array([97, 98, 99, 100, 101])
   );
   expect(stringFromUint8Array).toBe('abcde');
 });
 
 test('Validate string to Uint8Array conversion', () => {
-  let uint8ArrayBuffer = EncryptionHelpers.stringToUint8ArrayBuffer('abcde');
-  let mapped = Array.prototype.map.call(
+  const uint8ArrayBuffer = EncryptionHelpers.stringToUint8ArrayBuffer('abcde');
+  const mapped = Array.prototype.map.call(
     new Uint8Array(uint8ArrayBuffer),
     (x) => x
   );
@@ -48,6 +48,8 @@ test('Validate string to Uint8Array conversion', () => {
 });
 
 test('Validate Uint8Array to hex conversion', () => {
-  let hexValue = EncryptionHelpers.bufferToHex(new Uint8Array([1, 2, 3, 4, 5]));
+  const hexValue = EncryptionHelpers.bufferToHex(
+    new Uint8Array([1, 2, 3, 4, 5])
+  );
   expect(hexValue).toBe('0102030405');
 });

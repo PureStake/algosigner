@@ -1,6 +1,6 @@
 import { Settings } from '../config';
 import { API, Cache, Ledger } from '../messaging/types';
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 export function getAlgod(ledger: Ledger) {
   const params = Settings.getBackendParams(ledger, API.Algod);

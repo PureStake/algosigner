@@ -7,7 +7,7 @@ import { InvalidTransactionStructure } from '../../errors/validation';
 ///
 export class BaseValidatedTxnWrap {
   transaction: any = undefined;
-  validityObject: object = {};
+  validityObject: Record<string, unknown> = {};
   txDerivedTypeText: string;
 
   constructor(
@@ -16,8 +16,8 @@ export class BaseValidatedTxnWrap {
     requiredParamsSet: Array<string> = undefined
   ) {
     this.transaction = new txnType();
-    var missingFields = [];
-    var extraFields = [];
+    const missingFields = [];
+    const extraFields = [];
 
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
@@ -32,7 +32,7 @@ export class BaseValidatedTxnWrap {
 
     // Check required values in the case where one of a set is required.
     if (requiredParamsSet && requiredParamsSet.length > 0) {
-      var foundValue = false;
+      let foundValue = false;
       requiredParamsSet.forEach((key) => {
         if (params[key] !== undefined && params[key] !== null) {
           foundValue = true;
@@ -56,7 +56,7 @@ export class BaseValidatedTxnWrap {
 
     // Check the properties included versus the interface. Reject transactions with unknown fields.
 
-    for (let prop in params) {
+    for (const prop in params) {
       if (!Object.keys(this.transaction).includes(prop)) {
         extraFields.push(prop);
       } else {
