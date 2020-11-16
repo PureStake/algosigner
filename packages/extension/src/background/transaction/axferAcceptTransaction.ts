@@ -20,6 +20,7 @@ class AssetAcceptTx implements IAssetAcceptTx {
     lease?: any = null;
     reKeyTo?: any = null;
     amount?: number = null;
+    flatFee?: any = null;
 }
 
 ///

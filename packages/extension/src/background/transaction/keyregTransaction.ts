@@ -21,6 +21,7 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
     group?: any = null;
     lease?: any = null;
     reKeyTo?: any = null;
+    flatFee?: any = null;
 }
 
 ///

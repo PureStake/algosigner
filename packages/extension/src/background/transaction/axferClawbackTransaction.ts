@@ -21,6 +21,7 @@ class AssetClawbackTx implements IAssetClawbackTx {
     lease?: any = null;
     reKeyTo?: any = null;
     assetRevocationTarget: string = undefined;
+    flatFee?: any = null;
 }
 
 ///
