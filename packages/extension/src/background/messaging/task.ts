@@ -424,7 +424,7 @@ export class Task {
                         if(txn && txn.type == 'appl'){
                             if('appApprovalProgram' in txn){
                                 try {
-                                    txn.appApprovalProgram = Uint8Array.from(Buffer.from(txn.appApprovalProgram));
+                                    txn.appApprovalProgram = Uint8Array.from(Buffer.from(txn.appApprovalProgram,'base64'));
                                 }
                                 catch{
                                     message.error = 'Error trying to parse appApprovalProgram into a Uint8Array value.';
@@ -432,7 +432,7 @@ export class Task {
                             }
                             if('appClearProgram' in txn){
                                 try {
-                                    txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram));
+                                    txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram,'base64'));
                                 }
                                 catch{
                                     message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
@@ -443,7 +443,7 @@ export class Task {
                                     var tempArgs = [];
                                     txn.appArgs.forEach(element => {
                                         logging.log(element);
-                                        tempArgs.push(Uint8Array.from(Buffer.from(element)));
+                                        tempArgs.push(Uint8Array.from(Buffer.from(element,'base64')));
                                     });
                                     txn.appArgs = tempArgs;
                                 }
