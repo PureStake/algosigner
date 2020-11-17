@@ -10,6 +10,7 @@ import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from "../transaction/actions";
+import { buildTransaction } from '../utils/transactionBuilder';
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -487,7 +488,8 @@ export class InternalMethods {
                 // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
                 let signedTxn;
                 try {
-                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                    let builtTx = buildTransaction(txn);
+                    signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
                 } catch(e) {
                     sendResponse({error: e.message});
                     return;
@@ -504,7 +506,8 @@ export class InternalMethods {
             } else {
                 let signedTxn;
                 try {
-                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                    let builtTx = buildTransaction(txn);
+                    signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
                 } catch(e) {
                     sendResponse({error: e.message});
                     return;

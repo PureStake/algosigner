@@ -18,7 +18,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "algosdk": "^1.7.2"
+    "algosdk": "1.7.2"
   },
   "scripts": {
     "build": "npm run clean && npm run bundle && npm run copy",

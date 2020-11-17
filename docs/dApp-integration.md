@@ -149,7 +149,7 @@ In the following example, _txParams_ is set by a previous call to _AlgoSigner.al
 let txn = {
    from: accounts[0].address,
    to: 'PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4',
-   fee: txParams['min-fee'],
+   fee: txParams['fee'],
    type: 'pay',
    amount: amount,
    firstRound: txParams['last-round'],

@@ -16,6 +16,7 @@ export class ApplTx implements IApplTx {
     group?: any = null;
     lease?: any = null;
     reKeyTo?: any = null;
+    flatFee?: any = null;
 
     appIndex?: any = null;
     appOnComplete?: any = null;
