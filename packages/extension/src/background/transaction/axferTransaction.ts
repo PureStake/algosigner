@@ -20,6 +20,7 @@ class AssetTransferTx implements IAssetTransferTx {
     group?: any = null;
     lease?: any = null;
     reKeyTo?: any = null;
+    flatFee?: any = null;
 }
 
 ///

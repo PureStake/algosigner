@@ -17,6 +17,7 @@ class AssetDestroyTx implements IAssetDestroyTx {
     group?: any = null;
     lease?: any = null;
     reKeyTo?: any = null;
+    flatFee?: any = null;
 };
 
 ///

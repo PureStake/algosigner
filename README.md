@@ -1,6 +1,6 @@
  # ![AlgoSigner](media/algosigner-wallet-banner-3.png)
 
-An open-source Algorand wallet browser extension that permits dApp communication for signing Algorand transactions - available for Chrome initially. 
+An open-source Algorand wallet browser extension that permits dApp communication for signing Algorand transactions — available for Chrome initially. 
 
 ## Chrome Extension Store
 The extension is available on the [Chrome Extension Store](https://chrome.google.com/webstore/detail/algosigner/kmmolakhbgdlpkjkcjkebenjheonagdm)
@@ -9,36 +9,23 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it. 
 
-## 1.1.0 Update 
-The latest release introduces several key new features for users and dApp developers.
+## 1.2.0 Update 
+The latest release brings: 
 
-### Asset Support in the UI
-Assets have always been displayed in the UI, now you may find new assets, opt-in to them, and transfer them right in the UI. 
+- Support for dApps to submit Atomic (group) transactions
+- Support for dApps to submit application creation transactions
+- Change to how fee's and flat fees are handled in the UI and in the signing step
+- Minor UI updates (block duplicate accounts, block multiple asset optins, network selector properly closing)
 
-### Asset Support for dApps
-dApps were previously able to send in basic asset transactions to be signed by AlgoSigner. Support has now been added for all asset transaction types with accompanying UI notices. 
+### Atomic Transactions
+* Grouped transactions intended for atomic transaction functionality need to be grouped outside of AlgoSigner, but can be signed individually.
+* The grouped transactions need to have their binary components concatenated to be accepted in the AlgoSigner send method.
+* An example of this can be seen in the [existing sample dApp group test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
 
-* Clawback added
-* Destroy capability allowed for `acfg`
-* Close-to supported in `axfer`
+## Roadmap
+The next feature release will bring support for dApps to submit multi-signature transactions for signing. Planned for mid-late December. 
 
-### Application Transaction Support for dApps 
-dApp developers may now send in application transactions to be signed. This support is new and subject to change in subsequent releases. Please read the updated [dApp Integration Guide](docs/dApp-integration.md) for instructions on working with these transaction types. 
-
-### Additional dApp support
-
-* Support has been enabled for `close-to` transactions. 
-* Transaction validation errors will now provide more detailed messages on causes
-
-### UI Transactions
-With the addition of support for `close-to` transactions, new warning messages will display in the UI when dApps send in pay transactions that are potentially dangerous. 
-
-The signing window will also now reflect better the ledger the dApp is asking the user to sign a transaction for. A new label is present in dark blue for Testnet and orange for Mainnet
-
-### Sample dApp and dApp Tests
-
-* Signing app - New sample dApp for [demonstrating transaction signing](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html)
-* Updates to the [existing sample dApp](https://purestake.github.io/algosigner-dapp-example/) demonstrating pending lookup and asset search
+Following on will be a feature release permitting the addition and configuration of networks, planned for early 2021. 
 
 ## Decentralized Applications
 As a browser extension, AlgoSigner opens the door for developers to build DeFi applications on Algorand by providing a secure way to add transaction capabilities. This enables developers to initiate transactions and accept ALGOs seamlessly, without jeopardizing the security of their users’ secrets.
@@ -54,10 +41,11 @@ DApp users can trust AlgoSigner to:
 
 - Read [dApp Integration Guide](docs/dApp-integration.md)
 - Read [Sample dApp project](https://github.com/PureStake/algosigner-dapp-example)
+- Try [Sample Signing Scenarios](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html)
 - Try [Interactive dApp](https://purestake.github.io/algosigner-dapp-example/)
 
 ## Project Structure
-There are multiple packages in the project that combine to build the overall extension. Each component package is designed so that it's functionality doesn't require the rebuild of other packages and will be combined to build the deployable extension. 
+There are multiple packages in the project that combine to build the overall extension. Each component package is designed so that its functionality doesn't require the rebuild of other packages and will be combined to build the deployable extension. 
 
 *https://github.com/PureStake*
 * algosigner->							// Base project folder
@@ -69,7 +57,7 @@ There are multiple packages in the project that combine to build the overall ext
         * extension->                   // Extension definition and core files
 		* storage ->					// Handles saving and loading of account information 
 		* test-project ->				// Test wrapper for the package files
-        * ui->                          // Front end application for interaction within the extension interface	\	
+        * ui->                          // Front end application for interaction within the extension interface
 	* manifest.json						// Extension definition file
 	* package.json						// Algosigner package, required packages, and scripts to build the project
 	* readme.md							// Project overview
@@ -83,26 +71,26 @@ The ./dist/ folder is the only required folder to install the extension yourself
 
 - Clone the repository locally
 - Run `npm install` in the root folder
-- Run `npm run build` in the root folder - this creates the `dist` folder
-- Open Chrome Browser - go to `chrome://extensions/`
+- Run `npm run build` in the root folder — this creates the `dist` folder
+- Open Chrome browser — go to `chrome://extensions/`
 - Enable developer mode
 - Select `Load Unpacked` and choose the just created `dist` folder
 - AlgoSigner is now installed and available 
 
 ## Install from zip
-The latest built zip is available for download on the releases page - 
+The latest built zip is available for download on the releases page — 
 
-Note - this is not recommended for non-developers and never for production purposes, extreme caution should be taken with installing any wallet. 
+NoteL this is not recommended for non-developers and should never be used for production purposes. Extreme caution should be taken when installing any wallet. 
 
 ### Prerequisites
-- Installation of the Chrome Browser
+- Installation of the Chrome browser
 - File unzip program
 - Local file system write permissions
 - Access to set developer mode in Chrome and install unpacked extensions
 
 ### Process
 - Unzip `AlgoSigner.zip` file to local file system
-- Open Chrome Browser and go to `chrome://extensions/`
+- Open Chrome browser and go to `chrome://extensions/`
 - Enable developer mode
 - Select `Load Unpacked` and choose the unzipped `dist` folder
 - AlgoSigner is now installed and available 

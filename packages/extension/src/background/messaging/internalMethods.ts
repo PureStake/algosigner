@@ -10,6 +10,7 @@ import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from "../transaction/actions";
+import { buildTransaction } from '../utils/transactionBuilder';
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -234,9 +235,15 @@ export class InternalMethods {
         this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
         try {
-          var recoveredAccount = algosdk.mnemonicToSecretKey(mnemonic); 
+          var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr; 
+          var existingAccounts = session.wallet[ledger];
+          for (let i = 0; i < existingAccounts.length; i++) {
+              if (existingAccounts[i].address === recoveredAccountAddress) {
+                throw new Error(`Account already exists in ${ledger} wallet.`);
+              }
+          }
           var newAccount = {
-            address: recoveredAccount.addr,
+            address: recoveredAccountAddress,
             mnemonic: mnemonic,
             name: name
           };
@@ -481,7 +488,8 @@ export class InternalMethods {
                 // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
                 let signedTxn;
                 try {
-                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                    let builtTx = buildTransaction(txn);
+                    signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
                 } catch(e) {
                     sendResponse({error: e.message});
                     return;
@@ -498,7 +506,8 @@ export class InternalMethods {
             } else {
                 let signedTxn;
                 try {
-                    signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                    let builtTx = buildTransaction(txn);
+                    signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
                 } catch(e) {
                     sendResponse({error: e.message});
                     return;

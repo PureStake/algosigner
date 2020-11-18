@@ -1,6 +1,6 @@
 {
   "name": "algorand-test-project",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Repository for tests",
   "dependencies": {},
   "devDependencies": {
@@ -16,7 +16,6 @@
     "basic-dapp": "jest --group=basic-dapp",
     "basic-ui": "jest --group=basic-ui",
     "app-dapp": "jest --group=app-dapp",
-    "manual-dapp": "jest --group=manual-dapp --runInBand",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && echo \"Test info at: ./test-project/coverage/locv-report/index.html\"",
     "test": "jest --maxWorkers=1 --group=-manual-dapp"
   }
