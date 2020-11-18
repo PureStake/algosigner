@@ -319,6 +319,7 @@ describe('Basic dApp Setup and GET Tests', () => {
 
 })
 
+// Tests used a pre-existing app, moving to create/opt-in/call/destroy 
 describe('Opt-in', () => {
     
     // let applicationOptInBlob
@@ -542,9 +543,15 @@ describe('Create, Destroy Application', () => {
 
     // Same program as used in previous, swapped address for testAddress, pre-compiled
     var programCompiled = {
-        "hash": "JAAPR5QA6TVOQMM2DKA62OZJZBYS4H4OFUE3FN4Z5BMPL7WCCFXTCUPTTE",
-        "result": "AiAFAAECBAUmAiCtqJPNhdmlqplmoe8SVDuIp/lTIJLhXYxnXPhDDAkKBAdjb3VudGVyMRkiEkAAHjEZIxJAADYxGSQSQAAxMRklEkAAMTEZIQQSQAAkACgxABJAABgpSWQjCEk1AGciKWIjCDUBIik0AWY0AEMjQyNDKDEAEkMoMQASQw=="
+        "hash": "WPK4GMSGXWB2OKFGDY3GKXODYGJTVOBTO7F3WZJJDNDA5VOWVXFYBTEUBA",
+        "result": "AiAFAAECBAUmAyCtqJPNhdmlqplmoe8SVDuIp/lTIJLhXYxnXPhDDAkKBAdjb3VudGVyCXRpbWVzdGFtcDEZIhJAAB4xGSMSQAA8MRkkEkAANzEZJRJAADcxGSEEEkAAKgAoMQASQAAeKUlkIwhJNQBnIiliIwg1ASIpNAFmIio2GgBmNABDI0MjQygxABJDKDEAEkM="
     }
+    
+    // First version from sample
+    // {
+    //     "hash": "JAAPR5QA6TVOQMM2DKA62OZJZBYS4H4OFUE3FN4Z5BMPL7WCCFXTCUPTTE",
+    //     "result": "AiAFAAECBAUmAiCtqJPNhdmlqplmoe8SVDuIp/lTIJLhXYxnXPhDDAkKBAdjb3VudGVyMRkiEkAAHjEZIxJAADYxGSQSQAAxMRklEkAAMTEZIQQSQAAkACgxABJAABgpSWQjCEk1AGciKWIjCDUBIik0AWY0AEMjQyNDKDEAEkMoMQASQw=="
+    // }
 
     // Same clear as used in previous, just returns `
     var clearProgramCompiled = {
@@ -555,11 +562,15 @@ describe('Create, Destroy Application', () => {
     // Variables to hold tx blobs between tests
     let applicationCreateBlob
     let applicationDestroyBlob
+    let applicationCallBlob
+    let applicationOptInBlob
+    let applicationCloseBlob
     let applicationId
+    let ts64 
 
     test('Create Application', async () => { 
 
-        console.log(`Starting Appl Create tx`)
+        console.log(`Starting Application Create tx`)
 
         let txn = {
             "type" : "appl",
@@ -594,12 +605,12 @@ describe('Create, Destroy Application', () => {
             
             applicationCreateBlob = localSignedBlob // test section scope
             
-            console.log(`Exiting Appl Opt-in ${localSignedBlob.txID}`)
+            console.log(`Exiting Application Create ${localSignedBlob.txID} by ${testAccountAddress}`)
         }
     })
     
-    test('Post Appl Opt-In Blob', async () => {  
-        console.log(`Posting Appl Create ${applicationCreateBlob.txID}`);
+    test('Post Appl Create Blob', async () => {  
+        console.log(`Posting Appl Create ${applicationCreateBlob.txID} by ${testAccountAddress}`);
         await appPage.waitForTimeout(shortApiTimeout);
 
         getTxId = await postTransaction(applicationCreateBlob, appPage);
@@ -608,21 +619,274 @@ describe('Create, Destroy Application', () => {
             console.log(`Error: ${JSON.stringify(getTxId)}`);
         }
         else {
-            expect(getTxId.txId).toMatch(applicationOptInBlob.txID);
+            expect(getTxId.txId).toMatch(applicationCreateBlob.txID);
             console.log(`Exiting Appl Create ${getTxId.txId}`);
         }
     })
 
-    test('Verify Appl Opt-in Pending Tx', async () => {  
-        console.log(`Verifying Appl Opt-in ${applicationCreateBlob.txID}`)
+    test('Verify Appl Create Pending Tx', async () => {  
+        console.log(`Verifying Appl Create ${applicationCreateBlob.txID} by ${testAccountAddress}`)
         await appPage.waitForTimeout(shortApiTimeout);
 
         let pendingTx = await verifyTransaction(applicationCreateBlob.txID, getParams['last-round'] , appPage)
         
-        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
-        //applicationId = pendingTx["txn"]["
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+        applicationId = pendingTx["application-index"]
         console.log(JSON.stringify(pendingTx))
-        console.log(`Exiting Verify Appl Opt-in ${applicationOptInBlob.txID}`)
+        console.log(`Exiting Verify Appl Create ${applicationCreateBlob.txID}`)
     })
 
+    test('Opt-in to Application', async () => { 
+
+        console.log(`Starting Appl Opt-in tx to ${applicationId} by ${optInAddress}`)
+
+        let txn = {
+            "type" : "appl",
+            "from": optInAddress,
+            "appIndex": applicationId,
+            "appOnComplete": 1,
+            "note": 'App opt-in',
+            "fee": getParams['fee'],
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+        }
+        try {
+            localSignedBlob = await signTransaction(txn, appPage);
+        }
+        catch(e) { console.log(e)}
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+            
+            applicationOptInBlob = localSignedBlob // test section scope
+            
+            console.log(`Exiting Appl Opt-in ${localSignedBlob.txID} to ${applicationId} by ${optInAddress}`)
+        }
+    })
+
+    test('Post Appl Opt-In Blob', async () => {  
+        console.log(`Posting Appl Opt-in ${applicationOptInBlob.txID} to ${applicationId} by ${optInAddress}`);
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(applicationOptInBlob, appPage);
+        
+        if("message" in getTxId) { 
+            console.log(`Error: ${JSON.stringify(getTxId)}`);
+        }
+        else {
+            expect(getTxId.txId).toMatch(applicationOptInBlob.txID);
+            console.log(`Exiting Appl Post Opt-in ${getTxId.txId} to ${applicationId} by ${optInAddress}`);
+        }
+    })
+
+    test('Verify Appl Opt-in Pending Tx', async () => {  
+        console.log(`Verifying Appl Opt-in ${applicationOptInBlob.txID} to ${applicationId} by ${optInAddress}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let pendingTx = await verifyTransaction(applicationOptInBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+        expect(pendingTx["txn"]["txn"]["apid"]).toEqual(applicationId)
+
+        console.log(`Exiting Verify Appl Opt-in ${applicationOptInBlob.txID} to ${applicationId} by ${optInAddress}`)
+    })
+
+    test('Call Application to Update State', async () => { 
+
+            console.log(`Starting Call tx to ${applicationId} by ${optInAddress}`)
+
+            let ts = new Date().toUTCString();
+            let tsBuff = Buffer.from(ts)
+            ts64 = tsBuff.toString('base64')
+
+            let txn = {
+                "type" : "appl",
+                "from": optInAddress,
+                "appIndex": applicationId,
+                "appOnComplete": 0,
+                "appArgs": [ts64],
+                "note": 'App Call',
+                "fee": getParams['fee'],
+                "firstRound": getParams['last-round'],
+                "lastRound": getParams['last-round'] + 1000,
+                "genesisID": getParams['genesis-id'],
+                "genesisHash": getParams['genesis-hash'],
+            }
+            try {
+                localSignedBlob = await signTransaction(txn, appPage);
+            }
+            catch(e) { console.log(e)}
+
+            if("message" in localSignedBlob) { 
+                console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+            }
+            else {
+                expect(localSignedBlob).toHaveProperty("txID");
+                expect(localSignedBlob).toHaveProperty("blob");
+                
+                applicationCallBlob = localSignedBlob // test section scope
+                
+                console.log(`Exiting Appl Call ${localSignedBlob.txID} to ${applicationId} by ${optInAddress}`)
+            }
+        })
+
+        test('Post Appl Call Blob', async () => {  
+            console.log(`Posting Appl Call ${applicationCallBlob.txID} to ${applicationId} by ${optInAddress}`);
+            await appPage.waitForTimeout(shortApiTimeout);
+
+            getTxId = await postTransaction(applicationCallBlob, appPage);
+            
+            if("message" in getTxId) { 
+                console.log(`Error: ${JSON.stringify(getTxId)}`);
+            }
+            else {
+                expect(getTxId.txId).toMatch(applicationCallBlob.txID);
+                console.log(`Exiting Appl Post Call ${getTxId.txId} to ${applicationId} by ${optInAddress}`);
+            }
+        })
+
+        test('Verify Appl Call Pending Tx', async () => {  
+            console.log(`Verifying Appl Call ${applicationCallBlob.txID}`)
+            await appPage.waitForTimeout(shortApiTimeout);
+
+            let pendingTx = await verifyTransaction(applicationCallBlob.txID, getParams['last-round'] , appPage)
+            
+            expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+            expect(pendingTx["txn"]["txn"]["apid"]).toEqual(applicationId)
+            expect(pendingTx["local-state-delta"]).toBeTruthy()
+
+            console.log(`Exiting Verify Appl Call ${applicationCallBlob.txID}`)
+        })
+
+    test('Close Application', async () => { 
+
+            console.log(`Starting Appl Close tx for ${applicationId} by ${optInAddress}`)
+    
+            let txn = {
+                "type" : "appl",
+                "from": optInAddress,
+                "appOnComplete": 2,
+                "appIndex": applicationId,
+                "note": 'Application Close',
+                "fee": getParams['min-fee'],
+                "flatFee": getParams['flatFee'],
+                "firstRound": getParams['last-round'],
+                "lastRound": getParams['last-round'] + 1000,
+                "genesisID": getParams['genesis-id'],
+                "genesisHash": getParams['genesis-hash'],
+            }
+            try {
+                localSignedBlob = await signTransaction(txn, appPage);
+            }
+            catch(e) { console.log(e)}
+    
+            if("message" in localSignedBlob) { 
+                console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+            }
+            else {
+                expect(localSignedBlob).toHaveProperty("txID");
+                expect(localSignedBlob).toHaveProperty("blob");
+                
+                applicationCloseBlob = localSignedBlob // test section scope
+                
+                console.log(`Exiting Appl Opt-in ${localSignedBlob.txID}`)
+            }
+    
+        })
+
+        test('Post Appl Close Blob', async () => {  
+            console.log(`Posting Close Call ${applicationCloseBlob.txID} to ${applicationId} by ${optInAddress}`);
+            await appPage.waitForTimeout(shortApiTimeout);
+
+            getTxId = await postTransaction(applicationCloseBlob, appPage);
+            
+            if("message" in getTxId) { 
+                console.log(`Error: ${JSON.stringify(getTxId)}`);
+            }
+            else {
+                expect(getTxId.txId).toMatch(applicationCloseBlob.txID);
+                console.log(`Exiting Appl Post Close ${getTxId.txId} to ${applicationId} by ${optInAddress}`);
+            }
+        })
+
+        test('Verify Appl Close Pending Tx', async () => {  
+            console.log(`Verifying Appl Close ${applicationCloseBlob.txID}`)
+            await appPage.waitForTimeout(shortApiTimeout);
+
+            let pendingTx = await verifyTransaction(applicationCloseBlob.txID, getParams['last-round'] , appPage)
+            
+            expect(pendingTx["txn"]["txn"]["snd"]).toMatch(optInAddress)
+            expect(pendingTx["txn"]["txn"]["apid"]).toEqual(applicationId)
+
+            console.log(`Exiting Verify Appl Close ${applicationCloseBlob.txID}`)
+        })
+
+    test('Destroy Application', async () => { 
+
+        console.log(`Starting Appl Destroy tx`)
+
+        let txn = {
+            "type" : "appl",
+            "from": testAccountAddress,
+            "appOnComplete": 5,
+            "appIndex": applicationId,
+            "note": 'Application Destroy',
+            "fee": getParams['min-fee'],
+            "flatFee": getParams['flatFee'],
+            "firstRound": getParams['last-round'],
+            "lastRound": getParams['last-round'] + 1000,
+            "genesisID": getParams['genesis-id'],
+            "genesisHash": getParams['genesis-hash'],
+        }
+        try {
+            localSignedBlob = await signTransaction(txn, appPage);
+        }
+        catch(e) { console.log(e)}
+
+        if("message" in localSignedBlob) { 
+            console.log(`Error: ${JSON.stringify(localSignedBlob)}`)
+        }
+        else {
+            expect(localSignedBlob).toHaveProperty("txID");
+            expect(localSignedBlob).toHaveProperty("blob");
+            
+            applicationDestroyBlob = localSignedBlob // test section scope
+            
+            console.log(`Exiting Appl Destroy ${localSignedBlob.txID}`)
+        }
+
+    })
+
+    test('Post Appl Destroy Blob', async () => {  
+        console.log(`Posting Destroy Call ${applicationDestroyBlob.txID} to ${applicationId} by ${testAccountAddress}`);
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        getTxId = await postTransaction(applicationDestroyBlob, appPage);
+        
+        if("message" in getTxId) { 
+            console.log(`Error: ${JSON.stringify(getTxId)}`);
+        }
+        else {
+            expect(getTxId.txId).toMatch(applicationDestroyBlob.txID);
+            console.log(`Exiting Appl Post Destroy ${getTxId.txId} to ${applicationId} by ${testAccountAddress}`);
+        }
+    })
+
+    test('Verify Appl Destroy Pending Tx', async () => {  
+        console.log(`Verifying Appl Call ${applicationDestroyBlob.txID}`)
+        await appPage.waitForTimeout(shortApiTimeout);
+
+        let pendingTx = await verifyTransaction(applicationDestroyBlob.txID, getParams['last-round'] , appPage)
+        
+        expect(pendingTx["txn"]["txn"]["snd"]).toMatch(testAccountAddress)
+       // expect(pendingTx["txn"]["txn"]["apid"]).toEqual(applicationId)
+
+        console.log(`Exiting Verify Appl Destroy ${applicationDestroyBlob.txID}`)
+    })
 })
