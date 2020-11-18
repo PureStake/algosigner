@@ -149,7 +149,7 @@ In the following example, _txParams_ is set by a previous call to _AlgoSigner.al
 let txn = {
    from: accounts[0].address,
    to: 'PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4',
-   fee: txParams['min-fee'],
+   fee: txParams['fee'],
    type: 'pay',
    amount: amount,
    firstRound: txParams['last-round'],
@@ -175,6 +175,12 @@ Different transaction objects can be created for other purposes, for example: se
 Due to limitations in Chrome internal messaging, AlgoSigner encodes the transaction blob in base64 strings. If interrogation of the blob is needed, we have provided helper functions in the AlgoSigner repository:
 - [Python](https://github.com/PureStake/algosigner-dapp-example/blob/master/python/pythonTransaction.py)
 - [NodeJS](https://github.com/PureStake/algosigner-dapp-example/blob/master/nodeJs/nodeJsTransaction.js)
+
+#### Atomic Transactions
+* Grouped transactions intended for atomic transaction functionality need to be grouped outside of AlgoSigner, but can be signed individually.
+* The grouped transactions need to have their binary components concatenated to be accepted in the AlgoSigner send method.
+* An example of this can be seen in the [existing sample dApp group test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
+
 
 ### AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })
 Send a base64 encoded signed transaction blob to AlgoSigner to transmit to the Network.

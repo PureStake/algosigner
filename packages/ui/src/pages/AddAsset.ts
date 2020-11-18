@@ -1,16 +1,19 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useContext } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
-import { useDebounce } from 'services/customHooks'
-
-import HeaderView from 'components/HeaderView'
 import AddAssetConfirm from 'components/Account/AddAssetConfirm'
+import HeaderView from 'components/HeaderView'
+
+import { useDebounce } from 'services/customHooks'
+import { sendMessage } from 'services/Messaging'
+import { StoreContext } from 'services/StoreContext'
+
 
 const AddAsset: FunctionalComponent = (props: any) => {
+  const store:any = useContext(StoreContext);
   const { matches, path, url, ledger, address } = props;
   const [tab, setTab] = useState<number>(0);
   const [filter, setFilter] = useState<string>('');
@@ -21,6 +24,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
   // Verified results coming from Inc's API
   const [verifiedResults, setVerifiedResults] = useState<any>({});
   const [verifiedIDs, setVerifiedIDs] = useState<number[]>([]);
+  const [accountsAssetsIDs, setAccountsAssetsIDs] = useState<number[]>([]);
 
   const debouncedFilter = useDebounce(filter, 500);
 
@@ -74,6 +78,18 @@ const AddAsset: FunctionalComponent = (props: any) => {
 
   useEffect(() => {
     setLoading(true);
+    // Load account's assets
+    for (var i = store[ledger].length - 1; i >= 0; i--) {
+      if (store[ledger][i].address === address) {
+        if ('details' in store[ledger][i]) {
+          const ids = store[ledger][i].details.assets.map(x => x['asset-id']);
+          setAccountsAssetsIDs(ids);
+        }
+        break;
+      }
+    }
+
+    // Load Verified assets
     const params = {
       ledger: ledger
     };
@@ -170,7 +186,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
       <div class="modal is-active">
         <div class="modal-background" onClick=${()=>setSelectedAsset(null)}></div>
         <div class="modal-content" style="padding: 0 15px; max-height: calc(100vh - 95px);">
-          <${AddAssetConfirm} asset=${selectedAsset} ledger=${ledger} address=${address} />
+          <${AddAssetConfirm} asset=${selectedAsset} ledger=${ledger} address=${address} accountsAssetsIDs=${accountsAssetsIDs} />
         </div>
         <button class="modal-close is-large" aria-label="close" onClick=${()=>setSelectedAsset(null)} />
       </div>

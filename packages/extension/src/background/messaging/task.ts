@@ -12,6 +12,7 @@ import { Settings } from '../config';
 import {extensionBrowser} from '@algosigner/common/chrome';
 import {logging} from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from "../../errors/validation";
+import { buildTransaction } from '../utils/transactionBuilder';
 
 export class Task {
 
@@ -422,23 +423,39 @@ export class Task {
                         // Application transactions only
                         if(txn && txn.type == 'appl'){
                             if('appApprovalProgram' in txn){
-                                txn.appApprovalProgram = Uint8Array.from(Buffer.from(txn.appApprovalProgram));
+                                try {
+                                    txn.appApprovalProgram = Uint8Array.from(Buffer.from(txn.appApprovalProgram,'base64'));
+                                }
+                                catch{
+                                    message.error = 'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                                }
                             }
                             if('appClearProgram' in txn){
-                                txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram));
+                                try {
+                                    txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram,'base64'));
+                                }
+                                catch{
+                                    message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
+                                }
                             }
                             if('appArgs' in txn){
-                                var tempArgs = [];
-                                txn.appArgs.forEach(element => {
-                                    logging.log(element);
-                                    tempArgs.push(Uint8Array.from(Buffer.from(element)));
-                                });
-                                txn.appArgs = tempArgs;
+                                try {
+                                    var tempArgs = [];
+                                    txn.appArgs.forEach(element => {
+                                        logging.log(element);
+                                        tempArgs.push(Uint8Array.from(Buffer.from(element,'base64')));
+                                    });
+                                    txn.appArgs = tempArgs;
+                                }
+                                catch{
+                                    message.error = 'Error trying to parse appArgs into Uint8Array values.';
+                                }
                             }
                         }
 
                         try {
-                            let signedTxn = algosdk.signTransaction(txn, recoveredAccount.sk);
+                            let builtTx = buildTransaction(txn);
+                            let signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
                             let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
                             message.response = {

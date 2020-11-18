@@ -19,6 +19,7 @@ class PaymentTx implements IPaymentTx{
     genesisHash: any = undefined;
     group?: any = null;
     lease?: any = null;
+    flatFee?: any = null;
 };
 
 ///

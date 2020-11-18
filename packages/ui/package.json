@@ -1,6 +1,6 @@
 {
   "name": "algosigner-ui",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "https://developer.purestake.io",
   "description": "User interface built for AlgoSigner.",
   "private": true,

@@ -74,6 +74,14 @@ $modal-close-top: 8px;
 @import "bulma/sass/components/tabs.sass";
 @import "bulma/sass/grid/columns.sass";
 
+.dropdown-mask {
+	width: 100vw;
+	height: 100vh;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: -5;
+}
 
 .loader {
 	@include loader;
