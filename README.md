@@ -9,36 +9,23 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it. 
 
-## 1.1.0 Update 
-The latest release introduces several key new features for users and dApp developers.
+## 1.2.0 Update 
+The latest release brings: 
 
-### Asset Support in the UI
-Assets you own have always been displayed in the AlgoSigner UI, but we have added additional capabilities. Now you may search for new assets, opt-in to receive them, and transfer them right in the AlgoSigner UI. 
+- Support for dApps to submit Atomic (group) transactions
+- Support for dApps to submit application creation transactions
+- Change to how fee's and flat fees are handled in the UI and in the signing step
+- Minor UI updates (block duplicate accounts, block multiple asset optins, network selector properly closing)
 
-### Asset Support for dApps
-dApps were previously able to send in basic asset transactions to be signed by AlgoSigner. Support has now been added for all asset transaction types with accompanying UI notices. 
+### Atomic Transactions
+* Grouped transactions intended for atomic transaction functionality need to be grouped outside of AlgoSigner, but can be signed individually.
+* The grouped transactions need to have their binary components concatenated to be accepted in the AlgoSigner send method.
+* An example of this can be seen in the [existing sample dApp group test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
 
-* Clawback added
-* Destroy capability allowed for `acfg`
-* Close-to supported in `axfer`
+## Roadmap
+The next feature release will bring support for dApps to submit multi-signature transactions for signing. Planned for mid-late December. 
 
-### Application Transaction Support for dApps 
-dApp developers may now send in application transactions to be signed. This support is new and subject to change in subsequent releases. Please read the updated [dApp Integration Guide](docs/dApp-integration.md) for instructions on working with these transaction types. 
-
-### Additional dApp support
-
-* Support has been enabled for `close-to` transactions. 
-* Transaction validation errors will now provide more detailed messages on causes
-
-### UI Transactions
-With the addition of support for `close-to` transactions, new warning messages will display in the UI when dApps send in pay transactions that are potentially dangerous. 
-
-The signing window will also now better reflect the ledger for which the dApp is asking the user to sign a transaction. A new label is present in dark blue for TestNet and orange for MainNet.
-
-### Sample dApp and dApp Tests
-
-* Signing app — New sample dApp for [demonstrating transaction signing](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html)
-* Updates to the [existing sample dApp](https://purestake.github.io/algosigner-dapp-example/) demonstrating pending lookup and asset search
+Following on will be a feature release permitting the addition and configuration of networks, planned for early 2021. 
 
 ## Decentralized Applications
 As a browser extension, AlgoSigner opens the door for developers to build DeFi applications on Algorand by providing a secure way to add transaction capabilities. This enables developers to initiate transactions and accept ALGOs seamlessly, without jeopardizing the security of their users’ secrets.
@@ -54,6 +41,7 @@ DApp users can trust AlgoSigner to:
 
 - Read [dApp Integration Guide](docs/dApp-integration.md)
 - Read [Sample dApp project](https://github.com/PureStake/algosigner-dapp-example)
+- Try [Sample Signing Scenarios](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html)
 - Try [Interactive dApp](https://purestake.github.io/algosigner-dapp-example/)
 
 ## Project Structure
