@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/package-lock.json
+.DS_Store
+**/coverage
+packages/crypto
+packages/dapp
+packages/test-project
+**/*.config.js
