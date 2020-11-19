@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/package-lock.json
+.DS_Store
+**/coverage
+packages/crypto
+packages/common
+**/tsconfig.json
+.github
