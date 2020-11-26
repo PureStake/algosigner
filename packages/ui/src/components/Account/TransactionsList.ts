@@ -1,4 +1,4 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
@@ -25,24 +25,20 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       'ledger': ledger,
       'address': address,
       'next-token': nextToken,
-      'limit': 20
+      'limit': 20,
     };
-    sendMessage(JsonRpcMethod.Transactions, params, function(response) {
+    sendMessage(JsonRpcMethod.Transactions, params, function (response) {
       // If there are already transactions, just append the new ones
-      if (results.length > 0)
-        setResults(results.concat(response.transactions))
-      else
-        setResults(response.transactions);
+      if (results.length > 0) setResults(results.concat(response.transactions));
+      else setResults(response.transactions);
 
-      if (response["next-token"]) 
-        setNextToken(response["next-token"]);
-      else
-        setNextToken(null);
+      if (response['next-token']) setNextToken(response['next-token']);
+      else setNextToken(null);
     });
-  }
+  };
 
   const handleClick = (tx) => {
-    switch(tx['tx-type']) {
+    switch (tx['tx-type']) {
       case 'pay':
         setShowTx(html`<${TxPay} tx=${tx} ledger=${ledger} />`);
         break;
@@ -62,59 +58,56 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         setShowTx(html`<${TxAppl} tx=${tx} ledger=${ledger} />`);
         break;
     }
-  }
+  };
 
   useEffect(() => {
-    setDate(new Date())
+    setDate(new Date());
     fetchApi();
   }, []);
 
-  if (!results)
-    return null;
+  if (!results) return null;
 
   const loadMore = () => {
-    fetchApi()
-  }
+    fetchApi();
+  };
 
   const getInfo = (tx, date) => {
-    function getTime(date,  roundTime) {
+    function getTime(date, roundTime) {
       const MINUTESTHRESHOLD = 60000;
       const HOURSTHRESHOLD = 3600000;
 
-      const roundDate = new Date(roundTime*1000);
+      const roundDate = new Date(roundTime * 1000);
       const diffTime = date - roundDate.getTime();
 
       if (diffTime < 86400000) {
         let time, label;
         if (diffTime < MINUTESTHRESHOLD) {
           time = diffTime / 1000;
-          label = "sec";
+          label = 'sec';
         } else if (diffTime < HOURSTHRESHOLD) {
           time = diffTime / MINUTESTHRESHOLD;
-          label = "min";
+          label = 'min';
         } else {
           time = diffTime / HOURSTHRESHOLD;
-          label = "hour";
+          label = 'hour';
         }
-        time = Math.floor(time)
-        if (time > 1)
-          return time + " " + label + "s ago"
-        else
-          return time + " " + label + " ago"
+        time = Math.floor(time);
+        if (time > 1) return time + ' ' + label + 's ago';
+        else return time + ' ' + label + ' ago';
       } else {
-        return roundDate.toDateString()
+        return roundDate.toDateString();
       }
     }
 
     let title, subtitle, info;
-    switch(tx['tx-type']) {
+    switch (tx['tx-type']) {
       case 'pay':
-        info = (tx['payment-transaction'].amount / 1e6) + ' Algos' ;
+        info = tx['payment-transaction'].amount / 1e6 + ' Algos';
         if (tx.sender === address) {
-          subtitle = "To"
+          subtitle = 'To';
           title = tx['payment-transaction'].receiver;
         } else {
-          subtitle = "From"
+          subtitle = 'From';
           title = tx.sender;
         }
         break;
@@ -129,39 +122,40 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         info = tx['asset-transfer-transaction']['amount'];
         //TODO Close-to txs
         // Clawback if there is a sender in the transfer object
-        if (tx['asset-transfer-transaction'].sender){
-          if (tx['asset-transfer-transaction'].receiver === address){
-            subtitle = "ASA From (clawback)"
+        if (tx['asset-transfer-transaction'].sender) {
+          if (tx['asset-transfer-transaction'].receiver === address) {
+            subtitle = 'ASA From (clawback)';
             title = tx['asset-transfer-transaction']['sender'];
           } else {
-            subtitle = "ASA To (clawback)"
+            subtitle = 'ASA To (clawback)';
             title = tx['asset-transfer-transaction']['receiver'];
           }
         } else {
-          if (tx['asset-transfer-transaction'].receiver === address){
-            subtitle = "ASA From"
+          if (tx['asset-transfer-transaction'].receiver === address) {
+            subtitle = 'ASA From';
             title = tx['sender'];
           } else {
-            subtitle = "ASA To"
+            subtitle = 'ASA To';
             title = tx['asset-transfer-transaction']['receiver'];
           }
         }
         break;
       case 'afrz':
         title = tx['asset-freeze-transaction']['asset-id'];
-        if (tx['asset-freeze-transaction']['new-freeze-status']){
-          subtitle = "Asset freezed"
+        if (tx['asset-freeze-transaction']['new-freeze-status']) {
+          subtitle = 'Asset freezed';
         } else {
-          subtitle = "Asset unfreezed"
+          subtitle = 'Asset unfreezed';
         }
         break;
-      case 'appl':     
-        if ('application-id' in tx['application-transaction']) {     
-          subtitle = tx['application-transaction']['application-id'] || 'application';
+      case 'appl':
+        if ('application-id' in tx['application-transaction']) {
+          subtitle =
+            tx['application-transaction']['application-id'] || 'application';
           title = tx['application-transaction']['on-completion'];
         } else {
-          subtitle = "appl";
-          title = "Application Transaction";
+          subtitle = 'appl';
+          title = 'Application Transaction';
         }
         break;
     }
@@ -184,42 +178,49 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         </div>
         <div class="has-text-right">
           <h2 class="subtitle is-size-7 has-text-grey-light is-uppercase">
-            ${getTime(date, tx["round-time"])}
+            ${getTime(date, tx['round-time'])}
           </h2>
           <h1 class="title is-size-6">${info}</h1>
         </div>
       </div>
     `;
-  }
+  };
 
   return html`
     <div class="py-2">
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
-      ${ results.map((tx: any) => html`
-        <div class="py-3 px-4"
-          style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
-          onClick=${() => handleClick(tx)}>
-          ${getInfo(tx, date)}
-        </div>
-      `)}
-      ${ nextToken && html`
-        <div class="py-3 px-4 has-text-centered"
-          style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
-          <a onClick=${loadMore}>
-            Load more transactions
-          </a>
+      ${results.map(
+        (tx: any) => html`
+          <div
+            class="py-3 px-4"
+            style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
+            onClick=${() => handleClick(tx)}
+          >
+            ${getInfo(tx, date)}
+          </div>
+        `
+      )}
+      ${nextToken &&
+      html`
+        <div
+          class="py-3 px-4 has-text-centered"
+          style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+        >
+          <a onClick=${loadMore}> Load more transactions </a>
         </div>
       `}
     </div>
 
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>
       <div class="modal-background"></div>
-      <div class="modal-content" style="padding: 0 15px;">
-        ${showTx}
-      </div>
-      <button class="modal-close is-large" aria-label="close" onClick=${()=>setShowTx(null)} />
+      <div class="modal-content">${showTx}</div>
+      <button
+        class="modal-close is-large"
+        aria-label="close"
+        onClick=${() => setShowTx(null)}
+      />
     </div>
-  `
+  `;
 };
 
 export default TransactionsList;
