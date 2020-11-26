@@ -10,14 +10,29 @@ const TxPay: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      <p class="has-text-centered has-text-weight-bold">Payment</p>
-      <p><strong>TxID:</strong> <span>${tx.id}</span></p>
-      <p><strong>From:</strong> <span>${tx.sender}</span></p>
-      <p><strong>To:</strong> <span>${tx['payment-transaction'].receiver}</span></p>
-      <p><strong>Amount:</strong> <span>${tx['payment-transaction']['amount']/1e6} Algos</span></p>
-      <p><strong>Block:</strong> <span>${tx['confirmed-round']}</span></p>
+      <p id="txTitle" class="has-text-centered has-text-weight-bold">Payment</p>
+      <p data-transaction-id="${tx.id}">
+        <strong>TxID:</strong> <span>${tx.id}</span>
+      </p>
+      <p data-transaction-sender="${tx.sender}">
+        <strong>From:</strong> <span>${tx.sender}</span>
+      </p>
+      <p>
+        <strong>To:</strong> <span>${tx["payment-transaction"].receiver}</span>
+      </p>
+      <p>
+        <strong>Amount:</strong>
+        <span>${tx["payment-transaction"]["amount"] / 1e6} Algos</span>
+      </p>
+      <p><strong>Block:</strong> <span>${tx["confirmed-round"]}</span></p>
       <div class="has-text-centered">
-        <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${tx.id}`} target="_blank" rel="noopener noreferrer">
+        <a
+          href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${
+            tx.id
+          }`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           See details in GoalSeeker
         </a>
       </div>

@@ -1,6 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useState, useContext, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -167,22 +167,29 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     }
 
     return html`
-      <div style="display: flex; justify-content: space-between;" id="div_${tx.id}">
+      <div
+        style="display: flex; justify-content: space-between;"
+        data-transaction-id="${tx.id}"
+      >
         <div style="max-width: 60%; white-space: nowrap;">
           <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
             ${subtitle}
           </h2>
-          <h1 style="text-overflow: ellipsis; overflow: hidden;"
-            class="title is-size-6">${title}</h1>
+          <h1
+            style="text-overflow: ellipsis; overflow: hidden;"
+            class="title is-size-6"
+          >
+            ${title}
+          </h1>
         </div>
         <div class="has-text-right">
           <h2 class="subtitle is-size-7 has-text-grey-light is-uppercase">
-            ${getTime(date, tx['round-time'])}
+            ${getTime(date, tx["round-time"])}
           </h2>
           <h1 class="title is-size-6">${info}</h1>
         </div>
       </div>
-    `
+    `;
   }
 
   return html`

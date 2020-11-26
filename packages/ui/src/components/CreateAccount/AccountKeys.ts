@@ -9,27 +9,39 @@ const AccountKeys: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
   const [recorded, setRecorded] = useState<boolean>(false);
 
-  let grid : Array<any[]> = [[], [], [], [], []];
+  const grid : Array<any[]> = [[], [], [], [], []];
   const blocks : Array<any> = account.mnemonic.split(" ").map((word, idx) => {
     if (idx % 5 === 0)
       return html`
-        <div class="mb-1" style="position: relative;" id="div_${idx+1}">
-          <div class="has-text-link"
-            style="position: absolute; text-align: right; left: -1.2em; top: -0.2em; width: 1em; font-size: 0.6em;">
-            ${idx+1}
+        <div
+          class="mb-1"
+          style="position: relative;"
+          data-key-index="${idx + 1}"
+          data-word="${word}"
+        >
+          <div
+            class="has-text-link"
+            style="position: absolute; text-align: right; left: -1.2em; top: -0.2em; width: 1em; font-size: 0.6em;"
+          >
+            ${idx + 1}
           </div>
           ${word}
         </div>
-      `
+      `;
 
     return html`
-      <div class="mb-1" style="position: relative;" id="div_${idx+1}">
+      <div
+        class="mb-1"
+        style="position: relative;"
+        data-key-index="${idx + 1}"
+        data-word="${word}"
+      >
         ${word}
       </div>
-    `
+    `;
   });
 
-  for (var i = 0; i < blocks.length; i++) {
+  for (let i = 0; i < blocks.length; i++) {
     grid[i%5].push(blocks[i]);
   }
 
