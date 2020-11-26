@@ -1,11 +1,10 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
   //TODO more details in close to and clawbacks
 
-  //console.log('tadfad', tx)
   return html`
     <div class="box" style="overflow-wrap: break-word;">
       <p id="txTitle" class="has-text-centered has-text-weight-bold">Asset transfer</p>
@@ -31,6 +30,6 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       </div>
     </div>
   `;
-}
+};
 
-export default TxAxfer
+export default TxAxfer;
