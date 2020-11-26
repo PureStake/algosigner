@@ -158,6 +158,79 @@ describe('Basic Happy Path Tests', () => {
 
   test('Verify transaction', verifyTransaction);
 
+  test('Check Asset details', async () => {
+    const assetSelector = '[data-asset-id]';
+    await selectAccount();
+    await extensionPage.waitForSelector(assetSelector);
+    const assetId = await extensionPage.$eval(
+      assetSelector,
+      (e) => e.dataset['assetId']
+    );
+    const assetBalance = await extensionPage.$eval(
+      assetSelector,
+      (e) => e.dataset['assetBalance']
+    );
+    await extensionPage.click(assetSelector);
+    await expect(
+      extensionPage.$eval(
+        `.modal ${assetSelector}`,
+        (e) => e.dataset['assetId']
+      )
+    ).resolves.toBe(assetId);
+    await expect(
+      extensionPage.$eval(
+        `.modal ${assetSelector}`,
+        (e) => e.dataset['assetBalance']
+      )
+    ).resolves.toBe(assetBalance);
+    await closeModal();
+    const thereIsFullAssetList = await extensionPage.$('#showAssets');
+    if (thereIsFullAssetList) {
+      await extensionPage.click('#showAssets');
+      await extensionPage.waitForSelector(
+        `.modal [data-asset-id="${assetId}"]`
+      );
+      await closeModal();
+    }
+    await goBack();
+  });
+
+  test('Send Asset Transaction', async () => {
+    await selectAccount();
+    await extensionPage.click('#sendTransfer');
+    await extensionPage.waitForTimeout(100);
+    await extensionPage.click('#selectAsset');
+    await extensionPage.waitForTimeout(100);
+    await extensionPage.waitForSelector('#asset-13169404');
+    await extensionPage.click('#asset-13169404');
+    await extensionPage.waitForTimeout(500);
+    // Test correct decimal handling
+    await extensionPage.type('#transferAmount', `0.000000000${amount}`);
+    const actualAmount = await extensionPage.$eval('#transferAmount', (e) => {
+      const inputValue = e.value;
+      e.value = '';
+      return inputValue;
+    });
+    expect(actualAmount).toMatch('0.000000');
+    // Test actual transfer
+    await extensionPage.type('#transferAmount', `0.00000${amount}`);
+    await extensionPage.type('#toAddress', testAccountAddress);
+    await extensionPage.type('#note', 'AutoTest Send E2E Asset');
+    await extensionPage.click('#submitTransfer');
+    await extensionPage.waitForTimeout(100);
+    await extensionPage.type('#enterPassword', unsafePassword);
+    await extensionPage.waitForTimeout(200);
+    await extensionPage.click('#authButton');
+    await extensionPage.waitForTimeout(2000);
+    await extensionPage.waitForSelector('#txId');
+    txId = await extensionPage.$eval('#txId', (e) => e.innerText);
+    txTitle = 'Asset transfer';
+    await returnToAccount();
+    await goBack();
+  });
+
+  test('Verify transaction', verifyTransaction);
+
   test('Transaction Errors: OverSpend', async () => {
     await selectAccount();
     await extensionPage.click('#sendTransfer');
