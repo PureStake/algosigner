@@ -20,9 +20,7 @@ describe('Basic Happy Path Tests', () => {
   let txId; // returned tx id from send txn
   let txTitle; // for tx verification
 
-  jest.setTimeout(15000);
-  // todo - switch tests to single page object
-
+  // TODO: switch tests to single page object
   beforeAll(async () => {
     const dummyPage = await browser.newPage();
     await dummyPage.waitForTimeout(2000); // arbitrary wait time.
@@ -46,11 +44,38 @@ describe('Basic Happy Path Tests', () => {
     await extensionPage.goto(baseUrl);
   });
 
-  beforeEach(async () => {});
+  beforeEach(async () => {
+    jest.setTimeout(15000);
+  });
 
   afterAll(async () => {
     extensionPage.close();
   });
+
+  const verifyTransaction = async () => {
+    await extensionPage.waitForTimeout(10000);
+    await selectAccount();
+    const txSelector = `[data-transaction-id=${txId}]`;
+    await extensionPage.waitForSelector(txSelector);
+    await extensionPage.click(txSelector);
+    await expect(
+      extensionPage.$eval('#txTitle', (e) => e.innerText)
+    ).resolves.toBe(txTitle);
+    await expect(
+      extensionPage.$eval(
+        '.modal.is-active [data-transaction-id]',
+        (e) => e.dataset['transactionId']
+      )
+    ).resolves.toBe(txId);
+    await expect(
+      extensionPage.$eval(
+        '.modal.is-active [data-transaction-sender]',
+        (e) => e.dataset['transactionSender']
+      )
+    ).resolves.toBe(testAccountAddress);
+    await closeModal();
+    await goBack();
+  };
 
   test('Welcome Page Title', async () => {
     await expect(extensionPage.title()).resolves.toMatch(extensionName);
@@ -130,6 +155,8 @@ describe('Basic Happy Path Tests', () => {
     await returnToAccount();
     await goBack();
   });
+
+  test('Verify transaction', verifyTransaction);
 
   test('Transaction Errors: OverSpend', async () => {
     await selectAccount();
@@ -246,8 +273,6 @@ describe('Create Account', () => {
   let createdAccountAddress; // returned tx id from send txn
   let mnemonicArray = [];
 
-  jest.setTimeout(10000);
-
   beforeAll(async () => {
     const dummyPage = await browser.newPage();
     await dummyPage.waitForTimeout(2000); // arbitrary wait time.
@@ -273,7 +298,9 @@ describe('Create Account', () => {
     extensionPage.close();
   });
 
-  beforeEach(async () => {});
+  beforeEach(async () => {
+    jest.setTimeout(10000);
+  });
 
   test('Create An Account, Step 1 - Enter Account Name', async () => {
     await extensionPage.waitForSelector('#addAccount');
