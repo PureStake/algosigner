@@ -331,14 +331,11 @@ describe('Basic Happy Path Tests', () => {
   };
 });
 
-// // Create a new account in AlgoSigner
+// Create a new account in AlgoSigner
 describe('Create Account', () => {
   const extensionName = 'AlgoSigner';
   const extensionPopupHtml = 'index.html';
   const unsafePassword = 'c5brJp5f';
-  const sendAlgoToAddress =
-    'AEC4WDHXCDF4B5LBNXXRTB3IJTVJSWUZ4VJ4THPU2QGRJGTA3MIDFN3CQA';
-  const amount = Math.floor(Math.random() * 10); // txn size, modify multiplier for bulk
   const testNetAccount = 'Created-Account';
 
   let baseUrl; // set in beforeAll
@@ -393,8 +390,8 @@ describe('Create Account', () => {
 
     for (let i = 1; i <= 25; i++) {
       mnemonicArray[i] = await extensionPage.$eval(
-        '#div_' + i,
-        (e) => e.innerText
+        `[data-key-index="${i}"]`,
+        (e) => e.dataset['word']
       );
     }
     await extensionPage.waitForSelector('#recordCheckbox');
@@ -406,13 +403,8 @@ describe('Create Account', () => {
     await extensionPage.waitForSelector('#enterMnemonic');
 
     for (let i = 1; i <= 25; i++) {
-      // ugly but works
-      if (mnemonicArray[i].search('\n') != -1) {
-        let actualWord = mnemonicArray[i].split('\n');
-        mnemonicArray[i] = actualWord[1];
-      }
       await extensionPage.waitForSelector('#' + mnemonicArray[i]);
-      await extensionPage.click('#' + mnemonicArray[i]);
+      await extensionPage.click(`#${mnemonicArray[i]}:not([disabled])`);
     }
     await extensionPage.click('#nextStep');
   });
@@ -430,7 +422,7 @@ describe('Create Account', () => {
     await extensionPage.waitForTimeout(500);
     await expect(
       extensionPage.$eval('#accountName', (e) => e.innerText)
-    ).resolves.toMatch(/Created-Account/);
+    ).resolves.toBe(testNetAccount);
   });
 
   test('Load Account Details', async () => {
