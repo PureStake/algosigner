@@ -46,7 +46,7 @@ const Account: FunctionalComponent = (props: any) => {
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
       <div id="accountName" class="is-flex is-size-5 mb-1">
-        <a class="mr-2" onClick=${() => route("/wallet")}>
+        <a class="mr-2" onClick=${() => route('/wallet')}>
           <span id="goBack">
             <i class="fas fa-chevron-left"></i>
           </span>
@@ -102,6 +102,7 @@ const Account: FunctionalComponent = (props: any) => {
           ></div>
           <div
             class="modal-content"
+            style="padding: 0 15px; max-height: calc(100vh - 95px);"
           >
             <${AccountDetails} account=${account} ledger=${ledger} />
           </div>

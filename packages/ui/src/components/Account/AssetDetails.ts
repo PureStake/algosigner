@@ -1,6 +1,6 @@
 import { FunctionalComponent } from "preact";
 import { html } from 'htm/preact';
-import { useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging'
@@ -10,6 +10,7 @@ import ToClipboard from 'components/ToClipboard'
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
+  const [, setResults] = useState<number>(0);
 
   const fetchApi = async () => {
     const params = {
@@ -22,6 +23,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
         for (let i = keys.length - 1; i >= 0; i--) {
           asset[keys[i]] = response.asset.params[keys[i]];
         }
+        setResults(1);
       });
     }
   }

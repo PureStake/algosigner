@@ -152,14 +152,14 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               value=${amount}
               onInput=${(e) => handleAmountChange(e.target.value, asset)}
             />
-            ${"decimals" in asset &&
+            ${'decimals' in asset &&
             html`
               <p
                 class="has-text-grey has-text-centered mt-1"
                 style="font-size: 0.9em;"
               >
                 This asset allows for ${asset.decimals}
-                decimal${asset.decimals !== 1 && "s"}
+                decimal${asset.decimals !== 1 && 's'}
               </p>
             `}
           </div>
@@ -174,10 +174,10 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                 style="border: none; width: 120px; justify-content: flex-end;"
               >
                 <span style="text-overflow: ellipsis; overflow: hidden;">
-                  ${asset["unit-name"] ||
-                  asset["name"] ||
-                  asset["asset-id"] ||
-                  "Algos"}
+                  ${asset['unit-name'] ||
+                  asset['name'] ||
+                  asset['asset-id'] ||
+                  'Algos'}
                 </span>
                 <span class="icon is-small">
                   <i class="fas fa-caret-down" aria-hidden="true"></i>
@@ -206,15 +206,15 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                 account.details.assets.map(
                   (x) => html`
                     <a
-                      id=${`asset-${x["asset-id"]}`}
-                      title=${x["asset-id"]}
+                      id=${`asset-${x['asset-id']}`}
+                      title=${x['asset-id']}
                       onClick=${() => selectAsset(x)}
                       class="dropdown-item is-flex px-4"
                       style="justify-content: space-between;"
                     >
-                      <span>${x["name"] || x["asset-id"]}</span>
+                      <span>${x['name'] || x['asset-id']}</span>
                       <span class="ml-4 has-text-grey">
-                        ${assetFormat(x.amount, x.decimals)} ${x["unit-name"]}
+                        ${assetFormat(x.amount, x.decimals)} ${x['unit-name']}
                       </span>
                     </a>
                   `
@@ -243,8 +243,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
         <div class="has-text-centered has-text-weight-bold my-2">
           <span><i class="fas fa-arrow-down mr-3"></i></span>
-          ${"asset-id" in asset && html` <span>Asset transfer</span> `}
-          ${!("asset-id" in asset) && html` <span>Payment</span> `}
+          ${'asset-id' in asset && html` <span>Asset transfer</span> `}
+          ${!('asset-id' in asset) && html` <span>Payment</span> `}
         </div>
 
         <textarea
@@ -300,7 +300,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content">
+        <div class="modal-content" style="padding: 0 15px;">
           <div class="box">
             <p>Transaction sent with ID</p>
             <p id="txId" style="word-break: break-all;">${txId}</p>
@@ -320,7 +320,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content">
+        <div class="modal-content" style="padding: 0 15px;">
           <div class="box">
             <p class="has-text-danger has-text-weight-bold mb-2">
               Transaction failed with the following error:
@@ -331,7 +331,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button
           class="modal-close is-large"
           aria-label="close"
-          onClick=${() => setError("")}
+          onClick=${() => setError('')}
         />
       </div>
     `}
