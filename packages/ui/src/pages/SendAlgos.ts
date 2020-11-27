@@ -1,20 +1,19 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 import { assetFormat, numFormat } from 'services/common';
 
-import { StoreContext } from 'services/StoreContext'
+import { StoreContext } from 'services/StoreContext';
 
-import HeaderView from 'components/HeaderView'
-import Authenticate from 'components/Authenticate'
-
+import HeaderView from 'components/HeaderView';
+import Authenticate from 'components/Authenticate';
 
 const SendAlgos: FunctionalComponent = (props: any) => {
-  const store:any = useContext(StoreContext);
+  const store: any = useContext(StoreContext);
   const { matches, ledger, address } = props;
 
   const [, forceUpdate] = useState<boolean>(false);
@@ -40,24 +39,26 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     }
   }, []);
 
-  let ddClass: string = "dropdown is-right";
-  if (ddActive)
-    ddClass += " is-active";
+  let ddClass: string = 'dropdown is-right';
+  if (ddActive) ddClass += ' is-active';
 
   const selectAsset = (selectedAsset) => {
     setDdActive(false);
 
-    // Load details if they are not present in the session or is an empty object (algos). 
-    if (Object.keys(selectedAsset).length === 0 || 'decimals' in selectedAsset) {
+    // Load details if they are not present in the session or is an empty object (algos).
+    if (
+      Object.keys(selectedAsset).length === 0 ||
+      'decimals' in selectedAsset
+    ) {
       setAsset(selectedAsset);
       handleAmountChange(amount, selectedAsset);
     } else {
       const params = {
         'ledger': ledger,
-        'asset-id': selectedAsset['asset-id']
+        'asset-id': selectedAsset['asset-id'],
       };
 
-      sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
+      sendMessage(JsonRpcMethod.AssetDetails, params, function (response) {
         const keys = Object.keys(response.asset.params);
         for (let i = keys.length - 1; i >= 0; i--) {
           selectedAsset[keys[i]] = response.asset.params[keys[i]];
@@ -72,18 +73,15 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const decimals = 'decimals' in ass ? ass.decimals : 6;
     const integer = decimals >= 16 ? 1 : 16 - decimals;
     let re;
-    if (decimals > 0) 
+    if (decimals > 0)
       re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
-    else 
-      re = new RegExp(`\\d{1,16}`);
+    else re = new RegExp(`\\d{1,16}`);
 
     const finalVal = val.match(re);
-    if (finalVal)
-      setAmount(finalVal[0]);
-    else
-      setAmount('');
-    forceUpdate(n => !n);
-  }
+    if (finalVal) setAmount(finalVal[0]);
+    else setAmount('');
+    forceUpdate((n) => !n);
+  };
 
   const sendTx = async (pwd: string) => {
     setLoading(true);
@@ -91,9 +89,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     setError('');
 
     const decimals = 'decimals' in asset ? asset.decimals : 6;
-    const amountToSend = +amount*Math.pow(10, decimals);
+    const amountToSend = +amount * Math.pow(10, decimals);
 
-    const params : any = {
+    const params: any = {
       ledger: ledger,
       passphrase: pwd,
       address: account.address,
@@ -101,8 +99,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         from: account.address,
         to: to,
         note: note,
-        amount: +amountToSend
-      }
+        amount: +amountToSend,
+      },
     };
 
     if ('asset-id' in asset) {
@@ -112,11 +110,11 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       params.txnParams.type = 'pay';
     }
 
-    sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
-      if ('error' in response) { 
+    sendMessage(JsonRpcMethod.SignSendTransaction, params, function (response) {
+      if ('error' in response) {
         setLoading(false);
         switch (response.error) {
-          case "Login Failed":
+          case 'Login Failed':
             setAuthError('Wrong passphrase');
             break;
           default:
@@ -128,7 +126,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         setAskAuth(false);
         setTxId(response.txId);
       }
-    })
+    });
   };
 
   return html`
@@ -282,7 +280,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content" style="padding: 0 15px;">
+        <div class="modal-content">
           <${Authenticate}
             error=${authError}
             loading=${loading}
@@ -300,7 +298,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content" style="padding: 0 15px;">
+        <div class="modal-content">
           <div class="box">
             <p>Transaction sent with ID</p>
             <p id="txId" style="word-break: break-all;">${txId}</p>
@@ -320,7 +318,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content" style="padding: 0 15px;">
+        <div class="modal-content">
           <div class="box">
             <p class="has-text-danger has-text-weight-bold mb-2">
               Transaction failed with the following error:

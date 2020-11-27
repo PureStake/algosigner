@@ -1,25 +1,24 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { Link, route } from 'preact-router';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 import { numFormat } from 'services/common';
 
-import { StoreContext } from 'services/StoreContext'
-import TransactionsList from 'components/Account/TransactionsList'
-import AssetsList from 'components/Account/AssetsList'
-import AccountDetails from 'components/Account/AccountDetails'
+import { StoreContext } from 'services/StoreContext';
+import TransactionsList from 'components/Account/TransactionsList';
+import AssetsList from 'components/Account/AssetsList';
+import AccountDetails from 'components/Account/AccountDetails';
 import algo from 'assets/algo.png';
 
-
 const Account: FunctionalComponent = (props: any) => {
-  const store:any = useContext(StoreContext);
+  const store: any = useContext(StoreContext);
   const { url, ledger, address } = props;
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
-  const [showDetails, setShowDetails] = useState<boolean>(false)
+  const [showDetails, setShowDetails] = useState<boolean>(false);
 
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
@@ -35,13 +34,13 @@ const Account: FunctionalComponent = (props: any) => {
   const fetchApi = () => {
     const params = {
       ledger: ledger,
-      address: address
+      address: address,
     };
-    sendMessage(JsonRpcMethod.AccountDetails, params, function(response) {
+    sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
       setDetails(response);
       store.updateAccountDetails(ledger, response);
     });
-  }
+  };
 
   return html`
     <div class="px-4 py-3 has-text-weight-bold ">
@@ -100,10 +99,7 @@ const Account: FunctionalComponent = (props: any) => {
             class="modal-background"
             onClick=${() => setShowDetails(false)}
           ></div>
-          <div
-            class="modal-content"
-            style="padding: 0 15px; max-height: calc(100vh - 95px);"
-          >
+          <div class="modal-content">
             <${AccountDetails} account=${account} ledger=${ledger} />
           </div>
           <button

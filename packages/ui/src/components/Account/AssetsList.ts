@@ -1,17 +1,17 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState } from 'preact/hooks';
 
-import AssetDetails from 'components/Account/AssetDetails'
+import AssetDetails from 'components/Account/AssetDetails';
 
 const AssetPreview: FunctionalComponent = (props: any) => {
   const { asset, setShowAsset } = props;
 
   const getAmount = () => {
     const decimals = asset.decimals || 0;
-    const amount = asset.amount/Math.pow(10, decimals);
-    return amount.toLocaleString('en-US', {maximumFractionDigits: decimals});
-  }
+    const amount = asset.amount / Math.pow(10, decimals);
+    return amount.toLocaleString('en-US', { maximumFractionDigits: decimals });
+  };
 
   return html`
     <div
@@ -37,7 +37,7 @@ const AssetPreview: FunctionalComponent = (props: any) => {
       </span>
     </div>
   `;
-}
+};
 
 const AssetsList: FunctionalComponent = (props: any) => {
   const { ledger, assets } = props;
@@ -67,9 +67,9 @@ const AssetsList: FunctionalComponent = (props: any) => {
       </div>
     `}
 
-    <div class=${`modal ${fullList ? "is-active" : ""}`}>
+    <div class=${`modal ${fullList ? 'is-active' : ''}`}>
       <div class="modal-background" onClick=${() => setFullList(false)}></div>
-      <div class="modal-content" style="padding: 0 15px;">
+      <div class="modal-content">
         <div class="box" style="overflow-wrap: break-word;">
           ${assets.map(
             (asset: any) => html`
@@ -85,9 +85,9 @@ const AssetsList: FunctionalComponent = (props: any) => {
       />
     </div>
 
-    <div class=${`modal ${showAsset ? "is-active" : ""}`}>
+    <div class=${`modal ${showAsset ? 'is-active' : ''}`}>
       <div class="modal-background" onClick=${() => setShowAsset(null)}></div>
-      <div class="modal-content" style="padding: 0 15px;">
+      <div class="modal-content">
         ${showAsset &&
         html` <${AssetDetails} asset=${showAsset} ledger=${ledger} /> `}
       </div>
