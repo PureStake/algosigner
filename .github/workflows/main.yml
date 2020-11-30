@@ -6,7 +6,8 @@ on:
       - release
 
 jobs:
-  end_to_end_tests:
+  run_tests:
+    name: Run all tests
     runs-on: ubuntu-latest
     env:
       CI: 'true'
@@ -23,10 +24,12 @@ jobs:
       run: npm install 
     - name: Build
       run: npm run build
+    - name: Run unit tests
+      run: npm run test:unit
     - name: Run headful puppeteer tests
       uses: djp3/puppeteer-headful@master
       with:
-        args: npm test
+        args: npm run test:e2e
     - name: Upload screenshots
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
