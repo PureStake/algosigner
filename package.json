@@ -16,7 +16,9 @@
     "postinstall": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install); (cd ./packages/test-project && npm install);",
     "prebuild": "rm -rf ./dist/*",
     "coveragetest": "cd ./packages/test-project && npm run coveragetest",
-    "test": "(cd ./packages/crypto && npm run test); (cd ./packages/extension && npm run test); (cd ./packages/ui && npm run test); (cd ./packages/dapp && npm run test); (cd ./packages/common && npm run test); (cd ./packages/test-project && npm run github-test);"
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "(cd ./packages/crypto && npm run test); (cd ./packages/extension && npm run test); (cd ./packages/ui && npm run test); (cd ./packages/dapp && npm run test); (cd ./packages/common && npm run test);",
+    "test:e2e": "(cd ./packages/test-project && npm run github-test);"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.7.0",
@@ -29,7 +31,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "echo '\nChecking for uncommited files\nMake sure to stash changes before pushing\n'; git diff HEAD --quiet && npm run test:unit"
     }
   },
   "lint-staged": {
