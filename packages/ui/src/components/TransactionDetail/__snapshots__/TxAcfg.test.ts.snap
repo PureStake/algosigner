@@ -7,10 +7,13 @@ exports[`TxAcfg should match snapshot 1`] = `
 >
   <p
     className="has-text-centered has-text-weight-bold"
+    id="txTitle"
   >
     Asset configuration
   </p>
-  <p>
+  <p
+    data-transaction-id="B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ"
+  >
     <strong>
       TxID:
     </strong>
@@ -19,7 +22,9 @@ exports[`TxAcfg should match snapshot 1`] = `
       B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ
     </span>
   </p>
-  <p>
+  <p
+    data-transaction-sender="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
+  >
     <strong>
       From:
     </strong>
@@ -32,7 +37,6 @@ exports[`TxAcfg should match snapshot 1`] = `
     <strong>
       Asset name:
     </strong>
-     
     <span>
       non
     </span>
@@ -43,7 +47,6 @@ exports[`TxAcfg should match snapshot 1`] = `
     </strong>
      
     12999
-     
     non
   </p>
   <p>

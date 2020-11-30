@@ -7,10 +7,13 @@ exports[`TxPay should match snapshot 1`] = `
 >
   <p
     className="has-text-centered has-text-weight-bold"
+    id="txTitle"
   >
     Payment
   </p>
-  <p>
+  <p
+    data-transaction-id="FTENCQN3ZPSK7CZP2WVJ2FGZG66K6ZT65NEECKWGJ753KAXQSOZQ"
+  >
     <strong>
       TxID:
     </strong>
@@ -19,7 +22,9 @@ exports[`TxPay should match snapshot 1`] = `
       FTENCQN3ZPSK7CZP2WVJ2FGZG66K6ZT65NEECKWGJ753KAXQSOZQ
     </span>
   </p>
-  <p>
+  <p
+    data-transaction-sender="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
+  >
     <strong>
       From:
     </strong>
@@ -41,7 +46,6 @@ exports[`TxPay should match snapshot 1`] = `
     <strong>
       Amount:
     </strong>
-     
     <span>
       0.004232
        Algos
