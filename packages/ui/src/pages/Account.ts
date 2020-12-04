@@ -63,8 +63,10 @@ const Account: FunctionalComponent = (props: any) => {
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
         ${
           details &&
-          html`${numFormat(details.amount / 1e6, 6)}
-            <span class="has-text-grey-light">Algos</span>`
+          html`
+            <span>${numFormat(details.amount / 1e6, 6)} </span>
+            <span class="has-text-grey-light">Algos</span>
+          `
         }
       </span>
     </div>
@@ -95,10 +97,7 @@ const Account: FunctionalComponent = (props: any) => {
       showDetails &&
       html`
         <div class="modal is-active">
-          <div
-            class="modal-background"
-            onClick=${() => setShowDetails(false)}
-          ></div>
+          <div class="modal-background" onClick=${() => setShowDetails(false)}></div>
           <div class="modal-content">
             <${AccountDetails} account=${account} ledger=${ledger} />
           </div>
