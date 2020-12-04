@@ -135,31 +135,33 @@ export function calculateEstimatedFee(
       estimatedFee = minFee;
     }
   } else {
-    let dappFee = estimatedFee;
-    // If the dApp doesn't suggest a per-byte fee, we use the Ledger suggested min-fee
+    const dappFee = estimatedFee;
     if (dappFee === 0) {
-      dappFee = minFee;
+      // If the dApp doesn't suggest a per-byte fee, we use the Ledger suggested total min-fee
+      estimatedFee = minFee;
+    } else {
+      /*
+        Since the final fee depends on the transaction size we create a
+        dummy replica transaction that's similar to what the SDK eventually sends
+        For this we ignore all empty fields and shorten field names to 4 characters 
+        so we use smaller field names like the SDK does
+        i.e.: the SDK uses 'gen' fpr 'genesisId', 'amt' for 'amount', etc
+      */
+      const dummyTransaction = {};
+      Object.keys(transaction).map((key, index) => {
+        if (transaction[key]) {
+          dummyTransaction[index.toString().padStart(4, '0')] =
+            transaction[key];
+        }
+      });
+      // We use algosdk to encode our dummy transaction into MessagePack
+      // and use the resulting MessagePack to determine an estimate byte size
+      const transactionSize: number = algosdk.encodeObj(dummyTransaction)
+        .byteLength;
+      // Finally we estimate the final fee with the dApp fee
+      // and our estimated transaction byte-size
+      estimatedFee = dappFee * transactionSize;
     }
-    /*
-      Since the final fee depends on the transaction size we create a
-      dummy replica transaction that's similar to what the SDK eventually sends
-      For this we ignore all empty fields and shorten field names to 4 characters 
-      so we use smaller field names like the SDK does
-      i.e.: the SDK uses 'gen' fpr 'genesisId', 'amt' for 'amount', etc
-    */
-    const dummyTransaction = {};
-    Object.keys(transaction).map((key, index) => {
-      if (transaction[key]) {
-        dummyTransaction[index.toString().padStart(4, '0')] = transaction[key];
-      }
-    });
-    // We use algosdk to encode our dummy transaction into MessagePack
-    // and use the resulting MessagePack to determine an estimate byte size
-    const transactionSize: number = algosdk.encodeObj(dummyTransaction)
-      .byteLength;
-    // Finally we estimate the final fee with the dApp/Ledger fee
-    // and our estimated transaction byte-size
-    estimatedFee = dappFee * transactionSize;
   }
   transactionWrap.estimatedFee = estimatedFee;
 }
