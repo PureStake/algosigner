@@ -6,15 +6,13 @@ const TxAppl: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      <p id="txTitle" class="has-text-centered has-text-weight-bold">
-        Application
-      </p>
+      <p id="txTitle" class="has-text-centered has-text-weight-bold"> Application </p>
       <p data-transaction-id="${tx.id}">
-        <strong>TxID:</strong>
+        <strong>TxID: </strong>
         <span>${tx.id}</span>
       </p>
       <p data-transaction-sender="${tx.sender}">
-        <strong>From:</strong>
+        <strong>From: </strong>
         <span>${tx.sender}</span>
       </p>
       <p>
