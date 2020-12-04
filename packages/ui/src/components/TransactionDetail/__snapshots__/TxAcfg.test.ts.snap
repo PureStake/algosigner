@@ -15,9 +15,8 @@ exports[`TxAcfg should match snapshot 1`] = `
     data-transaction-id="B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ"
   >
     <strong>
-      TxID:
+      TxID: 
     </strong>
-     
     <span>
       B2EMD3434ROUEZESQXI3C5TNUBUL6AZJXYEEE54BBRGBJ743SKLQ
     </span>
@@ -26,16 +25,15 @@ exports[`TxAcfg should match snapshot 1`] = `
     data-transaction-sender="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
   >
     <strong>
-      From:
+      From: 
     </strong>
-     
     <span>
       RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
     </span>
   </p>
   <p>
     <strong>
-      Asset name:
+      Asset name: 
     </strong>
     <span>
       non
@@ -43,17 +41,17 @@ exports[`TxAcfg should match snapshot 1`] = `
   </p>
   <p>
     <strong>
-      Total:
+      Total: 
     </strong>
-     
-    12999
-    non
+    <span>
+      12999
+       non
+    </span>
   </p>
   <p>
     <strong>
-      Block:
+      Block: 
     </strong>
-     
     <span>
       9265758
     </span>
