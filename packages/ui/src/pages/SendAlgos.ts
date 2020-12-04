@@ -46,10 +46,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     setDdActive(false);
 
     // Load details if they are not present in the session or is an empty object (algos).
-    if (
-      Object.keys(selectedAsset).length === 0 ||
-      'decimals' in selectedAsset
-    ) {
+    if (Object.keys(selectedAsset).length === 0 || 'decimals' in selectedAsset) {
       setAsset(selectedAsset);
       handleAmountChange(amount, selectedAsset);
     } else {
@@ -73,8 +70,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const decimals = 'decimals' in ass ? ass.decimals : 6;
     const integer = decimals >= 16 ? 1 : 16 - decimals;
     let re;
-    if (decimals > 0)
-      re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
+    if (decimals > 0) re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
     else re = new RegExp(`\\d{1,16}`);
 
     const finalVal = val.match(re);
@@ -130,10 +126,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   };
 
   return html`
-    <div
-      class="main-view"
-      style="flex-direction: column; justify-content: space-between;"
-    >
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
         title="Send"
@@ -152,12 +145,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             />
             ${'decimals' in asset &&
             html`
-              <p
-                class="has-text-grey has-text-centered mt-1"
-                style="font-size: 0.9em;"
-              >
-                This asset allows for ${asset.decimals}
-                decimal${asset.decimals !== 1 && 's'}
+              <p class="has-text-grey has-text-centered mt-1" style="font-size: 0.9em;">
+                This asset allows for
+                <span> ${asset.decimals} decimal${asset.decimals !== 1 && 's'}</span>
               </p>
             `}
           </div>
@@ -172,10 +162,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                 style="border: none; width: 120px; justify-content: flex-end;"
               >
                 <span style="text-overflow: ellipsis; overflow: hidden;">
-                  ${asset['unit-name'] ||
-                  asset['name'] ||
-                  asset['asset-id'] ||
-                  'Algos'}
+                  ${asset['unit-name'] || asset['name'] || asset['asset-id'] || 'Algos'}
                 </span>
                 <span class="icon is-small">
                   <i class="fas fa-caret-down" aria-hidden="true"></i>
@@ -183,10 +170,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               </button>
             </div>
             <div class="dropdown-menu" id="dropdown-menu" role="menu">
-              <div
-                class="dropdown-content"
-                style="max-height: 330px; overflow: auto;"
-              >
+              <div class="dropdown-content" style="max-height: 330px; overflow: auto;">
                 <a
                   id="asset-0"
                   onClick=${() => selectAsset({})}
@@ -195,9 +179,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                 >
                   <span>Algos</span>
                   <span class="ml-4 has-text-grey">
-                    ${account.details &&
-                    numFormat(account.details.amount / 1e6, 6)}
-                    Algos
+                    ${account.details && numFormat(account.details.amount / 1e6, 6)} Algos
                   </span>
                 </a>
                 ${account.details &&
@@ -281,11 +263,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content">
-          <${Authenticate}
-            error=${authError}
-            loading=${loading}
-            nextStep=${sendTx}
-          />
+          <${Authenticate} error=${authError} loading=${loading} nextStep=${sendTx} />
         </div>
         <button
           class="modal-close is-large"
@@ -326,11 +304,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p id="tx-error">${error}</p>
           </div>
         </div>
-        <button
-          class="modal-close is-large"
-          aria-label="close"
-          onClick=${() => setError('')}
-        />
+        <button class="modal-close is-large" aria-label="close" onClick=${() => setError('')} />
       </div>
     `}
   `;
