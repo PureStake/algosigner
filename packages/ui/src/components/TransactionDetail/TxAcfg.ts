@@ -1,5 +1,5 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 
 const TxAcfg: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
@@ -10,25 +10,33 @@ const TxAcfg: FunctionalComponent = (props: any) => {
         Asset configuration
       </p>
       <p data-transaction-id="${tx.id}">
-        <strong>TxID:</strong> <span>${tx.id}</span>
+        <strong>TxID: </strong>
+        <span>${tx.id}</span>
       </p>
       <p data-transaction-sender="${tx.sender}">
-        <strong>From:</strong> <span>${tx.sender}</span>
+        <strong>From: </strong>
+        <span>${tx.sender}</span>
       </p>
       ${tx['asset-config-transaction']['params']['name'] &&
       html`
         <p>
-          <strong>Asset name:</strong>
+          <strong>Asset name: </strong>
           <span>${tx['asset-config-transaction']['params']['name']}</span>
         </p>
       `}
       <p>
-        <strong>Total:</strong> ${tx['asset-config-transaction']['params'][
-          'total'
-        ]}
-        ${tx['asset-config-transaction']['params']['unit-name']}
+        <strong>Total: </strong>
+        <span>
+          ${tx['asset-config-transaction']['params']['total']}
+          ${tx['asset-config-transaction']['params']['unit-name']
+            ? ' ' + tx['asset-config-transaction']['params']['unit-name']
+            : ''}
+        </span>
       </p>
-      <p><strong>Block:</strong> <span>${tx['confirmed-round']}</span></p>
+      <p>
+        <strong>Block: </strong>
+        <span>${tx['confirmed-round']}</span>
+      </p>
       <div class="has-text-centered">
         <a
           href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${
@@ -42,6 +50,6 @@ const TxAcfg: FunctionalComponent = (props: any) => {
       </div>
     </div>
   `;
-}
+};
 
-export default TxAcfg
+export default TxAcfg;

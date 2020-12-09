@@ -1,5 +1,5 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 
 const TxKeyreg: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
@@ -10,12 +10,17 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
         Key registration
       </p>
       <p data-transaction-id="${tx.id}">
-        <strong>TxID:</strong> <span>${tx.id}</span>
+        <strong>TxID: </strong>
+        <span>${tx.id}</span>
       </p>
       <p data-transaction-sender="${tx.sender}">
-        <strong>From:</strong> <span>${tx.sender}</span>
+        <strong>From: </strong>
+        <span>${tx.sender}</span>
       </p>
-      <p><strong>Block:</strong> ${tx['confirmed-round']}</p>
+      <p>
+        <strong>Block: </strong>
+        <span>${tx['confirmed-round']}</span>
+      </p>
       <div class="has-text-centered">
         <a
           href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${
@@ -29,6 +34,6 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
       </div>
     </div>
   `;
-}
+};
 
-export default TxKeyreg
+export default TxKeyreg;
