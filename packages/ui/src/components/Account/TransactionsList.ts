@@ -18,10 +18,12 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const [date, setDate] = useState<any>(new Date());
   const [results, setResults] = useState<any>([]);
   const [pending, setPending] = useState<any>([]);
+  const [isLoading, setLoading] = useState<any>(true);
   const [showTx, setShowTx] = useState<any>(null);
   const [nextToken, setNextToken] = useState<any>(null);
 
   const fetchApi = async () => {
+    setLoading(true);
     const params = {
       'ledger': ledger,
       'address': address,
@@ -29,10 +31,11 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       'limit': 20,
     };
     sendMessage(JsonRpcMethod.Transactions, params, function (response) {
+      setLoading(false);
       // If there are already transactions, just append the new ones
       if (results.length > 0) {
         setResults(results.concat(response.transactions));
-      } else { 
+      } else {
         setResults(response.transactions);
         setPending(response.pending);
       }
@@ -155,8 +158,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
       case 'appl':
         if ('application-id' in tx['application-transaction']) {
-          subtitle =
-            tx['application-transaction']['application-id'] || 'application';
+          subtitle = tx['application-transaction']['application-id'] || 'application';
           title = tx['application-transaction']['on-completion'];
         } else {
           subtitle = 'appl';
@@ -166,18 +168,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     }
 
     return html`
-      <div
-        style="display: flex; justify-content: space-between;"
-        data-transaction-id="${tx.id}"
-      >
+      <div style="display: flex; justify-content: space-between;" data-transaction-id="${tx.id}">
         <div style="max-width: 60%; white-space: nowrap;">
-          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
-            ${subtitle}
-          </h2>
-          <h1
-            style="text-overflow: ellipsis; overflow: hidden;"
-            class="title is-size-6"
-          >
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light"> ${subtitle} </h2>
+          <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
             ${title}
           </h1>
         </div>
@@ -190,7 +184,6 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       </div>
     `;
   };
-
 
   const getPendingTxInfo = (tx) => {
     let title;
@@ -232,10 +225,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
       ${pending.map(
         (tx: any) => html`
-          <div
-            class="py-3 px-4"
-            style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
-          >
+          <div class="py-3 px-4" style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
             ${getPendingTxInfo(tx)}
           </div>
         `
@@ -252,13 +242,20 @@ const TransactionsList: FunctionalComponent = (props: any) => {
           </div>
         `
       )}
-      ${nextToken &&
+      ${!isLoading &&
+      nextToken &&
       html`
         <div
           class="py-3 px-4 has-text-centered"
           style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
         >
           <a onClick=${loadMore}> Load more transactions </a>
+        </div>
+      `}
+      ${isLoading &&
+      html`
+        <div style="padding: 10px 0;">
+          <span class="loader" style="position: relative; left: calc(50% - 0.5em);"></span>
         </div>
       `}
     </div>
