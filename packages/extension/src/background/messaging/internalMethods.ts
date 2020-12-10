@@ -2,7 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from "@algosigner/storage/src/extensionStorage";
 import { Task } from './task';
-import { API, Backend, Cache, Ledger } from './types';
+import { API, Cache, Ledger } from './types';
 import { Settings } from '../config';
 import encryptionWrap from "../encryptionWrap";
 import Session from '../utils/session';
@@ -11,6 +11,7 @@ import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from "../transaction/actions";
 import { buildTransaction } from '../utils/transactionBuilder';
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require("algosdk");
 
 const session = new Session;
@@ -37,14 +38,14 @@ export class InternalMethods {
             const { address, name } = wallet['TestNet'][i];
             safeWallet.TestNet.push({
                 address: address,
-                name: wallet.TestNet[i].name
+                name: name
             });
         }
         for (var i = 0; i < wallet.MainNet.length; i++) {
             const { address, name } = wallet['MainNet'][i];
             safeWallet.MainNet.push({
                 address: address,
-                name: wallet.MainNet[i].name
+                name: name
             });
         }
         return safeWallet;
@@ -439,7 +440,7 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
         const { ledger, address, passphrase, txnParams } = request.body.params;
-        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
+        this._encryptionWrap = new encryptionWrap(passphrase);
         var algod = this.getAlgod(ledger);
 
         this._encryptionWrap.unlock(async (unlockedValue: any) => {
@@ -489,15 +490,12 @@ export class InternalMethods {
                 logging.log('A transaction has failed because of an inability to build the specified transaction type.');
                 sendResponse({error: 'A transaction has failed because of an inability to build the specified transaction type.'});
                 return;
-            }
-            else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Invalid)) {
+            } else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Invalid)) {
                 // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
                 sendResponse({error: 'One or more fields are not valid. Please check and try again.'});
                 return;
-            }
-            else if(transactionWrap.validityObject && (Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Warning ))
-            || (Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Dangerous))) {
-                // We have a transaction which does not contain invalid fields, but does contain fields that are dangerous 
+            } else {
+                // We have a transaction which does not contain invalid fields, but may contain fields that are dangerous 
                 // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
                 let signedTxn;
                 try {
@@ -516,26 +514,7 @@ export class InternalMethods {
                     else
                         sendResponse({error: e.body.message});
                 });
-            } else {
-                let signedTxn;
-                try {
-                    let builtTx = buildTransaction(txn);
-                    signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
-                } catch(e) {
-                    sendResponse({error: e.message});
-                    return;
-                }
-
-                algod.sendRawTransaction(signedTxn.blob, txHeaders).do().then((resp: any) => {
-                    sendResponse({txId: resp.txId});
-                }).catch((e: any) => {
-                    if (e.body.message.includes('overspend'))
-                        sendResponse({error: "Overspending. Your account doesn't have sufficient funds."});
-                    else
-                        sendResponse({error: e.body.message});
-                });
             }
-
         });
 
         return true;
