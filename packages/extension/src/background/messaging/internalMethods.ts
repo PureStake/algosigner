@@ -324,13 +324,26 @@ export class InternalMethods {
 
     public static [JsonRpcMethod.Transactions](request: any, sendResponse: Function) {
         let indexer = this.getIndexer(request.body.params.ledger);
-        let txs = indexer.lookupAccountTransactions(request.body.params.address);
+        let algod = this.getAlgod(request.body.params.ledger);
+        let txList = indexer.lookupAccountTransactions(request.body.params.address);
+        let pendingTxs = algod.pendingTransactionByAddress(request.body.params.address);
         if (request.body.params.limit)
-            txs.limit(request.body.params.limit);
+            txList.limit(request.body.params.limit);
         if (request.body.params['next-token'])
-            txs.nextToken(request.body.params['next-token']);
-        txs.do().then((res: any) => {
-            sendResponse(res);
+            txList.nextToken(request.body.params['next-token']);
+        txList.do().then((txListResponse: any) => {
+            pendingTxs.do().then((pendingTxsResponse: any) => {
+                const pendingTxs = [];
+                pendingTxsResponse['top-transactions'].forEach(pend => {
+                    pendingTxs.push({ type: pend['txn']['type']});
+                });
+                const uiResponse = {
+                  'next-token': txListResponse['next-token'],
+                  'transactions': txListResponse.transactions,
+                  'pending': pendingTxs,
+                };
+                sendResponse(uiResponse);
+            });
         }).catch((e: any) => {
             sendResponse({error: e.message});
         });

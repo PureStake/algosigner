@@ -16,7 +16,8 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const { address, ledger } = props;
 
   const [date, setDate] = useState<any>(new Date());
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<any>([]);
+  const [pending, setPending] = useState<any>([]);
   const [showTx, setShowTx] = useState<any>(null);
   const [nextToken, setNextToken] = useState<any>(null);
 
@@ -29,8 +30,12 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     };
     sendMessage(JsonRpcMethod.Transactions, params, function (response) {
       // If there are already transactions, just append the new ones
-      if (results.length > 0) setResults(results.concat(response.transactions));
-      else setResults(response.transactions);
+      if (results.length > 0) {
+        setResults(results.concat(response.transactions));
+      } else { 
+        setResults(response.transactions);
+        setPending(response.pending);
+      }
 
       if (response['next-token']) setNextToken(response['next-token']);
       else setNextToken(null);
@@ -71,7 +76,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     fetchApi();
   };
 
-  const getInfo = (tx, date) => {
+  const getTxInfo = (tx, date) => {
     function getTime(date, roundTime) {
       const MINUTESTHRESHOLD = 60000;
       const HOURSTHRESHOLD = 3600000;
@@ -186,17 +191,64 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     `;
   };
 
+
+  const getPendingTxInfo = (tx) => {
+    let title;
+    switch (tx['type']) {
+      case 'pay':
+        title = 'Payment';
+        break;
+      case 'keyreg':
+        title = 'Key Registration';
+        break;
+      case 'acfg':
+        title = 'Asset Config';
+        break;
+      case 'axfer':
+        title = 'Asset Transfer';
+        break;
+      case 'afrz':
+        title = 'Asset Freeze';
+        break;
+      case 'appl':
+        title = 'Application Transaction';
+        break;
+    }
+
+    return html`
+      <div style="display: flex; justify-content: space-between;">
+        <div style="white-space: nowrap;">
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">Pending transaction</h2>
+          <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
+            ${title}
+          </h1>
+        </div>
+      </div>
+    `;
+  };
+
   return html`
     <div class="py-2">
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
-      ${results.map(
+      ${pending.map(
+        (tx: any) => html`
+          <div
+            class="py-3 px-4"
+            style="border-top: 1px solid rgba(138, 159, 168, 0.2);"
+          >
+            ${getPendingTxInfo(tx)}
+          </div>
+        `
+      )}
+      ${results &&
+      results.map(
         (tx: any) => html`
           <div
             class="py-3 px-4"
             style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
             onClick=${() => handleClick(tx)}
           >
-            ${getInfo(tx, date)}
+            ${getTxInfo(tx, date)}
           </div>
         `
       )}
@@ -214,11 +266,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>
       <div class="modal-background"></div>
       <div class="modal-content">${showTx}</div>
-      <button
-        class="modal-close is-large"
-        aria-label="close"
-        onClick=${() => setShowTx(null)}
-      />
+      <button class="modal-close is-large" aria-label="close" onClick=${() => setShowTx(null)} />
     </div>
   `;
 };
