@@ -243,14 +243,19 @@ const TransactionsList: FunctionalComponent = (props: any) => {
           <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
             <i>${subtitle}</i>
           </h2>
-          <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
+          <h1
+            style="text-overflow: ellipsis; overflow: hidden;"
+            class="title is-size-6 has-text-grey"
+          >
             <i>${title}</i>
           </h1>
         </div>
         ${info &&
         html`
           <div class="has-text-right" style="margin-top: 17px;">
-            <h1 class="title is-size-6">${info}</h1>
+            <h1 class="title is-size-6 has-text-grey">
+              <i>${info}</i>
+            </h1>
           </div>
         `}
       </div>
