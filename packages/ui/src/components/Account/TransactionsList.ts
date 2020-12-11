@@ -112,10 +112,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       case 'pay':
         info = tx['payment-transaction'].amount / 1e6 + ' Algos';
         if (tx.sender === address) {
-          subtitle = 'To';
+          subtitle = 'Payment To';
           title = tx['payment-transaction'].receiver;
         } else {
-          subtitle = 'From';
+          subtitle = 'Payment From';
           title = tx.sender;
         }
         break;
