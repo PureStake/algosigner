@@ -186,36 +186,73 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   };
 
   const getPendingTxInfo = (tx) => {
-    let title;
+    let title, subtitle, info;
     switch (tx['type']) {
       case 'pay':
-        title = 'Payment';
+        info = tx.amount / 1e6 + ' Algos';
+        if (tx.sender === address) {
+          subtitle = 'Pending Payment to';
+          title = tx.receiver;
+        } else {
+          subtitle = 'Pending Payment from';
+          title = tx.sender;
+        }
         break;
       case 'keyreg':
+        subtitle = 'Pending transaction';
         title = 'Key Registration';
         break;
       case 'acfg':
-        title = 'Asset Config';
+        subtitle = 'Pending Asset Config Transaction';
+        title = tx.id;
         break;
       case 'axfer':
-        title = 'Asset Transfer';
+        info = tx.assetName ? `${tx.amount} ${tx.assetName}` : null;
+        // Clawback if there is a sender in the transfer object
+        if (tx.assetSender) {
+          if (tx.receiver === address) {
+            subtitle = 'Pending Asset Clawback From';
+            title = tx.assetSender;
+          } else {
+            subtitle = 'Pending Asset Clawback To';
+            title = tx.receiver;
+          }
+        } else {
+          if (tx.receiver === address) {
+            subtitle = 'Pending Asset Transfer From';
+            title = tx.sender;
+          } else {
+            subtitle = 'Pending Asset Transfer To';
+            title = tx.receiver;
+          }
+        }
         break;
       case 'afrz':
-        title = 'Asset Freeze';
+        subtitle = 'Pending Asset Freeze Transaction';
+        title = tx.assetName;
         break;
       case 'appl':
-        title = 'Application Transaction';
+        subtitle = 'Pending Application Transaction';
+        title = tx.id;
         break;
     }
 
     return html`
       <div style="display: flex; justify-content: space-between;">
-        <div style="white-space: nowrap;">
-          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">Pending transaction</h2>
+        <div style="max-width: 60%; white-space: nowrap;">
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
+            <i>${subtitle}</i>
+          </h2>
           <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
-            ${title}
+            <i>${title}</i>
           </h1>
         </div>
+        ${info &&
+        html`
+          <div class="has-text-right" style="margin-top: 17px;">
+            <h1 class="title is-size-6">${info}</h1>
+          </div>
+        `}
       </div>
     `;
   };
