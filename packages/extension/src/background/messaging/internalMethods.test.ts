@@ -395,7 +395,17 @@ describe('algosdk methods', () => {
     const mockedUiResponse = {
       'next-token': mockIndexerResponse['next-token'],
       'transactions': mockIndexerResponse['transactions'],
-      'pending': [{ type: mockAlgodResponse['top-transactions'][0]['txn']['type'] }],
+      'pending': [
+        {
+          type: mockAlgodResponse['top-transactions'][0]['txn']['type'],
+          amount: mockAlgodResponse['top-transactions'][0]['txn']['amt'],
+          sender: algosdk.encodeAddress(mockAlgodResponse['top-transactions'][0]['txn']['snd']),
+          receiver: algosdk.encodeAddress(mockAlgodResponse['top-transactions'][0]['txn']['rcv']),
+          assetSender: undefined,
+          assetName: undefined,
+          id: undefined,
+        },
+      ],
     };
 
     const indexerSpy = jest.spyOn(algosdk, 'Indexer');

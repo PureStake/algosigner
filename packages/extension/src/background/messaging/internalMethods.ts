@@ -325,7 +325,7 @@ export class InternalMethods {
     const indexer = this.getIndexer(ledger);
     const algod = this.getAlgod(ledger);
     const txList = indexer.lookupAccountTransactions(address);
-    const pendingTxList = algod.pendingTransactionsInformation(address);
+    const pendingTxList = algod.pendingTransactionByAddress(address);
     if (limit) txList.limit(limit);
     if (token) txList.nextToken(token);
     txList
