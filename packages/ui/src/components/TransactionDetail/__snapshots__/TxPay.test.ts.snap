@@ -15,9 +15,8 @@ exports[`TxPay should match snapshot 1`] = `
     data-transaction-id="FTENCQN3ZPSK7CZP2WVJ2FGZG66K6ZT65NEECKWGJ753KAXQSOZQ"
   >
     <strong>
-      TxID:
+      TxID: 
     </strong>
-     
     <span>
       FTENCQN3ZPSK7CZP2WVJ2FGZG66K6ZT65NEECKWGJ753KAXQSOZQ
     </span>
@@ -26,25 +25,23 @@ exports[`TxPay should match snapshot 1`] = `
     data-transaction-sender="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
   >
     <strong>
-      From:
+      From: 
     </strong>
-     
     <span>
       RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
     </span>
   </p>
   <p>
     <strong>
-      To:
+      To: 
     </strong>
-     
     <span>
       RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
     </span>
   </p>
   <p>
     <strong>
-      Amount:
+      Amount: 
     </strong>
     <span>
       0.004232
@@ -53,9 +50,8 @@ exports[`TxPay should match snapshot 1`] = `
   </p>
   <p>
     <strong>
-      Block:
+      Block: 
     </strong>
-     
     <span>
       9548884
     </span>

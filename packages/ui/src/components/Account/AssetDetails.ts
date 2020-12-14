@@ -1,12 +1,11 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 
-import ToClipboard from 'components/ToClipboard'
-
+import ToClipboard from 'components/ToClipboard';
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
@@ -15,10 +14,10 @@ const AssetDetails: FunctionalComponent = (props: any) => {
   const fetchApi = async () => {
     const params = {
       'ledger': ledger,
-      'asset-id': asset['asset-id']
+      'asset-id': asset['asset-id'],
     };
     if (!('name' in asset)) {
-      sendMessage(JsonRpcMethod.AssetDetails, params, function(response) {
+      sendMessage(JsonRpcMethod.AssetDetails, params, function (response) {
         const keys = Object.keys(response.asset.params);
         for (let i = keys.length - 1; i >= 0; i--) {
           asset[keys[i]] = response.asset.params[keys[i]];
@@ -26,22 +25,20 @@ const AssetDetails: FunctionalComponent = (props: any) => {
         setResults(1);
       });
     }
-  }
+  };
 
-  const toDecimal = (num, full=false) => {
+  const toDecimal = (num, full = false) => {
     const params: any = {
-      maximumFractionDigits: asset.decimals
-    }
-    const amount = num/Math.pow(10, asset.decimals);
-    if (full)
-      params.minimumFractionDigits = asset.decimals;
+      maximumFractionDigits: asset.decimals,
+    };
+    const amount = num / Math.pow(10, asset.decimals);
+    if (full) params.minimumFractionDigits = asset.decimals;
     return amount.toLocaleString('en-US', params);
-  }
+  };
 
   useEffect(() => {
     fetchApi();
   }, []);
-
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
@@ -59,7 +56,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
         <p>
           <b>Your balance</b>
           <span class="is-pulled-right">
-            <b>${toDecimal(asset.amount)}</b>
+            <b>${toDecimal(asset.amount)} </b>
             <span class="has-text-grey-light">${asset['unit-name']}</span>
           </span>
         </p>
@@ -67,7 +64,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
         <p>
           <b>Total units</b>
           <span class="is-pulled-right">
-            <b>${toDecimal(asset.total, true)}</b>
+            <b>${toDecimal(asset.total, true)} </b>
             <span class="has-text-grey-light">${asset['unit-name']}</span>
           </span>
         </p>

@@ -65,7 +65,6 @@ const SignTransaction: FunctionalComponent = () => {
     setAuthError('');
     window.removeEventListener('beforeunload', deny);
 
-    //console.log('SIGNINg', 'params', params)
     sendMessage(JsonRpcMethod.SignAllow, params, function (response) {
       if ('error' in response) {
         window.addEventListener('beforeunload', deny);
@@ -116,10 +115,15 @@ const SignTransaction: FunctionalComponent = () => {
                 <img src=${request.favIconUrl} width="48" style="float:left" />
               `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
-                ${request.originTitle} wants to sign a transaction for
-                ${ledger.toLowerCase() == 'mainnet'
-                  ? html`<span style="color:#f16522;">${ledger}</span>`
-                  : html`<span style="color:#222b60;">${ledger}</span>`}
+                <!-- prettier-ignore -->
+                <span>${request.originTitle} wants to sign a transaction for </span>
+                <span
+                  style="color:${ledger.toLowerCase() == 'mainnet'
+                    ? '#f16522'
+                    : '#222b60'};"
+                >
+                  ${ledger}
+                </span>
               </h1>
             </div>
           </section>
@@ -133,6 +137,7 @@ const SignTransaction: FunctionalComponent = () => {
               <${TxPay}
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
@@ -142,6 +147,7 @@ const SignTransaction: FunctionalComponent = () => {
               <${TxKeyreg}
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
@@ -152,6 +158,7 @@ const SignTransaction: FunctionalComponent = () => {
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
@@ -162,6 +169,7 @@ const SignTransaction: FunctionalComponent = () => {
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
@@ -171,6 +179,7 @@ const SignTransaction: FunctionalComponent = () => {
               <${TxAfrz}
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
@@ -180,6 +189,7 @@ const SignTransaction: FunctionalComponent = () => {
               <${TxAppl}
                 tx=${request.body.params.transaction}
                 vo=${request.body.params.validityObject}
+                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />

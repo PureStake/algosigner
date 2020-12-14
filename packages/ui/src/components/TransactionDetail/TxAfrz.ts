@@ -1,10 +1,12 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 
 const TxAfrz: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
 
-  const freezed = tx['asset-freeze-transaction']['new-freeze-status'] ? 'Freeze' : 'Unfreeze';
+  const freezed = tx['asset-freeze-transaction']['new-freeze-status']
+    ? 'Freeze'
+    : 'Unfreeze';
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
@@ -12,20 +14,29 @@ const TxAfrz: FunctionalComponent = (props: any) => {
         Asset ${freezed}
       </p>
       <p data-transaction-id="${tx.id}">
-        <strong>TxID:</strong> <span>${tx.id}</span>
+        <strong>TxID: </strong>
+        <span>${tx.id}</span>
       </p>
       <p data-transaction-sender="${tx.sender}">
-        <strong>Origin:</strong> <span>${tx.sender}</span>
+        <strong>Origin: </strong>
+        <span>${tx.sender}</span>
       </p>
       <p>
-        <strong>Freeze address:</strong>
+        <strong>Freeze address: </strong>
         <span>${tx['asset-freeze-transaction']['address']}</span>
       </p>
       <p>
-        <strong>Asset:</strong> <span>${tx['asset-freeze-transaction']['asset-id']}</span>
+        <strong>Asset: </strong>
+        <span>${tx['asset-freeze-transaction']['asset-id']}</span>
       </p>
-      <p><strong>Action:</strong> <span>${freezed}</span></p>
-      <p><strong>Block:</strong> <span>${tx['confirmed-round']}</span></p>
+      <p>
+        <strong>Action: </strong>
+        <span>${freezed}</span>
+      </p>
+      <p>
+        <strong>Block: </strong>
+        <span>${tx['confirmed-round']}</span>
+      </p>
       <div class="has-text-centered">
         <a
           href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${
@@ -39,6 +50,6 @@ const TxAfrz: FunctionalComponent = (props: any) => {
       </div>
     </div>
   `;
-}
+};
 
-export default TxAfrz
+export default TxAfrz;
