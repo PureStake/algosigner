@@ -13,6 +13,7 @@ import {extensionBrowser} from '@algosigner/common/chrome';
 import {logging} from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from "../../errors/validation";
 import { buildTransaction } from '../utils/transactionBuilder';
+import { getSigningAccounts } from '../utils/multisig';
 
 export class Task {
 
@@ -208,6 +209,77 @@ export class Task {
                         }
                     }
                 },
+                [JsonRpcMethod.SignMultisigTransaction]: (
+                    d: any,
+                    resolve: Function, reject: Function
+                ) => {
+                    // TODO: Possible support for blob transfer on previously signed transactions
+
+                    var transactionWrap = undefined;
+                    var validationError = undefined;
+                    try {
+                        transactionWrap = getValidatedTxnWrap(d.body.params.txn, d.body.params.txn["type"]);
+                    }
+                    catch(e) {
+                        logging.log(`Validation failed. ${e}`);
+                        validationError = e;
+                    }
+                    if(!transactionWrap && validationError && validationError instanceof InvalidTransactionStructure) {     
+                        // We don't have a transaction wrap, but we have a validation error.               
+                        d.error = {
+                            message: validationError.message
+                        };
+                        reject(d);
+                        return;
+                    }
+                    else if(!transactionWrap) {   
+                        // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.               
+                        logging.log('A transaction has failed because of an inability to build the specified transaction type.');
+                        d.error = {
+                            message: (validationError || 'Validation failed for transaction. Please verify the properties are valid.')
+                        };
+                        reject(d);
+                    }
+                    else if(transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status']  === ValidationStatus.Invalid)) {
+                        // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+                        // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+                        var invalidKeys = [];
+                        Object.entries(transactionWrap.validityObject).forEach(([key,value]) => {
+                            if(value['status']===ValidationStatus.Invalid){
+                                invalidKeys.push(`${key}`);
+                            }
+                        })
+                        d.error = {
+                            message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(',')}].`
+                        };
+                        reject(d);
+                    }
+                    else {
+                        logging.log(`transactionwrap success as: \n${JSON.stringify(transactionWrap)}`);
+                        d.body.params.validityObject = transactionWrap.validityObject;
+                        d.body.params.txn = transactionWrap.transaction;
+                    }
+                
+                    // We have a transaction which appears to be valid. Show the popup as normal.
+                    extensionBrowser.windows.create({
+                        url: extensionBrowser.runtime.getURL("index.html#/sign-multisig-transaction"),
+                        type: "popup",
+                        focused: true,
+                        width: 400 + 12,
+                        height: 550 + 34
+                    }, function (w) {
+                        if(w) {
+                            Task.requests[d.originTabID] = {
+                                window_id: w.id,
+                                message: d
+                            };
+                            // Send message with tx info
+                            setTimeout(function(){
+                                extensionBrowser.runtime.sendMessage(d);
+                            }, 500);
+                        }
+                    });               
+                },
                 // algod
                 [JsonRpcMethod.SendTransaction]: (
                     d: any,
@@ -225,7 +297,6 @@ export class Task {
                     };
                     const tx = atob(params.tx).split("").map(x => x.charCodeAt(0));
                     fetchParams.body = new Uint8Array(tx);
-
 
                     let url = conn.url;
                     if (conn.port.length > 0)
@@ -396,6 +467,7 @@ export class Task {
 
                         extensionBrowser.windows.remove(auth.window_id);
 
+                        let txn = {...message.body.params.transaction};
                         let account;
 
                         // Find address to send algos from
@@ -407,8 +479,6 @@ export class Task {
                         }
 
                         var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
-
-                        let txn = {...message.body.params.transaction};
 
                         Object.keys({...message.body.params.transaction}).forEach(key => {
                             if(txn[key] === undefined || txn[key] === null){
@@ -454,8 +524,15 @@ export class Task {
                         }
 
                         try {
+                            // This step transitions a raw object into a transaction style object
                             let builtTx = buildTransaction(txn);
-                            let signedTxn = {"txID": builtTx.txID().toString(), "blob": builtTx.signTxn(recoveredAccount.sk)};
+
+                            // We are combining the tx id get and sign into one step/object because of legacy, 
+                            // this may not need to be the case any longer.
+                            let signedTxn = {"txID": undefined, "blob": undefined};
+                            signedTxn.txID = builtTx.txID().toString();
+                            signedTxn.blob = builtTx.signTxn(recoveredAccount.sk);
+                            
                             let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
                             message.response = {
@@ -465,7 +542,140 @@ export class Task {
                         } catch(e) {
                             message.error = e.message;
                         }
+                        
+                        // Clean class saved request
+                        delete Task.requests[responseOriginTabID];
+                        MessageApi.send(message);
+                    });
+                    return true;
+                },
+                // sign-allow-multisig
+                [JsonRpcMethod.SignAllowMultisig]: (request: any, sendResponse: Function) => {
+                    const { passphrase, responseOriginTabID } = request.body.params;
+                    let auth = Task.requests[responseOriginTabID];
+                    let message = auth.message;
 
+                    // Map the full multisig transaction here
+                    let msig_txn = {msig:  message.body.params.msig, txn:  message.body.params.txn};
+
+                    // Use MainNet if specified - default to TestNet
+                    let ledger = (msig_txn.txn && (msig_txn.txn.genesisID === "mainnet-v1.0")) ? Ledger.MainNet : Ledger.TestNet;
+                    
+                    // Get parameters and connect the SDK
+                    const params = Settings.getBackendParams(ledger, API.Algod);
+                    const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
+
+                    // Create an encryption wrap to get the needed signing account information
+                    let context = new encryptionWrap(passphrase);
+                    context.unlock(async (unlockedValue: any) => {
+                        if ('error' in unlockedValue) {
+                            sendResponse(unlockedValue);
+                            return false;
+                        }
+
+                        extensionBrowser.windows.remove(auth.window_id);    
+                                               
+                        // Verify this is a multisig sign occurs in the getSigningAccounts
+                        // This get may receive a .error in return if an appropriate account is not found
+                        let account;
+                        let multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
+                        if(multisigAccounts.error) {
+                            message.error = multisigAccounts.error.message;
+                        }
+                        else {
+                            // TODO: Currently we are grabbing the first non-signed account. This may change.
+                            account = multisigAccounts.accounts[0];
+                        }
+
+                        if(account) {
+                            // We can now use the found account match to get the sign key
+                            var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic); 
+
+                            // Use the received txn component of the transaction, but remove undefined and null values
+                            Object.keys({...msig_txn.txn}).forEach(key => {
+                                if(msig_txn.txn[key] === undefined || msig_txn.txn[key] === null){
+                                    delete msig_txn.txn[key];
+                                }
+                            });
+
+                            // Modify base64 encoded fields 
+                            if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
+                                msig_txn.txn.note = new Uint8Array(Buffer.from(msig_txn.txn.note));
+                            }
+                            // Application transactions only
+                            if(msig_txn.txn && msig_txn.txn.type == 'appl'){
+                                if('appApprovalProgram' in msig_txn.txn){
+                                    try {
+                                        msig_txn.txn.appApprovalProgram = Uint8Array.from(Buffer.from(msig_txn.txn.appApprovalProgram,'base64'));
+                                    }
+                                    catch{
+                                        message.error = 'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                                    }
+                                }
+                                if('appClearProgram' in msig_txn.txn){
+                                    try {
+                                        msig_txn.txn.appClearProgram = Uint8Array.from(Buffer.from(msig_txn.txn.appClearProgram,'base64'));
+                                    }
+                                    catch{
+                                        message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
+                                    }
+                                }
+                                if('appArgs' in msig_txn.txn){
+                                    try {
+                                        var tempArgs = [];
+                                        msig_txn.txn.appArgs.forEach(element => {
+                                            tempArgs.push(Uint8Array.from(Buffer.from(element,'base64')));
+                                        });
+                                        msig_txn.txn.appArgs = tempArgs;
+                                    }
+                                    catch{
+                                        message.error = 'Error trying to parse appArgs into Uint8Array values.';
+                                    }
+                                }
+                            }
+
+                            try {
+                                // This step transitions a raw object into a transaction style object
+                                let builtTx = buildTransaction(msig_txn.txn); 
+
+                                // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
+                                let version = msig_txn.msig.v || msig_txn.msig.version;
+                                let threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
+                                let addrs = msig_txn.msig.addrs || msig_txn.msig.subsig.map(subsig => {
+                                    return subsig.pk;
+                                });
+                                let preimg = {
+                                    version: version,
+                                    threshold: threshold,
+                                    addrs:  addrs
+                                };
+                                
+                                let signedTxn;
+                                let appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
+                                // Check for existing signatures. Append if there are any.
+                                if(appendEnabled && msig_txn.msig.subsig.some(subsig => subsig.s)) {           
+                                    // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
+                                    // It is subject to change and is built as scaffolding for future functionality. 
+                                    let encodedBlob = message.body.params.txn; 
+                                    var decodedBlob = Buffer.from(encodedBlob, 'base64');
+                                    signedTxn = algosdk.appendSignMultisigTransaction(decodedBlob, preimg, recoveredAccount.sk);                                
+                                }
+                                else {
+                                    // If this is the first signature then do a normal sign
+                                    signedTxn = algosdk.signMultisigTransaction(builtTx, preimg, recoveredAccount.sk);
+                                }
+
+                                // Converting the blob to an encoded string for transfer back to dApp
+                                let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                                message.response = {
+                                    txID: signedTxn.txID,
+                                    blob: b64Obj
+                                };
+                            } catch(e) {
+                                message.error = e.message;
+                            }
+                        }
                         // Clean class saved request
                         delete Task.requests[responseOriginTabID];
                         MessageApi.send(message);
