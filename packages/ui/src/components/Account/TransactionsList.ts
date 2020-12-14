@@ -1,6 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -12,6 +12,8 @@ import TxAxfer from 'components/TransactionDetail/TxAxfer';
 import TxAfrz from 'components/TransactionDetail/TxAfrz';
 import TxAppl from 'components/TransactionDetail/TxAppl';
 
+const BACKGROUND_REFRESH_TIMER: number = 10000;
+
 const TransactionsList: FunctionalComponent = (props: any) => {
   const { address, ledger } = props;
 
@@ -21,6 +23,8 @@ const TransactionsList: FunctionalComponent = (props: any) => {
   const [isLoading, setLoading] = useState<any>(true);
   const [showTx, setShowTx] = useState<any>(null);
   const [nextToken, setNextToken] = useState<any>(null);
+  const resultsRef = useRef([]);
+  const pendingRef = useRef([]);
 
   const fetchApi = async () => {
     setLoading(true);
@@ -36,8 +40,34 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       if (results.length > 0) {
         setResults(results.concat(response.transactions));
       } else {
-        setResults(response.transactions);
-        setPending(response.pending);
+        resultsRef.current = response.transactions;
+        pendingRef.current = response.pending;
+        setResults(resultsRef.current);
+        setPending(pendingRef.current);
+        if (pendingRef.current.length) {
+          setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
+        }
+      }
+      const nextToken = response['next-token'] || null;
+      setNextToken(nextToken);
+    });
+  };
+
+  const backgroundFetch = async () => {
+    setLoading(true);
+    const params = {
+      ledger: ledger,
+      address: address,
+      limit: resultsRef.current.length + pendingRef.current.length,
+    };
+    sendMessage(JsonRpcMethod.Transactions, params, function (response) {
+      setLoading(false);
+      setDate(new Date());
+      setResults(response.transactions);
+      setPending(response.pending);
+      // If there are still pending tx after the update, we request another background fetch
+      if (response.pending.length) {
+        setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
       }
 
       if (response['next-token']) setNextToken(response['next-token']);
