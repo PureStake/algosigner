@@ -7,60 +7,59 @@ exports[`TxAfrz should match snapshot 1`] = `
 >
   <p
     className="has-text-centered has-text-weight-bold"
+    id="txTitle"
   >
     Asset 
     Freeze
   </p>
-  <p>
-    <b>
-      TxID:
-    </b>
-     
+  <p
+    data-transaction-id="VH4LN4PICQPJNAZE6KVCNOYLE3K5XWWZH2OM3HWCSF2TOQU4MGNA"
+  >
+    <strong>
+      TxID: 
+    </strong>
     <span>
       VH4LN4PICQPJNAZE6KVCNOYLE3K5XWWZH2OM3HWCSF2TOQU4MGNA
     </span>
   </p>
-  <p>
-    <b>
-      Origin:
-    </b>
-     
+  <p
+    data-transaction-sender="WLH5LELVSEVQL45LBRQYCLJAX6KQPGWUY5WHJXVRV2NPYZUBQAFPH22Q7A"
+  >
+    <strong>
+      Origin: 
+    </strong>
     <span>
       WLH5LELVSEVQL45LBRQYCLJAX6KQPGWUY5WHJXVRV2NPYZUBQAFPH22Q7A
     </span>
   </p>
   <p>
-    <b>
-      Freeze address:
-    </b>
-     
+    <strong>
+      Freeze address: 
+    </strong>
     <span>
       ZYQX7BZ6LGTD7UCS7J5RVEAKHUJPK3FNJFZV2GPUYS2TFIADVFHDBKTN7I
     </span>
   </p>
   <p>
-    <b>
-      Asset:
-    </b>
-     
+    <strong>
+      Asset: 
+    </strong>
     <span>
       185
     </span>
   </p>
   <p>
-    <b>
-      Action:
-    </b>
-     
+    <strong>
+      Action: 
+    </strong>
     <span>
       Freeze
     </span>
   </p>
   <p>
-    <b>
-      Block:
-    </b>
-     
+    <strong>
+      Block: 
+    </strong>
     <span>
       3276956
     </span>

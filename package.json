@@ -9,14 +9,35 @@
   ],
   "scripts": {
     "build": "(cd ./packages/common && npm run build); (cd ./packages/crypto && npm run build); (cd ./packages/storage && npm run build); (cd ./packages/ui && npm run build); (cd ./packages/extension && npm run build); (cd ./packages/dapp && npm run build);",
-    "buildcopyui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
+    "build:ui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
+    "build:extension": "cd ./packages/extension && npm run build && cp -r ./dist/* ../../dist/",
     "copy": "mkdir -p ./dist && cp -r ./packages/extension/dist/* dist/ && cp -r ./packages/ui/dist/* dist/ && cp -r ./packages/dapp/dist/* dist/ && mkdir -p ./dist/docs && cp -r ./docs/* dist/docs/",
     "clean": "rm -rf ./dist/* && rm -rf ./packages/common/dist/* && rm -rf ./packages/crypto/dist/* && rm -rf ./packages/dapp/dist/* && rm -rf ./packages/extension/dist/* && rm -rf ./packages/storage/dist/* && rm -rf ./packages/ui/dist/* && rm -rf ./packages/dapp/lib/*",
     "postbuild": "npm run copy",
     "postinstall": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install); (cd ./packages/test-project && npm install);",
     "prebuild": "rm -rf ./dist/*",
     "coveragetest": "cd ./packages/test-project && npm run coveragetest",
-    "test": "(cd ./packages/crypto && npm run test); (cd ./packages/extension && npm run test); (cd ./packages/ui && npm run test); (cd ./packages/dapp && npm run test); (cd ./packages/common && npm run test); (cd ./packages/test-project && npm run github-test);"
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "(cd ./packages/crypto && npm run test) && (cd ./packages/extension && npm run test) && (cd ./packages/ui && npm run test) && (cd ./packages/dapp && npm run test) && (cd ./packages/common && npm run test)",
+    "test:e2e": "(cd ./packages/test-project && npm run github-test)"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.7.0",
+    "@typescript-eslint/parser": "^4.7.0",
+    "eslint": "^7.12.1",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.5.1",
+    "prettier": "^2.2.1",
+    "typescript": "^3.9.7"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "echo '\nChecking for uncommited files\nMake sure to stash uncommited changes before pushing\n'; git diff HEAD --quiet && npm run test:unit"
+    }
+  },
+  "lint-staged": {
+    "*.{js,json,ts,scss,css,md}": "prettier --write",
+    "*.{js,json,ts}": "eslint --fix"
+  }
 }

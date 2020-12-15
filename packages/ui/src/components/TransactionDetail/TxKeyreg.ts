@@ -1,22 +1,39 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 
 const TxKeyreg: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      <p class="has-text-centered has-text-weight-bold">Key registration</p>
-      <p><strong>TxID:</strong> ${tx.id}</p>
-      <p><strong>From:</strong> ${tx.sender}</p>
-      <p><strong>Block:</strong> ${tx['confirmed-round']}</p>
+      <p id="txTitle" class="has-text-centered has-text-weight-bold">
+        Key registration
+      </p>
+      <p data-transaction-id="${tx.id}">
+        <strong>TxID: </strong>
+        <span>${tx.id}</span>
+      </p>
+      <p data-transaction-sender="${tx.sender}">
+        <strong>From: </strong>
+        <span>${tx.sender}</span>
+      </p>
+      <p>
+        <strong>Block: </strong>
+        <span>${tx['confirmed-round']}</span>
+      </p>
       <div class="has-text-centered">
-        <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${tx.id}`} target="_blank" rel="noopener noreferrer">
+        <a
+          href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${
+            tx.id
+          }`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           See details in GoalSeeker
         </a>
       </div>
     </div>
   `;
-}
+};
 
-export default TxKeyreg
+export default TxKeyreg;

@@ -1,19 +1,18 @@
 // import { generateAccount, secretKeyToMnemonic } from 'algosdk';
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
-import { useObserver } from 'mobx-react-lite';
-import { Link, route } from 'preact-router';
+import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 
-import { StoreContext } from 'services/StoreContext'
+import { StoreContext } from 'services/StoreContext';
 
-import SetAccountName from 'components/CreateAccount/SetAccountName'
-import AccountKeys from 'components/CreateAccount/AccountKeys'
-import ConfirmMnemonic from 'components/CreateAccount/ConfirmMnemonic'
-import Authenticate from 'components/Authenticate'
+import SetAccountName from 'components/CreateAccount/SetAccountName';
+import AccountKeys from 'components/CreateAccount/AccountKeys';
+import ConfirmMnemonic from 'components/CreateAccount/ConfirmMnemonic';
+import Authenticate from 'components/Authenticate';
 
 interface Account {
   address: string;
@@ -22,7 +21,7 @@ interface Account {
 }
 
 const CreateAccount: FunctionalComponent = (props: any) => {
-  const { url, ledger } = props;
+  const { ledger } = props;
   const [name, setName] = useState('');
   const [account, setAccount] = useState<Account>({
     address: '',
@@ -33,32 +32,32 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
-  const store:any = useContext(StoreContext);
+  const store: any = useContext(StoreContext);
 
   useEffect(() => {
-    sendMessage(JsonRpcMethod.CreateAccount, {}, function(response) {
+    sendMessage(JsonRpcMethod.CreateAccount, {}, function (response) {
       setAccount({
         mnemonic: response[0],
         address: response[1],
-        name: ""
+        name: '',
       });
     });
   }, []);
 
   const nextStep = () => {
     setStep(step + 1);
-  }
+  };
 
   const setAccountName = () => {
-    let newAcc : Account = Object.assign({}, account)
-    newAcc.name = name
+    const newAcc: Account = Object.assign({}, account);
+    newAcc.name = name;
     setAccount(newAcc);
     nextStep();
-  }
+  };
 
   const prevStep = () => {
     setStep(step - 1);
-  }
+  };
 
   const createAccount = (pwd) => {
     const params = {
@@ -66,16 +65,16 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       address: account.address || '',
       mnemonic: account.mnemonic || '',
       name: account.name || '',
-      passphrase: pwd
+      passphrase: pwd,
     };
     setLoading(true);
     setAuthError('');
 
-    sendMessage(JsonRpcMethod.SaveAccount, params, function(response) {
+    sendMessage(JsonRpcMethod.SaveAccount, params, function (response) {
       if ('error' in response) {
         setLoading(false);
         switch (response.error) {
-          case "Login Failed":
+          case 'Login Failed':
             setAuthError('Wrong passphrase');
             break;
           default:
@@ -90,41 +89,53 @@ const CreateAccount: FunctionalComponent = (props: any) => {
     });
   };
 
-
   return html`
-    ${ step===0 && html`
+    ${step === 0 &&
+    html`
       <${SetAccountName}
         name=${name}
         setName=${setName}
         ledger=${ledger}
-        nextStep=${setAccountName} />
+        nextStep=${setAccountName}
+      />
     `}
-    ${ step===1 && html`
+    ${step === 1 &&
+    html`
       <${AccountKeys}
         account=${account}
         prevStep=${prevStep}
-        nextStep=${nextStep} />
+        nextStep=${nextStep}
+      />
     `}
-    ${ step===2 && html`
+    ${step === 2 &&
+    html`
       <${ConfirmMnemonic}
         account=${account}
         prevStep=${prevStep}
-        nextStep=${() => {setAskAuth(true)}} />
-
+        nextStep=${() => {
+          setAskAuth(true);
+        }}
+      />
     `}
-    ${ askAuth && html`
+    ${askAuth &&
+    html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content" style="padding: 0 15px;">
+        <div class="modal-content">
           <${Authenticate}
             error=${authError}
             loading=${loading}
-            nextStep=${createAccount} />
+            nextStep=${createAccount}
+          />
         </div>
-        <button class="modal-close is-large" aria-label="close" onClick=${()=>setAskAuth(false)} />
+        <button
+          class="modal-close is-large"
+          aria-label="close"
+          onClick=${() => setAskAuth(false)}
+        />
       </div>
     `}
-  `
+  `;
 };
 
 export default CreateAccount;
