@@ -1,6 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
@@ -12,15 +12,22 @@ import TxAxfer from 'components/TransactionDetail/TxAxfer';
 import TxAfrz from 'components/TransactionDetail/TxAfrz';
 import TxAppl from 'components/TransactionDetail/TxAppl';
 
+const BACKGROUND_REFRESH_TIMER: number = 10000;
+
 const TransactionsList: FunctionalComponent = (props: any) => {
   const { address, ledger } = props;
 
   const [date, setDate] = useState<any>(new Date());
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<any>([]);
+  const [pending, setPending] = useState<any>([]);
+  const [isLoading, setLoading] = useState<any>(true);
   const [showTx, setShowTx] = useState<any>(null);
   const [nextToken, setNextToken] = useState<any>(null);
+  const resultsRef = useRef([]);
+  const pendingRef = useRef([]);
 
   const fetchApi = async () => {
+    setLoading(true);
     const params = {
       'ledger': ledger,
       'address': address,
@@ -28,9 +35,40 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       'limit': 20,
     };
     sendMessage(JsonRpcMethod.Transactions, params, function (response) {
+      setLoading(false);
       // If there are already transactions, just append the new ones
-      if (results.length > 0) setResults(results.concat(response.transactions));
-      else setResults(response.transactions);
+      if (results.length > 0) {
+        setResults(results.concat(response.transactions));
+      } else {
+        resultsRef.current = response.transactions;
+        pendingRef.current = response.pending;
+        setResults(resultsRef.current);
+        setPending(pendingRef.current);
+        if (pendingRef.current.length) {
+          setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
+        }
+      }
+      const nextToken = response['next-token'] || null;
+      setNextToken(nextToken);
+    });
+  };
+
+  const backgroundFetch = async () => {
+    setLoading(true);
+    const params = {
+      ledger: ledger,
+      address: address,
+      limit: resultsRef.current.length + pendingRef.current.length,
+    };
+    sendMessage(JsonRpcMethod.Transactions, params, function (response) {
+      setLoading(false);
+      setDate(new Date());
+      setResults(response.transactions);
+      setPending(response.pending);
+      // If there are still pending tx after the update, we request another background fetch
+      if (response.pending.length) {
+        setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
+      }
 
       if (response['next-token']) setNextToken(response['next-token']);
       else setNextToken(null);
@@ -71,7 +109,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     fetchApi();
   };
 
-  const getInfo = (tx, date) => {
+  const getTxInfo = (tx, date) => {
     function getTime(date, roundTime) {
       const MINUTESTHRESHOLD = 60000;
       const HOURSTHRESHOLD = 3600000;
@@ -104,10 +142,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       case 'pay':
         info = tx['payment-transaction'].amount / 1e6 + ' Algos';
         if (tx.sender === address) {
-          subtitle = 'To';
+          subtitle = 'Payment To';
           title = tx['payment-transaction'].receiver;
         } else {
-          subtitle = 'From';
+          subtitle = 'Payment From';
           title = tx.sender;
         }
         break;
@@ -150,8 +188,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
       case 'appl':
         if ('application-id' in tx['application-transaction']) {
-          subtitle =
-            tx['application-transaction']['application-id'] || 'application';
+          subtitle = tx['application-transaction']['application-id'] || 'application';
           title = tx['application-transaction']['on-completion'];
         } else {
           subtitle = 'appl';
@@ -161,18 +198,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     }
 
     return html`
-      <div
-        style="display: flex; justify-content: space-between;"
-        data-transaction-id="${tx.id}"
-      >
+      <div style="display: flex; justify-content: space-between;" data-transaction-id="${tx.id}">
         <div style="max-width: 60%; white-space: nowrap;">
-          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
-            ${subtitle}
-          </h2>
-          <h1
-            style="text-overflow: ellipsis; overflow: hidden;"
-            class="title is-size-6"
-          >
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light"> ${subtitle} </h2>
+          <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
             ${title}
           </h1>
         </div>
@@ -186,21 +215,107 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     `;
   };
 
+  const getPendingTxInfo = (tx) => {
+    let title, subtitle, info;
+    switch (tx['type']) {
+      case 'pay':
+        info = tx.amount / 1e6 + ' Algos';
+        if (tx.sender === address) {
+          subtitle = 'Pending Payment to';
+          title = tx.receiver;
+        } else {
+          subtitle = 'Pending Payment from';
+          title = tx.sender;
+        }
+        break;
+      case 'keyreg':
+        subtitle = 'Pending transaction';
+        title = 'Key Registration';
+        break;
+      case 'acfg':
+        subtitle = 'Pending Asset Config Transaction';
+        title = tx.id;
+        break;
+      case 'axfer':
+        info = tx.assetName ? `${tx.amount} ${tx.assetName}` : null;
+        // Clawback if there is a sender in the transfer object
+        if (tx.assetSender) {
+          if (tx.receiver === address) {
+            subtitle = 'Pending Asset Clawback From';
+            title = tx.assetSender;
+          } else {
+            subtitle = 'Pending Asset Clawback To';
+            title = tx.receiver;
+          }
+        } else {
+          if (tx.receiver === address) {
+            subtitle = 'Pending Asset Transfer From';
+            title = tx.sender;
+          } else {
+            subtitle = 'Pending Asset Transfer To';
+            title = tx.receiver;
+          }
+        }
+        break;
+      case 'afrz':
+        subtitle = 'Pending Asset Freeze Transaction';
+        title = tx.assetName;
+        break;
+      case 'appl':
+        subtitle = 'Pending Application Transaction';
+        title = tx.id;
+        break;
+    }
+
+    return html`
+      <div style="display: flex; justify-content: space-between;">
+        <div style="max-width: 60%; white-space: nowrap;">
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">
+            <i>${subtitle}</i>
+          </h2>
+          <h1
+            style="text-overflow: ellipsis; overflow: hidden;"
+            class="title is-size-6 has-text-grey"
+          >
+            <i>${title}</i>
+          </h1>
+        </div>
+        ${info &&
+        html`
+          <div class="has-text-right" style="margin-top: 17px;">
+            <h1 class="title is-size-6 has-text-grey">
+              <i>${info}</i>
+            </h1>
+          </div>
+        `}
+      </div>
+    `;
+  };
+
   return html`
     <div class="py-2">
       <span class="px-4 has-text-weight-bold is-size-5">Transactions</span>
-      ${results.map(
+      ${pending.map(
+        (tx: any) => html`
+          <div class="py-3 px-4" style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
+            ${getPendingTxInfo(tx)}
+          </div>
+        `
+      )}
+      ${results &&
+      results.map(
         (tx: any) => html`
           <div
             class="py-3 px-4"
             style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
             onClick=${() => handleClick(tx)}
           >
-            ${getInfo(tx, date)}
+            ${getTxInfo(tx, date)}
           </div>
         `
       )}
-      ${nextToken &&
+      ${!isLoading &&
+      nextToken &&
       html`
         <div
           class="py-3 px-4 has-text-centered"
@@ -209,16 +324,18 @@ const TransactionsList: FunctionalComponent = (props: any) => {
           <a onClick=${loadMore}> Load more transactions </a>
         </div>
       `}
+      ${isLoading &&
+      html`
+        <div style="padding: 10px 0;">
+          <span class="loader" style="position: relative; left: calc(50% - 0.5em);"></span>
+        </div>
+      `}
     </div>
 
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>
       <div class="modal-background"></div>
       <div class="modal-content">${showTx}</div>
-      <button
-        class="modal-close is-large"
-        aria-label="close"
-        onClick=${() => setShowTx(null)}
-      />
+      <button class="modal-close is-large" aria-label="close" onClick=${() => setShowTx(null)} />
     </div>
   `;
 };

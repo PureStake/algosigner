@@ -55,7 +55,7 @@ const Account: FunctionalComponent = (props: any) => {
           class="button is-outlined is-small is-primary is-pulled-right"
           onClick=${() => setShowDetails(true)}>
           <span class="icon">
-            <i class="fas fa-ellipsis-v"></i>
+            <i style="vertical-align: middle;" class="fas fa-ellipsis-v"></i>
           </span>
         </button>
       </p>
