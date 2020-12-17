@@ -2,14 +2,11 @@
   "name": "algorand-test-project",
   "version": "1.2.0",
   "description": "Repository for tests",
-  "dependencies": {},
   "devDependencies": {
-    "jest": "^26.4.2",
-    "jest-puppeteer": "^4.4.0",
+    "jest": "^26.6.3",
     "jest-runner-groups": "^2.0.1",
-    "jest-webextension-mock": "^3.6.1",
-    "puppeteer": "^5.3.0",
-    "ts-jest": "^26.3.0"
+    "puppeteer": "^5.5.0",
+    "ts-jest": "^26.4.4"
   },
   "scripts": {
     "github-test": "jest --group=github",
