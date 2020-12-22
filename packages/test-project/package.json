@@ -9,7 +9,7 @@
     "ts-jest": "^26.4.4"
   },
   "scripts": {
-    "github-test": "jest --group=github",
+    "github": "jest -i --group=github",
     "basic-dapp": "jest --group=basic-dapp",
     "basic-ui": "jest --group=basic-ui",
     "app-dapp": "jest --group=app-dapp",

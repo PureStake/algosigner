@@ -47,4 +47,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: screenshot
-        path: ./*.png
+        path: ./packages/test-project/screenshots/*.png
+        retention-days: 5
