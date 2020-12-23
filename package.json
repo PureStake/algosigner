@@ -19,7 +19,8 @@
     "coveragetest": "cd ./packages/test-project && npm run coveragetest",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "(cd ./packages/crypto && npm run test) && (cd ./packages/extension && npm run test) && (cd ./packages/ui && npm run test) && (cd ./packages/dapp && npm run test) && (cd ./packages/common && npm run test)",
-    "test:e2e": "(cd ./packages/test-project && npm run github)"
+    "test:e2e": "(cd ./packages/test-project && npm run test)",
+    "test:github": "(cd ./packages/test-project && npm run github)"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.7.0",

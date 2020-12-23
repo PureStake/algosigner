@@ -41,7 +41,7 @@ jobs:
     - name: Run headful puppeteer tests
       uses: djp3/puppeteer-headful@master
       with:
-        args: npm run test:e2e
+        args: npm run test:github
     - name: Upload screenshots
       if: ${{ always() }}
       uses: actions/upload-artifact@v2

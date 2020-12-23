@@ -11,8 +11,7 @@ describe('Basic Happy Path Tests', () => {
   const unsafeMenmonic =
     'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy';
   const testNetAccount = 'E2E-Tests';
-  const testAccountAddress =
-    'MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE';
+  const testAccountAddress = 'MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE';
   const amount = Math.ceil(Math.random() * 9); // txn size, modify multiplier for bulk
 
   let baseUrl; // set in beforeAll
@@ -27,10 +26,7 @@ describe('Basic Happy Path Tests', () => {
     const targets = await browser.targets();
 
     const extensionTarget = targets.find(({ _targetInfo }) => {
-      return (
-        _targetInfo.title === extensionName &&
-        _targetInfo.type === 'background_page'
-      );
+      return _targetInfo.title === extensionName && _targetInfo.type === 'background_page';
     });
 
     const extensionUrl = extensionTarget._targetInfo.url || '';
@@ -54,13 +50,10 @@ describe('Basic Happy Path Tests', () => {
 
   const verifyTransaction = async () => {
     await extensionPage.waitForTimeout(10000);
-    await selectAccount();
     const txSelector = `[data-transaction-id=${txId}]`;
     await extensionPage.waitForSelector(txSelector);
     await extensionPage.click(txSelector);
-    await expect(
-      extensionPage.$eval('#txTitle', (e) => e.innerText)
-    ).resolves.toBe(txTitle);
+    await expect(extensionPage.$eval('#txTitle', (e) => e.innerText)).resolves.toBe(txTitle);
     await expect(
       extensionPage.$eval(
         '.modal.is-active [data-transaction-id]',
@@ -74,7 +67,6 @@ describe('Basic Happy Path Tests', () => {
       )
     ).resolves.toBe(testAccountAddress);
     await closeModal();
-    await goBack();
   };
 
   test('Welcome Page Title', async () => {
@@ -87,9 +79,9 @@ describe('Basic Happy Path Tests', () => {
   });
 
   test('Set new wallet password', async () => {
-    await expect(
-      extensionPage.$eval('.mt-2', (e) => e.innerText)
-    ).resolves.toMatch('my_1st_game_was_GALAGA!');
+    await expect(extensionPage.$eval('.mt-2', (e) => e.innerText)).resolves.toMatch(
+      'my_1st_game_was_GALAGA!'
+    );
     await extensionPage.waitForSelector('#createWallet');
     await extensionPage.type('#setPassword', unsafePassword);
     await extensionPage.type('#confirmPassword', unsafePassword);
@@ -129,9 +121,9 @@ describe('Basic Happy Path Tests', () => {
 
   test('Load Account Info', async () => {
     await selectAccount();
-    await expect(
-      extensionPage.$eval('#accountName', (e) => e.innerText)
-    ).resolves.toBe(testNetAccount);
+    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
+      testNetAccount
+    );
     await goBack();
   });
 
@@ -143,53 +135,36 @@ describe('Basic Happy Path Tests', () => {
     await extensionPage.type('#toAddress', testAccountAddress);
     await extensionPage.type('#note', 'AutoTest Send Algo');
     await extensionPage.click('#submitTransfer');
-    await extensionPage.waitForTimeout(100);
+    await extensionPage.waitForSelector('#enterPassword');
     await extensionPage.type('#enterPassword', unsafePassword);
-    await extensionPage.waitForTimeout(200);
+    await extensionPage.waitForSelector('#authButton');
     await extensionPage.click('#authButton');
-    await extensionPage.waitForTimeout(2000);
     await extensionPage.waitForSelector('#txId');
     // setup tx details for next test
     txId = await extensionPage.$eval('#txId', (e) => e.innerText);
     txTitle = 'Payment';
     await returnToAccount();
-    await goBack();
   });
 
   test('Verify transaction', verifyTransaction);
 
   test('Check Asset details', async () => {
     const assetSelector = '[data-asset-id]';
-    await selectAccount();
     await extensionPage.waitForSelector(assetSelector);
-    const assetId = await extensionPage.$eval(
-      assetSelector,
-      (e) => e.dataset['assetId']
-    );
-    const assetBalance = await extensionPage.$eval(
-      assetSelector,
-      (e) => e.dataset['assetBalance']
-    );
+    const assetId = await extensionPage.$eval(assetSelector, (e) => e.dataset['assetId']);
+    const assetBalance = await extensionPage.$eval(assetSelector, (e) => e.dataset['assetBalance']);
     await extensionPage.click(assetSelector);
     await expect(
-      extensionPage.$eval(
-        `.modal ${assetSelector}`,
-        (e) => e.dataset['assetId']
-      )
+      extensionPage.$eval(`.modal ${assetSelector}`, (e) => e.dataset['assetId'])
     ).resolves.toBe(assetId);
     await expect(
-      extensionPage.$eval(
-        `.modal ${assetSelector}`,
-        (e) => e.dataset['assetBalance']
-      )
+      extensionPage.$eval(`.modal ${assetSelector}`, (e) => e.dataset['assetBalance'])
     ).resolves.toBe(assetBalance);
     await closeModal();
     const thereIsFullAssetList = await extensionPage.$('#showAssets');
     if (thereIsFullAssetList) {
       await extensionPage.click('#showAssets');
-      await extensionPage.waitForSelector(
-        `.modal [data-asset-id="${assetId}"]`
-      );
+      await extensionPage.waitForSelector(`.modal [data-asset-id="${assetId}"]`);
       await closeModal();
     }
     await goBack();
@@ -217,65 +192,57 @@ describe('Basic Happy Path Tests', () => {
     await extensionPage.type('#toAddress', testAccountAddress);
     await extensionPage.type('#note', 'AutoTest Send E2E Asset');
     await extensionPage.click('#submitTransfer');
-    await extensionPage.waitForTimeout(100);
+    await extensionPage.waitForSelector('#enterPassword');
     await extensionPage.type('#enterPassword', unsafePassword);
-    await extensionPage.waitForTimeout(200);
+    await extensionPage.waitForSelector('#authButton');
     await extensionPage.click('#authButton');
-    await extensionPage.waitForTimeout(2000);
     await extensionPage.waitForSelector('#txId');
     txId = await extensionPage.$eval('#txId', (e) => e.innerText);
     txTitle = 'Asset transfer';
     await returnToAccount();
-    await goBack();
   });
 
   test('Verify transaction', verifyTransaction);
 
-  test('Transaction Errors: OverSpend', async () => {
-    await selectAccount();
-    await extensionPage.click('#sendTransfer');
-    await extensionPage.waitForTimeout(100);
-    await extensionPage.type('#transferAmount', '900000');
-    await extensionPage.type('#toAddress', testAccountAddress);
-    await extensionPage.type('#note', 'AutoTest Overspend Algo');
-    await extensionPage.click('#submitTransfer');
-    await extensionPage.waitForTimeout(100);
-    await extensionPage.type('#enterPassword', unsafePassword);
-    await extensionPage.waitForTimeout(200);
-    await extensionPage.click('#authButton');
-    await extensionPage.waitForTimeout(2000);
-    await extensionPage.waitForSelector('#tx-error');
-    await extensionPage.waitForTimeout(2000);
+  // test('Transaction Errors: OverSpend', async () => {
+  //   await selectAccount();
+  //   await extensionPage.click('#sendTransfer');
+  //   await extensionPage.waitForSelector('#transferAmount');
+  //   await extensionPage.type('#transferAmount', '900000');
+  //   await extensionPage.type('#toAddress', testAccountAddress);
+  //   await extensionPage.type('#note', 'AutoTest Overspend Algo');
+  //   await extensionPage.click('#submitTransfer');
+  //   await extensionPage.waitForSelector('#enterPassword');
+  //   await extensionPage.type('#enterPassword', unsafePassword);
+  //   await extensionPage.waitForSelector('#authButton');
+  //   await extensionPage.click('#authButton');
+  //   await extensionPage.waitForSelector('#tx-error');
 
-    let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
-    await expect(pageError).toMatch(
-      "Overspending. Your account doesn't have sufficient funds."
-    );
+  //   let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
+  //   await expect(pageError).toMatch(
+  //     "Overspending. Your account doesn't have sufficient funds."
+  //   );
 
-    await closeModal();
-    await extensionPage.waitForTimeout(200);
-    await goBack();
-  });
+  //   await closeModal();
+  //   await extensionPage.waitForTimeout(200);
+  //   await goBack();
+  // });
 
   test('Transaction Errors: Invalid Field - Amount', async () => {
     await extensionPage.click('#sendTransfer');
-    await extensionPage.waitForTimeout(100);
+    await extensionPage.waitForSelector('#transferAmount');
     await extensionPage.type('#transferAmount', '9999999999.999999');
     await extensionPage.type('#toAddress', testAccountAddress);
     await extensionPage.type('#note', 'AutoTest Invalid Amount');
     await extensionPage.click('#submitTransfer');
-    await extensionPage.waitForTimeout(100);
+    await extensionPage.waitForSelector('#enterPassword');
     await extensionPage.type('#enterPassword', unsafePassword);
-    await extensionPage.waitForTimeout(200);
+    await extensionPage.waitForSelector('#authButton');
     await extensionPage.click('#authButton');
-    await extensionPage.waitForTimeout(2000);
     await extensionPage.waitForSelector('#tx-error');
-    await extensionPage.waitForTimeout(2000);
 
     let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
-    expect(pageError).toMatch(
-      'One or more fields are not valid. Please check and try again.'
-    );
+    expect(pageError).toMatch('One or more fields are not valid. Please check and try again.');
 
     await closeModal();
     await extensionPage.waitForTimeout(200);
@@ -285,10 +252,12 @@ describe('Basic Happy Path Tests', () => {
   test('Load Account Details', async () => {
     await extensionPage.click('#showDetails');
     await extensionPage.waitForSelector('#accountAddress');
-    await expect(
-      extensionPage.$eval('#accountAddress', (e) => e.innerText)
-    ).resolves.toBe(testAccountAddress);
-    await expect(extensionPage).toMatchElement('#accountAddress');
+    await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
+      testAccountAddress
+    );
+    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
+      testNetAccount
+    );
   });
 
   test('Delete Account', async () => {
@@ -301,7 +270,8 @@ describe('Basic Happy Path Tests', () => {
 
   test('Verify Account Deleted', async () => {
     await extensionPage.waitForSelector('#addAccount');
-    await expect(extensionPage).not.toMatchElement('#accountAddress');
+    await expect(extensionPage.select('#accountAddress')).rejects.toThrow();
+    await expect(extensionPage.select('#accountName')).rejects.toThrow();
   });
 
   const selectAccount = async () => {
@@ -313,8 +283,9 @@ describe('Basic Happy Path Tests', () => {
   };
 
   const returnToAccount = async () => {
+    await extensionPage.waitForTimeout(2000);
     await extensionPage.click('#backToWallet');
-    await extensionPage.waitForTimeout(5000);
+    await extensionPage.waitForTimeout(2000);
     return;
   };
 
@@ -349,10 +320,7 @@ describe('Create Account', () => {
     const targets = await browser.targets();
 
     const extensionTarget = targets.find(({ _targetInfo }) => {
-      return (
-        _targetInfo.title === extensionName &&
-        _targetInfo.type === 'background_page'
-      );
+      return _targetInfo.title === extensionName && _targetInfo.type === 'background_page';
     });
 
     const extensionUrl = extensionTarget._targetInfo.url || '';
@@ -383,10 +351,7 @@ describe('Create Account', () => {
 
   test('Create An Account, Step 2 - Get Mnemonic', async () => {
     await extensionPage.click('#accountAddress');
-    createdAccountAddress = await extensionPage.$eval(
-      '#accountAddress',
-      (e) => e.innerText
-    ); // setup for another test
+    createdAccountAddress = await extensionPage.$eval('#accountAddress', (e) => e.innerText); // setup for another test
 
     for (let i = 1; i <= 25; i++) {
       mnemonicArray[i] = await extensionPage.$eval(
@@ -420,18 +385,20 @@ describe('Create Account', () => {
     await extensionPage.waitForSelector('#account_' + testNetAccount);
     await extensionPage.click('#account_' + testNetAccount);
     await extensionPage.waitForTimeout(500);
-    await expect(
-      extensionPage.$eval('#accountName', (e) => e.innerText)
-    ).resolves.toBe(testNetAccount);
+    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
+      testNetAccount
+    );
   });
 
   test('Load Account Details', async () => {
     await extensionPage.click('#showDetails');
     await extensionPage.waitForSelector('#accountAddress');
-    await expect(
-      extensionPage.$eval('#accountAddress', (e) => e.innerText)
-    ).resolves.toBe(createdAccountAddress);
-    await expect(extensionPage).toMatchElement('#accountAddress');
+    await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
+      createdAccountAddress
+    );
+    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
+      testNetAccount
+    );
   });
 
   test('Delete Account', async () => {
@@ -444,6 +411,7 @@ describe('Create Account', () => {
 
   test('Verify Account Deleted', async () => {
     await extensionPage.waitForSelector('#addAccount');
-    await expect(extensionPage).not.toMatchElement('#accountAddress');
+    await expect(extensionPage.select('#accountAddress')).rejects.toThrow();
+    await expect(extensionPage.select('#accountName')).rejects.toThrow();
   });
 });
