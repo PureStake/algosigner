@@ -1,31 +1,29 @@
 {
-    "manifest_version": 2,
-    "name": "AlgoSigner",
-    "author": "https://developer.purestake.io",
-    "version": "1.2.0",
-    "description": "Algorand Wallet Extension | Send & Receive ALGOs | Sign dApp Transactions",
-    "icons": { 
-        "48": "icon.png"
-    },
-    "content_scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["content.js"],
-            "run_at": "document_start"
-        }
-    ],
-    "background": {
-        "scripts": ["background.js"],
-        "persistent": true
-    },
-    "browser_action": {
-      "default_title": "AlgoSigner",
-      "default_icon": "icon.png",
-      "default_popup":"index.html"
-    },
-    "content_security_policy": "script-src 'self' 'sha256-r3HgVicK23eFlaBe+glyMCfP98WwT3i3bmq8FxshKMY='; object-src 'self'",
-    "web_accessible_resources": ["AlgoSigner.min.js"],
-    "permissions": [
-        "storage"
-    ]
+  "manifest_version": 2,
+  "name": "AlgoSigner",
+  "author": "https://developer.purestake.io",
+  "version": "1.3.0",
+  "description": "Algorand Wallet Extension | Send & Receive ALGOs | Sign dApp Transactions",
+  "icons": {
+    "48": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "AlgoSigner",
+    "default_icon": "icon.png",
+    "default_popup": "index.html"
+  },
+  "content_security_policy": "script-src 'self' 'sha256-r3HgVicK23eFlaBe+glyMCfP98WwT3i3bmq8FxshKMY='; object-src 'self'",
+  "web_accessible_resources": ["AlgoSigner.min.js"],
+  "permissions": ["storage"]
 }

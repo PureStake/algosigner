@@ -10,26 +10,28 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.2.0 Update
+## 1.3.0 Update
 
 The latest release brings:
 
-- Support for dApps to submit Atomic (group) transactions
-- Support for dApps to submit application creation transactions
-- Change to how fee's and flat fees are handled in the UI and in the signing step
-- Minor UI updates (block duplicate accounts, block multiple asset optins, network selector properly closing)
+- Support for dApps to submit multisig transactions and retrieve the single associated address signature.
+
+## Roadmap
+
+The next feature release will be a feature release permitting the addition and configuration of networks, planned for early 2021.
+
+### Multisig Transactions
+
+- Multisig transactions can be signed individually through AlgoSigner.
+  - Using the associated msig for the transaction an available matching unsigned address will be selected if possible to sign the txn component.
+  - The resulting sign will return the a msig with only this signature in the blob and will need to be merged with other signatures before sending to the network.
+- An example of this can be seen in the [existing sample dApp multisig test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
 
 ### Atomic Transactions
 
 - Grouped transactions intended for atomic transaction functionality need to be grouped outside of AlgoSigner, but can be signed individually.
 - The grouped transactions need to have their binary components concatenated to be accepted in the AlgoSigner send method.
 - An example of this can be seen in the [existing sample dApp group test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
-
-## Roadmap
-
-The next feature release will bring support for dApps to submit multi-signature transactions for signing. Planned for mid-late December.
-
-Following on will be a feature release permitting the addition and configuration of networks, planned for early 2021.
 
 ## Decentralized Applications
 
