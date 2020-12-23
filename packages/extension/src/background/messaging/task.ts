@@ -1,5 +1,5 @@
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require("algosdk");
+const algosdk = require('algosdk');
 
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
@@ -12,11 +12,11 @@ import {
 import { ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
-import encryptionWrap from "../encryptionWrap";
+import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
-import { InvalidTransactionStructure } from "../../errors/validation";
+import { InvalidTransactionStructure } from '../../errors/validation';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 
@@ -123,18 +123,11 @@ export class Task {
           }
         },
         // sign-transaction
-        [JsonRpcMethod.SignTransaction]: (
-          d: any,
-          resolve: Function,
-          reject: Function
-        ) => {
-          var transactionWrap = undefined;
-          var validationError = undefined;
+        [JsonRpcMethod.SignTransaction]: (d: any, resolve: Function, reject: Function) => {
+          let transactionWrap = undefined;
+          let validationError = undefined;
           try {
-            transactionWrap = getValidatedTxnWrap(
-              d.body.params,
-              d.body.params['type']
-            );
+            transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params['type']);
           } catch (e) {
             logging.log(`Validation failed. ${e}`);
             validationError = e;
@@ -169,14 +162,12 @@ export class Task {
           ) {
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            var invalidKeys = [];
-            Object.entries(transactionWrap.validityObject).forEach(
-              ([key, value]) => {
-                if (value['status'] === ValidationStatus.Invalid) {
-                  invalidKeys.push(`${key}`);
-                }
+            let invalidKeys = [];
+            Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
+              if (value['status'] === ValidationStatus.Invalid) {
+                invalidKeys.push(`${key}`);
               }
-            );
+            });
             d.error = {
               message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(
                 ','
@@ -208,9 +199,7 @@ export class Task {
 
               extensionBrowser.windows.create(
                 {
-                  url: extensionBrowser.runtime.getURL(
-                    'index.html#/sign-transaction'
-                  ),
+                  url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
                   ...popupProperties,
                 },
                 function (w) {
@@ -229,83 +218,122 @@ export class Task {
             });
           }
         },
-        [JsonRpcMethod.SignMultisigTransaction]: (
-          d: any,
-          resolve: Function, reject: Function
-        ) => {
+        [JsonRpcMethod.SignMultisigTransaction]: (d: any, resolve: Function, reject: Function) => {
           // TODO: Possible support for blob transfer on previously signed transactions
 
-          var transactionWrap = undefined;
-          var validationError = undefined;
+          let transactionWrap = undefined;
+          let validationError = undefined;
           try {
-            transactionWrap = getValidatedTxnWrap(d.body.params.txn, d.body.params.txn["type"]);
-          }
-          catch (e) {
+            transactionWrap = getValidatedTxnWrap(d.body.params.txn, d.body.params.txn['type']);
+          } catch (e) {
             logging.log(`Validation failed. ${e}`);
             validationError = e;
           }
-          if (!transactionWrap && validationError && validationError instanceof InvalidTransactionStructure) {
-            // We don't have a transaction wrap, but we have a validation error.         
+          if (
+            !transactionWrap &&
+            validationError &&
+            validationError instanceof InvalidTransactionStructure
+          ) {
+            // We don't have a transaction wrap, but we have a validation error.
             d.error = {
-              message: validationError.message
+              message: validationError.message,
             };
             reject(d);
             return;
-          }
-          else if (!transactionWrap) {
-            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.         
-            logging.log('A transaction has failed because of an inability to build the specified transaction type.');
+          } else if (!transactionWrap) {
+            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
+            logging.log(
+              'A transaction has failed because of an inability to build the specified transaction type.'
+            );
             d.error = {
-              message: (validationError || 'Validation failed for transaction. Please verify the properties are valid.')
+              message:
+                validationError ||
+                'Validation failed for transaction. Please verify the properties are valid.',
             };
             reject(d);
-          }
-          else if (transactionWrap.validityObject && Object.values(transactionWrap.validityObject).some(value => value['status'] === ValidationStatus.Invalid)) {
+          } else if (
+            transactionWrap.validityObject &&
+            Object.values(transactionWrap.validityObject).some(
+              (value) => value['status'] === ValidationStatus.Invalid
+            )
+          ) {
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            var invalidKeys = [];
+            let invalidKeys = [];
             Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
               if (value['status'] === ValidationStatus.Invalid) {
                 invalidKeys.push(`${key}`);
               }
-            })
+            });
             d.error = {
-              message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(',')}].`
+              message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(
+                ','
+              )}].`,
             };
             reject(d);
-          }
-          else {
-            logging.log(`transactionwrap success as: \n${JSON.stringify(transactionWrap)}`);
-            d.body.params.validityObject = transactionWrap.validityObject;
-            d.body.params.txn = transactionWrap.transaction;
-          }
+          } else {
+            // Get Ledger params
+            const conn = Settings.getBackendParams(
+              getLedgerFromGenesisID(transactionWrap.transaction.genesisID),
+              API.Algod
+            );
+            const sendPath = '/v2/transactions/params';
+            const fetchParams: any = {
+              headers: {
+                ...conn.apiKey,
+              },
+              method: 'GET',
+            };
 
-          // We have a transaction which appears to be valid. Show the popup as normal.
-          extensionBrowser.windows.create({
-            url: extensionBrowser.runtime.getURL("index.html#/sign-multisig-transaction"),
-            type: "popup",
-            focused: true,
-            width: 400 + 12,
-            height: 550 + 34
-          }, function (w) {
-            if (w) {
-              Task.requests[d.originTabID] = {
-                window_id: w.id,
-                message: d
-              };
-              // Send message with tx info
-              setTimeout(function () {
-                extensionBrowser.runtime.sendMessage(d);
-              }, 500);
-            }
-          });
+            let url = conn.url;
+            if (conn.port.length > 0) url += ':' + conn.port;
+
+            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+              calculateEstimatedFee(transactionWrap, params);
+
+              d.body.params.validityObject = transactionWrap.validityObject;
+              d.body.params.txn = transactionWrap.transaction;
+              d.body.params.estimatedFee = transactionWrap.estimatedFee;
+
+              let msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
+              const session = InternalMethods.getHelperSession();
+              const ledger = getLedgerFromGenesisID(transactionWrap.transaction.genesisID);
+              const accounts = session.wallet[ledger];
+              let multisigAccounts = getSigningAccounts(accounts, msig_txn);
+
+              if (multisigAccounts.error) {
+                d.error = multisigAccounts.error.message;
+                reject(d);
+              } else {
+                if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
+                  d.body.params.account = multisigAccounts.accounts[0]['address'];
+                  d.body.params.name = multisigAccounts.accounts[0]['name'];
+                }
+
+                extensionBrowser.windows.create(
+                  {
+                    url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
+                    ...popupProperties,
+                  },
+                  function (w) {
+                    if (w) {
+                      Task.requests[d.originTabID] = {
+                        window_id: w.id,
+                        message: d,
+                      };
+                      // Send message with tx info
+                      setTimeout(function () {
+                        extensionBrowser.runtime.sendMessage(d);
+                      }, 500);
+                    }
+                  }
+                );
+              }
+            });
+          }
         },
         // algod
-        [JsonRpcMethod.SendTransaction]: (
-          d: any,
-          resolve: Function,
-          reject: Function
-        ) => {
+        [JsonRpcMethod.SendTransaction]: (d: any, resolve: Function, reject: Function) => {
           const { params } = d.body;
           const conn = Settings.getBackendParams(params.ledger, API.Algod);
           const sendPath = '/v2/transactions';
@@ -335,11 +363,7 @@ export class Task {
             });
         },
         // algod
-        [JsonRpcMethod.Algod]: (
-          d: any,
-          resolve: Function,
-          reject: Function
-        ) => {
+        [JsonRpcMethod.Algod]: (d: any, resolve: Function, reject: Function) => {
           const { params } = d.body;
           const conn = Settings.getBackendParams(params.ledger, API.Algod);
 
@@ -368,11 +392,7 @@ export class Task {
             });
         },
         // Indexer
-        [JsonRpcMethod.Indexer]: (
-          d: any,
-          resolve: Function,
-          reject: Function
-        ) => {
+        [JsonRpcMethod.Indexer]: (d: any, resolve: Function, reject: Function) => {
           const { params } = d.body;
           const conn = Settings.getBackendParams(params.ledger, API.Indexer);
 
@@ -401,15 +421,11 @@ export class Task {
             });
         },
         // Accounts
-        [JsonRpcMethod.Accounts]: (
-          d: any,
-          resolve: Function,
-          reject: Function
-        ) => {
+        [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
           const accounts = session.wallet[d.body.params.ledger];
           let res = [];
-          for (var i = 0; i < accounts.length; i++) {
+          for (let i = 0; i < accounts.length; i++) {
             res.push({
               address: accounts[i].address,
             });
@@ -485,26 +501,22 @@ export class Task {
             let account;
 
             // Find address to send algos from
-            for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+            for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
               if (unlockedValue[ledger][i].address === from) {
                 account = unlockedValue[ledger][i];
                 break;
               }
             }
 
-            var recoveredAccount = algosdk.mnemonicToSecretKey(
-              account.mnemonic
-            );
+            let recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
             let txn = { ...message.body.params.transaction };
 
-            Object.keys({ ...message.body.params.transaction }).forEach(
-              (key) => {
-                if (txn[key] === undefined || txn[key] === null) {
-                  delete txn[key];
-                }
+            Object.keys({ ...message.body.params.transaction }).forEach((key) => {
+              if (txn[key] === undefined || txn[key] === null) {
+                delete txn[key];
               }
-            );
+            });
 
             // Modify base64 encoded fields
             if ('note' in txn && txn.note !== undefined) {
@@ -524,27 +536,21 @@ export class Task {
               }
               if ('appClearProgram' in txn) {
                 try {
-                  txn.appClearProgram = Uint8Array.from(
-                    Buffer.from(txn.appClearProgram, 'base64')
-                  );
+                  txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram, 'base64'));
                 } catch {
-                  message.error =
-                    'Error trying to parse appClearProgram into a Uint8Array value.';
+                  message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
                 }
               }
               if ('appArgs' in txn) {
                 try {
-                  var tempArgs = [];
+                  let tempArgs = [];
                   txn.appArgs.forEach((element) => {
                     logging.log(element);
-                    tempArgs.push(
-                      Uint8Array.from(Buffer.from(element, 'base64'))
-                    );
+                    tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
                   });
                   txn.appArgs = tempArgs;
                 } catch {
-                  message.error =
-                    'Error trying to parse appArgs into Uint8Array values.';
+                  message.error = 'Error trying to parse appArgs into Uint8Array values.';
                 }
               }
             }
@@ -552,7 +558,7 @@ export class Task {
             try {
               // This step transitions a raw object into a transaction style object
               let builtTx = buildTransaction(txn);
-              // We are combining the tx id get and sign into one step/object because of legacy, 
+              // We are combining the tx id get and sign into one step/object because of legacy,
               // this may not need to be the case any longer.
               let signedTxn = {
                 txID: builtTx.txID().toString(),
@@ -606,24 +612,23 @@ export class Task {
             let multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
             if (multisigAccounts.error) {
               message.error = multisigAccounts.error.message;
-            }
-            else {
+            } else {
               // TODO: Currently we are grabbing the first non-signed account. This may change.
               account = multisigAccounts.accounts[0];
             }
 
             if (account) {
               // We can now use the found account match to get the sign key
-              var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+              let recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
               // Use the received txn component of the transaction, but remove undefined and null values
-              Object.keys({ ...msig_txn.txn }).forEach(key => {
+              Object.keys({ ...msig_txn.txn }).forEach((key) => {
                 if (msig_txn.txn[key] === undefined || msig_txn.txn[key] === null) {
                   delete msig_txn.txn[key];
                 }
               });
 
-              // Modify base64 encoded fields 
+              // Modify base64 encoded fields
               if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
                 msig_txn.txn.note = new Uint8Array(Buffer.from(msig_txn.txn.note));
               }
@@ -631,29 +636,32 @@ export class Task {
               if (msig_txn.txn && msig_txn.txn.type == 'appl') {
                 if ('appApprovalProgram' in msig_txn.txn) {
                   try {
-                    msig_txn.txn.appApprovalProgram = Uint8Array.from(Buffer.from(msig_txn.txn.appApprovalProgram, 'base64'));
-                  }
-                  catch {
-                    message.error = 'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                    msig_txn.txn.appApprovalProgram = Uint8Array.from(
+                      Buffer.from(msig_txn.txn.appApprovalProgram, 'base64')
+                    );
+                  } catch {
+                    message.error =
+                      'Error trying to parse appApprovalProgram into a Uint8Array value.';
                   }
                 }
                 if ('appClearProgram' in msig_txn.txn) {
                   try {
-                    msig_txn.txn.appClearProgram = Uint8Array.from(Buffer.from(msig_txn.txn.appClearProgram, 'base64'));
-                  }
-                  catch {
-                    message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
+                    msig_txn.txn.appClearProgram = Uint8Array.from(
+                      Buffer.from(msig_txn.txn.appClearProgram, 'base64')
+                    );
+                  } catch {
+                    message.error =
+                      'Error trying to parse appClearProgram into a Uint8Array value.';
                   }
                 }
                 if ('appArgs' in msig_txn.txn) {
                   try {
-                    var tempArgs = [];
-                    msig_txn.txn.appArgs.forEach(element => {
+                    let tempArgs = [];
+                    msig_txn.txn.appArgs.forEach((element) => {
                       tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
                     });
                     msig_txn.txn.appArgs = tempArgs;
-                  }
-                  catch {
+                  } catch {
                     message.error = 'Error trying to parse appArgs into Uint8Array values.';
                   }
                 }
@@ -666,26 +674,31 @@ export class Task {
                 // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
                 let version = msig_txn.msig.v || msig_txn.msig.version;
                 let threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
-                let addrs = msig_txn.msig.addrs || msig_txn.msig.subsig.map(subsig => {
-                  return subsig.pk;
-                });
+                let addrs =
+                  msig_txn.msig.addrs ||
+                  msig_txn.msig.subsig.map((subsig) => {
+                    return subsig.pk;
+                  });
                 let preimg = {
                   version: version,
                   threshold: threshold,
-                  addrs: addrs
+                  addrs: addrs,
                 };
 
                 let signedTxn;
                 let appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
                 // Check for existing signatures. Append if there are any.
-                if (appendEnabled && msig_txn.msig.subsig.some(subsig => subsig.s)) {
+                if (appendEnabled && msig_txn.msig.subsig.some((subsig) => subsig.s)) {
                   // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
-                  // It is subject to change and is built as scaffolding for future functionality. 
+                  // It is subject to change and is built as scaffolding for future functionality.
                   let encodedBlob = message.body.params.txn;
-                  var decodedBlob = Buffer.from(encodedBlob, 'base64');
-                  signedTxn = algosdk.appendSignMultisigTransaction(decodedBlob, preimg, recoveredAccount.sk);
-                }
-                else {
+                  let decodedBlob = Buffer.from(encodedBlob, 'base64');
+                  signedTxn = algosdk.appendSignMultisigTransaction(
+                    decodedBlob,
+                    preimg,
+                    recoveredAccount.sk
+                  );
+                } else {
                   // If this is the first signature then do a normal sign
                   signedTxn = algosdk.signMultisigTransaction(builtTx, preimg, recoveredAccount.sk);
                 }
@@ -695,7 +708,7 @@ export class Task {
 
                 message.response = {
                   txID: signedTxn.txID,
-                  blob: b64Obj
+                  blob: b64Obj,
                 };
               } catch (e) {
                 message.error = e.message;
@@ -722,128 +735,50 @@ export class Task {
             MessageApi.send(message);
           }, 100);
         },
-        [JsonRpcMethod.CreateWallet]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.CreateWallet](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.CreateWallet]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse);
         },
-        [JsonRpcMethod.DeleteWallet]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.DeleteWallet](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.DeleteWallet]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.DeleteWallet](request, sendResponse);
         },
-        [JsonRpcMethod.CreateAccount]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.CreateAccount](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.CreateAccount]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.CreateAccount](request, sendResponse);
         },
         [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.Login](request, sendResponse);
         },
         [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.GetSession](
-            request,
-            sendResponse
-          );
+          return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);
         },
         [JsonRpcMethod.SaveAccount]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.SaveAccount](
-            request,
-            sendResponse
-          );
+          return InternalMethods[JsonRpcMethod.SaveAccount](request, sendResponse);
         },
-        [JsonRpcMethod.ImportAccount]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.ImportAccount](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.ImportAccount]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.ImportAccount](request, sendResponse);
         },
-        [JsonRpcMethod.DeleteAccount]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.DeleteAccount](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.DeleteAccount]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.DeleteAccount](request, sendResponse);
         },
-        [JsonRpcMethod.Transactions]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.Transactions](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.Transactions]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.Transactions](request, sendResponse);
         },
-        [JsonRpcMethod.AccountDetails]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.AccountDetails](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.AccountDetails]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.AccountDetails](request, sendResponse);
         },
-        [JsonRpcMethod.AssetDetails]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.AssetDetails](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.AssetDetails]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.AssetDetails](request, sendResponse);
         },
-        [JsonRpcMethod.AssetsAPIList]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.AssetsAPIList](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.AssetsAPIList]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.AssetsAPIList](request, sendResponse);
         },
-        [JsonRpcMethod.AssetsVerifiedList]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.AssetsVerifiedList](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.AssetsVerifiedList]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.AssetsVerifiedList](request, sendResponse);
         },
-        [JsonRpcMethod.SignSendTransaction]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.SignSendTransaction](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
         },
-        [JsonRpcMethod.ChangeLedger]: (
-          request: any,
-          sendResponse: Function
-        ) => {
-          return InternalMethods[JsonRpcMethod.ChangeLedger](
-            request,
-            sendResponse
-          );
+        [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
         },
       },
     };
