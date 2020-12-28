@@ -557,9 +557,9 @@ export class InternalMethods {
             sendResponse({ txId: resp.txId });
           })
           .catch((e: any) => {
-            if (e.body.message.includes('overspend'))
+            if (e.message.includes('overspend'))
               sendResponse({ error: "Overspending. Your account doesn't have sufficient funds." });
-            else sendResponse({ error: e.body.message });
+            else sendResponse({ error: e.message });
           });
       }
     });

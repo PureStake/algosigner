@@ -124,11 +124,9 @@ describe('Basic Happy Path Tests', () => {
     await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
       testNetAccount
     );
-    await goBack();
   });
 
   test('Send Algos Transaction', async () => {
-    await selectAccount();
     await extensionPage.click('#sendTransfer');
     await extensionPage.waitForTimeout(100);
     await extensionPage.type('#transferAmount', amount.toString());
@@ -204,29 +202,28 @@ describe('Basic Happy Path Tests', () => {
 
   test('Verify transaction', verifyTransaction);
 
-  // test('Transaction Errors: OverSpend', async () => {
-  //   await selectAccount();
-  //   await extensionPage.click('#sendTransfer');
-  //   await extensionPage.waitForSelector('#transferAmount');
-  //   await extensionPage.type('#transferAmount', '900000');
-  //   await extensionPage.type('#toAddress', testAccountAddress);
-  //   await extensionPage.type('#note', 'AutoTest Overspend Algo');
-  //   await extensionPage.click('#submitTransfer');
-  //   await extensionPage.waitForSelector('#enterPassword');
-  //   await extensionPage.type('#enterPassword', unsafePassword);
-  //   await extensionPage.waitForSelector('#authButton');
-  //   await extensionPage.click('#authButton');
-  //   await extensionPage.waitForSelector('#tx-error');
+  test('Transaction Errors: OverSpend', async () => {
+    await extensionPage.click('#sendTransfer');
+    await extensionPage.waitForSelector('#transferAmount');
+    await extensionPage.type('#transferAmount', '900000');
+    await extensionPage.type('#toAddress', testAccountAddress);
+    await extensionPage.type('#note', 'AutoTest Overspend Algo');
+    await extensionPage.click('#submitTransfer');
+    await extensionPage.waitForSelector('#enterPassword');
+    await extensionPage.type('#enterPassword', unsafePassword);
+    await extensionPage.waitForSelector('#authButton');
+    await extensionPage.click('#authButton');
+    await extensionPage.waitForSelector('#tx-error');
 
-  //   let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
-  //   await expect(pageError).toMatch(
-  //     "Overspending. Your account doesn't have sufficient funds."
-  //   );
+    let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
+    await expect(pageError).toMatch(
+      "Overspending. Your account doesn't have sufficient funds."
+    );
 
-  //   await closeModal();
-  //   await extensionPage.waitForTimeout(200);
-  //   await goBack();
-  // });
+    await closeModal();
+    await extensionPage.waitForTimeout(200);
+    await goBack();
+  });
 
   test('Transaction Errors: Invalid Field - Amount', async () => {
     await extensionPage.click('#sendTransfer');
