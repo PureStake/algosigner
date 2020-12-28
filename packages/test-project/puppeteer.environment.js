@@ -18,7 +18,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
       executablePath: process.env.PUPPETEER_EXEC_PATH || '',
       headless: false,
       defaultViewport: null,
-      //slowMo: 50, // For watching tests more closely in debugging
+      // slowMo: 50, // For watching tests more closely in debugging
       args: [
         '--no-sandbox',
         //'--no-sandbox-and-elevated', //For Windows
@@ -27,6 +27,8 @@ class PuppeteerEnvironment extends NodeEnvironment {
         `--load-extension=${srcPath('dist')}`,
       ],
     });
+    const pages = await this.global.browser.pages();
+    this.global.page = pages[0];
   }
 
   async teardown() {
