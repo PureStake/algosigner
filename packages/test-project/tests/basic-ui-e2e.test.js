@@ -50,7 +50,7 @@ describe('Basic Happy Path Tests', () => {
 
   const verifyTransaction = async () => {
     await extensionPage.waitForTimeout(10000);
-    const txSelector = `[data-transaction-id=${txId}]`;
+    const txSelector = `[data-transaction-id="${txId}"]`;
     await extensionPage.waitForSelector(txSelector);
     await extensionPage.click(txSelector);
     await expect(extensionPage.$eval('#txTitle', (e) => e.innerText)).resolves.toBe(txTitle);
