@@ -6,24 +6,7 @@ on:
       - release
 
 jobs:
-  unit_tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    env:
-      CI: 'true'
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
-      with:
-        node-version: '12.15'
-    - name: Install test dependencies
-      env:
-        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-      run: (cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);
-    - name: Run unit tests
-      run: npm run test:unit
   end_to_end_tests:
-    name: End to End Tests
     runs-on: ubuntu-latest
     env:
       CI: 'true'
@@ -32,20 +15,26 @@ jobs:
     - uses: actions/setup-node@v2-beta
       with:
         node-version: '12.15'
-    - name: Install build dependencies
+    - name: Delete all dist
+      run: npm run clean
+    - name: Install testing dependencies
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-      run: npm run postinstall
+      run: npm install 
     - name: Build
       run: npm run build
     - name: Run headful puppeteer tests
       uses: djp3/puppeteer-headful@master
       with:
-        args: npm run test:github
+        args: npm test
     - name: Upload screenshots
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
         name: screenshot
-        path: ./packages/test-project/screenshots/*.png
-        retention-days: 5
+        path: ./*.png
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: ./dist/*

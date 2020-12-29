@@ -8,11 +8,6 @@ exports[`AccountDetails should match snapshot 1`] = `
   <strong>
     Address
   </strong>
-   (
-  <ToClipboard
-    data="PBZHOKKNBUCCDJB7KB2KLHUMWCGAMBXZKGBFGGBHYNNXFIBOYI7ONYBWK4"
-  />
-  )
   <p
     id="accountAddress"
   >

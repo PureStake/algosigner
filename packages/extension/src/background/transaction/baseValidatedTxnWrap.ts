@@ -9,7 +9,6 @@ export class BaseValidatedTxnWrap {
     transaction: any = undefined;
     validityObject: object = {};
     txDerivedTypeText: string;
-    estimatedFee: number;
     
     constructor(params: any, txnType: any, requiredParamsSet: Array<string> = undefined) { 
         this.transaction = new txnType();

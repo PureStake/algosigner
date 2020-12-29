@@ -3,24 +3,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
 html {
-  height: 550px;
-  width: 400px;
-  overflow: hidden !important;
+	height: 550px;
+	width: 400px;
+	overflow: hidden !important;
 }
 
 // Global font size
 $body-size: 15px;
 
-$grey-lighter: #eff4f7;
-$grey: #8a9fa8;
+$grey-lighter: #EFF4F7;
+$grey: #8A9FA8;
 
-$orange-light: #ff9548;
-$orange: #f16522;
-$orange-dark: #d64500;
+$orange-light: #FF9548;
+$orange: #F16522;
+$orange-dark: #D64500;
 
-$blue-light: #9095af;
+$blue-light: #9095AF;
 $blue: #222b60;
-$blue-dark: #222b60;
+$blue-dark: #222B60;
 
 $red-light: rgba(231, 183, 183, 0.5);
 
@@ -37,80 +37,79 @@ $input-radius: 12px;
 $modal-close-right: 4px;
 $modal-close-top: 8px;
 
+.modal-content, .modal-card {
+	max-height: calc(100vh - 100px) !important;
+}
+
+
 // BOX
 // $box-shadow: none;
 
 .main-view {
-  display: flex;
-  flex: 1;
-}
+	display: flex;
+	flex: 1;
+};
 
 .account-preview.box {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background: #eff4f7;
-  height: 3.2em;
-  cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background: #EFF4F7;
+	height: 3.2em;
+	cursor: pointer;
 }
 
-@import 'bulma/sass/utilities/_all.sass';
-@import 'bulma/sass/base/_all.sass';
-@import 'bulma/sass/helpers/_all.sass';
-@import 'bulma/sass/elements/box.sass';
-@import 'bulma/sass/elements/button.sass';
-@import 'bulma/sass/elements/container.sass';
-@import 'bulma/sass/elements/title.sass';
-@import 'bulma/sass/form/_all.sass';
-@import 'bulma/sass/layout/section.sass';
-@import 'bulma/sass/layout/hero.sass';
-@import 'bulma/sass/components/level.sass';
-@import 'bulma/sass/components/modal.sass';
-@import 'bulma/sass/components/dropdown.sass';
-@import 'bulma/sass/components/tabs.sass';
-@import 'bulma/sass/grid/columns.sass';
-
-// Modal Overrides
-.modal-content {
-  max-height: calc(100vh - 100px);
-  padding: 0 15px;
-}
+@import "bulma/sass/utilities/_all.sass";
+@import "bulma/sass/base/_all.sass";
+@import "bulma/sass/helpers/_all.sass";
+@import "bulma/sass/elements/box.sass";
+@import "bulma/sass/elements/button.sass";
+@import "bulma/sass/elements/container.sass";
+@import "bulma/sass/elements/title.sass";
+@import "bulma/sass/form/_all.sass";
+@import "bulma/sass/layout/section.sass";
+@import "bulma/sass/layout/hero.sass";
+@import "bulma/sass/components/level.sass";
+@import "bulma/sass/components/modal.sass";
+@import "bulma/sass/components/dropdown.sass";
+@import "bulma/sass/components/tabs.sass";
+@import "bulma/sass/grid/columns.sass";
 
 .dropdown-mask {
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -5;
+	width: 100vw;
+	height: 100vh;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: -5;
 }
 
 .loader {
-  @include loader;
-  border-width: 1px;
-  border-bottom-color: #94b1c3;
-  border-left-color: #94b1c3;
+	@include loader;
+	border-width: 1px;
+	border-bottom-color: #94b1c3;
+	border-left-color: #94b1c3;
 }
 
 #warning-tx-list {
-  border-left: 5px solid rgb(255, 215, 0);
-  background-color: rgb(255, 215, 0, 0.1);
-  padding: 5px;
-  margin: 5px 0px 5px 0px;
+	border-left: 5px solid rgb(255,215,0);
+	background-color: rgb(255,215,0,.1);
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
 }
 
 #danger-tx-list {
-  border-left: 5px solid rgb(255, 0, 0);
-  background-color: rgb(255, 0, 0, 0.1);
-  padding: 5px;
-  margin: 5px 0px 5px 0px;
+	border-left: 5px solid rgb(255,0,0);
+	background-color: rgb(255,0,0,.1);
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
 }
 
 .tx-field-warning {
-  border: solid 1px rgb(255, 215, 0);
-  background-color: rgb(255, 215, 0, 0.1);
+	border: solid 1px rgb(255,215,0);
+	background-color: rgb(255,215,0,.1);
 }
 
 .tx-field-danger {
-  border: solid 1px rgb(255, 215, 0);
-  background-color: rgb(255, 0, 0, 0.1);
+	border: solid 1px rgb(255,215,0);
+	background-color: rgb(255,0,0,.1);
 }

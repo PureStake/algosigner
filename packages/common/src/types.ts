@@ -19,8 +19,3 @@ export type Transaction = {
     readonly note?: Note;
     readonly to: TAccount;
 }
-
-export type MultisigTransaction = {
-    readonly msig: any;
-    readonly txn: Transaction;
-}

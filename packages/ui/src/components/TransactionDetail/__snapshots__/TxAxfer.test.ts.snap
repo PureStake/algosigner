@@ -7,50 +7,50 @@ exports[`TxAxfer should match snapshot 1`] = `
 >
   <p
     className="has-text-centered has-text-weight-bold"
-    id="txTitle"
   >
     Asset transfer
   </p>
-  <p
-    data-transaction-id="5EYWUOBWEEOM4QRE6JNVP3XHEVFCZ7CFNNI32Q5T2SWWUC7QPGIQ"
-  >
+  <p>
     <strong>
-      TxID: 
+      TxID:
     </strong>
+     
     <span>
       5EYWUOBWEEOM4QRE6JNVP3XHEVFCZ7CFNNI32Q5T2SWWUC7QPGIQ
     </span>
   </p>
-  <p
-    data-transaction-sender="RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A"
-  >
+  <p>
     <strong>
-      From: 
+      From:
     </strong>
+     
     <span>
       RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
     </span>
   </p>
   <p>
     <strong>
-      To: 
+      To:
     </strong>
-    <span>
+     
+    <sspan>
       RCWKH27QBUZSE5B5BRR4KY6J4FHZB6GMY3ZYHFL2ER43ETTGBQCJGRNH7A
-    </span>
+    </sspan>
   </p>
   <p>
     <strong>
-      Amount: 
+      Amount:
     </strong>
+     
     <span>
       0
     </span>
   </p>
   <p>
     <strong>
-      Block: 
+      Block:
     </strong>
+     
     <span>
       9548799
     </span>

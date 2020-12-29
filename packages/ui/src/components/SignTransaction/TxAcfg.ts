@@ -1,10 +1,10 @@
 import { html } from 'htm/preact';
-import { FunctionalComponent } from 'preact';
+import { FunctionalComponent } from "preact";
 import { useState } from 'preact/hooks';
 
 const TxAcfg: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, vo, dt, fee } = props;
+  const { tx, account, vo, dt } = props;
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -20,87 +20,65 @@ const TxAcfg: FunctionalComponent = (props: any) => {
       </div>
     </div>
 
-    <p class="has-text-centered has-text-weight-bold">
-      ${dt || 'Asset Configuration'}
-    </p>
+    <p class="has-text-centered has-text-weight-bold"> ${dt || 'Asset Configuration'}</p>
 
     <div class="tabs is-centered mb-2">
       <ul>
-        <li
-          class=${tab === 'overview' ? 'is-active' : ''}
-          onClick=${() => setTab('overview')}
-        >
+        <li class=${tab==="overview" ? "is-active" : ""}
+          onClick=${() => setTab('overview')}>
           <a>Overview</a>
         </li>
-        <li
-          class=${tab === 'details' ? 'is-active' : ''}
-          onClick=${() => setTab('details')}
-        >
+        <li class=${tab==="details" ? "is-active" : ""}
+          onClick=${() => setTab('details')}>
           <a>Details</a>
         </li>
       </ul>
     </div>
 
-    ${tab === 'overview' &&
-    html`
+    ${ tab==="overview" && html`
       <div>
-        ${tx.assetIndex &&
-        html`
+        ${tx.assetIndex && html`
           <div class="is-flex">
             <p style="width: 30%;">Asset:</p>
             <p style="width: 70%;">${tx.assetIndex}</p>
           </div>
         `}
-        ${tx.assetName &&
-        html`
+        ${tx.assetName && html`
           <div class="is-flex">
             <p style="width: 30%;">Asset Name:</p>
             <p style="width: 70%;">${tx.assetName}</p>
           </div>
         `}
-        ${tx.assetUnitName &&
-        html`
+        ${tx.assetUnitName && html`
           <div class="is-flex">
             <p style="width: 30%;">Unit Name:</p>
             <p style="width: 70%;">${tx.assetUnitName}</p>
           </div>
         `}
-        ${tx.assetURL &&
-        html`
+        ${tx.assetURL && html`
           <div class="is-flex">
             <p style="width: 30%;">Asset URL:</p>
             <p style="width: 70%;">${tx.assetURL}</p>
           </div>
         `}
-        ${tx.assetTotal &&
-        html`
+        ${tx.assetTotal && html`
           <div class="is-flex">
             <p style="width: 30%;">Asset Total:</p>
             <p style="width: 70%;">${tx.assetTotal}</p>
           </div>
         `}
-        <div
-          class="is-flex${vo && vo['fee']
-            ? (' ' + vo['fee']['className']).trimRight()
-            : ''}"
-        >
-          <p style="width: 30%;">
-            ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'}
-          </p>
-          <p style="width: 70%;">${fee / 1e6} Algos</p>
-        </div>
+        <p class="${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">Fee: <span style="float: right; margin-right: 11em;">${tx.fee/1e6} Algos</span></p>
       </div>
     `}
-    ${tab === 'details' &&
-    html`
+    ${ tab==="details" && html`
       <div style="height: 245px; overflow: auto;">
         <pre style="background: #EFF4F7; border-radius: 5px;">
           <code>${txText}</code>
-        </pre
-        >
+        </pre>
       </div>
     `}
-  `;
-};
 
-export default TxAcfg;
+  `;
+}
+
+export default TxAcfg

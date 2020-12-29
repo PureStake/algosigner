@@ -7,8 +7,6 @@ exports[`AssetDetails should match snapshot 1`] = `
 >
   <div
     className="has-text-centered mb-2"
-    data-asset-balance="1,000"
-    data-asset-id={12007988}
   >
     <b>
       Dm-1
@@ -29,8 +27,8 @@ exports[`AssetDetails should match snapshot 1`] = `
     >
       <b>
         1,000
-         
       </b>
+       
       <span
         className="has-text-grey-light"
       >
@@ -50,8 +48,8 @@ exports[`AssetDetails should match snapshot 1`] = `
     >
       <b>
         1,000
-         
       </b>
+       
       <span
         className="has-text-grey-light"
       >
