@@ -22,7 +22,7 @@ jobs:
       run: (cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);
     - name: Run unit tests
       run: npm run test:unit
-  end_to_end_tests:
+  end_2_end_tests:
     name: End to End Tests
     runs-on: ubuntu-latest
     env:
