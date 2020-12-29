@@ -1,9 +1,8 @@
-// /**
-//  * Exercises dApp
-//  * 
-//  * @group dapp-storage
-//  */
-
+/**
+ * Exercises dApp
+ *
+ * @group dapp-storage
+ */
 
 // /// Needs to have the jest-extension-mock fix to work properly
 // describe('Dapp Storage test', () => {
@@ -17,9 +16,9 @@
 //         await extensionBrowser.storage.local.get(null, function(result) {
 //             expect(result).toStrictEqual({});
 //         });
-        
+
 //         await extensionBrowser.storage.local.get(["defaultwalletname"], function(result) {
 //             expect(result.defaultwalletname).toStrictEqual(undefined);
 //         });
-//     }); 
+//     });
 // })

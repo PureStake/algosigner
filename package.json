@@ -1,6 +1,6 @@
 {
   "name": "algosigner",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "https://developer.purestake.io",
   "description": "Sign Algorand transactions in your browser with PureStake.",
   "keywords": [
@@ -19,7 +19,8 @@
     "coveragetest": "cd ./packages/test-project && npm run coveragetest",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "(cd ./packages/crypto && npm run test) && (cd ./packages/extension && npm run test) && (cd ./packages/ui && npm run test) && (cd ./packages/dapp && npm run test) && (cd ./packages/common && npm run test)",
-    "test:e2e": "(cd ./packages/test-project && npm run github-test)"
+    "test:e2e": "(cd ./packages/test-project && npm run test)",
+    "test:github": "(cd ./packages/test-project && npm run github)"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.7.0",
@@ -37,7 +38,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,json,ts,scss,css,md}": "prettier --write",
+    "*.{js,json,ts,scss,css,md,yaml}": "prettier --write",
     "*.{js,json,ts}": "eslint --fix"
   }
 }
