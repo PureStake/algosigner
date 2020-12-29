@@ -186,12 +186,12 @@ describe('Wallet Setup', () => {
         await extensionPage.click('#createWallet')
     })
 
-    test('Switch Ledger', async () => {
-        await extensionPage.waitForTimeout(2000)
-        await extensionPage.click('#selectLedger')
-        await extensionPage.waitForTimeout(500)
-        await extensionPage.click('#selectTestNet')
-    })
+     test('Switch Ledger', async () => {
+       await extensionPage.waitForSelector('#selectLedger');
+       await extensionPage.click('#selectLedger');
+       await extensionPage.waitForSelector('#selectTestNet');
+       await extensionPage.click('#selectTestNet');
+     });
 
     test('Import Base Account', async () => {
         await extensionPage.waitForSelector('#addAccount')
