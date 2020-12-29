@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
@@ -16,25 +20,26 @@ import Authenticate from 'components/Authenticate';
 import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
+import logging from '@algosigner/common/logging';
 
 function deny() {
   const params = {
     responseOriginTabID: responseOriginTabID,
   };
-  sendMessage(JsonRpcMethod.SignDeny, params, function () {
-    // No callback
-  });
+  sendMessage(JsonRpcMethod.SignDeny, params, function () {});
 }
 
 let responseOriginTabID = 0;
 
-const SignTransaction: FunctionalComponent = () => {
+const SignMultisigTransaction: FunctionalComponent = (props) => {
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [account, setAccount] = useState<string>('');
   const [request, setRequest] = useState<any>({});
+  const [showTx, setShowTx] = useState<any>(null);
   const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
@@ -45,7 +50,7 @@ const SignTransaction: FunctionalComponent = () => {
       // Check if the message is coming from the background script
       if (
         isFromExtension(sender.origin) &&
-        request.body.method == JsonRpcMethod.SignTransaction
+        request.body.method == JsonRpcMethod.SignMultisigTransaction
       ) {
         setRequest(request);
         responseOriginTabID = request.originTabID;
@@ -63,9 +68,10 @@ const SignTransaction: FunctionalComponent = () => {
     };
     setLoading(true);
     setAuthError('');
+    setError('');
     window.removeEventListener('beforeunload', deny);
 
-    sendMessage(JsonRpcMethod.SignAllow, params, function (response) {
+    sendMessage(JsonRpcMethod.SignAllowMultisig, params, function (response) {
       if ('error' in response) {
         window.addEventListener('beforeunload', deny);
         setLoading(false);
@@ -74,6 +80,7 @@ const SignTransaction: FunctionalComponent = () => {
             setAuthError('Wrong passphrase');
             break;
           default:
+            setError(response.error);
             setAskAuth(false);
             break;
         }
@@ -82,26 +89,22 @@ const SignTransaction: FunctionalComponent = () => {
   };
 
   if (request.body) {
-    const tx = request.body.params.transaction;
+    let tx = request.body.params.txn;
     // Search for account
     let txLedger;
     if (tx.genesisID === 'mainnet-v1.0') txLedger = 'MainNet';
     else if (tx.genesisID === 'testnet-v1.0') txLedger = 'TestNet';
 
-    for (let i = store[txLedger].length - 1; i >= 0; i--) {
-      if (store[txLedger][i].address === tx.from) {
-        setAccount(store[txLedger][i].name);
-        break;
-      }
+    if (request.body.params.name) {
+      setAccount(request.body.params.name);
+    } else {
+      setAccount(request.body.params.account);
     }
     setLedger(txLedger);
   }
 
   return html`
-    <div
-      class="main-view"
-      style="flex-direction: column; justify-content: space-between;"
-    >
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
       </div>
@@ -111,19 +114,12 @@ const SignTransaction: FunctionalComponent = () => {
           <section class="hero">
             <div class="hero-body py-5">
               ${request.favIconUrl &&
-              html`
-                <img src=${request.favIconUrl} width="48" style="float:left" />
-              `}
+              html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
-                <!-- prettier-ignore -->
-                <span>${request.originTitle} wants to sign a transaction for </span>
-                <span
-                  style="color:${ledger.toLowerCase() == 'mainnet'
-                    ? '#f16522'
-                    : '#222b60'};"
-                >
-                  ${ledger}
-                </span>
+                ${request.originTitle} wants to sign a transaction for
+                ${ledger.toLowerCase() == 'mainnet'
+                  ? html`<span style="color:#f16522;">${ledger}</span>`
+                  : html`<span style="color:#222b60;">${ledger}</span>`}
               </h1>
             </div>
           </section>
@@ -132,66 +128,66 @@ const SignTransaction: FunctionalComponent = () => {
             html`<${TxAlert} vo=${request.body.params.validityObject} />`}
           </section>
           <section class="section py-0">
-            ${request.body.params.transaction.type === 'pay' &&
+            ${request.body.params.txn.type === 'pay' &&
             html`
               <${TxPay}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
-            ${request.body.params.transaction.type === 'keyreg' &&
+            ${request.body.params.txn.type === 'keyreg' &&
             html`
               <${TxKeyreg}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
-            ${request.body.params.transaction.type === 'acfg' &&
+            ${request.body.params.txn.type === 'acfg' &&
             html`
               <${TxAcfg}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
-            ${request.body.params.transaction.type === 'axfer' &&
+            ${request.body.params.txn.type === 'axfer' &&
             html`
               <${TxAxfer}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
-            ${request.body.params.transaction.type === 'afrz' &&
+            ${request.body.params.txn.type === 'afrz' &&
             html`
               <${TxAfrz}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
-            ${request.body.params.transaction.type === 'appl' &&
+            ${request.body.params.txn.type === 'appl' &&
             html`
               <${TxAppl}
-                tx=${request.body.params.transaction}
+                tx=${request.body.params.txn}
                 vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
                 account=${account}
                 ledger=${ledger}
+                fee=${request.body.params.estimatedFee}
               />
             `}
           </section>
@@ -199,11 +195,7 @@ const SignTransaction: FunctionalComponent = () => {
       </div>
 
       <div class="mx-5 mb-3" style="display: flex;">
-        <button
-          id="rejectTx"
-          class="button is-danger is-outlined px-6"
-          onClick=${deny}
-        >
+        <button id="rejectTx" class="button is-danger is-outlined px-6" onClick=${deny}>
           Reject
         </button>
         <button
@@ -223,12 +215,8 @@ const SignTransaction: FunctionalComponent = () => {
     html`
       <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-content">
-          <${Authenticate}
-            error=${authError}
-            loading=${loading}
-            nextStep=${sign}
-          />
+        <div class="modal-content" style="padding: 0 15px;">
+          <${Authenticate} error=${authError} loading=${loading} nextStep=${sign} />
         </div>
         <button
           class="modal-close is-large"
@@ -240,4 +228,4 @@ const SignTransaction: FunctionalComponent = () => {
   `;
 };
 
-export default SignTransaction;
+export default SignMultisigTransaction;
