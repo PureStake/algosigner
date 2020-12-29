@@ -14,6 +14,6 @@
     "basic-ui": "jest --group=basic-ui",
     "app-dapp": "jest --group=app-dapp",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && echo \"Test info at: ./test-project/coverage/locv-report/index.html\"",
-    "test": "jest -i --group=-github"
+    "test": "jest -i --group=-github --group=-dapp-storage"
   }
 }

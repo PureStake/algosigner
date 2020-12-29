@@ -22,7 +22,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
       args: [
         '--no-sandbox',
         //'--no-sandbox-and-elevated', //For Windows
-        '--window-size=350,700',
+        '--window-size=450,700',
         `--disable-extensions-except=${srcPath('dist')}`,
         `--load-extension=${srcPath('dist')}`,
       ],
