@@ -170,16 +170,15 @@
          await extensionPage.waitForSelector('#createWallet')
          await extensionPage.type('#setPassword',unsafePassword);
          await extensionPage.type('#confirmPassword',unsafePassword);
-         await extensionPage.waitForTimeout(2000)
          await extensionPage.waitForSelector('#createWallet')
          await extensionPage.click('#createWallet')
      })
  
      test('Switch Ledger', async () => {
-         await extensionPage.waitForTimeout(2000)
+         await extensionPage.waitForSelector('#selectLedger');
          await extensionPage.screenshot({path: 'screenshots/test_waiting_for_page.png'})
          await extensionPage.click('#selectLedger')
-         await extensionPage.waitForTimeout(500)
+         await extensionPage.waitForSelector('#selectTestNet');
          await extensionPage.click('#selectTestNet')
      })
  
