@@ -1,4 +1,4 @@
-name: Tests
+name: Build and Test
 
 on:
   push:
@@ -16,10 +16,8 @@ jobs:
     - uses: actions/setup-node@v2-beta
       with:
         node-version: '12.15'
-    - name: Install test dependencies
-      env:
-        PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-      run: (cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);
+    - name: Install build dependencies
+      run: npm run install:extension
     - name: Run unit tests
       run: npm run test:unit
   end_to_end_tests:
@@ -32,7 +30,7 @@ jobs:
     - uses: actions/setup-node@v2-beta
       with:
         node-version: '12.15'
-    - name: Install build dependencies
+    - name: Install test dependencies
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
       run: npm run postinstall
@@ -49,3 +47,22 @@ jobs:
         name: screenshot
         path: ./packages/test-project/screenshots/*.png
         retention-days: 5
+  build:
+    name: Zip and Upload Build
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2-beta
+      with:
+        node-version: '12.15'
+    - name: Install build dependencies
+      run: npm run install:extension
+    - name: Build
+      run: npm run build
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: ./dist/*
