@@ -5,13 +5,19 @@
  */
 
 const { accounts } = require('./common/constants');
-const { openExtension, getLedgerParams } = require('./common/helpers');
-const { CreateWallet, ConnectAlgoSigner } = require('./common/tests');
+const {
+  openExtension,
+  getLedgerParams,
+  signTransaction,
+  sendTransaction,
+} = require('./common/helpers');
+const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
 const msigAccount = accounts.multisig;
 
 let ledgerParams;
 let multisigTransaction;
+let signedTransaction;
 
 jest.setTimeout(10000);
 
@@ -29,7 +35,6 @@ describe('dApp Setup', () => {
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerParams();
     console.log(`TestNet transaction params: [last-round: ${ledgerParams['last-round']}, ...]`);
-    /* eslint-disable-next-line */
     multisigTransaction = {
       msig: {
         subsig: msigAccount.subaccounts.map((acc) => {
@@ -50,5 +55,33 @@ describe('dApp Setup', () => {
         genesisHash: ledgerParams['genesis-hash'],
       },
     };
+  });
+});
+
+describe('MultiSig Use cases', () => {
+  test('Fail on Sign with no Valid Addresses', async () => {
+    // We try to sign with no accounts loaded
+    await expect(
+      dappPage.evaluate((transaction) => {
+        return Promise.resolve(AlgoSigner.signMultisig(transaction))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, multisigTransaction)
+    ).resolves.toBe('No address match found.');
+  });
+
+  ImportAccount(msigAccount.subaccounts[0]);
+
+  test('Append 1 Signature to MultiSig Transaction', async () => {
+    signedTransaction = await signTransaction(multisigTransaction);
+  });
+
+  test('Should fail signature treshold validation', async () => {
+    const result = await sendTransaction(signedTransaction);
+    expect(result.message).toBe('multisig validation failed');
   });
 });

@@ -17,6 +17,24 @@ async function openExtension() {
   await extensionPage.goto(baseUrl);
 }
 
+async function selectAccount(account) {
+  const accountSelector = '#account_' + account.name.replace(/\s/g, '');
+  await extensionPage.waitForSelector(accountSelector);
+  await extensionPage.click(accountSelector);
+  await extensionPage.waitForTimeout(500);
+}
+
+async function goBack() {
+  await extensionPage.click('#goBack');
+  await extensionPage.waitForTimeout(500);
+}
+
+async function closeModal() {
+  const modalSelector = '.modal.is-active button.modal-close';
+  await extensionPage.waitForSelector(modalSelector);
+  await extensionPage.click(modalSelector);
+}
+
 // Dapp Helpers
 async function getPopup() {
   await dappPage.waitForTimeout(1000);
@@ -50,8 +68,43 @@ async function getLedgerParams() {
   return params;
 }
 
+async function signTransaction(transaction) {
+  const signedTransaction = await dappPage.evaluate(async (transaction) => {
+    const signPromise = AlgoSigner.signMultisig(transaction);
+    await window.authorizeSign();
+    return await signPromise;
+  }, transaction);
+  await expect(signedTransaction).toHaveProperty('txID');
+  await expect(signedTransaction).toHaveProperty('blob');
+  return signedTransaction;
+}
+
+async function sendTransaction(signedTransaction) {
+  const sendBody = {
+    ledger: 'TestNet',
+    tx: signedTransaction.blob,
+  };
+  const result = await dappPage.evaluate(async (sendBody) => {
+    return Promise.resolve(
+      AlgoSigner.send(sendBody)
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        })
+    );
+  }, sendBody);
+  return result;
+}
+
 module.exports = {
   openExtension,
+  selectAccount,
+  goBack,
+  closeModal,
   getPopup,
   getLedgerParams,
+  signTransaction,
+  sendTransaction,
 };

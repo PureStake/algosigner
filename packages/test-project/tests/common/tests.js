@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { getPopup } = require('./helpers');
+const { selectAccount, goBack, closeModal, getPopup } = require('./helpers');
 
 // Common Tests
 async function WelcomePage() {
@@ -40,6 +40,36 @@ async function CreateWallet() {
   SelectTestNetLedger();
 }
 
+async function ImportAccount(account) {
+  test(`Import Account ${account.name}`, async () => {
+    await extensionPage.waitForSelector('#addAccount');
+    await extensionPage.click('#addAccount');
+    await extensionPage.waitForSelector('#importAccount');
+    await extensionPage.click('#importAccount');
+    await extensionPage.waitForSelector('#accountName');
+    await extensionPage.type('#accountName', account.name);
+    await extensionPage.type('#enterMnemonic', account.mnemonic);
+    await extensionPage.click('#nextStep');
+    await extensionPage.waitForSelector('#enterPassword');
+    await extensionPage.type('#enterPassword', wallet.password);
+    await extensionPage.click('#authButton');
+  });
+
+  test(`Verify Account Info (${account.name})`, async () => {
+    await selectAccount(account);
+    await extensionPage.waitForSelector('#accountName');
+    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
+      account.name
+    );
+    await extensionPage.click('#showDetails');
+    await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
+      account.address
+    );
+    await closeModal();
+    await goBack();
+  });
+}
+
 // Dapp Tests
 async function ConnectAlgoSigner() {
   test('Expose Authorize Functions', async () => {
@@ -49,6 +79,17 @@ async function ConnectAlgoSigner() {
       await popup.click('#grantAccess');
     }
     await dappPage.exposeFunction('authorizeDapp', authorizeDapp);
+
+    async function authorizeSign() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#approveTx');
+      await popup.click('#approveTx');
+      await popup.waitForSelector('#enterPassword');
+      await popup.type('#enterPassword', wallet.password);
+      await popup.waitForSelector('#authButton');
+      await popup.click('#authButton');
+    }
+    await dappPage.exposeFunction('authorizeSign', authorizeSign);
   });
 
   test('Connect Dapp through content.js', async () => {
@@ -66,5 +107,6 @@ module.exports = {
   SetPassword,
   SelectTestNetLedger,
   CreateWallet,
+  ImportAccount,
   ConnectAlgoSigner,
 };
