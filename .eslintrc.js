@@ -7,7 +7,8 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   globals: {
     browser: true,
-    page: true,
+    dappPage: true,
+    extensionPage: true,
     AlgoSigner: true,
   },
   parser: '@typescript-eslint/parser',

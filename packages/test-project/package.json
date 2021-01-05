@@ -13,6 +13,8 @@
     "basic-dapp": "jest --group=basic-dapp",
     "basic-ui": "jest --group=basic-ui",
     "app-dapp": "jest --group=app-dapp",
+    "dapp/multisig": "jest --group=dapp/multisig",
+    "dapp": "jest --group=dapp",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && echo \"Test info at: ./test-project/coverage/locv-report/index.html\"",
     "test": "jest -i --group=-github --group=-dapp-storage"
   }
