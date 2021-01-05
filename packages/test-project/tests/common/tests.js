@@ -1,4 +1,7 @@
 const { wallet, extension } = require('./constants');
+const { getPopup } = require('./helpers');
+
+// Common Tests
 async function WelcomePage() {
   test('Welcome Page Title', async () => {
     await expect(extensionPage.title()).resolves.toMatch(extension.name);
@@ -37,9 +40,31 @@ async function CreateWallet() {
   SelectTestNetLedger();
 }
 
+// Dapp Tests
+async function ConnectAlgoSigner() {
+  test('Expose Authorize Functions', async () => {
+    async function authorizeDapp() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#grantAccess');
+      await popup.click('#grantAccess');
+    }
+    await dappPage.exposeFunction('authorizeDapp', authorizeDapp);
+  });
+
+  test('Connect Dapp through content.js', async () => {
+    const connected = await dappPage.evaluate(async () => {
+      const connectPromise = AlgoSigner.connect();
+      await window.authorizeDapp();
+      return await connectPromise;
+    });
+    await expect(connected).toEqual({});
+  });
+}
+
 module.exports = {
   WelcomePage,
   SetPassword,
   SelectTestNetLedger,
   CreateWallet,
+  ConnectAlgoSigner,
 };
