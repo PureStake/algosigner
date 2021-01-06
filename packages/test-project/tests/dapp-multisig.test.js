@@ -10,6 +10,7 @@ const {
   getLedgerParams,
   signTransaction,
   sendTransaction,
+  decodeBlob,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
@@ -76,8 +77,16 @@ describe('MultiSig Use cases', () => {
 
   ImportAccount(msigAccount.subaccounts[0]);
 
-  test('Append 1 Signature to MultiSig Transaction', async () => {
+  test('Append First Signature to MultiSig Transaction', async () => {
     signedTransaction = await signTransaction(multisigTransaction);
+    const decodedTransaction = await decodeBlob(signedTransaction.blob);
+    expect(decodedTransaction).toHaveProperty('txn');
+    expect(decodedTransaction).toHaveProperty('msig');
+    // Setup for next case
+    multisigTransaction = {
+      ...multisigTransaction,
+      msig: decodedTransaction.msig,
+    };
   });
 
   test('Should fail signature treshold validation', async () => {

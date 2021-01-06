@@ -1,3 +1,4 @@
+const algosdk = require('algosdk');
 const { extension } = require('./constants');
 
 // UI Helpers
@@ -14,6 +15,7 @@ async function openExtension() {
   const baseUrl = `chrome-extension://${extensionID}/${extension.html}`;
 
   extensionPage.on('console', (msg) => console.log('EXTENSION PAGE LOG:', msg.text()));
+  dappPage.on('console', (msg) => console.log('DAPP PAGE LOG:', msg.text()));
   await extensionPage.goto(baseUrl);
 }
 
@@ -37,7 +39,7 @@ async function closeModal() {
 
 // Dapp Helpers
 async function getPopup() {
-  await dappPage.waitForTimeout(1000);
+  await dappPage.waitForTimeout(1500);
   const pages = await browser.pages();
   return pages[pages.length - 1];
 }
@@ -70,9 +72,15 @@ async function getLedgerParams() {
 
 async function signTransaction(transaction) {
   const signedTransaction = await dappPage.evaluate(async (transaction) => {
-    const signPromise = AlgoSigner.signMultisig(transaction);
+    const signPromise = AlgoSigner.signMultisig(transaction)
+      .then((data) => {
+        return data;
+      })
+      .catch((error) => {
+        return error;
+      });
     await window.authorizeSign();
-    return await signPromise;
+    return await Promise.resolve(signPromise);
   }, transaction);
   await expect(signedTransaction).toHaveProperty('txID');
   await expect(signedTransaction).toHaveProperty('blob');
@@ -98,6 +106,17 @@ async function sendTransaction(signedTransaction) {
   return result;
 }
 
+async function decodeBlob(blob) {
+  return algosdk.decodeObj(
+    new Uint8Array(
+      Buffer.from(blob, 'base64')
+        .toString('binary')
+        .split('')
+        .map((x) => x.charCodeAt(0))
+    )
+  );
+}
+
 module.exports = {
   openExtension,
   selectAccount,
@@ -107,4 +126,5 @@ module.exports = {
   getLedgerParams,
   signTransaction,
   sendTransaction,
+  decodeBlob,
 };
