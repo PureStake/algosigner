@@ -36,7 +36,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
-      "pre-push": "echo '\nChecking for uncommited files\nMake sure to stash uncommited changes before pushing\n'; git diff HEAD --quiet && npm run test:unit"
+      "pre-push": "npm run test:unit"
     }
   },
   "lint-staged": {
