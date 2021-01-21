@@ -69,10 +69,19 @@ $modal-close-top: 8px;
 @import 'bulma/sass/components/tabs.sass';
 @import 'bulma/sass/grid/columns.sass';
 
-// Modal Overrides
+// Bulma Overrides
 .modal-content {
   max-height: calc(100vh - 100px);
   padding: 0 15px;
+}
+
+.modal-background {
+  width: 100vw;
+  height: 100vh;
+}
+
+a:hover {
+  color: $orange-dark;
 }
 
 // Custom classes
@@ -84,6 +93,27 @@ $modal-close-top: 8px;
   border-bottom: 1px solid $grey-lighter;
   min-height: 39px;
   background: white;
+}
+
+.menu {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  visibility: hidden;
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.2), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+
+  &.is-active {
+    visibility: visible;
+  }
+
+  .menu-item {
+    display: block;
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid $grey-lighter;
+  }
 }
 
 .dropdown-mask {
