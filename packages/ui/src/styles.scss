@@ -48,7 +48,7 @@ $modal-close-top: 8px;
 .account-preview.box {
   overflow: hidden;
   text-overflow: ellipsis;
-  background: #eff4f7;
+  background: $grey-lighter;
   height: 3.2em;
   cursor: pointer;
 }
@@ -73,6 +73,17 @@ $modal-close-top: 8px;
 .modal-content {
   max-height: calc(100vh - 100px);
   padding: 0 15px;
+}
+
+// Custom classes
+.header {
+  flex: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid $grey-lighter;
+  min-height: 39px;
+  background: white;
 }
 
 .dropdown-mask {
