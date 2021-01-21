@@ -1,5 +1,6 @@
 export const JSONRPC_VERSION: string = "2.0";
 
+/* eslint-disable no-unused-vars */
 export enum JsonRpcMethod {
     Heartbeat = "heartbeat",
     Authorization = "authorization",
@@ -23,6 +24,7 @@ export enum JsonRpcMethod {
     DeleteAccount = "delete-account",
     GetSession = "get-session",
     Login = "login",
+    Logout = "logout",
     AccountDetails = "account-details",
     Transactions = "transactions",
     AssetDetails = "asset-details",
@@ -30,7 +32,6 @@ export enum JsonRpcMethod {
     AssetsVerifiedList = "assets-verified-list",
     SignSendTransaction = "sign-send-transaction",
     ChangeLedger = "change-ledger",
-
 }
 
 export type JsonPayload = {[key: string]: string | number | JsonPayload | undefined};
