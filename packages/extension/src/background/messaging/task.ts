@@ -2,8 +2,7 @@
 const algosdk = require('algosdk');
 
 import { RequestErrors } from '@algosigner/common/types';
-import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { API } from './types';
+import { API, JsonRpcMethod } from '@algosigner/common/messaging/types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisID,
@@ -13,7 +12,7 @@ import { ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
-import { Settings } from '../config';
+import { Settings } from '@algosigner/common/messaging/config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';

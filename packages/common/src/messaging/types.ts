@@ -1,3 +1,21 @@
+// Key and value must match in this enum so we
+// can compare its existance with i.e. "Testnet" in SupportedLedger
+/* eslint-disable no-unused-vars */
+export enum Ledger {
+  TestNet = 'TestNet',
+  MainNet = 'MainNet',
+}
+
+export enum Backend {
+  PureStake = 'PureStake',
+  Algod = 'Algod',
+}
+
+export enum API {
+  Algod = 'Algod',
+  Indexer = 'Indexer',
+}
+
 export const JSONRPC_VERSION: string = "2.0";
 
 /* eslint-disable no-unused-vars */
@@ -49,6 +67,7 @@ export enum MessageSource {
     Router = "router",
     UI = "ui"
 }
+
 export type MessageBody = {
     readonly source: MessageSource,
     readonly body: JsonRpcBody

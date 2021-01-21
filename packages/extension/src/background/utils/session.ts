@@ -1,4 +1,4 @@
-import { Ledger } from '../messaging/types';
+import { Ledger } from '@algosigner/common/messaging/types';
 
 export default class Session {
   private _wallet: any;
@@ -12,11 +12,11 @@ export default class Session {
     return this._wallet;
   }
 
-  public set ledger(v: any) {
+  public set ledger(v: Ledger) {
     this._ledger = v;
   }
 
-  public get ledger(): any {
+  public get ledger(): Ledger {
     return this._ledger;
   }
 
@@ -27,7 +27,7 @@ export default class Session {
     };
   }
 
-  public clearSession() {
+  public clearSession(): void {
     this._wallet = undefined;
     this._ledger = undefined;
   }

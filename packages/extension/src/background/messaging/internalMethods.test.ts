@@ -1,5 +1,4 @@
-import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Ledger } from './types';
+import { JsonRpcMethod, Ledger } from '@algosigner/common/messaging/types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */

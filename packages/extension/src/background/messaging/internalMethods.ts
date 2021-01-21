@@ -1,12 +1,12 @@
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
 
-import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { API, Ledger, JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Task } from './task';
-import { API, Cache, Ledger } from './types';
-import { Settings } from '../config';
+import { Cache } from './types';
+import { Settings } from '@algosigner/common/messaging/config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';

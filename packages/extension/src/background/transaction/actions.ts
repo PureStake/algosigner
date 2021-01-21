@@ -1,34 +1,34 @@
-import { IPaymentTx } from "@algosigner/common/interfaces/pay";
-import { IAssetConfigTx } from "@algosigner/common/interfaces/acfg";
-import { IAssetCreateTx } from "@algosigner/common/interfaces/acfg_create";
-import { IAssetDestroyTx } from "@algosigner/common/interfaces/acfg_destroy";
-import { IAssetFreezeTx } from "@algosigner/common/interfaces/afrz";
-import { IAssetTransferTx } from "@algosigner/common/interfaces/axfer";
-import { IAssetAcceptTx } from "@algosigner/common/interfaces/axfer_accept";
-import { IAssetClawbackTx } from "@algosigner/common/interfaces/axfer_clawback";
-import { IKeyRegistrationTx } from "@algosigner/common/interfaces/keyreg";
-import { IApplTx } from "@algosigner/common/interfaces/appl";
-import { PayTransaction } from "./payTransaction";
-import { AssetConfigTransaction } from "./acfgTransaction";
-import { AssetCreateTransaction } from "./acfgCreateTransaction";
-import { AssetDestroyTransaction } from "./acfgDestroyTransaction";
-import { AssetFreezeTransaction } from "./afrzTransaction";
-import { AssetTransferTransaction } from "./axferTransaction";
-import { AssetAcceptTransaction } from "./axferAcceptTransaction";
-import { AssetClawbackTransaction } from "./axferClawbackTransaction";
-import { KeyregTransaction } from "./keyregTransaction";
-import { ApplTransaction } from "./applTransaction";
-import { TransactionType } from "@algosigner/common/types/transaction";
-import { BaseValidatedTxnWrap } from "./baseValidatedTxnWrap";
-import { Ledger } from '../messaging/types';
+import { IPaymentTx } from '@algosigner/common/interfaces/pay';
+import { IAssetConfigTx } from '@algosigner/common/interfaces/acfg';
+import { IAssetCreateTx } from '@algosigner/common/interfaces/acfg_create';
+import { IAssetDestroyTx } from '@algosigner/common/interfaces/acfg_destroy';
+import { IAssetFreezeTx } from '@algosigner/common/interfaces/afrz';
+import { IAssetTransferTx } from '@algosigner/common/interfaces/axfer';
+import { IAssetAcceptTx } from '@algosigner/common/interfaces/axfer_accept';
+import { IAssetClawbackTx } from '@algosigner/common/interfaces/axfer_clawback';
+import { IKeyRegistrationTx } from '@algosigner/common/interfaces/keyreg';
+import { IApplTx } from '@algosigner/common/interfaces/appl';
+import { PayTransaction } from './payTransaction';
+import { AssetConfigTransaction } from './acfgTransaction';
+import { AssetCreateTransaction } from './acfgCreateTransaction';
+import { AssetDestroyTransaction } from './acfgDestroyTransaction';
+import { AssetFreezeTransaction } from './afrzTransaction';
+import { AssetTransferTransaction } from './axferTransaction';
+import { AssetAcceptTransaction } from './axferAcceptTransaction';
+import { AssetClawbackTransaction } from './axferClawbackTransaction';
+import { KeyregTransaction } from './keyregTransaction';
+import { ApplTransaction } from './applTransaction';
+import { TransactionType } from '@algosigner/common/types/transaction';
+import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
+import { Ledger } from '@algosigner/common/messaging/types';
 
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
 
 ///
-// Sign transaction and return. 
+// Sign transaction and return.
 ///
-export function getValidatedTxnWrap(txn: object, type: string):BaseValidatedTxnWrap {
+export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxnWrap {
   let validatedTxnWrap: BaseValidatedTxnWrap = undefined;
   let error: Error = undefined;
 
@@ -54,9 +54,7 @@ export function getValidatedTxnWrap(txn: object, type: string):BaseValidatedTxnW
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetDestroyTransaction(
-            txn as IAssetDestroyTx
-          );
+          validatedTxnWrap = new AssetDestroyTransaction(txn as IAssetDestroyTx);
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -79,9 +77,7 @@ export function getValidatedTxnWrap(txn: object, type: string):BaseValidatedTxnW
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetTransferTransaction(
-            txn as IAssetTransferTx
-          );
+          validatedTxnWrap = new AssetTransferTransaction(txn as IAssetTransferTx);
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -89,9 +85,7 @@ export function getValidatedTxnWrap(txn: object, type: string):BaseValidatedTxnW
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetClawbackTransaction(
-            txn as IAssetClawbackTx
-          );
+          validatedTxnWrap = new AssetClawbackTransaction(txn as IAssetClawbackTx);
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -114,17 +108,14 @@ export function getValidatedTxnWrap(txn: object, type: string):BaseValidatedTxnW
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisID(genesisID: string):Ledger {
-    let ledger;
-    if (genesisID === 'mainnet-v1.0') ledger = Ledger.MainNet;
-    else if (genesisID === 'testnet-v1.0') ledger = Ledger.TestNet;
-    return ledger;
+export function getLedgerFromGenesisID(genesisID: string): Ledger {
+  let ledger;
+  if (genesisID === 'mainnet-v1.0') ledger = Ledger.MainNet;
+  else if (genesisID === 'testnet-v1.0') ledger = Ledger.TestNet;
+  return ledger;
 }
 
-export function calculateEstimatedFee(
-  transactionWrap: BaseValidatedTxnWrap,
-  params: any
-): void {
+export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {
   const transaction = transactionWrap.transaction;
   const minFee = +params['min-fee'];
   let estimatedFee = +transaction['fee'];
@@ -150,14 +141,12 @@ export function calculateEstimatedFee(
       const dummyTransaction = {};
       Object.keys(transaction).map((key, index) => {
         if (transaction[key]) {
-          dummyTransaction[index.toString().padStart(4, '0')] =
-            transaction[key];
+          dummyTransaction[index.toString().padStart(4, '0')] = transaction[key];
         }
       });
       // We use algosdk to encode our dummy transaction into MessagePack
       // and use the resulting MessagePack to determine an estimate byte size
-      const transactionSize: number = algosdk.encodeObj(dummyTransaction)
-        .byteLength;
+      const transactionSize: number = algosdk.encodeObj(dummyTransaction).byteLength;
       // Finally we estimate the final fee with the dApp fee
       // and our estimated transaction byte-size
       estimatedFee = dappFee * transactionSize;
