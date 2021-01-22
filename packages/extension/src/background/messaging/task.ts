@@ -372,6 +372,7 @@ export class Task {
             headers: {
               ...conn.apiKey,
               'Content-Type': contentType,
+              ...params.headers,
             },
             method: params.method || 'GET',
           };
@@ -401,6 +402,7 @@ export class Task {
             headers: {
               ...conn.apiKey,
               'Content-Type': contentType,
+              ...params.headers,
             },
             method: params.method || 'GET',
           };
