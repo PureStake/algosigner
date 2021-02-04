@@ -12,6 +12,7 @@
     "github": "jest -i --group=github",
     "basic-dapp": "jest --group=basic-dapp",
     "basic-ui": "jest --group=basic-ui",
+    "client": "jest --group=sdk-client",
     "app-dapp": "jest --group=app-dapp",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && echo \"Test info at: ./test-project/coverage/locv-report/index.html\"",
     "test": "jest -i --group=-github --group=-dapp-storage"
