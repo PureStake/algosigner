@@ -44,7 +44,7 @@ function createQueryString(query: any) {
   let queryString = '?';
   for (const key in cleanQuery) {
     if (cleanQuery.hasOwnProperty(key)) {
-      queryString += `${cleanQuery[key]}&`;
+      queryString += `${key}=${cleanQuery[key]}&`;
     }
   }
   // Slice to remove dangling '&'
@@ -52,8 +52,8 @@ function createQueryString(query: any) {
 }
 
 export class HTTPClient {
-  ledger: Ledger;
-  rpcMethod: Function;
+  private ledger: Ledger;
+  private rpcMethod: Function;
 
   constructor(ledger: Ledger, rpcMethod: Function) {
     this.rpcMethod = rpcMethod;
@@ -80,7 +80,7 @@ export class HTTPClient {
         })
     );
 
-    return { body: response };
+    return { ok: true, body: response };
   }
 
   // Signature from algosdk HTTPClient definition
@@ -103,6 +103,6 @@ export class HTTPClient {
         })
     );
 
-    return { body: response };
+    return { ok: true, body: response };
   }
 }
