@@ -1,3 +1,6 @@
+/* eslint-disable-next-line @typescript-eslint/no-var-requires */
+const algosdk = require('algosdk');
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
@@ -11,8 +14,6 @@ import { initializeCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from '../transaction/actions';
 import { buildTransaction } from '../utils/transactionBuilder';
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
 
 const session = new Session();
 
@@ -29,7 +30,7 @@ export class InternalMethods {
   }
 
   private static safeWallet(wallet: any) {
-    let safeWallet: { TestNet: any[]; MainNet: any[] } = {
+    const safeWallet: { TestNet: any[]; MainNet: any[] } = {
       TestNet: [],
       MainNet: [],
     };
@@ -140,11 +141,11 @@ export class InternalMethods {
       if ('error' in response) {
         sendResponse(response);
       } else {
-        let wallet = this.safeWallet(response);
+        const wallet = this.safeWallet(response);
         // Load Accounts details from Cache
         new ExtensionStorage().getStorage('cache', (storedCache: any) => {
-          let cache: Cache = initializeCache(storedCache);
-          let cachedLedgers = Object.keys(cache.accounts);
+          const cache: Cache = initializeCache(storedCache);
+          const cachedLedgers = Object.keys(cache.accounts);
 
           console.log('cached', cachedLedgers);
           for (var j = cachedLedgers.length - 1; j >= 0; j--) {
@@ -166,6 +167,11 @@ export class InternalMethods {
     return true;
   }
 
+  /* eslint-disable-next-line no-unused-vars */
+  public static [JsonRpcMethod.Logout](request: any, sendResponse: Function) {
+    session.clearSession();
+  }
+
   public static [JsonRpcMethod.CreateAccount](request: any, sendResponse: Function) {
     var keys = algosdk.generateAccount();
     var mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
@@ -180,7 +186,7 @@ export class InternalMethods {
       if ('error' in unlockedValue) {
         sendResponse(unlockedValue);
       } else {
-        let newAccount = {
+        const newAccount = {
           address: address,
           mnemonic: mnemonic,
           name: name,
@@ -275,13 +281,13 @@ export class InternalMethods {
       .accountInformation(address)
       .do()
       .then((res: any) => {
-        let extensionStorage = new ExtensionStorage();
+        const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (storedCache: any) => {
-          let cache: Cache = initializeCache(storedCache, ledger);
+          const cache: Cache = initializeCache(storedCache, ledger);
 
           // Check for asset details saved in storage, if needed
           if ('assets' in res && res.assets.length > 0) {
-            let missingAssets = [];
+            const missingAssets = [];
             for (var i = res.assets.length - 1; i >= 0; i--) {
               const assetId = res.assets[i]['asset-id'];
               if (assetId in cache.assets[ledger]) {
@@ -306,7 +312,7 @@ export class InternalMethods {
           extensionStorage.setStorage('cache', cache, null);
 
           // Add details to session
-          let wallet = session.wallet;
+          const wallet = session.wallet;
           for (var i = wallet[ledger].length - 1; i >= 0; i--) {
             if (wallet[ledger][i].address === address) {
               wallet[ledger][i].details = res;
@@ -377,14 +383,14 @@ export class InternalMethods {
   public static [JsonRpcMethod.AssetDetails](request: any, sendResponse: Function) {
     const assetId = request.body.params['asset-id'];
     const { ledger } = request.body.params;
-    let indexer = this.getIndexer(ledger);
+    const indexer = this.getIndexer(ledger);
     indexer
       .lookupAssetByID(assetId)
       .do()
       .then((res: any) => {
         sendResponse(res);
         // Save asset details in storage if needed
-        let extensionStorage = new ExtensionStorage();
+        const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (cache: any) => {
           if (cache === undefined) cache = new Cache();
           if (!(ledger in cache.assets)) cache.assets[ledger] = {};
@@ -408,7 +414,7 @@ export class InternalMethods {
       req
         .do()
         .then((res: any) => {
-          let newAssets = assets.concat(res.assets);
+          const newAssets = assets.concat(res.assets);
           for (var i = newAssets.length - 1; i >= 0; i--) {
             newAssets[i] = {
               asset_id: newAssets[i].index,
@@ -426,7 +432,7 @@ export class InternalMethods {
     }
 
     const { ledger, filter, nextToken } = request.body.params;
-    let indexer = this.getIndexer(ledger);
+    const indexer = this.getIndexer(ledger);
     // Do the search for asset id (if filter value is integer)
     // and asset name and concat them.
     if (filter.length > 0 && !isNaN(filter) && (!nextToken || nextToken.length === 0)) {
@@ -492,8 +498,8 @@ export class InternalMethods {
       }
 
       var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-      let params = await algod.getTransactionParams().do();
-      let txn = {
+      const params = await algod.getTransactionParams().do();
+      const txn = {
         ...txnParams,
         fee: params.fee,
         firstRound: params.firstRound,
@@ -540,7 +546,7 @@ export class InternalMethods {
         // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
         let signedTxn;
         try {
-          let builtTx = buildTransaction(txn);
+          const builtTx = buildTransaction(txn);
           signedTxn = {
             txID: builtTx.txID().toString(),
             blob: builtTx.signTxn(recoveredAccount.sk),

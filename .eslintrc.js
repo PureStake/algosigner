@@ -19,10 +19,20 @@ module.exports = {
   rules: {
     'no-unused-vars': 'error',
     'no-var': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-inferrable-types': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
+    '@typescript-eslint/ban-types': [
+      'error',
+      {
+        types: {
+          Function: false,
+          Object: false,
+        },
+        extendDefaults: true,
+      },
+    ],
   },
   overrides: [
     {
