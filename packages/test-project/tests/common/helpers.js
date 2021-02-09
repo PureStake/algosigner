@@ -87,10 +87,10 @@ async function signTransaction(transaction) {
   return signedTransaction;
 }
 
-async function sendTransaction(signedTransaction) {
+async function sendTransaction(blob) {
   const sendBody = {
     ledger: 'TestNet',
-    tx: signedTransaction.blob,
+    tx: blob,
   };
   const result = await dappPage.evaluate(async (sendBody) => {
     return Promise.resolve(
@@ -117,6 +117,13 @@ async function decodeBlob(blob) {
   );
 }
 
+function encodeAddress(address) {
+  return algosdk.encodeAddress(address);
+}
+
+function decodeAddress(address) {
+  return algosdk.decodeAddress(address);
+}
 module.exports = {
   openExtension,
   selectAccount,
@@ -127,4 +134,6 @@ module.exports = {
   signTransaction,
   sendTransaction,
   decodeBlob,
+  encodeAddress,
+  decodeAddress,
 };

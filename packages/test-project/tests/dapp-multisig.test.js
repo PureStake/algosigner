@@ -11,6 +11,7 @@ const {
   signTransaction,
   sendTransaction,
   decodeBlob,
+  encodeAddress,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
@@ -18,7 +19,7 @@ const msigAccount = accounts.multisig;
 
 let ledgerParams;
 let multisigTransaction;
-let signedTransaction;
+let signedTransactions = [];
 
 jest.setTimeout(10000);
 
@@ -77,20 +78,39 @@ describe('MultiSig Use cases', () => {
 
   ImportAccount(msigAccount.subaccounts[0]);
 
-  test('Append First Signature to MultiSig Transaction', async () => {
-    signedTransaction = await signTransaction(multisigTransaction);
-    const decodedTransaction = await decodeBlob(signedTransaction.blob);
+  test('Sign MultiSig Transaction with first account', async () => {
+    signedTransactions.push(await signTransaction(multisigTransaction));
+
+    // Verify signature is added
+    const decodedTransaction = await decodeBlob(signedTransactions[0].blob);
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
-    // Setup for next case
-    multisigTransaction = {
-      ...multisigTransaction,
-      msig: decodedTransaction.msig,
-    };
+    expect(decodedTransaction.msig).toHaveProperty('subsig');
+    expect(decodedTransaction.msig.subsig.length).toBe(3);
+    expect(decodedTransaction.msig.subsig[0]).toHaveProperty('s');
   });
 
   test('Should fail signature treshold validation', async () => {
-    const result = await sendTransaction(signedTransaction);
+    const result = await sendTransaction(signedTransactions[0].blob);
     expect(result.message).toBe('multisig validation failed');
+  });
+
+  ImportAccount(msigAccount.subaccounts[1]);
+
+  test('Append Second Signature to MultiSig Transaction', async () => {
+    // Merge signature to original transaction
+    const decodedTransaction = await decodeBlob(signedTransactions[0].blob);
+    multisigTransaction = {
+      ...multisigTransaction,
+      msig: {
+        ...multisigTransaction.msig,
+        subsig: decodedTransaction.msig.subsig.map((subsig) => {
+          const data = subsig;
+          data.pk = encodeAddress(data.pk);
+          return data;
+        }),
+      },
+    };
+    signedTransactions.push(await signTransaction(multisigTransaction));
   });
 });
