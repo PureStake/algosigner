@@ -92,7 +92,9 @@ describe('MultiSig Use cases', () => {
 
   test('Should fail signature treshold validation', async () => {
     const result = await sendTransaction(signedTransactions[0].blob);
-    expect(result.message).toBe('multisig validation failed');
+    expect(result).toMatchObject({
+      message: expect.stringContaining('multisig validation failed'),
+    });
   });
 
   ImportAccount(msigAccount.subaccounts[1]);

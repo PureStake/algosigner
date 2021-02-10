@@ -106,15 +106,25 @@ async function sendTransaction(blob) {
   return result;
 }
 
-async function decodeBlob(blob) {
-  return algosdk.decodeObj(
-    new Uint8Array(
-      Buffer.from(blob, 'base64')
-        .toString('binary')
-        .split('')
-        .map((x) => x.charCodeAt(0))
-    )
+function blobToByteArray(blob) {
+  return new Uint8Array(
+    Buffer.from(blob, 'base64')
+      .toString('binary')
+      .split('')
+      .map((x) => x.charCodeAt(0))
   );
+}
+
+function byteArrayToBlob(array) {
+  return Buffer.from(String.fromCharCode.apply(null, array), 'binary').toString('base64');
+}
+
+function decodeObject(obj) {
+  return algosdk.decodeObj(obj);
+}
+
+function decodeBlob(blob) {
+  return decodeObject(blobToByteArray(blob));
 }
 
 function encodeAddress(address) {
@@ -133,6 +143,9 @@ module.exports = {
   getLedgerParams,
   signTransaction,
   sendTransaction,
+  blobToByteArray,
+  byteArrayToBlob,
+  decodeObject,
   decodeBlob,
   encodeAddress,
   decodeAddress,
