@@ -11,7 +11,9 @@ const {
   signTransaction,
   sendTransaction,
   decodeBlob,
+  byteArrayToBlob,
   encodeAddress,
+  mergeMultisigTransactions,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
@@ -114,5 +116,13 @@ describe('MultiSig Use cases', () => {
       },
     };
     signedTransactions.push(await signTransaction(multisigTransaction));
+  });
+
+  test('Send SDK-merged Multisig Transaction', async () => {
+    const sdkMerge = mergeMultisigTransactions(signedTransactions);
+    const result = await sendTransaction(byteArrayToBlob(sdkMerge));
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty('txId');
+    expect(result).not.toHaveProperty('message');
   });
 });

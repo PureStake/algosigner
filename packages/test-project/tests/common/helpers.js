@@ -134,6 +134,13 @@ function encodeAddress(address) {
 function decodeAddress(address) {
   return algosdk.decodeAddress(address);
 }
+
+function mergeMultisigTransactions(signedArray) {
+  const a = signedArray.map((s) => blobToByteArray(s.blob));
+  console.error(a);
+  return algosdk.mergeMultisigTransactions(a);
+}
+
 module.exports = {
   openExtension,
   selectAccount,
@@ -149,4 +156,5 @@ module.exports = {
   decodeBlob,
   encodeAddress,
   decodeAddress,
+  mergeMultisigTransactions,
 };
