@@ -106,7 +106,7 @@ async function sendTransaction(blob) {
   return result;
 }
 
-function blobToByteArray(blob) {
+function base64ToByteArray(blob) {
   return new Uint8Array(
     Buffer.from(blob, 'base64')
       .toString('binary')
@@ -115,7 +115,7 @@ function blobToByteArray(blob) {
   );
 }
 
-function byteArrayToBlob(array) {
+function byteArrayToBase64(array) {
   return Buffer.from(String.fromCharCode.apply(null, array), 'binary').toString('base64');
 }
 
@@ -123,8 +123,8 @@ function decodeObject(obj) {
   return algosdk.decodeObj(obj);
 }
 
-function decodeBlob(blob) {
-  return decodeObject(blobToByteArray(blob));
+function decodeBase64Blob(blob) {
+  return decodeObject(base64ToByteArray(blob));
 }
 
 function encodeAddress(address) {
@@ -135,10 +135,21 @@ function decodeAddress(address) {
   return algosdk.decodeAddress(address);
 }
 
-function mergeMultisigTransactions(signedArray) {
-  const a = signedArray.map((s) => blobToByteArray(s.blob));
-  console.error(a);
-  return algosdk.mergeMultisigTransactions(a);
+function mergeMultisigTransactions(signedTransactionsArray) {
+  const convertedArray = signedTransactionsArray.map((s) => base64ToByteArray(s.blob));
+  const mergedTx = algosdk.mergeMultisigTransactions(convertedArray);
+  return byteArrayToBase64(mergedTx);
+}
+
+function appendSignToMultisigTransaction(partialTransaction, msigParams, mnemonic) {
+  const byteArrayTransaction = base64ToByteArray(partialTransaction.blob);
+  const params = {
+    version: msigParams.v,
+    threshold: msigParams.thr,
+    addrs: msigParams.subsig.map((acc) => acc.pk),
+  };
+  const secretKey = algosdk.mnemonicToSecretKey(mnemonic).sk;
+  return algosdk.appendSignMultisigTransaction(byteArrayTransaction, params, secretKey);
 }
 
 module.exports = {
@@ -150,11 +161,12 @@ module.exports = {
   getLedgerParams,
   signTransaction,
   sendTransaction,
-  blobToByteArray,
-  byteArrayToBlob,
+  base64ToByteArray,
+  byteArrayToBase64,
   decodeObject,
-  decodeBlob,
+  decodeBase64Blob,
   encodeAddress,
   decodeAddress,
   mergeMultisigTransactions,
+  appendSignToMultisigTransaction,
 };

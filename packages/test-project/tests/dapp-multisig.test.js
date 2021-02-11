@@ -10,10 +10,11 @@ const {
   getLedgerParams,
   signTransaction,
   sendTransaction,
-  decodeBlob,
-  byteArrayToBlob,
+  decodeBase64Blob,
+  byteArrayToBase64,
   encodeAddress,
   mergeMultisigTransactions,
+  appendSignToMultisigTransaction,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
@@ -80,11 +81,11 @@ describe('MultiSig Use cases', () => {
 
   ImportAccount(msigAccount.subaccounts[0]);
 
-  test('Sign MultiSig Transaction with first account', async () => {
+  test('Sign MultiSig Transaction with First account', async () => {
     signedTransactions.push(await signTransaction(multisigTransaction));
 
     // Verify signature is added
-    const decodedTransaction = await decodeBlob(signedTransactions[0].blob);
+    const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
     expect(decodedTransaction.msig).toHaveProperty('subsig');
@@ -101,14 +102,14 @@ describe('MultiSig Use cases', () => {
 
   ImportAccount(msigAccount.subaccounts[1]);
 
-  test('Append Second Signature to MultiSig Transaction', async () => {
-    // Merge signature to original transaction
-    const decodedTransaction = await decodeBlob(signedTransactions[0].blob);
+  test('Sign MultiSig Transaction with Second account', async () => {
+    // Merge first signature to original transaction
+    const decodedFirstTransaction = decodeBase64Blob(signedTransactions[0].blob);
     multisigTransaction = {
       ...multisigTransaction,
       msig: {
         ...multisigTransaction.msig,
-        subsig: decodedTransaction.msig.subsig.map((subsig) => {
+        subsig: decodedFirstTransaction.msig.subsig.map((subsig) => {
           const data = subsig;
           data.pk = encodeAddress(data.pk);
           return data;
@@ -116,13 +117,41 @@ describe('MultiSig Use cases', () => {
       },
     };
     signedTransactions.push(await signTransaction(multisigTransaction));
+
+    // Verify signature is added
+    const decodedTransaction = decodeBase64Blob(signedTransactions[1].blob);
+    expect(decodedTransaction).toHaveProperty('txn');
+    expect(decodedTransaction).toHaveProperty('msig');
+    expect(decodedTransaction.msig).toHaveProperty('subsig');
+    expect(decodedTransaction.msig.subsig.length).toBe(3);
+    expect(decodedTransaction.msig.subsig[1]).toHaveProperty('s');
   });
 
   test('Send SDK-merged Multisig Transaction', async () => {
     const sdkMerge = mergeMultisigTransactions(signedTransactions);
-    const result = await sendTransaction(byteArrayToBlob(sdkMerge));
+    const result = await sendTransaction(sdkMerge);
     expect(result).not.toBeNull();
     expect(result).toHaveProperty('txId');
     expect(result).not.toHaveProperty('message');
+    signedTransactions.push(sdkMerge);
+  });
+
+  test('Append Second signature with SDK', async () => {
+    const appendedMultisig = appendSignToMultisigTransaction(
+      signedTransactions[1],
+      multisigTransaction.msig,
+      msigAccount.subaccounts[0].mnemonic
+    );
+    expect(appendedMultisig).not.toBeNull();
+    expect(appendedMultisig).toHaveProperty('txID');
+    expect(appendedMultisig).toHaveProperty('blob');
+    // We can't send it since it shares ID with the other
+    signedTransactions.push(appendedMultisig);
+  });
+
+  test('Compare merge results', async () => {
+    const decodedFirstMerge = decodeBase64Blob(signedTransactions[2]);
+    const decodedSecondMerge = decodeBase64Blob(byteArrayToBase64(signedTransactions[3].blob));
+    expect(decodedFirstMerge).toStrictEqual(decodedSecondMerge);
   });
 });
