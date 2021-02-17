@@ -4,5 +4,4 @@
 .DS_Store
 **/coverage
 packages/crypto
-packages/dapp
 **/*.config.js
