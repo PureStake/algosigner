@@ -3,10 +3,10 @@ const algosdk = require('algosdk');
 
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { API } from './types';
+import { API, Ledger } from './types';
 import {
   getValidatedTxnWrap,
-  getLedgerFromGenesisID,
+  getLedgerFromGenesisId,
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { ValidationStatus } from '../utils/validator';
@@ -177,13 +177,13 @@ export class Task {
           } else {
             // Get Ledger params
             const conn = Settings.getBackendParams(
-              getLedgerFromGenesisID(transactionWrap.transaction.genesisID),
+              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
               API.Algod
             );
             const sendPath = '/v2/transactions/params';
             const fetchParams: any = {
               headers: {
-                ...conn.apiKey,
+                ...conn.headers,
               },
               method: 'GET',
             };
@@ -274,13 +274,13 @@ export class Task {
           } else {
             // Get Ledger params
             const conn = Settings.getBackendParams(
-              getLedgerFromGenesisID(transactionWrap.transaction.genesisID),
+              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
               API.Algod
             );
             const sendPath = '/v2/transactions/params';
             const fetchParams: any = {
               headers: {
-                ...conn.apiKey,
+                ...conn.headers,
               },
               method: 'GET',
             };
@@ -297,7 +297,7 @@ export class Task {
 
               const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
               const session = InternalMethods.getHelperSession();
-              const ledger = getLedgerFromGenesisID(transactionWrap.transaction.genesisID);
+              const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
               const accounts = session.wallet[ledger];
               const multisigAccounts = getSigningAccounts(accounts, msig_txn);
 
@@ -339,7 +339,7 @@ export class Task {
           const sendPath = '/v2/transactions';
           const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': 'application/x-binary',
             },
             method: 'POST',
@@ -371,7 +371,7 @@ export class Task {
 
           const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': contentType,
             },
             method: params.method || 'GET',
@@ -400,7 +400,7 @@ export class Task {
 
           const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': contentType,
             },
             method: params.method || 'GET',
@@ -424,7 +424,29 @@ export class Task {
         /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
+          // If we don't have a ledger requested, respond with an error giving available ledgers
+          if (!d.body.params.ledger) {
+            const baseNetworks = Object.keys(Ledger);
+            const injectedNetworks = Settings.getCleansedInjectedNetworks();
+            d.error = {
+              message: `Ledger not provided. Please use a base ledger: [${baseNetworks}] or an available custom one ${JSON.stringify(
+                injectedNetworks
+              )}.`,
+            };
+            reject(d);
+            return;
+          }
+
           const accounts = session.wallet[d.body.params.ledger];
+          // If we have requested a ledger but don't have it, respond with an error
+          if (accounts === undefined) {
+            d.error = {
+              message: RequestErrors.UnsupportedLedger,
+            };
+            reject(d);
+            return;
+          }
+
           const res = [];
           for (let i = 0; i < accounts.length; i++) {
             res.push({
@@ -488,7 +510,7 @@ export class Task {
             // note,
           } = message.body.params.transaction;
 
-          const ledger = getLedgerFromGenesisID(genesisID);
+          const ledger = getLedgerFromGenesisId(genesisID);
 
           const context = new encryptionWrap(passphrase);
           context.unlock(async (unlockedValue: any) => {
@@ -501,6 +523,10 @@ export class Task {
 
             let account;
 
+            if (unlockedValue[ledger] === undefined) {
+              message.error = RequestErrors.UnsupportedLedger;
+              MessageApi.send(message);
+            }
             // Find address to send algos from
             for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
               if (unlockedValue[ledger][i].address === from) {
@@ -591,7 +617,7 @@ export class Task {
           const msig_txn = { msig: message.body.params.msig, txn: message.body.params.txn };
 
           // Use MainNet if specified - default to TestNet
-          const ledger = getLedgerFromGenesisID(msig_txn.txn.genesisID);
+          const ledger = getLedgerFromGenesisId(msig_txn.txn.genesisID);
 
           // Create an encryption wrap to get the needed signing account information
           const context = new encryptionWrap(passphrase);
@@ -780,6 +806,15 @@ export class Task {
         },
         [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
+        },
+        [JsonRpcMethod.SaveNetwork]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
+        },
+        [JsonRpcMethod.DeleteNetwork]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.DeleteNetwork](request, sendResponse);
+        },
+        [JsonRpcMethod.GetLedgers]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetLedgers](request, sendResponse);
         },
       },
     };

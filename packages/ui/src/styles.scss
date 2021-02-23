@@ -155,3 +155,17 @@ a:hover {
   border: solid 1px rgb(255, 215, 0);
   background-color: rgb(255, 0, 0, 0.1);
 }
+
+.network-modify label {
+  float: left;
+  font-size: small;
+}
+.network-modify input {
+  font-size: smaller;
+  text-align: right;
+  margin-bottom: 0.25rem;
+}
+.network-modify-footer button {
+  width: 48%;
+  margin: 0% 1% 0% 1%;
+}

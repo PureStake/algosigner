@@ -21,6 +21,7 @@ import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
 import logging from '@algosigner/common/logging';
+import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 
 function deny() {
   const params = {
@@ -92,8 +93,23 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
     let tx = request.body.params.txn;
     // Search for account
     let txLedger;
-    if (tx.genesisID === 'mainnet-v1.0') txLedger = 'MainNet';
-    else if (tx.genesisID === 'testnet-v1.0') txLedger = 'TestNet';
+    getBaseSupportedLedgers().forEach((l) => {
+      if (tx.genesisID === l['genesisId']) {
+        txLedger = l['name'];
+      }
+    });
+
+    // Add on any injected ledgers
+    if (txLedger === undefined) {
+      const injectedLedgers = store['injectedLedgers'];
+      if (injectedLedgers && injectedLedgers.length > 0) {
+        injectedLedgers.forEach((l) => {
+          if (tx.genesisID === l['genesisId']) {
+            txLedger = l['name'];
+          }
+        });
+      }
+    }
 
     if (request.body.params.name) {
       setAccount(request.body.params.name);

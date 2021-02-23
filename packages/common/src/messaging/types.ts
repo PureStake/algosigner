@@ -32,6 +32,10 @@ export enum JsonRpcMethod {
     AssetsVerifiedList = "assets-verified-list",
     SignSendTransaction = "sign-send-transaction",
     ChangeLedger = "change-ledger",
+    SaveNetwork = "save-network",
+    DeleteNetwork = "delete-network",
+    GetLedgers = "get-ledgers",
+
 }
 
 export type JsonPayload = {[key: string]: string | number | JsonPayload | undefined};
