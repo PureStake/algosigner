@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 const algosdk = require('algosdk');
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { Settings } from '../config';
 
 ///
 // Validation Status
@@ -133,7 +134,10 @@ export function Validate(field: any, value: any): ValidationResponse {
 
     // Genesis ID must be present and one of the approved values
     case 'genesisID':
-      if (getBaseSupportedLedgers().some((l) => value === l['genesisId'])) {
+      if (
+        getBaseSupportedLedgers().some((l) => value === l['genesisId']) ||
+        Settings.getCleansedInjectedNetworks().find((l) => value === l['genesisId'])
+      ) {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {
         return new ValidationResponse({

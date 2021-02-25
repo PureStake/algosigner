@@ -556,7 +556,12 @@ export class InternalMethods {
         )
       ) {
         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-        sendResponse({ error: 'One or more fields are not valid. Please check and try again.' });
+        const e =
+          'One or more fields are not valid. Please check and try again.\n' +
+          Object.values(transactionWrap.validityObject)
+            .filter((value) => value['status'] === ValidationStatus.Invalid)
+            .map((vo) => vo['info']);
+        sendResponse({ error: e });
         return;
       } else {
         // We have a transaction which does not contain invalid fields, but may contain fields that are dangerous
