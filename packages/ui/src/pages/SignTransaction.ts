@@ -91,23 +91,28 @@ const SignTransaction: FunctionalComponent = () => {
 
     // Add on any injected ledgers
     if (txLedger === undefined) {
-      const injectedLedgers = store['injectedLedgers'];
-      if (injectedLedgers && injectedLedgers.length > 0) {
-        injectedLedgers.forEach((l) => {
-          if (tx.genesisID === l['genesisId']) {
-            txLedger = l['name'];
-          }
-        });
-      }
-    }
+      let sessionLedgers;
+      store.getAvailableLedgers((availableLedgers) => {
+        if (!availableLedgers.error) {
+          sessionLedgers = availableLedgers;
+          sessionLedgers.forEach((l) => {
+            if (tx.genesisID === l['genesisId']) {
+              txLedger = l['name'];
+            }
+          });
 
-    for (let i = store[txLedger].length - 1; i >= 0; i--) {
-      if (store[txLedger][i].address === tx.from) {
-        setAccount(store[txLedger][i].name);
-        break;
-      }
+          for (let i = store[txLedger].length - 1; i >= 0; i--) {
+            if (store[txLedger][i].address === tx.from) {
+              setAccount(store[txLedger][i].name);
+              break;
+            }
+          }
+          setLedger(txLedger);
+        }
+      });
+    } else {
+      setLedger(txLedger);
     }
-    setLedger(txLedger);
   }
 
   return html`

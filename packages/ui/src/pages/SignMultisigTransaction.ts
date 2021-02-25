@@ -99,24 +99,29 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
       }
     });
 
-    // Add on any injected ledgers
-    if (txLedger === undefined) {
-      const injectedLedgers = store['injectedLedgers'];
-      if (injectedLedgers && injectedLedgers.length > 0) {
-        injectedLedgers.forEach((l) => {
-          if (tx.genesisID === l['genesisId']) {
-            txLedger = l['name'];
-          }
-        });
-      }
-    }
-
     if (request.body.params.name) {
       setAccount(request.body.params.name);
     } else {
       setAccount(request.body.params.account);
     }
-    setLedger(txLedger);
+
+    // Add on any injected ledgers
+    if (txLedger === undefined) {
+      let sessionLedgers;
+      store.getAvailableLedgers((availableLedgers) => {
+        if (!availableLedgers.error) {
+          sessionLedgers = availableLedgers;
+          sessionLedgers.forEach((l) => {
+            if (tx.genesisID === l['genesisId']) {
+              txLedger = l['name'];
+            }
+          });
+          setLedger(txLedger);
+        }
+      });
+    } else {
+      setLedger(txLedger);
+    }
   }
 
   return html`
