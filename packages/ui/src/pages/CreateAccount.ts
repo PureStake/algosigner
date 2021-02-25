@@ -83,8 +83,9 @@ const CreateAccount: FunctionalComponent = (props: any) => {
             break;
         }
       } else {
-        store.updateWallet(response);
-        route('/wallet');
+        store.updateWallet(response, () => {
+          route('/wallet');
+        });
       }
     });
   };
@@ -100,13 +101,7 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       />
     `}
     ${step === 1 &&
-    html`
-      <${AccountKeys}
-        account=${account}
-        prevStep=${prevStep}
-        nextStep=${nextStep}
-      />
-    `}
+    html` <${AccountKeys} account=${account} prevStep=${prevStep} nextStep=${nextStep} /> `}
     ${step === 2 &&
     html`
       <${ConfirmMnemonic}
@@ -122,11 +117,7 @@ const CreateAccount: FunctionalComponent = (props: any) => {
       <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content">
-          <${Authenticate}
-            error=${authError}
-            loading=${loading}
-            nextStep=${createAccount}
-          />
+          <${Authenticate} error=${authError} loading=${loading} nextStep=${createAccount} />
         </div>
         <button
           class="modal-close is-large"

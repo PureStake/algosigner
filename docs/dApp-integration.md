@@ -15,13 +15,20 @@ Proxied requests are passed through to an API service - currently set to the Pur
 
 ## Existing Methods
 
-- [Connect to Extension](#algosignerconnect)
-- [Request Wallet Accounts](#algosigneraccounts-ledger-mainnettestnet-)
-- [Algod v2 API](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
-- [Indexer v2 API](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
-- [Sign Transactions](#algosignersigntxnobject)
-- [Multi-Sig Transactions](#algosignersignmultisigtxn)
-- [Send Transactions](#algosignersend-ledger-mainnettestnet-txblob-)
+- [!AlgoSigner](#)
+- [Integrating AlgoSigner to add Transaction Capabilities for dApps on Algorand](#integrating-algosigner-to-add-transaction-capabilities-for-dapps-on-algorand)
+  - [Existing Methods](#existing-methods)
+    - [AlgoSigner.connect()](#algosignerconnect)
+    - [AlgoSigner.accounts({ ledger: ‘MainNet|TestNet’ })](#algosigneraccounts-ledger-mainnettestnet-)
+    - [AlgoSigner.algod({ ledger: ‘MainNet|TestNet’, path: ‘algod v2 path’, ... })](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
+    - [AlgoSigner.indexer({ ledger: ‘MainNet|TestNet’, path: ‘indexer v2 path’ })](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
+    - [AlgoSigner.sign(txnObject)](#algosignersigntxnobject)
+      - [Transaction Requirements](#transaction-requirements)
+      - [Atomic Transactions](#atomic-transactions)
+    - [AlgoSigner.signMultisig(txn)](#algosignersignmultisigtxn)
+    - [Custom Networks](#custom-networks)
+    - [AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })](#algosignersend-ledger-mainnettestnet-txblob-)
+  - [Rejection Messages](#rejection-messages)
 
 ### AlgoSigner.connect()
 
@@ -203,6 +210,16 @@ Due to limitations in Chrome internal messaging, AlgoSigner encodes the transact
   - Using the associated msig for the transaction an available matching unsigned address will be selected if possible to sign the txn component.
   - The resulting sign will return the a msig with only this signature in the blob and will need to be merged with other signatures before sending to the network.
 - An example of this can be seen in the [existing sample dApp multisig test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
+
+### Custom Networks
+
+- Custom networks beta support is now in AlgoSigner.
+- AlgoSigner.accounts(ledger) has changed such that calls now accept names that have been added to the user's custom network list as valid ledger names.
+  - A non-matching ledger name will result in a error:
+    - [RequestErrors.UnsupportedLedger] The provided ledger is not supported.
+  - An empty request will result with an error:
+    - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisId":"testnet-v1.0"}].
+- Transaction requests will require a valid matching "genesisId", even for custom networks.
 
 **Request**
 

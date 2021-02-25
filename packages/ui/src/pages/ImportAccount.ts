@@ -47,8 +47,9 @@ const ImportAccount: FunctionalComponent = (props: any) => {
             break;
         }
       } else {
-        store.updateWallet(response);
-        route('/wallet');
+        store.updateWallet(response, () => {
+          route('/wallet');
+        });
       }
     });
   };

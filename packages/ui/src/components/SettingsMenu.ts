@@ -8,6 +8,7 @@ import HeaderComponent from './HeaderComponent';
 import DeleteWallet from 'components/DeleteWallet';
 import Logo from './Logo';
 import { sendMessage } from 'services/Messaging';
+import LedgerNetworksConfiguration from './LedgerNetworksConfiguration';
 
 const SettingsMenu: FunctionalComponent = () => {
   const [active, setActive] = useState<boolean>(false);
@@ -28,6 +29,13 @@ const SettingsMenu: FunctionalComponent = () => {
 
   const getSubmenu = () => {
     switch (currentMenu) {
+      case 'networkConfiguration':
+        return html`<${LedgerNetworksConfiguration}
+          closeFunction=${() => {
+            setCurrentMenu('settings');
+            flip();
+          }}
+        />`;
       case 'delete':
         return html`<${DeleteWallet} />`;
       default:
@@ -56,6 +64,13 @@ const SettingsMenu: FunctionalComponent = () => {
         ${
           currentMenu === 'settings' &&
           html`
+            <a
+              class="menu-item"
+              id="showNetworkConfiguration"
+              onClick=${() => setCurrentMenu('networkConfiguration')}
+            >
+              Network Configuration
+            </a>
             <a class="menu-item" id="showWalletDetails" onClick=${() => setCurrentMenu('delete')}
               >Delete wallet</a
             >
