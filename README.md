@@ -30,7 +30,7 @@ Upcomming feature releases will focus on adding Ledger device support and a more
   - Network ID: Genesis ID for the network. Transactions will be validated against the value here and must contain a matching value. Defaults to "mainnet-v1.0".
   - Network Algod URL: The address which will be used for any Algod related calls. Defaults to the PureStake MainNet URL.
   - Network Indexer URL: The address which will be used for any Indexer lookup calls. Defaults to the PureStake MainNet Indexer URL.
-  - Network Headers: Object stucture that will be used as replacement headers for calls. The object structure has an "Algod" and "Indexer" sub structure which will both need a valid "X-API-Key" to function.
+  - Network Headers: Object stucture that will be used as replacement headers for calls. The object structure has an "Algod" and "Indexer" sub structure which will contain the headers the target api needs in order to function.
 
 ### Multisig Transactions
 

@@ -31,7 +31,7 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
   return useObserver(
     () => html`
       <div className="box has-text-centered is-flex" style="flex-direction: column;">
-        <b className="mb-2">Network Configuration</b>
+        <div><b className="mb-2">Network Configuration</b> - beta</div>
         <div style="flex: 1; text-align: -webkit-center;">
           ${!isNetConfigModalVisible &&
           html`
