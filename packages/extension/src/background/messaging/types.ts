@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-types */
+
+import { LedgerTemplate } from '@algosigner/common/types/ledgers';
+
 // Key and value must match in this enum so we
 // can compare its existance with i.e. "Testnet" in SupportedLedger
 /* eslint-disable no-unused-vars */
@@ -35,7 +39,13 @@ export interface Cache {
             ],
             ...
         },
+        availableLedgers: [
+          {
+            ...
+          }
+        ],
     */
   assets: object;
   accounts: object;
+  availableLedgers: Array<LedgerTemplate>;
 }

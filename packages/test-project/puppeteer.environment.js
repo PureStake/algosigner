@@ -6,6 +6,7 @@ const NodeEnvironment = require('jest-environment-node');
 function srcPath(subpath) {
   return path.resolve(__dirname, '../../' + subpath);
 }
+const SAMPLE_PAGE = 'https://google.com/';
 
 class PuppeteerEnvironment extends NodeEnvironment {
   constructor(config) {
@@ -28,7 +29,10 @@ class PuppeteerEnvironment extends NodeEnvironment {
       ],
     });
     const pages = await this.global.browser.pages();
-    this.global.page = pages[0];
+    this.global.dappPage = pages[0];
+    // We use a sample page because algosigner.min.js doesn't load on empty pages
+    this.global.dappPage.goto(SAMPLE_PAGE);
+    this.global.extensionPage = await this.global.browser.newPage();
   }
 
   async teardown() {
