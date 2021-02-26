@@ -5,6 +5,7 @@ import { useObserver } from 'mobx-react-lite';
 import { StoreContext } from 'services/StoreContext';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 import LedgerNetworkModify from './LedgerNetworkModify';
+import { route } from 'preact-router';
 
 const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
   const { closeFunction } = props;
@@ -72,10 +73,13 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
           ${isNetConfigModalVisible &&
           html`
             <${LedgerNetworkModify}
-              closeFunction=${(isFullClose) => {
+              closeFunction=${(closeType) => {
                 setNetConfigModalVisible(false);
-                if (isFullClose) {
+                if (closeType === 1) {
                   closeFunction && closeFunction();
+                } else if (closeType === 2) {
+                  closeFunction && closeFunction();
+                  route('/wallet');
                 }
               }}
               name=${activeLedgerTemplate.name}

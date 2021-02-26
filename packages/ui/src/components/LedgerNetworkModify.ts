@@ -10,7 +10,6 @@ import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
 
 const LedgerNetworkModify: FunctionalComponent = (props: any) => {
-  console.log('Network Modify Component Props:', props);
   const { closeFunction, isEditable, isModify } = props;
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
@@ -50,7 +49,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
         // Delete the network from store, then update the wallet and return
         store.deleteNetwork(networkName, () => {
           store.setLedger(undefined);
-          closeFunction && closeFunction(true);
+          closeFunction && closeFunction(1);
         });
       }
     });
@@ -77,7 +76,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       } else {
         store.setAvailableLedgers(response.availableLedgers);
         store.setLedger(networkName);
-        closeFunction && closeFunction(true);
+        closeFunction && closeFunction(2);
       }
     });
   };
@@ -139,7 +138,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
         <button
           class="modal-close is-large"
           style="z-index: 1; opacity: 0;"
-          onClick=${() => closeFunction && closeFunction(true)}
+          onClick=${() => closeFunction && closeFunction(1)}
         />
       </div>
       ${isEditable &&
