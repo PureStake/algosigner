@@ -47,8 +47,9 @@ const ImportAccount: FunctionalComponent = (props: any) => {
             break;
         }
       } else {
-        store.updateWallet(response);
-        route('/wallet');
+        store.updateWallet(response, () => {
+          route('/wallet');
+        });
       }
     });
   };
@@ -58,14 +59,8 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   };
 
   return html`
-    <div
-      class="main-view"
-      style="flex-direction: column; justify-content: space-between;"
-    >
-      <${HeaderView}
-        action="${() => route('/wallet')}"
-        title="Import ${ledger} account"
-      />
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+      <${HeaderView} action="${() => route('/wallet')}" title="Import ${ledger} account" />
       <div class="px-3" style="flex: 1;">
         <input
           id="accountName"
@@ -75,9 +70,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           onInput=${(e) => setName(e.target.value)}
         />
 
-        <p class="my-3">
-          Insert the 25 word mnemonic of the acccount you want to import
-        </p>
+        <p class="my-3"> Insert the 25 word mnemonic of the account you want to import </p>
 
         <textarea
           id="enterMnemonic"
@@ -111,11 +104,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
       <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content">
-          <${Authenticate}
-            error=${authError}
-            loading=${loading}
-            nextStep=${importAccount}
-          />
+          <${Authenticate} error=${authError} loading=${loading} nextStep=${importAccount} />
         </div>
         <button
           class="modal-close is-large"

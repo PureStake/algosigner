@@ -1,1 +1,1 @@
-export {AlgoSigner} from './algosigner';
+export { AlgoSigner } from './algosigner';

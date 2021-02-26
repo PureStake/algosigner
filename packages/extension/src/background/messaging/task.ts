@@ -1,17 +1,12 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable prefer-const */
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
 
 import { RequestErrors } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { API } from './types';
+import { API, Ledger } from './types';
 import {
   getValidatedTxnWrap,
-  getLedgerFromGenesisID,
+  getLedgerFromGenesisId,
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { ValidationStatus } from '../utils/validator';
@@ -56,7 +51,7 @@ export class Task {
           resolve(json);
         })
         .catch((error) => {
-          let res: Object = {
+          const res: Object = {
             message: error.message,
             data: error.data,
           };
@@ -66,8 +61,8 @@ export class Task {
   }
 
   public static build(request: any) {
-    let body = request.body;
-    let method = body.method;
+    const body = request.body;
+    const method = body.method;
 
     // Check if there's a previous request from the same origin
     if (request.originTabID in Task.requests)
@@ -167,7 +162,7 @@ export class Task {
           ) {
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            let invalidKeys = [];
+            const invalidKeys = [];
             Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
               if (value['status'] === ValidationStatus.Invalid) {
                 invalidKeys.push(`${key}`);
@@ -182,13 +177,13 @@ export class Task {
           } else {
             // Get Ledger params
             const conn = Settings.getBackendParams(
-              getLedgerFromGenesisID(transactionWrap.transaction.genesisID),
+              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
               API.Algod
             );
             const sendPath = '/v2/transactions/params';
             const fetchParams: any = {
               headers: {
-                ...conn.apiKey,
+                ...conn.headers,
               },
               method: 'GET',
             };
@@ -264,7 +259,7 @@ export class Task {
           ) {
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            let invalidKeys = [];
+            const invalidKeys = [];
             Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
               if (value['status'] === ValidationStatus.Invalid) {
                 invalidKeys.push(`${key}`);
@@ -279,13 +274,13 @@ export class Task {
           } else {
             // Get Ledger params
             const conn = Settings.getBackendParams(
-              getLedgerFromGenesisID(transactionWrap.transaction.genesisID),
+              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
               API.Algod
             );
             const sendPath = '/v2/transactions/params';
             const fetchParams: any = {
               headers: {
-                ...conn.apiKey,
+                ...conn.headers,
               },
               method: 'GET',
             };
@@ -300,11 +295,11 @@ export class Task {
               d.body.params.txn = transactionWrap.transaction;
               d.body.params.estimatedFee = transactionWrap.estimatedFee;
 
-              let msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
+              const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
               const session = InternalMethods.getHelperSession();
-              const ledger = getLedgerFromGenesisID(transactionWrap.transaction.genesisID);
+              const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
               const accounts = session.wallet[ledger];
-              let multisigAccounts = getSigningAccounts(accounts, msig_txn);
+              const multisigAccounts = getSigningAccounts(accounts, msig_txn);
 
               if (multisigAccounts.error) {
                 d.error = multisigAccounts.error.message;
@@ -342,9 +337,9 @@ export class Task {
           const { params } = d.body;
           const conn = Settings.getBackendParams(params.ledger, API.Algod);
           const sendPath = '/v2/transactions';
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': 'application/x-binary',
             },
             method: 'POST',
@@ -374,9 +369,9 @@ export class Task {
 
           const contentType = params.contentType ? params.contentType : '';
 
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': contentType,
             },
             method: params.method || 'GET',
@@ -403,9 +398,9 @@ export class Task {
 
           const contentType = params.contentType ? params.contentType : '';
 
-          let fetchParams: any = {
+          const fetchParams: any = {
             headers: {
-              ...conn.apiKey,
+              ...conn.headers,
               'Content-Type': contentType,
             },
             method: params.method || 'GET',
@@ -426,10 +421,33 @@ export class Task {
             });
         },
         // Accounts
+        /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
+          // If we don't have a ledger requested, respond with an error giving available ledgers
+          if (!d.body.params.ledger) {
+            const baseNetworks = Object.keys(Ledger);
+            const injectedNetworks = Settings.getCleansedInjectedNetworks();
+            d.error = {
+              message: `Ledger not provided. Please use a base ledger: [${baseNetworks}] or an available custom one ${JSON.stringify(
+                injectedNetworks
+              )}.`,
+            };
+            reject(d);
+            return;
+          }
+
           const accounts = session.wallet[d.body.params.ledger];
-          let res = [];
+          // If we have requested a ledger but don't have it, respond with an error
+          if (accounts === undefined) {
+            d.error = {
+              message: RequestErrors.UnsupportedLedger,
+            };
+            reject(d);
+            return;
+          }
+
+          const res = [];
           for (let i = 0; i < accounts.length; i++) {
             res.push({
               address: accounts[i].address,
@@ -443,8 +461,8 @@ export class Task {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
           const { responseOriginTabID } = d.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           extensionBrowser.windows.remove(auth.window_id);
           Task.authorized_pool.push(message.origin);
@@ -459,8 +477,8 @@ export class Task {
         // authorization-deny
         [JsonRpcMethod.AuthorizationDeny]: (d) => {
           const { responseOriginTabID } = d.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           auth.message.error = {
             message: RequestErrors.NotAuthorized,
@@ -477,8 +495,8 @@ export class Task {
         // sign-allow
         [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID } = request.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           const {
             from,
@@ -492,9 +510,9 @@ export class Task {
             // note,
           } = message.body.params.transaction;
 
-          const ledger = getLedgerFromGenesisID(genesisID);
+          const ledger = getLedgerFromGenesisId(genesisID);
 
-          let context = new encryptionWrap(passphrase);
+          const context = new encryptionWrap(passphrase);
           context.unlock(async (unlockedValue: any) => {
             if ('error' in unlockedValue) {
               sendResponse(unlockedValue);
@@ -505,6 +523,10 @@ export class Task {
 
             let account;
 
+            if (unlockedValue[ledger] === undefined) {
+              message.error = RequestErrors.UnsupportedLedger;
+              MessageApi.send(message);
+            }
             // Find address to send algos from
             for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
               if (unlockedValue[ledger][i].address === from) {
@@ -513,9 +535,9 @@ export class Task {
               }
             }
 
-            let recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+            const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
-            let txn = { ...message.body.params.transaction };
+            const txn = { ...message.body.params.transaction };
 
             Object.keys({ ...message.body.params.transaction }).forEach((key) => {
               if (txn[key] === undefined || txn[key] === null) {
@@ -548,7 +570,7 @@ export class Task {
               }
               if ('appArgs' in txn) {
                 try {
-                  let tempArgs = [];
+                  const tempArgs = [];
                   txn.appArgs.forEach((element) => {
                     logging.log(element);
                     tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
@@ -562,14 +584,14 @@ export class Task {
 
             try {
               // This step transitions a raw object into a transaction style object
-              let builtTx = buildTransaction(txn);
+              const builtTx = buildTransaction(txn);
               // We are combining the tx id get and sign into one step/object because of legacy,
               // this may not need to be the case any longer.
-              let signedTxn = {
+              const signedTxn = {
                 txID: builtTx.txID().toString(),
                 blob: builtTx.signTxn(recoveredAccount.sk),
               };
-              let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+              const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
               message.response = {
                 txID: signedTxn.txID,
@@ -588,21 +610,17 @@ export class Task {
         // sign-allow-multisig
         [JsonRpcMethod.SignAllowMultisig]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID } = request.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           // Map the full multisig transaction here
-          let msig_txn = { msig: message.body.params.msig, txn: message.body.params.txn };
+          const msig_txn = { msig: message.body.params.msig, txn: message.body.params.txn };
 
           // Use MainNet if specified - default to TestNet
-          let ledger = getLedgerFromGenesisID(msig_txn.txn.genesisID);
-
-          // Get parameters and connect the SDK
-          const params = Settings.getBackendParams(ledger, API.Algod);
-          const algod = new algosdk.Algodv2(params.apiKey, params.url, params.port);
+          const ledger = getLedgerFromGenesisId(msig_txn.txn.genesisID);
 
           // Create an encryption wrap to get the needed signing account information
-          let context = new encryptionWrap(passphrase);
+          const context = new encryptionWrap(passphrase);
           context.unlock(async (unlockedValue: any) => {
             if ('error' in unlockedValue) {
               sendResponse(unlockedValue);
@@ -614,7 +632,7 @@ export class Task {
             // Verify this is a multisig sign occurs in the getSigningAccounts
             // This get may receive a .error in return if an appropriate account is not found
             let account;
-            let multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
+            const multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
             if (multisigAccounts.error) {
               message.error = multisigAccounts.error.message;
             } else {
@@ -624,7 +642,7 @@ export class Task {
 
             if (account) {
               // We can now use the found account match to get the sign key
-              let recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+              const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
               // Use the received txn component of the transaction, but remove undefined and null values
               Object.keys({ ...msig_txn.txn }).forEach((key) => {
@@ -661,7 +679,7 @@ export class Task {
                 }
                 if ('appArgs' in msig_txn.txn) {
                   try {
-                    let tempArgs = [];
+                    const tempArgs = [];
                     msig_txn.txn.appArgs.forEach((element) => {
                       tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
                     });
@@ -674,30 +692,30 @@ export class Task {
 
               try {
                 // This step transitions a raw object into a transaction style object
-                let builtTx = buildTransaction(msig_txn.txn);
+                const builtTx = buildTransaction(msig_txn.txn);
 
                 // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
-                let version = msig_txn.msig.v || msig_txn.msig.version;
-                let threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
-                let addrs =
+                const version = msig_txn.msig.v || msig_txn.msig.version;
+                const threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
+                const addrs =
                   msig_txn.msig.addrs ||
                   msig_txn.msig.subsig.map((subsig) => {
                     return subsig.pk;
                   });
-                let preimg = {
+                const preimg = {
                   version: version,
                   threshold: threshold,
                   addrs: addrs,
                 };
 
                 let signedTxn;
-                let appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
+                const appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
                 // Check for existing signatures. Append if there are any.
                 if (appendEnabled && msig_txn.msig.subsig.some((subsig) => subsig.s)) {
                   // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
                   // It is subject to change and is built as scaffolding for future functionality.
-                  let encodedBlob = message.body.params.txn;
-                  let decodedBlob = Buffer.from(encodedBlob, 'base64');
+                  const encodedBlob = message.body.params.txn;
+                  const decodedBlob = Buffer.from(encodedBlob, 'base64');
                   signedTxn = algosdk.appendSignMultisigTransaction(
                     decodedBlob,
                     preimg,
@@ -709,7 +727,7 @@ export class Task {
                 }
 
                 // Converting the blob to an encoded string for transfer back to dApp
-                let b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+                const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
                 message.response = {
                   txID: signedTxn.txID,
@@ -725,10 +743,11 @@ export class Task {
           });
           return true;
         },
+        /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
           const { responseOriginTabID } = request.body.params;
-          let auth = Task.requests[responseOriginTabID];
-          let message = auth.message;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
 
           auth.message.error = {
             message: RequestErrors.NotAuthorized,
@@ -751,6 +770,11 @@ export class Task {
         },
         [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.Login](request, sendResponse);
+        },
+        /* eslint-disable-next-line no-unused-vars */
+        [JsonRpcMethod.Logout]: (request: any, sendResponse: Function) => {
+          InternalMethods.clearSession();
+          Task.clearPool();
         },
         [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);
@@ -784,6 +808,15 @@ export class Task {
         },
         [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
+        },
+        [JsonRpcMethod.SaveNetwork]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
+        },
+        [JsonRpcMethod.DeleteNetwork]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.DeleteNetwork](request, sendResponse);
+        },
+        [JsonRpcMethod.GetLedgers]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetLedgers](request, sendResponse);
         },
       },
     };
