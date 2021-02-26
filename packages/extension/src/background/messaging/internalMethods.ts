@@ -75,8 +75,12 @@ export class InternalMethods {
       });
   }
 
-  public static getHelperSession() {
+  public static getHelperSession(): Session {
     return session.session;
+  }
+
+  public static clearSession(): void {
+    session.clearSession();
   }
 
   public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
@@ -166,11 +170,6 @@ export class InternalMethods {
       }
     });
     return true;
-  }
-
-  /* eslint-disable-next-line no-unused-vars */
-  public static [JsonRpcMethod.Logout](request: any, sendResponse: Function) {
-    session.clearSession();
   }
 
   public static [JsonRpcMethod.CreateAccount](request: any, sendResponse: Function) {

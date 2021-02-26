@@ -39,7 +39,7 @@ export default class Session {
     };
   }
 
-  public clearSession() {
+  public clearSession(): void {
     this._wallet = undefined;
     this._ledger = undefined;
     this._availableLedgers = undefined;
