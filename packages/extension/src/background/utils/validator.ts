@@ -51,7 +51,7 @@ export function Validate(field: any, value: any): ValidationResponse {
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
-          info: 'Address does not adhear to a valid structure.',
+          info: 'Address does not adhere to a valid structure.',
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
@@ -60,7 +60,7 @@ export function Validate(field: any, value: any): ValidationResponse {
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
-          info: 'Address does not adhear to a valid structure.',
+          info: 'Address does not adhere to a valid structure.',
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
