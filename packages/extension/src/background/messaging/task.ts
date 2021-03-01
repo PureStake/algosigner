@@ -775,6 +775,7 @@ export class Task {
         [JsonRpcMethod.Logout]: (request: any, sendResponse: Function) => {
           InternalMethods.clearSession();
           Task.clearPool();
+          sendResponse(true);
         },
         [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);

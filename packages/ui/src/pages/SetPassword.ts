@@ -21,6 +21,7 @@ const SetPassword: FunctionalComponent = (props) => {
   const [pwd, setPwd] = useState<String>('');
   const [confirmPwd, setConfirmPwd] = useState<String>('');
   const [error, setError] = useState<String>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const store: any = useContext(StoreContext);
 
   const createWallet = () => {
@@ -36,7 +37,10 @@ const SetPassword: FunctionalComponent = (props) => {
       passphrase: pwd,
     };
 
+    setLoading(true);
+
     sendMessage(JsonRpcMethod.CreateWallet, params, function (response) {
+      setLoading(false);
       if ('error' in response) {
         setError(response.error);
       } else {
@@ -117,7 +121,7 @@ const SetPassword: FunctionalComponent = (props) => {
       <div class="mx-5 mb-3">
         <button
           id="createWallet"
-          class="button is-link is-fullwidth"
+          class="button is-link is-fullwidth ${loading ? 'is-loading' : ''}"
           disabled=${pwd.length === 0 || confirmPwd.length === 0}
           onClick=${createWallet}
         >
