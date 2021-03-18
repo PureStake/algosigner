@@ -126,11 +126,34 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             value=${networkIndexerUrl}
             onInput=${(e) => setNetworkIndexerUrl(e.target.value)}
           />
-          <label>Network Headers</label>
+          <label
+            >Network Headers
+            <span>
+              <i
+                id="cogheader"
+                class="fas fa-info-circle ml-1"
+                title='Network Headers use API Key:
+ x-algo-api-key
+              
+Or use individual keys to Algod and Indexer with JSON:
+ {
+	"Algod":
+	{
+		"x-api-key": "xxxxxxxxx"
+	},
+	"Indexer":
+	{
+		"x-api-key": "xxxxxxxxx"
+	}
+ }'
+              >
+              </i>
+            </span>
+          </label>
           <input
             id="networkHeaders"
             class="input"
-            placeholder='{"Algod":{"X-API-Key":"xxxxx"},"Indexer":{"X-API-Key":"xxxxx"}}'
+            placeholder="API Key or JSON Structure"
             value=${networkHeaders}
             onInput=${(e) => setNetworkHeaders(e.target.value)}
           />
