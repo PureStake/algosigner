@@ -132,8 +132,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
               <i
                 id="cogheader"
                 class="fas fa-info-circle ml-1"
-                title='Network Headers use API Key:
- x-algo-api-key
+                title='Network Headers use API Token:
+ x-algo-api-token
               
 Or use individual keys to Algod and Indexer with JSON:
  {
