@@ -13,22 +13,19 @@ Sent in transactions will be validated against the Algorand JS SDK transaction t
 
 Proxied requests are passed through to an API service - currently set to the PureStake API service. Endpoints available are limited to what the service exposes. The API backend may be configured by advanced users and is not guaranteed to respond as expected.
 
-## Existing Methods
+## [Existing Methods](#existing-methods)
 
-- [!AlgoSigner](#)
-- [Integrating AlgoSigner to add Transaction Capabilities for dApps on Algorand](#integrating-algosigner-to-add-transaction-capabilities-for-dapps-on-algorand)
-  - [Existing Methods](#existing-methods)
-    - [AlgoSigner.connect()](#algosignerconnect)
-    - [AlgoSigner.accounts({ ledger: ‘MainNet|TestNet’ })](#algosigneraccounts-ledger-mainnettestnet-)
-    - [AlgoSigner.algod({ ledger: ‘MainNet|TestNet’, path: ‘algod v2 path’, ... })](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
-    - [AlgoSigner.indexer({ ledger: ‘MainNet|TestNet’, path: ‘indexer v2 path’ })](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
-    - [AlgoSigner.sign(txnObject)](#algosignersigntxnobject)
-      - [Transaction Requirements](#transaction-requirements)
-      - [Atomic Transactions](#atomic-transactions)
-    - [AlgoSigner.signMultisig(txn)](#algosignersignmultisigtxn)
-    - [Custom Networks](#custom-networks)
-    - [AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })](#algosignersend-ledger-mainnettestnet-txblob-)
-  - [Rejection Messages](#rejection-messages)
+- [AlgoSigner.connect()](#algosignerconnect)
+- [AlgoSigner.accounts({ ledger: ‘MainNet|TestNet’ })](#algosigneraccounts-ledger-mainnettestnet-)
+- [AlgoSigner.algod({ ledger: ‘MainNet|TestNet’, path: ‘algod v2 path’, ... })](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
+- [AlgoSigner.indexer({ ledger: ‘MainNet|TestNet’, path: ‘indexer v2 path’ })](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
+- [AlgoSigner.sign(txnObject)](#algosignersigntxnobject)
+  - [Transaction Requirements](#transaction-requirements)
+  - [Atomic Transactions](#atomic-transactions)
+- [AlgoSigner.signMultisig(txn)](#algosignersignmultisigtxn)
+- [Custom Networks](#custom-networks)
+- [AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })](#algosignersend-ledger-mainnettestnet-txblob-)
+- [Rejection Messages](#rejection-messages)
 
 ### AlgoSigner.connect()
 
