@@ -10,13 +10,13 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.4.0 Update
+## 1.4.1 Update
 
 The latest release brings:
 
-- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.).
-- Navigation menu improvements
-- Logout!
+- Custom network headers creation updated
+- Simultaneous AlgoSigner calls bug fix
+- Logout bug fix
 
 ### Custom Networks
 
