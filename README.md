@@ -12,11 +12,17 @@ Developers working with dApps may also install directly from the release package
 
 ## 1.4.1 Update
 
-The latest release brings:
+Minor release to address some bugs and usability issues:
 
-- Custom network headers creation updated
-- Simultaneous AlgoSigner calls bug fix
-- Logout bug fix
+- Custom network headers creation simplified to allow use of either the Algorand standard header key or custom headers
+- Simultaneous AlgoSigner RPC calls through `algod` and `indexer` fix to prevent response mismatches
+- Logout bug fix: prevents error message on each logout
+
+## 1.4.0 Update
+
+- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.).
+- Navigation menu improvements
+- Logout!
 
 ### Custom Networks
 
