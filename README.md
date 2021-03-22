@@ -1,6 +1,6 @@
 # ![AlgoSigner](media/algosigner-wallet-banner-3.png)
 
-An open-source Algorand wallet browser extension that permits dApp communication for signing Algorand transactions — available for Chrome initially.
+An open-source, security audited, Algorand wallet browser extension that permits dApp communication for signing Algorand transactions — available for Chrome.
 
 ## Chrome Extension Store
 
@@ -10,15 +10,30 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.3.0 Update
+## 1.4.0 Update
 
 The latest release brings:
 
-- Support for dApps to submit multisig transactions and retrieve the single associated address signature.
+- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.).
+- Navigation menu improvements
+- Logout!
+
+### Custom Networks
+
+- Network information can now be accessed by selecting "Network Configuration" in the options menu.
+  - This list shows the information needed by the dApp for connections.
+- New networks can be added via the "New Network" button. Here is a brief overview of the fields:
+  - Display Name: Name that will be displayed which will also be used for dApps interacting with the network.
+  - Network ID: Genesis ID for the network. Transactions will be validated against the value here and must contain a matching value. Defaults to "mainnet-v1.0".
+  - Network Algod URL: The address which will be used for any Algod related calls. Defaults to the PureStake MainNet URL.
+  - Network Indexer URL: The address which will be used for any Indexer lookup calls. Defaults to the PureStake MainNet Indexer URL.
+  - Network Headers: Object stucture that will be used as replacement headers for calls. The object structure has an "Algod" and "Indexer" sub structure which will contain the headers the target api needs in order to function.
 
 ## Roadmap
 
-The next feature release will be a feature release permitting the addition and configuration of networks, planned for early 2021.
+Upcoming feature releases will focus on adding Ledger device support and a more streamlined approach to creating and interacting with transactions in AlgoSigner.
+
+## Previously delivered
 
 ### Multisig Transactions
 

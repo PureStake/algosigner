@@ -1,7 +1,6 @@
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { InternalMethods } from '../messaging/internalMethods';
-import { Cache } from '../messaging/types';
-import { Ledger } from '@algosigner/common/messaging/types';
+import { Cache, Ledger } from '../messaging/types';
 import { initializeCache } from './helper';
 
 const TIMEOUT = 500;
@@ -21,6 +20,11 @@ export default class AssetsDetailsHelper {
   };
 
   public static add(assets: Array<number>, ledger: Ledger) {
+    // If this ledger doesn't have assets yet, then default them to an array
+    if (this.assetsToAdd[ledger] === undefined) {
+      this.assetsToAdd[ledger] = [];
+    }
+
     this.assetsToAdd[ledger] = this.assetsToAdd[ledger].concat(assets);
     if (this.timeouts[ledger] === null && this.assetsToAdd[ledger].length > 0)
       this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);

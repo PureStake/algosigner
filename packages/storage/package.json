@@ -1,6 +1,6 @@
 {
   "name": "algosigner-storage",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "author": "https://developer.purestake.io",
   "description": "Storage wrapper for saving and retrieving extention information in Algosigner.",
   "devDependencies": {

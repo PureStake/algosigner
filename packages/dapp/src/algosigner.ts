@@ -1,7 +1,6 @@
 import { Task } from './fn/task';
 import { Router } from './fn/router';
 import { HTTPClient } from './fn/client';
-import { Ledger } from '@algosigner/common/messaging/types';
 
 class Wrapper {
   private static instance: Wrapper;
@@ -17,12 +16,12 @@ class Wrapper {
   public indexer: Function = this.task.indexer;
   public subscribe: Function = this.task.subscribe;
 
-  public getAlgodHTTPClient(ledger: Ledger): HTTPClient {
+  public getAlgodHTTPClient(ledger: string): HTTPClient {
     this.task.connect();
     return new HTTPClient(ledger, this.task.algod);
   }
 
-  public getIndexerHTTPClient(ledger: Ledger): HTTPClient {
+  public getIndexerHTTPClient(ledger: string): HTTPClient {
     this.task.connect();
     return new HTTPClient(ledger, this.task.indexer);
   }

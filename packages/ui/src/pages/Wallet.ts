@@ -19,30 +19,26 @@ const Wallet: FunctionalComponent = () => {
 
   return useObserver(() => {
     const { ledger } = store;
-
     return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div class="px-4 py-4" style="flex: 1">
-          ${store[ledger].map(
-            (x: Account) => html`
-              <${AccountPreview}
-                key=${ledger + x}
-                ledger=${ledger}
-                account=${x}
-              />
-            `
-          )}
+          ${
+            store[ledger] &&
+            store[ledger].length !== 0 &&
+            store[ledger].map(
+              (x: Account) => html`
+                <${AccountPreview} key=${ledger + x} ledger=${ledger} account=${x} />
+              `
+            )
+          }
         </div>
 
         <div class="has-text-centered" style="padding: 0.5em 0.75em;">
           ${
-            store[ledger].length === 0 &&
+            (store[ledger] === undefined || store[ledger].length === 0) &&
             html`
               <div class="mb-4" style="color: #8A9FA8;">
-                <p
-                  class="has-text-weight-bold is-size-4 mb-4"
-                  style="letter-spacing: 1px;"
-                >
+                <p class="has-text-weight-bold is-size-4 mb-4" style="letter-spacing: 1px;">
                   Create or import<br />an account
                 </p>
                 <i style="color: #C4C4C4;" class="fas fa-4x fa-arrow-down"></i>

@@ -1,54 +1,51 @@
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
 
-import { API, Ledger, JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Task } from './task';
-import { Cache } from './types';
-import { Settings } from '@algosigner/common/messaging/config';
+import { API, Cache, Ledger } from './types';
+import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
-import { initializeCache } from '../utils/helper';
+import { initializeCache, getAvailableLedgersExt } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import { getValidatedTxnWrap } from '../transaction/actions';
 import { buildTransaction } from '../utils/transactionBuilder';
+import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
 
 const session = new Session();
 
 export class InternalMethods {
   private static _encryptionWrap: encryptionWrap | undefined;
 
-  public static getAlgod(ledger: Ledger) {
+  public static getAlgod(ledger: string) {
     const params = Settings.getBackendParams(ledger, API.Algod);
     return new algosdk.Algodv2(params.apiKey, params.url, params.port);
   }
-  public static getIndexer(ledger: Ledger) {
+  public static getIndexer(ledger: string) {
     const params = Settings.getBackendParams(ledger, API.Indexer);
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
   }
 
   private static safeWallet(wallet: any) {
-    const safeWallet: { TestNet: any[]; MainNet: any[] } = {
-      TestNet: [],
-      MainNet: [],
-    };
+    // Intialize the safe wallet then add the wallet ledgers in as empty arrays
+    const safeWallet = {};
+    Object.keys(wallet).forEach((key) => {
+      safeWallet[key] = [];
 
-    for (var i = 0; i < wallet.TestNet.length; i++) {
-      const { address, name } = wallet['TestNet'][i];
-      safeWallet.TestNet.push({
-        address: address,
-        name: name,
-      });
-    }
-    for (var i = 0; i < wallet.MainNet.length; i++) {
-      const { address, name } = wallet['MainNet'][i];
-      safeWallet.MainNet.push({
-        address: address,
-        name: name,
-      });
-    }
+      // Afterwards we can add in all the non-private keys and names into the safewallet
+      for (var j = 0; j < wallet[key].length; j++) {
+        const { address, name } = wallet[key][j];
+        safeWallet[key].push({
+          address: address,
+          name: name,
+        });
+      }
+    });
+
     return safeWallet;
   }
 
@@ -78,8 +75,12 @@ export class InternalMethods {
       });
   }
 
-  public static getHelperSession() {
+  public static getHelperSession(): Session {
     return session.session;
+  }
+
+  public static clearSession(): void {
+    session.clearSession();
   }
 
   public static [JsonRpcMethod.GetSession](request: any, sendResponse: Function) {
@@ -142,34 +143,33 @@ export class InternalMethods {
         sendResponse(response);
       } else {
         const wallet = this.safeWallet(response);
-        // Load Accounts details from Cache
-        new ExtensionStorage().getStorage('cache', (storedCache: any) => {
-          const cache: Cache = initializeCache(storedCache);
-          const cachedLedgers = Object.keys(cache.accounts);
+        getAvailableLedgersExt((availableLedgers) => {
+          const extensionStorage = new ExtensionStorage();
+          // Load Accounts details from Cache
+          extensionStorage.getStorage('cache', (storedCache: any) => {
+            const cache: Cache = initializeCache(storedCache);
+            const cachedLedgerAccounts = Object.keys(cache.accounts);
 
-          console.log('cached', cachedLedgers);
-          for (var j = cachedLedgers.length - 1; j >= 0; j--) {
-            const ledger = cachedLedgers[j];
-            console.log('cached', cachedLedgers);
-            for (var i = wallet[ledger].length - 1; i >= 0; i--) {
-              if (wallet[ledger][i].address in cache.accounts[ledger]) {
-                wallet[ledger][i].details = cache.accounts[ledger][wallet[ledger][i].address];
+            for (var j = cachedLedgerAccounts.length - 1; j >= 0; j--) {
+              const ledger = cachedLedgerAccounts[j];
+              if (wallet[ledger]) {
+                for (var i = wallet[ledger].length - 1; i >= 0; i--) {
+                  if (wallet[ledger][i].address in cache.accounts[ledger]) {
+                    wallet[ledger][i].details = cache.accounts[ledger][wallet[ledger][i].address];
+                  }
+                }
               }
             }
-          }
 
-          (session.wallet = wallet),
-            (session.ledger = Ledger.MainNet),
-            sendResponse(session.session);
+            (session.wallet = wallet),
+              (session.ledger = Ledger.MainNet),
+              (session.availableLedgers = availableLedgers),
+              sendResponse(session.session);
+          });
         });
       }
     });
     return true;
-  }
-
-  /* eslint-disable-next-line no-unused-vars */
-  public static [JsonRpcMethod.Logout](request: any, sendResponse: Function) {
-    session.clearSession();
   }
 
   public static [JsonRpcMethod.CreateAccount](request: any, sendResponse: Function) {
@@ -191,6 +191,11 @@ export class InternalMethods {
           mnemonic: mnemonic,
           name: name,
         };
+
+        if (!unlockedValue[ledger]) {
+          unlockedValue[ledger] = [];
+        }
+
         unlockedValue[ledger].push(newAccount);
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
@@ -240,11 +245,15 @@ export class InternalMethods {
     try {
       var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
       var existingAccounts = session.wallet[ledger];
-      for (let i = 0; i < existingAccounts.length; i++) {
-        if (existingAccounts[i].address === recoveredAccountAddress) {
-          throw new Error(`Account already exists in ${ledger} wallet.`);
+
+      if (existingAccounts) {
+        for (let i = 0; i < existingAccounts.length; i++) {
+          if (existingAccounts[i].address === recoveredAccountAddress) {
+            throw new Error(`Account already exists in ${ledger} wallet.`);
+          }
         }
       }
+
       var newAccount = {
         address: recoveredAccountAddress,
         mnemonic: mnemonic,
@@ -259,6 +268,10 @@ export class InternalMethods {
       if ('error' in unlockedValue) {
         sendResponse(unlockedValue);
       } else {
+        if (!unlockedValue[ledger]) {
+          unlockedValue[ledger] = [];
+        }
+
         unlockedValue[ledger].push(newAccount);
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
@@ -313,9 +326,12 @@ export class InternalMethods {
 
           // Add details to session
           const wallet = session.wallet;
-          for (var i = wallet[ledger].length - 1; i >= 0; i--) {
-            if (wallet[ledger][i].address === address) {
-              wallet[ledger][i].details = res;
+          // Validate the ledger still exists in the wallet
+          if (ledger && wallet[ledger]) {
+            for (var i = wallet[ledger].length - 1; i >= 0; i--) {
+              if (wallet[ledger][i].address === address) {
+                wallet[ledger][i].details = res;
+              }
             }
           }
         });
@@ -539,7 +555,12 @@ export class InternalMethods {
         )
       ) {
         // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-        sendResponse({ error: 'One or more fields are not valid. Please check and try again.' });
+        const e =
+          'One or more fields are not valid. Please check and try again.\n' +
+          Object.values(transactionWrap.validityObject)
+            .filter((value) => value['status'] === ValidationStatus.Invalid)
+            .map((vo) => vo['info']);
+        sendResponse({ error: e });
         return;
       } else {
         // We have a transaction which does not contain invalid fields, but may contain fields that are dangerous
@@ -576,5 +597,155 @@ export class InternalMethods {
   public static [JsonRpcMethod.ChangeLedger](request: any, sendResponse: Function) {
     session.ledger = request.body.params['ledger'];
     sendResponse({ ledger: session.ledger });
+  }
+
+  public static [JsonRpcMethod.DeleteNetwork](request: any, sendResponse: Function) {
+    const ledger = request.body.params['name'];
+    const ledgerUniqueName = ledger.toLowerCase();
+    getAvailableLedgersExt((availiableLedgers) => {
+      const matchingLedger = availiableLedgers.find((avls) => avls.uniqueName === ledgerUniqueName);
+
+      if (!matchingLedger || !matchingLedger.isEditable) {
+        sendResponse({ error: 'This ledger can not be deleted.' });
+      } else {
+        // Delete ledger from availableLedgers and assign to new array //
+        const remainingLedgers = availiableLedgers.filter(
+          (avls) => avls.uniqueName !== ledgerUniqueName
+        );
+
+        // Delete Accounts from wallet //
+        this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
+
+        // Remove existing accoutns in session.wallet
+        var existingAccounts = session.wallet[request.body.params['ledger']];
+        if (existingAccounts) {
+          delete session.wallet[request.body.params['ledger']];
+        }
+
+        // Using the passphrase unlock the current saved data
+        this._encryptionWrap.unlock((unlockedValue: any) => {
+          if ('error' in unlockedValue) {
+            sendResponse(unlockedValue);
+          } else {
+            if (unlockedValue[ledger]) {
+              // The unlocked value contains ledger information - delete it
+              delete unlockedValue[ledger];
+            }
+
+            // Resave the updated wallet value
+            this._encryptionWrap
+              ?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
+                if (isSuccessful) {
+                  // Fully rebuild the session wallet
+                  session.wallet = this.safeWallet(unlockedValue);
+                }
+              })
+              .then(() => {
+                // Update cache with remaining ledgers//
+                const extensionStorage = new ExtensionStorage();
+                extensionStorage.getStorage('cache', (cache: any) => {
+                  if (cache === undefined) {
+                    cache = initializeCache(cache);
+                  }
+                  if (cache) {
+                    cache.availableLedgers = remainingLedgers;
+                    extensionStorage.setStorage('cache', cache, () => {});
+                  }
+
+                  // Update the session //
+                  session.availableLedgers = remainingLedgers;
+
+                  // Delete from the injected ledger settings //
+                  Settings.deleteInjectedNetwork(ledgerUniqueName);
+
+                  // Send back remaining ledgers //
+                  sendResponse({ availableLedgers: remainingLedgers });
+                });
+              });
+          }
+        });
+      }
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.SaveNetwork](request: any, sendResponse: Function) {
+    try {
+      // If we have a passphrase then we are modifying.
+      // There may be accounts attatched, if we match on a unique name, we should update.
+      if (request.body.params['passphrase'] !== undefined) {
+        this._encryptionWrap = new encryptionWrap(request.body.params['passphrase']);
+        this._encryptionWrap.unlock((unlockedValue: any) => {
+          if ('error' in unlockedValue) {
+            sendResponse(unlockedValue);
+          }
+          // We have evaluated the passphrase and it was valid.
+        });
+      }
+      const addedLedger = new LedgerTemplate({
+        name: request.body.params['name'],
+        genesisId: request.body.params['genesisId'],
+        genesisHash: request.body.params['genesisHash'],
+        symbol: request.body.params['symbol'],
+        algodUrl: request.body.params['algodUrl'],
+        indexerUrl: request.body.params['indexerUrl'],
+        headers: request.body.params['headers'],
+      });
+
+      // Specifically get the base ledgers to check and prevent them from being overriden.
+      const defaultLedgers = getBaseSupportedLedgers();
+
+      getAvailableLedgersExt((availiableLedgers) => {
+        const comboLedgers = [...availiableLedgers];
+
+        // Add the new ledger if it isn't there.
+        if (!comboLedgers.some((cledg) => cledg.uniqueName === addedLedger.uniqueName)) {
+          comboLedgers.push(addedLedger);
+
+          // Also add the ledger to the injected ledgers in settings
+          Settings.addInjectedNetwork(addedLedger);
+        }
+        // If the new ledger name does exist, we sould update the values as long as it is not a default ledger.
+        else {
+          const matchingLedger = comboLedgers.find(
+            (cledg) => cledg.uniqueName === addedLedger.uniqueName
+          );
+          if (!defaultLedgers.some((dledg) => dledg.uniqueName === matchingLedger.uniqueName)) {
+            Settings.updateInjectedNetwork(addedLedger);
+            matchingLedger.genesisId = addedLedger.genesisId;
+            matchingLedger.symbol = addedLedger.symbol;
+            matchingLedger.genesisHash = addedLedger.genesisHash;
+            matchingLedger.algodUrl = addedLedger.algodUrl;
+            matchingLedger.indexerUrl = addedLedger.indexerUrl;
+            matchingLedger.headers = addedLedger.headers;
+          }
+        }
+        // Update the session and send response before setting cache.
+        session.availableLedgers = comboLedgers;
+        sendResponse({ availableLedgers: comboLedgers });
+
+        // Updated the cached ledgers.
+        const extensionStorage = new ExtensionStorage();
+        extensionStorage.getStorage('cache', (cache: any) => {
+          if (cache === undefined) {
+            cache = initializeCache(cache);
+          }
+          if (cache) {
+            cache.availableLedgers = comboLedgers;
+            extensionStorage.setStorage('cache', cache, () => {});
+          }
+        });
+      });
+      return true;
+    } catch (e) {
+      sendResponse({ error: e.message });
+    }
+  }
+  public static [JsonRpcMethod.GetLedgers](request: any, sendResponse: Function) {
+    getAvailableLedgersExt((availableLedgers) => {
+      sendResponse(availableLedgers);
+    });
+
+    return true;
   }
 }

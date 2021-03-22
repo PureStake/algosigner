@@ -1,4 +1,3 @@
-import { Ledger } from '@algosigner/common/messaging/types';
 import { JsonPayload } from '@algosigner/common/messaging/types';
 
 /**
@@ -52,10 +51,10 @@ function createQueryString(query: any) {
 }
 
 export class HTTPClient {
-  private ledger: Ledger;
+  private ledger: string;
   private rpcMethod: Function;
 
-  constructor(ledger: Ledger, rpcMethod: Function) {
+  constructor(ledger: string, rpcMethod: Function) {
     this.rpcMethod = rpcMethod;
     this.ledger = ledger;
   }

@@ -1,21 +1,3 @@
-// Key and value must match in this enum so we
-// can compare its existance with i.e. "Testnet" in SupportedLedger
-/* eslint-disable no-unused-vars */
-export enum Ledger {
-  TestNet = 'TestNet',
-  MainNet = 'MainNet',
-}
-
-export enum Backend {
-  PureStake = 'PureStake',
-  Algod = 'Algod',
-}
-
-export enum API {
-  Algod = 'Algod',
-  Indexer = 'Indexer',
-}
-
 export const JSONRPC_VERSION: string = "2.0";
 
 /* eslint-disable no-unused-vars */
@@ -50,6 +32,10 @@ export enum JsonRpcMethod {
     AssetsVerifiedList = "assets-verified-list",
     SignSendTransaction = "sign-send-transaction",
     ChangeLedger = "change-ledger",
+    SaveNetwork = "save-network",
+    DeleteNetwork = "delete-network",
+    GetLedgers = "get-ledgers",
+
 }
 
 export type JsonPayload = {[key: string]: string | number | JsonPayload | undefined};
@@ -67,7 +53,6 @@ export enum MessageSource {
     Router = "router",
     UI = "ui"
 }
-
 export type MessageBody = {
     readonly source: MessageSource,
     readonly body: JsonRpcBody

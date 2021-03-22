@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { IPaymentTx } from '@algosigner/common/interfaces/pay';
 import { IAssetConfigTx } from '@algosigner/common/interfaces/acfg';
 import { IAssetCreateTx } from '@algosigner/common/interfaces/acfg_create';
@@ -20,7 +21,8 @@ import { KeyregTransaction } from './keyregTransaction';
 import { ApplTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import { Ledger } from '@algosigner/common/messaging/types';
+import { Settings } from '../config';
+import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
@@ -108,11 +110,23 @@ export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxn
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisID(genesisID: string): Ledger {
-  let ledger;
-  if (genesisID === 'mainnet-v1.0') ledger = Ledger.MainNet;
-  else if (genesisID === 'testnet-v1.0') ledger = Ledger.TestNet;
-  return ledger;
+export function getLedgerFromGenesisId(genesisId: string) {
+  // Default the ledger to mainnet
+  const defaultLedger = 'MainNet';
+
+  // Check Genesis ID for base supported ledgers first
+  const defaultLedgers = getBaseSupportedLedgers();
+  let ledger = defaultLedgers.find((l) => genesisId === l['genesisId']);
+  if (ledger !== undefined) {
+    return ledger.name;
+  }
+  // Injected networks may have additional information, multiples, or additional checks
+  // so we will check them separately
+  ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
+  if (ledger !== undefined) {
+    return ledger.name;
+  }
+  return defaultLedger;
 }
 
 export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {

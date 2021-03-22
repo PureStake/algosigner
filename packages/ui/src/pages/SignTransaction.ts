@@ -16,6 +16,7 @@ import Authenticate from 'components/Authenticate';
 import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
+import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 
 function deny() {
   const params = {
@@ -43,10 +44,7 @@ const SignTransaction: FunctionalComponent = () => {
       if (Object.keys(request).length === 0) return false;
 
       // Check if the message is coming from the background script
-      if (
-        isFromExtension(sender.origin) &&
-        request.body.method == JsonRpcMethod.SignTransaction
-      ) {
+      if (isFromExtension(sender.origin) && request.body.method == JsonRpcMethod.SignTransaction) {
         setRequest(request);
         responseOriginTabID = request.originTabID;
       }
@@ -85,23 +83,47 @@ const SignTransaction: FunctionalComponent = () => {
     const tx = request.body.params.transaction;
     // Search for account
     let txLedger;
-    if (tx.genesisID === 'mainnet-v1.0') txLedger = 'MainNet';
-    else if (tx.genesisID === 'testnet-v1.0') txLedger = 'TestNet';
-
-    for (let i = store[txLedger].length - 1; i >= 0; i--) {
-      if (store[txLedger][i].address === tx.from) {
-        setAccount(store[txLedger][i].name);
-        break;
+    getBaseSupportedLedgers().forEach((l) => {
+      if (tx.genesisID === l['genesisId']) {
+        txLedger = l['name'];
+        setLedger(txLedger);
+        for (let i = store[txLedger].length - 1; i >= 0; i--) {
+          if (store[txLedger][i].address === tx.from) {
+            setAccount(store[txLedger][i].name);
+            break;
+          }
+        }
       }
+    });
+
+    // Add on any injected ledgers
+    if (txLedger === undefined || account === '') {
+      let sessionLedgers;
+      store.getAvailableLedgers((availableLedgers) => {
+        if (!availableLedgers.error) {
+          sessionLedgers = availableLedgers;
+          sessionLedgers.forEach((l) => {
+            if (tx.genesisID === l['genesisId']) {
+              txLedger = l['name'];
+            }
+          });
+
+          for (let i = store[txLedger].length - 1; i >= 0; i--) {
+            if (store[txLedger][i].address === tx.from) {
+              setAccount(store[txLedger][i].name);
+              break;
+            }
+          }
+          setLedger(txLedger);
+        }
+      });
+    } else {
+      setLedger(txLedger);
     }
-    setLedger(txLedger);
   }
 
   return html`
-    <div
-      class="main-view"
-      style="flex-direction: column; justify-content: space-between;"
-    >
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
       </div>
@@ -111,17 +133,11 @@ const SignTransaction: FunctionalComponent = () => {
           <section class="hero">
             <div class="hero-body py-5">
               ${request.favIconUrl &&
-              html`
-                <img src=${request.favIconUrl} width="48" style="float:left" />
-              `}
+              html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
                 <!-- prettier-ignore -->
                 <span>${request.originTitle} wants to sign a transaction for </span>
-                <span
-                  style="color:${ledger.toLowerCase() == 'mainnet'
-                    ? '#f16522'
-                    : '#222b60'};"
-                >
+                <span style="color:${ledger.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
                   ${ledger}
                 </span>
               </h1>
@@ -170,6 +186,8 @@ const SignTransaction: FunctionalComponent = () => {
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
                 fee=${request.body.params.estimatedFee}
+                da=${request.body.params.displayAmount}
+                un=${request.body.params.unitName}
                 account=${account}
                 ledger=${ledger}
               />
@@ -199,11 +217,7 @@ const SignTransaction: FunctionalComponent = () => {
       </div>
 
       <div class="mx-5 mb-3" style="display: flex;">
-        <button
-          id="rejectTx"
-          class="button is-danger is-outlined px-6"
-          onClick=${deny}
-        >
+        <button id="rejectTx" class="button is-danger is-outlined px-6" onClick=${deny}>
           Reject
         </button>
         <button
@@ -224,11 +238,7 @@ const SignTransaction: FunctionalComponent = () => {
       <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="modal-content">
-          <${Authenticate}
-            error=${authError}
-            loading=${loading}
-            nextStep=${sign}
-          />
+          <${Authenticate} error=${authError} loading=${loading} nextStep=${sign} />
         </div>
         <button
           class="modal-close is-large"

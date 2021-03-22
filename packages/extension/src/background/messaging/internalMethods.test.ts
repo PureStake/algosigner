@@ -1,4 +1,5 @@
-import { JsonRpcMethod, Ledger } from '@algosigner/common/messaging/types';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { Ledger } from './types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
@@ -94,6 +95,7 @@ describe('wallet flow', () => {
     InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({
+      availableLedgers: [],
       ledger: Ledger.MainNet,
       wallet: {
         TestNet: [],
@@ -116,6 +118,7 @@ describe('wallet flow', () => {
     const sendResponse = jest.fn();
 
     const session = {
+      availableLedgers: [],
       ledger: Ledger.MainNet,
       wallet: {
         TestNet: [],

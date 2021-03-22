@@ -4,13 +4,19 @@ import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
 
 const LedgerSelect: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [active, setActive] = useState<boolean>(false);
+
+  let sessionLedgers;
+  store.getAvailableLedgers((availableLedgers) => {
+    if (!availableLedgers.error) {
+      sessionLedgers = availableLedgers;
+    }
+  });
 
   let ddClass: string = 'dropdown is-right';
   if (active) ddClass += ' is-active';
@@ -51,12 +57,19 @@ const LedgerSelect: FunctionalComponent = () => {
         <div class="dropdown-menu" id="dropdown-menu" role="menu">
           <div class="dropdown-mask" onClick=${flip} />
           <div class="dropdown-content">
-            <a id="selectTestNet" onClick=${() => setLedger('TestNet')} class="dropdown-item">
-              TestNet
-            </a>
-            <a id="selectMainNet" onClick=${() => setLedger('MainNet')} class="dropdown-item">
-              MainNet
-            </a>
+            ${sessionLedgers &&
+            sessionLedgers.map(
+              (availableLedger: any) =>
+                html`
+                  <a
+                    id="select${availableLedger.name}"
+                    onClick=${() => setLedger(availableLedger.name)}
+                    class="dropdown-item"
+                  >
+                    ${availableLedger.name}
+                  </a>
+                `
+            )}
           </div>
         </div>
       </div>

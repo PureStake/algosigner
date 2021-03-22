@@ -7,7 +7,8 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   globals: {
     browser: true,
-    page: true,
+    dappPage: true,
+    extensionPage: true,
     AlgoSigner: true,
   },
   parser: '@typescript-eslint/parser',
@@ -18,6 +19,9 @@ module.exports = {
   rules: {
     'no-unused-vars': 'error',
     'no-var': 'warn',
+    'no-prototype-builtins': 'warn',
+    '@typescript-eslint/no-this-alias': 'warn',
+    '@typescript-eslint/no-empty-function': 'warn',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-inferrable-types': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
