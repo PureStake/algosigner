@@ -1,5 +1,3 @@
-import {IJsonRpc} from './interfaces'
-import {RequestErrors} from '../types';
 import {
     JSONRPC_VERSION, JsonRpcMethod, JsonPayload, JsonRpcBody
 } from './types';
@@ -16,7 +14,7 @@ export class JsonRpc /*implements IJsonRpc*/ {
             jsonrpc: JSONRPC_VERSION,
             method: method,
             params: params,
-            id: (+new Date).toString(16)
+            id: 'xxxxxxxxxxxxxxx'.replace(/[x]/g, () => {return (Math.random() * 16 | 0).toString(16)})
         }
     }
 }
