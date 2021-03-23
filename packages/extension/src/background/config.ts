@@ -66,11 +66,11 @@ export class Settings {
       try {
         headers = JSON.parse(ledger['headers']);
       } catch (e) {
-        // Use headers default value, but use it as a token if if is a string
+        // Use headers default value, but use it as a token if it is a string
         if (typeof headers === 'string') {
-          headers = { 'X-API-Key': headers };
           // Requests directly to a server would not require the X-API-Key
-          //headers = {"X-Algo-API-Token": headers};
+          // This is the case for most users and is now the default for a string only method.
+          headers = { 'X-Algo-API-Token': headers };
         }
       }
 

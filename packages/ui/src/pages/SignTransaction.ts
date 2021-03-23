@@ -86,11 +86,18 @@ const SignTransaction: FunctionalComponent = () => {
     getBaseSupportedLedgers().forEach((l) => {
       if (tx.genesisID === l['genesisId']) {
         txLedger = l['name'];
+        setLedger(txLedger);
+        for (let i = store[txLedger].length - 1; i >= 0; i--) {
+          if (store[txLedger][i].address === tx.from) {
+            setAccount(store[txLedger][i].name);
+            break;
+          }
+        }
       }
     });
 
     // Add on any injected ledgers
-    if (txLedger === undefined) {
+    if (txLedger === undefined || account === '') {
       let sessionLedgers;
       store.getAvailableLedgers((availableLedgers) => {
         if (!availableLedgers.error) {
@@ -179,6 +186,8 @@ const SignTransaction: FunctionalComponent = () => {
                 vo=${request.body.params.validityObject}
                 dt=${request.body.params.txDerivedTypeText}
                 fee=${request.body.params.estimatedFee}
+                da=${request.body.params.displayAmount}
+                un=${request.body.params.unitName}
                 account=${account}
                 ledger=${ledger}
               />

@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, ledger, vo, dt, fee } = props;
+  const { tx, account, ledger, vo, dt, fee, da, un } = props;
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -35,16 +35,10 @@ const TxAxfer: FunctionalComponent = (props: any) => {
 
     <div class="tabs is-centered mb-2">
       <ul>
-        <li
-          class=${tab === 'overview' ? 'is-active' : ''}
-          onClick=${() => setTab('overview')}
-        >
+        <li class=${tab === 'overview' ? 'is-active' : ''} onClick=${() => setTab('overview')}>
           <a>Overview</a>
         </li>
-        <li
-          class=${tab === 'details' ? 'is-active' : ''}
-          onClick=${() => setTab('details')}
-        >
+        <li class=${tab === 'details' ? 'is-active' : ''} onClick=${() => setTab('details')}>
           <a>Details</a>
         </li>
       </ul>
@@ -66,19 +60,13 @@ const TxAxfer: FunctionalComponent = (props: any) => {
             ${tx.assetIndex}
           </a>
         </div>
-        <div
-          class="is-flex${vo && vo['fee']
-            ? (' ' + vo['fee']['className']).trimRight()
-            : ''}"
-        >
-          <p style="width: 30%;">
-            ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'}
-          </p>
+        <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
+          <p style="width: 30%;"> ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'} </p>
           <p style="width: 70%;">${fee / 1e6} Algos</p>
         </div>
         <div class="is-flex">
           <p style="width: 30%;"><b>Amount:</b></p>
-          <p style="width: 70%;">${tx.amount}</p>
+          <p style="width: 70%;">${da || tx.amount} ${un}</p>
         </div>
       </div>
     `}
