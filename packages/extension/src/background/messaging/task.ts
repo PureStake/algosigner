@@ -85,6 +85,71 @@ export class Task {
     Task.authorized_pool = [];
   }
 
+  private static modifyTransactionWrapWithAssetCoreInfo(transactionWrap, callback) {
+    // Adjust decimal places if we are using an axfer transaction
+    if (transactionWrap.transaction['type'] === 'axfer') {
+      const assetIndex = transactionWrap.transaction['assetIndex'];
+      const ledger = getLedgerFromGenesisId(transactionWrap.transaction['genesisID']);
+      const conn = Settings.getBackendParams(ledger, API.Indexer);
+      const sendPath = `/v2/assets/${assetIndex}`;
+      const fetchAssets: any = {
+        headers: {
+          ...conn.headers,
+        },
+        method: 'GET',
+      };
+
+      let url = conn.url;
+      if (conn.port.length > 0) url += ':' + conn.port;
+      Task.fetchAPI(`${url}${sendPath}`, fetchAssets)
+        .then((assets) => {
+          const params = assets['asset']['params'];
+
+          // Get relevant data from asset params
+          const decimals = params['decimals'];
+          const unitName = params['unit-name'];
+
+          // Update the unit-name for the asset
+          if (unitName) {
+            transactionWrap.unitName = unitName;
+          }
+
+          // Get the display amount as a string to prevent screen deformation of large ints
+          let displayAmount = String(transactionWrap.transaction.amount);
+
+          // If we have decimals, then we need to set the display amount with them in mind
+          if (decimals && decimals > 0) {
+            // Append missing zeros, if needed
+            if (displayAmount.length < decimals) {
+              displayAmount = displayAmount.padStart(decimals, '0');
+            }
+            const offsetAmount = Math.abs(decimals - displayAmount.length);
+
+            // Apply decimal transition
+            displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
+              offsetAmount
+            )}`;
+
+            // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
+            if (displayAmount.startsWith('.')) {
+              displayAmount = '0'.concat(displayAmount);
+            }
+
+            // Set new amount
+            transactionWrap.displayAmount = displayAmount;
+          }
+          callback && callback(transactionWrap);
+        })
+        .catch((ex) => {
+          // Could not get asset information for a transfer - attach error note
+          transactionWrap['error'] = ex['message'];
+          callback && callback(transactionWrap);
+        });
+    } else {
+      callback && callback(transactionWrap);
+    }
+  }
+
   public static methods(): {
     [key: string]: {
       [JsonRpcMethod: string]: Function;
@@ -193,28 +258,35 @@ export class Task {
 
             Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
               calculateEstimatedFee(transactionWrap, params);
-              d.body.params = transactionWrap;
-              console.log('T-wrap');
-              console.log(transactionWrap);
 
-              extensionBrowser.windows.create(
-                {
-                  url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
-                  ...popupProperties,
-                },
-                function (w) {
-                  if (w) {
-                    Task.requests[d.originTabID] = {
-                      window_id: w.id,
-                      message: d,
-                    };
-                    // Send message with tx info
-                    setTimeout(function () {
-                      extensionBrowser.runtime.sendMessage(d);
-                    }, 500);
-                  }
+              Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap, (transactionWrap) => {
+                if (transactionWrap.error) {
+                  // There was an error building the asset info. Outright reject / allow with warning.
+                  //reject(d);
+                  //return;
                 }
-              );
+
+                d.body.params = transactionWrap;
+
+                extensionBrowser.windows.create(
+                  {
+                    url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
+                    ...popupProperties,
+                  },
+                  function (w) {
+                    if (w) {
+                      Task.requests[d.originTabID] = {
+                        window_id: w.id,
+                        message: d,
+                      };
+                      // Send message with tx info
+                      setTimeout(function () {
+                        extensionBrowser.runtime.sendMessage(d);
+                      }, 500);
+                    }
+                  }
+                );
+              });
             });
           }
         },
@@ -291,44 +363,52 @@ export class Task {
             Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
               calculateEstimatedFee(transactionWrap, params);
 
-              d.body.params.validityObject = transactionWrap.validityObject;
-              d.body.params.txn = transactionWrap.transaction;
-              d.body.params.estimatedFee = transactionWrap.estimatedFee;
-
-              const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
-              const session = InternalMethods.getHelperSession();
-              const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
-              const accounts = session.wallet[ledger];
-              const multisigAccounts = getSigningAccounts(accounts, msig_txn);
-
-              if (multisigAccounts.error) {
-                d.error = multisigAccounts.error.message;
-                reject(d);
-              } else {
-                if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
-                  d.body.params.account = multisigAccounts.accounts[0]['address'];
-                  d.body.params.name = multisigAccounts.accounts[0]['name'];
+              Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap, (transactionWrap) => {
+                if (transactionWrap.error) {
+                  // There was an error building the asset info. Outright reject / allow with warning.
+                  //reject(d);
+                  //return;
                 }
 
-                extensionBrowser.windows.create(
-                  {
-                    url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
-                    ...popupProperties,
-                  },
-                  function (w) {
-                    if (w) {
-                      Task.requests[d.originTabID] = {
-                        window_id: w.id,
-                        message: d,
-                      };
-                      // Send message with tx info
-                      setTimeout(function () {
-                        extensionBrowser.runtime.sendMessage(d);
-                      }, 500);
-                    }
+                d.body.params.validityObject = transactionWrap.validityObject;
+                d.body.params.txn = transactionWrap.transaction;
+                d.body.params.estimatedFee = transactionWrap.estimatedFee;
+
+                const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
+                const session = InternalMethods.getHelperSession();
+                const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
+                const accounts = session.wallet[ledger];
+                const multisigAccounts = getSigningAccounts(accounts, msig_txn);
+
+                if (multisigAccounts.error) {
+                  d.error = multisigAccounts.error.message;
+                  reject(d);
+                } else {
+                  if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
+                    d.body.params.account = multisigAccounts.accounts[0]['address'];
+                    d.body.params.name = multisigAccounts.accounts[0]['name'];
                   }
-                );
-              }
+
+                  extensionBrowser.windows.create(
+                    {
+                      url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
+                      ...popupProperties,
+                    },
+                    function (w) {
+                      if (w) {
+                        Task.requests[d.originTabID] = {
+                          window_id: w.id,
+                          message: d,
+                        };
+                        // Send message with tx info
+                        setTimeout(function () {
+                          extensionBrowser.runtime.sendMessage(d);
+                        }, 500);
+                      }
+                    }
+                  );
+                }
+              });
             });
           }
         },
@@ -510,101 +590,110 @@ export class Task {
             // note,
           } = message.body.params.transaction;
 
-          const ledger = getLedgerFromGenesisId(genesisID);
+          try {
+            const ledger = getLedgerFromGenesisId(genesisID);
 
-          const context = new encryptionWrap(passphrase);
-          context.unlock(async (unlockedValue: any) => {
-            if ('error' in unlockedValue) {
-              sendResponse(unlockedValue);
-              return false;
-            }
+            const context = new encryptionWrap(passphrase);
+            context.unlock(async (unlockedValue: any) => {
+              if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+                return false;
+              }
 
-            extensionBrowser.windows.remove(auth.window_id);
+              extensionBrowser.windows.remove(auth.window_id);
 
-            let account;
+              let account;
 
-            if (unlockedValue[ledger] === undefined) {
-              message.error = RequestErrors.UnsupportedLedger;
+              if (unlockedValue[ledger] === undefined) {
+                message.error = RequestErrors.UnsupportedLedger;
+                MessageApi.send(message);
+              }
+              // Find address to send algos from
+              for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                if (unlockedValue[ledger][i].address === from) {
+                  account = unlockedValue[ledger][i];
+                  break;
+                }
+              }
+
+              const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+
+              const txn = { ...message.body.params.transaction };
+
+              Object.keys({ ...message.body.params.transaction }).forEach((key) => {
+                if (txn[key] === undefined || txn[key] === null) {
+                  delete txn[key];
+                }
+              });
+
+              // Modify base64 encoded fields
+              if ('note' in txn && txn.note !== undefined) {
+                txn.note = new Uint8Array(Buffer.from(txn.note));
+              }
+              // Application transactions only
+              if (txn && txn.type == 'appl') {
+                if ('appApprovalProgram' in txn) {
+                  try {
+                    txn.appApprovalProgram = Uint8Array.from(
+                      Buffer.from(txn.appApprovalProgram, 'base64')
+                    );
+                  } catch {
+                    message.error =
+                      'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                  }
+                }
+                if ('appClearProgram' in txn) {
+                  try {
+                    txn.appClearProgram = Uint8Array.from(
+                      Buffer.from(txn.appClearProgram, 'base64')
+                    );
+                  } catch {
+                    message.error =
+                      'Error trying to parse appClearProgram into a Uint8Array value.';
+                  }
+                }
+                if ('appArgs' in txn) {
+                  try {
+                    const tempArgs = [];
+                    txn.appArgs.forEach((element) => {
+                      logging.log(element);
+                      tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
+                    });
+                    txn.appArgs = tempArgs;
+                  } catch {
+                    message.error = 'Error trying to parse appArgs into Uint8Array values.';
+                  }
+                }
+              }
+
+              try {
+                // This step transitions a raw object into a transaction style object
+                const builtTx = buildTransaction(txn);
+                // We are combining the tx id get and sign into one step/object because of legacy,
+                // this may not need to be the case any longer.
+                const signedTxn = {
+                  txID: builtTx.txID().toString(),
+                  blob: builtTx.signTxn(recoveredAccount.sk),
+                };
+                const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                message.response = {
+                  txID: signedTxn.txID,
+                  blob: b64Obj,
+                };
+              } catch (e) {
+                message.error = e.message;
+              }
+
+              // Clean class saved request
+              delete Task.requests[responseOriginTabID];
               MessageApi.send(message);
-            }
-            // Find address to send algos from
-            for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-              if (unlockedValue[ledger][i].address === from) {
-                account = unlockedValue[ledger][i];
-                break;
-              }
-            }
-
-            const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-
-            const txn = { ...message.body.params.transaction };
-
-            Object.keys({ ...message.body.params.transaction }).forEach((key) => {
-              if (txn[key] === undefined || txn[key] === null) {
-                delete txn[key];
-              }
             });
-
-            // Modify base64 encoded fields
-            if ('note' in txn && txn.note !== undefined) {
-              txn.note = new Uint8Array(Buffer.from(txn.note));
-            }
-            // Application transactions only
-            if (txn && txn.type == 'appl') {
-              if ('appApprovalProgram' in txn) {
-                try {
-                  txn.appApprovalProgram = Uint8Array.from(
-                    Buffer.from(txn.appApprovalProgram, 'base64')
-                  );
-                } catch {
-                  message.error =
-                    'Error trying to parse appApprovalProgram into a Uint8Array value.';
-                }
-              }
-              if ('appClearProgram' in txn) {
-                try {
-                  txn.appClearProgram = Uint8Array.from(Buffer.from(txn.appClearProgram, 'base64'));
-                } catch {
-                  message.error = 'Error trying to parse appClearProgram into a Uint8Array value.';
-                }
-              }
-              if ('appArgs' in txn) {
-                try {
-                  const tempArgs = [];
-                  txn.appArgs.forEach((element) => {
-                    logging.log(element);
-                    tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
-                  });
-                  txn.appArgs = tempArgs;
-                } catch {
-                  message.error = 'Error trying to parse appArgs into Uint8Array values.';
-                }
-              }
-            }
-
-            try {
-              // This step transitions a raw object into a transaction style object
-              const builtTx = buildTransaction(txn);
-              // We are combining the tx id get and sign into one step/object because of legacy,
-              // this may not need to be the case any longer.
-              const signedTxn = {
-                txID: builtTx.txID().toString(),
-                blob: builtTx.signTxn(recoveredAccount.sk),
-              };
-              const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
-
-              message.response = {
-                txID: signedTxn.txID,
-                blob: b64Obj,
-              };
-            } catch (e) {
-              message.error = e.message;
-            }
-
-            // Clean class saved request
+          } catch {
+            // On error we should remove the task
             delete Task.requests[responseOriginTabID];
-            MessageApi.send(message);
-          });
+            return false;
+          }
           return true;
         },
         // sign-allow-multisig
@@ -616,131 +705,141 @@ export class Task {
           // Map the full multisig transaction here
           const msig_txn = { msig: message.body.params.msig, txn: message.body.params.txn };
 
-          // Use MainNet if specified - default to TestNet
-          const ledger = getLedgerFromGenesisId(msig_txn.txn.genesisID);
+          try {
+            // Use MainNet if specified - default to TestNet
+            const ledger = getLedgerFromGenesisId(msig_txn.txn.genesisID);
 
-          // Create an encryption wrap to get the needed signing account information
-          const context = new encryptionWrap(passphrase);
-          context.unlock(async (unlockedValue: any) => {
-            if ('error' in unlockedValue) {
-              sendResponse(unlockedValue);
-              return false;
-            }
-
-            extensionBrowser.windows.remove(auth.window_id);
-
-            // Verify this is a multisig sign occurs in the getSigningAccounts
-            // This get may receive a .error in return if an appropriate account is not found
-            let account;
-            const multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
-            if (multisigAccounts.error) {
-              message.error = multisigAccounts.error.message;
-            } else {
-              // TODO: Currently we are grabbing the first non-signed account. This may change.
-              account = multisigAccounts.accounts[0];
-            }
-
-            if (account) {
-              // We can now use the found account match to get the sign key
-              const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-
-              // Use the received txn component of the transaction, but remove undefined and null values
-              Object.keys({ ...msig_txn.txn }).forEach((key) => {
-                if (msig_txn.txn[key] === undefined || msig_txn.txn[key] === null) {
-                  delete msig_txn.txn[key];
-                }
-              });
-
-              // Modify base64 encoded fields
-              if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
-                msig_txn.txn.note = new Uint8Array(Buffer.from(msig_txn.txn.note));
+            // Create an encryption wrap to get the needed signing account information
+            const context = new encryptionWrap(passphrase);
+            context.unlock(async (unlockedValue: any) => {
+              if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+                return false;
               }
-              // Application transactions only
-              if (msig_txn.txn && msig_txn.txn.type == 'appl') {
-                if ('appApprovalProgram' in msig_txn.txn) {
-                  try {
-                    msig_txn.txn.appApprovalProgram = Uint8Array.from(
-                      Buffer.from(msig_txn.txn.appApprovalProgram, 'base64')
-                    );
-                  } catch {
-                    message.error =
-                      'Error trying to parse appApprovalProgram into a Uint8Array value.';
+
+              extensionBrowser.windows.remove(auth.window_id);
+
+              // Verify this is a multisig sign occurs in the getSigningAccounts
+              // This get may receive a .error in return if an appropriate account is not found
+              let account;
+              const multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
+              if (multisigAccounts.error) {
+                message.error = multisigAccounts.error.message;
+              } else {
+                // TODO: Currently we are grabbing the first non-signed account. This may change.
+                account = multisigAccounts.accounts[0];
+              }
+
+              if (account) {
+                // We can now use the found account match to get the sign key
+                const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+
+                // Use the received txn component of the transaction, but remove undefined and null values
+                Object.keys({ ...msig_txn.txn }).forEach((key) => {
+                  if (msig_txn.txn[key] === undefined || msig_txn.txn[key] === null) {
+                    delete msig_txn.txn[key];
+                  }
+                });
+
+                // Modify base64 encoded fields
+                if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
+                  msig_txn.txn.note = new Uint8Array(Buffer.from(msig_txn.txn.note));
+                }
+                // Application transactions only
+                if (msig_txn.txn && msig_txn.txn.type == 'appl') {
+                  if ('appApprovalProgram' in msig_txn.txn) {
+                    try {
+                      msig_txn.txn.appApprovalProgram = Uint8Array.from(
+                        Buffer.from(msig_txn.txn.appApprovalProgram, 'base64')
+                      );
+                    } catch {
+                      message.error =
+                        'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                    }
+                  }
+                  if ('appClearProgram' in msig_txn.txn) {
+                    try {
+                      msig_txn.txn.appClearProgram = Uint8Array.from(
+                        Buffer.from(msig_txn.txn.appClearProgram, 'base64')
+                      );
+                    } catch {
+                      message.error =
+                        'Error trying to parse appClearProgram into a Uint8Array value.';
+                    }
+                  }
+                  if ('appArgs' in msig_txn.txn) {
+                    try {
+                      const tempArgs = [];
+                      msig_txn.txn.appArgs.forEach((element) => {
+                        tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
+                      });
+                      msig_txn.txn.appArgs = tempArgs;
+                    } catch {
+                      message.error = 'Error trying to parse appArgs into Uint8Array values.';
+                    }
                   }
                 }
-                if ('appClearProgram' in msig_txn.txn) {
-                  try {
-                    msig_txn.txn.appClearProgram = Uint8Array.from(
-                      Buffer.from(msig_txn.txn.appClearProgram, 'base64')
-                    );
-                  } catch {
-                    message.error =
-                      'Error trying to parse appClearProgram into a Uint8Array value.';
-                  }
-                }
-                if ('appArgs' in msig_txn.txn) {
-                  try {
-                    const tempArgs = [];
-                    msig_txn.txn.appArgs.forEach((element) => {
-                      tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
+
+                try {
+                  // This step transitions a raw object into a transaction style object
+                  const builtTx = buildTransaction(msig_txn.txn);
+
+                  // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
+                  const version = msig_txn.msig.v || msig_txn.msig.version;
+                  const threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
+                  const addrs =
+                    msig_txn.msig.addrs ||
+                    msig_txn.msig.subsig.map((subsig) => {
+                      return subsig.pk;
                     });
-                    msig_txn.txn.appArgs = tempArgs;
-                  } catch {
-                    message.error = 'Error trying to parse appArgs into Uint8Array values.';
+                  const preimg = {
+                    version: version,
+                    threshold: threshold,
+                    addrs: addrs,
+                  };
+
+                  let signedTxn;
+                  const appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
+                  // Check for existing signatures. Append if there are any.
+                  if (appendEnabled && msig_txn.msig.subsig.some((subsig) => subsig.s)) {
+                    // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
+                    // It is subject to change and is built as scaffolding for future functionality.
+                    const encodedBlob = message.body.params.txn;
+                    const decodedBlob = Buffer.from(encodedBlob, 'base64');
+                    signedTxn = algosdk.appendSignMultisigTransaction(
+                      decodedBlob,
+                      preimg,
+                      recoveredAccount.sk
+                    );
+                  } else {
+                    // If this is the first signature then do a normal sign
+                    signedTxn = algosdk.signMultisigTransaction(
+                      builtTx,
+                      preimg,
+                      recoveredAccount.sk
+                    );
                   }
+
+                  // Converting the blob to an encoded string for transfer back to dApp
+                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                  message.response = {
+                    txID: signedTxn.txID,
+                    blob: b64Obj,
+                  };
+                } catch (e) {
+                  message.error = e.message;
                 }
               }
-
-              try {
-                // This step transitions a raw object into a transaction style object
-                const builtTx = buildTransaction(msig_txn.txn);
-
-                // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
-                const version = msig_txn.msig.v || msig_txn.msig.version;
-                const threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
-                const addrs =
-                  msig_txn.msig.addrs ||
-                  msig_txn.msig.subsig.map((subsig) => {
-                    return subsig.pk;
-                  });
-                const preimg = {
-                  version: version,
-                  threshold: threshold,
-                  addrs: addrs,
-                };
-
-                let signedTxn;
-                const appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
-                // Check for existing signatures. Append if there are any.
-                if (appendEnabled && msig_txn.msig.subsig.some((subsig) => subsig.s)) {
-                  // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
-                  // It is subject to change and is built as scaffolding for future functionality.
-                  const encodedBlob = message.body.params.txn;
-                  const decodedBlob = Buffer.from(encodedBlob, 'base64');
-                  signedTxn = algosdk.appendSignMultisigTransaction(
-                    decodedBlob,
-                    preimg,
-                    recoveredAccount.sk
-                  );
-                } else {
-                  // If this is the first signature then do a normal sign
-                  signedTxn = algosdk.signMultisigTransaction(builtTx, preimg, recoveredAccount.sk);
-                }
-
-                // Converting the blob to an encoded string for transfer back to dApp
-                const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
-
-                message.response = {
-                  txID: signedTxn.txID,
-                  blob: b64Obj,
-                };
-              } catch (e) {
-                message.error = e.message;
-              }
-            }
-            // Clean class saved request
+              // Clean class saved request
+              delete Task.requests[responseOriginTabID];
+              MessageApi.send(message);
+            });
+          } catch {
+            // On error we should remove the task
             delete Task.requests[responseOriginTabID];
-            MessageApi.send(message);
-          });
+            return false;
+          }
           return true;
         },
         /* eslint-disable-next-line no-unused-vars */
@@ -775,6 +874,7 @@ export class Task {
         [JsonRpcMethod.Logout]: (request: any, sendResponse: Function) => {
           InternalMethods.clearSession();
           Task.clearPool();
+          sendResponse(true);
         },
         [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);

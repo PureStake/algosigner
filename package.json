@@ -1,6 +1,6 @@
 {
   "name": "algosigner",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "author": "https://developer.purestake.io",
   "description": "Sign Algorand transactions in your browser with PureStake.",
   "keywords": [
