@@ -8,9 +8,11 @@ export enum JsonRpcMethod {
     AuthorizationDeny = "authorization-deny",
     SignAllow = "sign-allow", 
     SignAllowMultisig = "sign-allow-multisig", 
+    SignV2Allow = "sign-v2-allow",
     SignDeny = "sign-deny",
     SignTransaction = "sign-transaction",
     SignMultisigTransaction = "sign-multisig-transaction",
+    SignV2Transaction = "sign-v2-transaction",
     SendTransaction = "send-transaction",
     Algod = "algod",
     Indexer = "indexer",
@@ -38,7 +40,7 @@ export enum JsonRpcMethod {
 
 }
 
-export type JsonPayload = {[key: string]: string | number | JsonPayload | undefined};
+export type JsonPayload = {[key: string]: string | number | Array<any> | JsonPayload | undefined};
 
 export type JsonRpcBody = {
     readonly jsonrpc: string;

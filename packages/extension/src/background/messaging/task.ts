@@ -412,6 +412,139 @@ export class Task {
             });
           }
         },
+        [JsonRpcMethod.SignV2Transaction]: (d: any, resolve: Function, reject: Function) => {
+          let transactionArray;
+          let transactionWraps = undefined;
+          let validationError = undefined;
+          try {
+            transactionArray = d.body.params.transactions;
+            console.log(transactionArray);
+            transactionArray = transactionArray.map((tx) => JSON.parse(atob(tx)));
+            console.log(transactionArray);
+          } catch (e) {
+            logging.log(`Unable to parse transaction object. ${e}`);
+            d.error = e;
+            reject(d);
+          }
+          try {
+            if (!transactionArray.every((tx) => transactionArray[0].genesisID === tx.genesisID))
+              throw new Error('All transactions need to belong to the same ledger.');
+            transactionWraps = transactionArray.map((tx) =>
+              getValidatedTxnWrap(tx, tx['type'], false)
+            );
+          } catch (e) {
+            logging.log(`Validation failed. ${e}`);
+            validationError = e;
+          }
+          console.log(transactionWraps);
+          if (
+            !transactionWraps &&
+            !transactionWraps.length &&
+            validationError &&
+            validationError instanceof InvalidTransactionStructure
+          ) {
+            console.log('No wraps, but validation errors');
+            // We don't have a transaction wrap, but we have a validation error.
+            d.error = {
+              message: validationError.message,
+            };
+            reject(d);
+            return;
+          } else if (!transactionWraps && !transactionWraps.length) {
+            console.log('No wraps, no validation errors');
+            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
+            logging.log(
+              'A transaction has failed because of an inability to build the specified transaction type.'
+            );
+            d.error = {
+              message:
+                validationError ||
+                'Validation failed for transaction. Please verify the properties are valid.',
+            };
+            reject(d);
+          } else if (
+            transactionWraps.some(
+              (tx) =>
+                tx.validityObject &&
+                Object.values(tx.validityObject).some(
+                  (value) => value['status'] === ValidationStatus.Invalid
+                )
+            )
+          ) {
+            console.log('Invalid fields');
+            // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+            // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+            const invalidKeys = {};
+            transactionWraps.forEach((tx, index) => {
+              invalidKeys['index'] = [];
+              Object.entries(tx.validityObject).forEach(([key, value]) => {
+                if (value['status'] === ValidationStatus.Invalid) {
+                  invalidKeys[index].push(`${key}`);
+                }
+              });
+              if (!invalidKeys[index].length) delete invalidKeys[index];
+            });
+
+            let message = '';
+
+            Object.keys(invalidKeys).forEach((index) => {
+              message =
+                message +
+                `Validation failed for transaction ${index} because of invalid properties [${invalidKeys[
+                  index
+                ].join(',')}]. `;
+            });
+
+            d.error = {
+              message: message,
+            };
+            reject(d);
+          } else {
+            console.log('Last bracket');
+            // Get Ledger params
+            const conn = Settings.getBackendParams(
+              getLedgerFromGenesisId(transactionWraps[0].transaction.genesisID),
+              API.Algod
+            );
+            const sendPath = '/v2/transactions/params';
+            const fetchParams: any = {
+              headers: {
+                ...conn.apiKey,
+              },
+              method: 'GET',
+            };
+
+            let url = conn.url;
+            if (conn.port.length > 0) url += ':' + conn.port;
+
+            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+              transactionWraps.forEach((tx) => {
+                calculateEstimatedFee(tx, params);
+              });
+              d.body.params = transactionWraps;
+              console.log(d.body.params);
+
+              extensionBrowser.windows.create(
+                {
+                  url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
+                  ...popupProperties,
+                },
+                function (w) {
+                  if (w) {
+                    Task.requests[d.originTabID] = {
+                      window_id: w.id,
+                      message: d,
+                    };
+                    // Send message with tx info
+                    setTimeout(function () {
+                      extensionBrowser.runtime.sendMessage(d);
+                    }, 500);
+                  }
+                }
+              );
+            });
+          }
+        },
         // algod
         [JsonRpcMethod.SendTransaction]: (d: any, resolve: Function, reject: Function) => {
           const { params } = d.body;
