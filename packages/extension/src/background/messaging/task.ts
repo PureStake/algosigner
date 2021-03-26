@@ -19,6 +19,7 @@ import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
+import { base64ToByteArray, removeEmptyFields } from '@algosigner/common/utils';
 
 const popupProperties = {
   type: 'popup',
@@ -419,7 +420,18 @@ export class Task {
           try {
             transactionArray = d.body.params.transactions;
             console.log(transactionArray);
-            transactionArray = transactionArray.map((tx) => JSON.parse(atob(tx)));
+            /**
+             * In order to process the msgpack and make it compatible with our validator, we:
+             * 0) Decode from base64 to Uint8Array msgpack
+             * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
+             * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
+             * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
+             */
+            transactionArray = transactionArray.map((tx) =>
+              removeEmptyFields(
+                algosdk.decodeUnsignedTransaction(base64ToByteArray(tx))._getDictForDisplay()
+              )
+            );
             console.log(transactionArray);
           } catch (e) {
             logging.log(`Unable to parse transaction object. ${e}`);

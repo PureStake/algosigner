@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { IPaymentTx } from '@algosigner/common/interfaces/pay';
 import { IAssetConfigTx } from '@algosigner/common/interfaces/acfg';
 import { IAssetCreateTx } from '@algosigner/common/interfaces/acfg_create';
@@ -30,25 +29,29 @@ const algosdk = require('algosdk');
 ///
 // Sign transaction and return.
 ///
-export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxnWrap {
+export function getValidatedTxnWrap(
+  txn: object,
+  type: string,
+  validateExtraFields: boolean = true
+): BaseValidatedTxnWrap {
   let validatedTxnWrap: BaseValidatedTxnWrap = undefined;
   let error: Error = undefined;
 
   switch (type.toLowerCase()) {
     case TransactionType.Pay:
-      validatedTxnWrap = new PayTransaction(txn as IPaymentTx);
+      validatedTxnWrap = new PayTransaction(txn as IPaymentTx, validateExtraFields);
       break;
     case TransactionType.Acfg:
       // Validate any of the 3 types of transactions that can occur with acfg
       // Use the first error as the passback error.
       try {
-        validatedTxnWrap = new AssetConfigTransaction(txn as IAssetConfigTx);
+        validatedTxnWrap = new AssetConfigTransaction(txn as IAssetConfigTx, validateExtraFields);
       } catch (e) {
         error = e;
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetCreateTransaction(txn as IAssetCreateTx);
+          validatedTxnWrap = new AssetCreateTransaction(txn as IAssetCreateTx, validateExtraFields);
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -56,7 +59,10 @@ export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxn
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetDestroyTransaction(txn as IAssetDestroyTx);
+          validatedTxnWrap = new AssetDestroyTransaction(
+            txn as IAssetDestroyTx,
+            validateExtraFields
+          );
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -67,19 +73,22 @@ export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxn
       }
       break;
     case TransactionType.Afrz:
-      validatedTxnWrap = new AssetFreezeTransaction(txn as IAssetFreezeTx);
+      validatedTxnWrap = new AssetFreezeTransaction(txn as IAssetFreezeTx, validateExtraFields);
       break;
     case TransactionType.Axfer:
       // Validate any of the 3 types of transactions that can occur with axfer
       // Use the first error as the passback error.
       try {
-        validatedTxnWrap = new AssetAcceptTransaction(txn as IAssetAcceptTx);
+        validatedTxnWrap = new AssetAcceptTransaction(txn as IAssetAcceptTx, validateExtraFields);
       } catch (e) {
         error = e;
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetTransferTransaction(txn as IAssetTransferTx);
+          validatedTxnWrap = new AssetTransferTransaction(
+            txn as IAssetTransferTx,
+            validateExtraFields
+          );
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -87,7 +96,10 @@ export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxn
       }
       if (!validatedTxnWrap) {
         try {
-          validatedTxnWrap = new AssetClawbackTransaction(txn as IAssetClawbackTx);
+          validatedTxnWrap = new AssetClawbackTransaction(
+            txn as IAssetClawbackTx,
+            validateExtraFields
+          );
         } catch (e) {
           e.message = [error.message, e.message].join(' ');
           error = e;
@@ -98,10 +110,10 @@ export function getValidatedTxnWrap(txn: object, type: string): BaseValidatedTxn
       }
       break;
     case TransactionType.Keyreg:
-      validatedTxnWrap = new KeyregTransaction(txn as IKeyRegistrationTx);
+      validatedTxnWrap = new KeyregTransaction(txn as IKeyRegistrationTx, validateExtraFields);
       break;
     case TransactionType.Appl:
-      validatedTxnWrap = new ApplTransaction(txn as IApplTx);
+      validatedTxnWrap = new ApplTransaction(txn as IApplTx, validateExtraFields);
       break;
     default:
       throw new Error('Type of transaction not specified or known.');
