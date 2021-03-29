@@ -30,9 +30,10 @@ module.exports = {
       'error',
       {
         types: {
-          Function: false,
-          Object: false,
-          object: false,
+          'Function': false,
+          'Object': false,
+          'object': false,
+          '{}': false,
         },
         extendDefaults: true,
       },

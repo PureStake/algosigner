@@ -987,6 +987,127 @@ export class Task {
           }
           return true;
         },
+        // sign-v2-allow
+        [JsonRpcMethod.SignV2Allow]: (request: any, sendResponse: Function) => {
+          const { passphrase, responseOriginTabID, accounts } = request.body.params;
+          const auth = Task.requests[responseOriginTabID];
+          const message = auth.message;
+          const transactionWraps = message.body.params;
+          const signedTxs = [];
+          const signErrors = [];
+          console.log('Signing');
+          console.log(message);
+
+          try {
+            const ledger = getLedgerFromGenesisId(transactionWraps[0].transaction.genesisID);
+
+            const context = new encryptionWrap(passphrase);
+            context.unlock(async (unlockedValue: any) => {
+              if ('error' in unlockedValue) {
+                sendResponse(unlockedValue);
+                return false;
+              }
+              extensionBrowser.windows.remove(auth.window_id);
+
+              const recoveredAccounts = [];
+
+              if (unlockedValue[ledger] === undefined) {
+                message.error = RequestErrors.UnsupportedLedger;
+                MessageApi.send(message);
+              }
+              // Find addresses to send algos from
+              for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+                for (let j = accounts.length - 1; j >= 0; j--) {
+                  if (unlockedValue[ledger][i].address === accounts[j].address) {
+                    recoveredAccounts[j] = algosdk.mnemonicToSecretKey(
+                      unlockedValue[ledger][i].mnemonic
+                    );
+                  }
+                }
+              }
+
+              transactionWraps.forEach((wrap, index) => {
+                const txn = removeEmptyFields(wrap.transaction);
+
+                // Modify base64 encoded fields
+                if ('note' in txn && txn.note !== undefined) {
+                  txn.note = new Uint8Array(Buffer.from(txn.note));
+                }
+                // Application transactions only
+                if (txn && txn.type == 'appl') {
+                  if ('appApprovalProgram' in txn) {
+                    try {
+                      txn.appApprovalProgram = Uint8Array.from(
+                        Buffer.from(txn.appApprovalProgram, 'base64')
+                      );
+                    } catch {
+                      signErrors[index] =
+                        'Error trying to parse appApprovalProgram into a Uint8Array value.';
+                    }
+                  }
+                  if ('appClearProgram' in txn) {
+                    try {
+                      txn.appClearProgram = Uint8Array.from(
+                        Buffer.from(txn.appClearProgram, 'base64')
+                      );
+                    } catch {
+                      signErrors[index] =
+                        'Error trying to parse appClearProgram into a Uint8Array value.';
+                    }
+                  }
+                  if ('appArgs' in txn) {
+                    try {
+                      const tempArgs = [];
+                      txn.appArgs.forEach((element) => {
+                        logging.log(element);
+                        tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
+                      });
+                      txn.appArgs = tempArgs;
+                    } catch {
+                      signErrors[index] = 'Error trying to parse appArgs into Uint8Array values.';
+                    }
+                  }
+                }
+
+                try {
+                  // This step transitions a raw object into a transaction style object
+                  const builtTx = buildTransaction(txn);
+                  // We are combining the tx id get and sign into one step/object because of legacy,
+                  // this may not need to be the case any longer.
+                  const signedTxn = {
+                    txID: builtTx.txID().toString(),
+                    blob: builtTx.signTxn(recoveredAccounts[index].sk),
+                  };
+                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                  signedTxs[index] = {
+                    txID: signedTxn.txID,
+                    blob: b64Obj,
+                  };
+                } catch (e) {
+                  signErrors[index] = e.message;
+                }
+              });
+
+              if (signErrors.length) {
+                message.error = 'There were problems signing the transactions.';
+                signErrors.forEach((error, index) => {
+                  message.error += `\nOn transaction ${index}, the error was: ${error}`;
+                });
+              } else {
+                message.response = signedTxs;
+              }
+              // Clean class saved request
+              delete Task.requests[responseOriginTabID];
+              MessageApi.send(message);
+            });
+          } catch {
+            // On error we should remove the task
+            delete Task.requests[responseOriginTabID];
+            return false;
+          }
+          return true;
+        },
         /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
           const { responseOriginTabID } = request.body.params;

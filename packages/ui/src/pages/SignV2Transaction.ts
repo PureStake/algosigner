@@ -36,8 +36,7 @@ const SignV2Transaction: FunctionalComponent = () => {
   const [authError, setAuthError] = useState<string>('');
   const [request, setRequest] = useState<any>({});
   const [ledger, setLedger] = useState<string>('');
-  const [accounts] = useState<Array<string>>([]);
-  // const [approvals, setApprovals] = useState<Array<boolean>>([]);
+  const [accounts, setAccounts] = useState<Array<any>>([]);
   const [tab, setTab] = useState<number>(0);
   let transactionWraps: Array<any> = [];
 
@@ -64,12 +63,13 @@ const SignV2Transaction: FunctionalComponent = () => {
     const params = {
       passphrase: pwd,
       responseOriginTabID: responseOriginTabID,
+      accounts,
     };
     setLoading(true);
     setAuthError('');
     window.removeEventListener('beforeunload', deny);
 
-    sendMessage(JsonRpcMethod.SignAllow, params, function (response) {
+    sendMessage(JsonRpcMethod.SignV2Allow, params, function (response) {
       if ('error' in response) {
         window.addEventListener('beforeunload', deny);
         setLoading(false);
@@ -85,22 +85,21 @@ const SignV2Transaction: FunctionalComponent = () => {
     });
   };
 
-  // const findAccounts = (ledger) => {
-  //   console.log(ledger);
-  //   console.log(accounts);
-  //   const newAccounts = [...accounts];
-  //   for (let i = store[ledger].length - 1; i >= 0; i--) {
-  //     transactionWraps.forEach((wrap, index) => {
-  //       if (store[ledger][i].address === wrap.transaction.from) {
-  //         if (newAccounts[index] === undefined) {
-  //           newAccounts[index] = store[ledger][i].name;
-  //         }
-  //       }
-  //     });
-  //   }
-  //   console.log(newAccounts);
-  //   setAccounts(newAccounts);
-  // };
+  const findAccounts = (ledger) => {
+    if (accounts.length < transactionWraps.length) {
+      const newAccounts = new Array(transactionWraps.length);
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
+        transactionWraps.forEach((wrap, index) => {
+          if (store[ledger][i].address === wrap.transaction.from) {
+            if (newAccounts[index] === undefined) {
+              newAccounts[index] = store[ledger][i];
+            }
+          }
+        });
+      }
+      setAccounts(newAccounts);
+    }
+  };
 
   const getWrapUI = (wrap, account) => {
     return html`
@@ -185,7 +184,7 @@ const SignV2Transaction: FunctionalComponent = () => {
         txLedger = l['name'];
         console.log(`found ledger ${txLedger}`);
         setLedger(txLedger);
-        // findAccounts(txLedger);
+        findAccounts(txLedger);
       }
     });
 
@@ -202,7 +201,7 @@ const SignV2Transaction: FunctionalComponent = () => {
           });
 
           setLedger(txLedger);
-          // findAccounts(txLedger);
+          findAccounts(txLedger);
         }
       });
     } else {
@@ -232,6 +231,7 @@ const SignV2Transaction: FunctionalComponent = () => {
         </section>
       `}
       ${request.body &&
+      accounts.length == transactionWraps.length &&
       transactionWraps.length > 1 &&
       html`
         <div class="tabs is-centered mb-0">
@@ -246,14 +246,15 @@ const SignV2Transaction: FunctionalComponent = () => {
           </ul>
         </div>
         <div style="flex: 1; overflow:auto; max-height: 300px;">
-          ${getWrapUI(transactionWraps[tab], accounts[tab])}
+          ${getWrapUI(transactionWraps[tab], accounts[tab].name)}
         </div>
       `}
       ${request.body &&
+      accounts.length == transactionWraps.length &&
       transactionWraps.length === 1 &&
       html`
         <div style="flex: 1; overflow:auto; max-height: 400px;">
-          ${getWrapUI(transactionWraps[0], accounts[0])}
+          ${getWrapUI(transactionWraps[0], accounts[0].name)}
         </div>
       `}
 
@@ -269,7 +270,7 @@ const SignV2Transaction: FunctionalComponent = () => {
             setAskAuth(true);
           }}
         >
-          Sign!
+          ${transactionWraps.length > 1 ? 'Sign all transactions!' : 'Sign!'}
         </button>
       </div>
     </div>
