@@ -5,7 +5,7 @@ import { MessageBuilder } from '../messaging/builder';
 import { Transaction, RequestErrors, MultisigTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
 import { Runtime } from '@algosigner/common/runtime/runtime';
-import { byteArrayToBase64 } from '@algosigner/common/utils';
+import { byteArrayToBase64 } from '@algosigner/common/encoding';
 
 export class Task extends Runtime implements ITask {
   static subscriptions: { [key: string]: Function } = {};

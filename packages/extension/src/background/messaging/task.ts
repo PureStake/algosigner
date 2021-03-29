@@ -19,7 +19,8 @@ import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
-import { base64ToByteArray, removeEmptyFields } from '@algosigner/common/utils';
+import { removeEmptyFields } from '@algosigner/common/utils';
+import { base64ToByteArray } from '@algosigner/common/encoding';
 
 const popupProperties = {
   type: 'popup',
