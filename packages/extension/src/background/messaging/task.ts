@@ -453,6 +453,7 @@ export class Task {
             headers: {
               ...conn.headers,
               'Content-Type': contentType,
+              ...params.headers,
             },
             method: params.method || 'GET',
           };
@@ -482,6 +483,7 @@ export class Task {
             headers: {
               ...conn.headers,
               'Content-Type': contentType,
+              ...params.headers,
             },
             method: params.method || 'GET',
           };
