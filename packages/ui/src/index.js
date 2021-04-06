@@ -26,6 +26,8 @@ import { StoreProvider } from 'services/StoreContext';
 
 require('./styles.scss');
 
+window.FontAwesome.config.autoReplaceSvg = 'nest';
+
 const mountNode = document.getElementById('root');
 
 const Root = (props) => {

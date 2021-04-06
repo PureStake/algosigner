@@ -451,8 +451,7 @@ export class Task {
           }
           console.log(transactionWraps);
           if (
-            !transactionWraps &&
-            !transactionWraps.length &&
+            (!transactionWraps || !transactionWraps.length) &&
             validationError &&
             validationError instanceof InvalidTransactionStructure
           ) {
@@ -463,9 +462,9 @@ export class Task {
             };
             reject(d);
             return;
-          } else if (!transactionWraps && !transactionWraps.length) {
+          } else if (!transactionWraps || !transactionWraps.length) {
             console.log('No wraps, no validation errors');
-            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
+            // We don't have a transaction wrap. We have an unknown error, reject the transaction.
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
@@ -1093,7 +1092,7 @@ export class Task {
               if (signErrors.length) {
                 message.error = 'There were problems signing the transactions.';
                 signErrors.forEach((error, index) => {
-                  message.error += `\nOn transaction ${index}, the error was: ${error}`;
+                  message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
                 });
               } else {
                 message.response = signedTxs;
