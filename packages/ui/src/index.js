@@ -4,6 +4,7 @@ import { Router, Route } from 'preact-router';
 import { createHashHistory } from 'history';
 import '@fortawesome/fontawesome-free/js/fontawesome';
 import '@fortawesome/fontawesome-free/js/solid';
+import '@fortawesome/fontawesome-free/js/regular';
 
 import MainHeader from 'components/MainHeader';
 import Footer from 'components/Footer';
