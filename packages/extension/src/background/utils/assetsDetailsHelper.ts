@@ -58,6 +58,11 @@ export default class AssetsDetailsHelper {
           cache.assets[ledger][assetId] = res.asset.params;
           extensionStorage.setStorage('cache', cache, null);
         })
+        .catch(() => {
+          // If there's an issue with the request, remove the asset from the queue.
+          // If not done, it will just keep trying to get the same asset over and over.
+          this.assetsToAdd[ledger].shift();
+        })
         .finally(() => {
           this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
         });
