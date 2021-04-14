@@ -126,7 +126,7 @@ const SignV2Transaction: FunctionalComponent = () => {
   };
 
   if (request.body && !transactionWraps.length) {
-    transactionWraps = request.body.params;
+    transactionWraps = request.body.params.transactionWraps;
 
     // Initialize per-tx variables
     if (!approvals.length && transactionWraps.length) {

@@ -22,7 +22,7 @@ import { NoDifferentLedgers } from '../../errors/v2Sign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 import { removeEmptyFields } from '@algosigner/common/utils';
-import { base64ToByteArray } from '@algosigner/common/encoding';
+import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 
 const popupProperties = {
   type: 'popup',
@@ -547,7 +547,7 @@ export class Task {
               transactionWraps.forEach((tx) => {
                 calculateEstimatedFee(tx, params);
               });
-              d.body.params = transactionWraps;
+              d.body.params.transactionWraps = transactionWraps;
               console.log(d.body.params);
 
               extensionBrowser.windows.create(
@@ -1006,14 +1006,17 @@ export class Task {
           const { passphrase, responseOriginTabID, accounts } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
-          const transactionWraps = message.body.params;
+          const transactionObjs = message.body.params.transactions.map((tx) =>
+            algosdk.decodeUnsignedTransaction(base64ToByteArray(tx))
+          );
+
           const signedTxs = [];
           const signErrors = [];
           console.log('Signing');
-          console.log(message);
+          console.log(transactionObjs);
 
           try {
-            const ledger = getLedgerFromGenesisId(transactionWraps[0].transaction.genesisID);
+            const ledger = getLedgerFromGenesisId(transactionObjs[0].genesisID);
 
             const context = new encryptionWrap(passphrase);
             context.unlock(async (unlockedValue: any) => {
@@ -1040,62 +1043,14 @@ export class Task {
                 }
               }
 
-              transactionWraps.forEach((wrap, index) => {
-                const txn = removeEmptyFields(wrap.transaction);
-
-                // Modify base64 encoded fields
-                if ('note' in txn && txn.note !== undefined) {
-                  txn.note = new Uint8Array(Buffer.from(txn.note));
-                }
-                // Application transactions only
-                if (txn && txn.type == 'appl') {
-                  if ('appApprovalProgram' in txn) {
-                    try {
-                      txn.appApprovalProgram = Uint8Array.from(
-                        Buffer.from(txn.appApprovalProgram, 'base64')
-                      );
-                    } catch {
-                      signErrors[index] =
-                        'Error trying to parse appApprovalProgram into a Uint8Array value.';
-                    }
-                  }
-                  if ('appClearProgram' in txn) {
-                    try {
-                      txn.appClearProgram = Uint8Array.from(
-                        Buffer.from(txn.appClearProgram, 'base64')
-                      );
-                    } catch {
-                      signErrors[index] =
-                        'Error trying to parse appClearProgram into a Uint8Array value.';
-                    }
-                  }
-                  if ('appArgs' in txn) {
-                    try {
-                      const tempArgs = [];
-                      txn.appArgs.forEach((element) => {
-                        logging.log(element);
-                        tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
-                      });
-                      txn.appArgs = tempArgs;
-                    } catch {
-                      signErrors[index] = 'Error trying to parse appArgs into Uint8Array values.';
-                    }
-                  }
-                }
-
+              transactionObjs.forEach((tx, index) => {
                 try {
-                  // This step transitions a raw object into a transaction style object
-                  const builtTx = buildTransaction(txn);
-                  // We are combining the tx id get and sign into one step/object because of legacy,
-                  // this may not need to be the case any longer.
-                  const signedTxn = {
-                    txID: builtTx.txID().toString(),
-                    blob: builtTx.signTxn(recoveredAccounts[index].sk),
-                  };
-                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+                  const txID = tx.txID().toString();
+                  const signedBlob = tx.signTxn(recoveredAccounts[index].sk);
+                  const b64Obj = byteArrayToBase64(signedBlob);
 
                   signedTxs[index] = {
-                    txID: signedTxn.txID,
+                    txID: txID,
                     blob: b64Obj,
                   };
                 } catch (e) {
@@ -1105,7 +1060,7 @@ export class Task {
 
               if (signErrors.length) {
                 message.error = 'There was a problem signing the transaction(s): ';
-                if (transactionWraps.length > 1) {
+                if (transactionObjs.length > 1) {
                   signErrors.forEach((error, index) => {
                     message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
                   });
