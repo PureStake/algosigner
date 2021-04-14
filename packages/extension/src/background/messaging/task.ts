@@ -9,6 +9,7 @@ import {
   getLedgerFromGenesisId,
   calculateEstimatedFee,
 } from '../transaction/actions';
+import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
@@ -17,6 +18,7 @@ import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
+import { NoDifferentLedgers } from '../../errors/v2Sign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 import { removeEmptyFields } from '@algosigner/common/utils';
@@ -195,8 +197,9 @@ export class Task {
           let validationError = undefined;
           try {
             transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params['type']);
+            InternalMethods.checkValidAccount(transactionWrap.transaction);
           } catch (e) {
-            logging.log(`Validation failed. ${e}`);
+            logging.log(`Validation failed. ${e.message}`);
             validationError = e;
           }
           if (
@@ -210,14 +213,14 @@ export class Task {
             };
             reject(d);
             return;
-          } else if (!transactionWrap) {
+          } else if (!transactionWrap || validationError) {
             // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
             d.error = {
               message:
-                validationError ||
+                (validationError && validationError.message) ||
                 'Validation failed for transaction. Please verify the properties are valid.',
             };
             reject(d);
@@ -416,11 +419,11 @@ export class Task {
         },
         [JsonRpcMethod.SignV2Transaction]: (d: any, resolve: Function, reject: Function) => {
           let transactionArray;
-          let transactionWraps = undefined;
-          let validationError = undefined;
+          let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
+          const validationErrors: Array<Error> = [];
+
           try {
             transactionArray = d.body.params.transactions;
-            console.log(transactionArray);
             /**
              * In order to process the msgpack and make it compatible with our validator, we:
              * 0) Decode from base64 to Uint8Array msgpack
@@ -435,45 +438,55 @@ export class Task {
             );
             console.log(transactionArray);
           } catch (e) {
-            logging.log(`Unable to parse transaction object. ${e}`);
+            logging.log(`Unable to parse transaction object(s). ${e}`);
             d.error = e;
             reject(d);
+            return;
           }
-          try {
-            if (!transactionArray.every((tx) => transactionArray[0].genesisID === tx.genesisID))
-              throw new Error('All transactions need to belong to the same ledger.');
-            transactionWraps = transactionArray.map((tx) =>
-              getValidatedTxnWrap(tx, tx['type'], false)
-            );
-          } catch (e) {
+
+          if (!transactionArray.every((tx) => transactionArray[0].genesisID === tx.genesisID)) {
+            const e = new NoDifferentLedgers();
             logging.log(`Validation failed. ${e}`);
-            validationError = e;
+            d.error = e;
+            reject(d);
+            return;
           }
+
+          transactionWraps = transactionArray.map((tx, index) => {
+            try {
+              console.log(`Building wrap ${index} with:`);
+              console.log(tx);
+              const wrap = getValidatedTxnWrap(tx, tx['type'], false);
+              console.log(wrap);
+              InternalMethods.checkValidAccount(wrap.transaction);
+              return wrap;
+            } catch (e) {
+              validationErrors[index] = e;
+            }
+          });
+          console.log('Wraps and errors');
           console.log(transactionWraps);
-          if (
-            (!transactionWraps || !transactionWraps.length) &&
-            validationError &&
-            validationError instanceof InvalidTransactionStructure
-          ) {
-            console.log('No wraps, but validation errors');
-            // We don't have a transaction wrap, but we have a validation error.
+          console.log(validationErrors);
+          if (validationErrors.length || !transactionWraps || !transactionWraps.length) {
+            console.log('Errors or no wraps');
+            // We don't have transaction wraps or we have an building error, reject the transaction.
+            let errorMessage = 'There was a problem validating the transaction(s): ';
+            let validationMessages = '';
+
+            validationErrors.forEach((err, index) => {
+              validationMessages =
+                validationMessages +
+                `\nValidation failed for transaction ${index} due to: ${err.message}`;
+            });
+            errorMessage +=
+              (validationMessages.length && validationMessages) ||
+              'Please verify the properties are valid.';
+            logging.log(errorMessage);
             d.error = {
-              message: validationError.message,
+              message: errorMessage,
             };
             reject(d);
             return;
-          } else if (!transactionWraps || !transactionWraps.length) {
-            console.log('No wraps, no validation errors');
-            // We don't have a transaction wrap. We have an unknown error, reject the transaction.
-            logging.log(
-              'A transaction has failed because of an inability to build the specified transaction type.'
-            );
-            d.error = {
-              message:
-                validationError ||
-                'Validation failed for transaction. Please verify the properties are valid.',
-            };
-            reject(d);
           } else if (
             transactionWraps.some(
               (tx) =>
@@ -497,20 +510,21 @@ export class Task {
               if (!invalidKeys[index].length) delete invalidKeys[index];
             });
 
-            let message = '';
+            let errorMessage = '';
 
             Object.keys(invalidKeys).forEach((index) => {
-              message =
-                message +
+              errorMessage =
+                errorMessage +
                 `Validation failed for transaction ${index} because of invalid properties [${invalidKeys[
                   index
                 ].join(',')}]. `;
             });
 
             d.error = {
-              message: message,
+              message: errorMessage,
             };
             reject(d);
+            return;
           } else {
             console.log('Last bracket');
             // Get Ledger params
@@ -1090,10 +1104,14 @@ export class Task {
               });
 
               if (signErrors.length) {
-                message.error = 'There were problems signing the transactions.';
-                signErrors.forEach((error, index) => {
-                  message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
-                });
+                message.error = 'There was a problem signing the transaction(s): ';
+                if (transactionWraps.length > 1) {
+                  signErrors.forEach((error, index) => {
+                    message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
+                  });
+                } else {
+                  message.error += signErrors[0];
+                }
               } else {
                 message.response = signedTxs;
               }

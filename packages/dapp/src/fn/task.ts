@@ -54,7 +54,6 @@ export class Task extends Runtime implements ITask {
     const params = {
       transactions: array.map((t) => byteArrayToBase64(t)),
     };
-    console.log(params.transactions);
     return MessageBuilder.promise(JsonRpcMethod.SignV2Transaction, params, error);
   }
 
