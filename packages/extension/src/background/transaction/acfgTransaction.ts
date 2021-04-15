@@ -53,7 +53,7 @@ const requiredAcfgParams: Array<string> = [
 ///
 export class AssetConfigTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Modify Asset';
-  constructor(params: IAssetConfigTx, validateExtraFields: boolean) {
-    super(params, AssetConfigTx, validateExtraFields, requiredAcfgParams);
+  constructor(params: IAssetConfigTx, v1Validations: boolean) {
+    super(params, AssetConfigTx, v1Validations, requiredAcfgParams);
   }
 }

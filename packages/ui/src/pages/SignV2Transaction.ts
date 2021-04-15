@@ -182,7 +182,7 @@ const SignV2Transaction: FunctionalComponent = () => {
           <${TxPay}
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             account=${account}
             ledger=${ledger}
           />
@@ -192,7 +192,7 @@ const SignV2Transaction: FunctionalComponent = () => {
           <${TxKeyreg}
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             account=${account}
             ledger=${ledger}
           />
@@ -203,7 +203,7 @@ const SignV2Transaction: FunctionalComponent = () => {
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
             dt=${wrap.txDerivedTypeText}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             account=${account}
             ledger=${ledger}
           />
@@ -214,7 +214,7 @@ const SignV2Transaction: FunctionalComponent = () => {
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
             dt=${wrap.txDerivedTypeText}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             da=${wrap.displayAmount}
             un=${wrap.unitName}
             account=${account}
@@ -226,7 +226,7 @@ const SignV2Transaction: FunctionalComponent = () => {
           <${TxAfrz}
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             account=${account}
             ledger=${ledger}
           />
@@ -236,7 +236,7 @@ const SignV2Transaction: FunctionalComponent = () => {
           <${TxAppl}
             tx=${wrap.transaction}
             vo=${wrap.validityObject}
-            fee=${wrap.estimatedFee}
+            estFee=${wrap.estimatedFee}
             account=${account}
             ledger=${ledger}
           />

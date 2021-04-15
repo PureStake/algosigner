@@ -4,7 +4,8 @@ import { useState } from 'preact/hooks';
 
 const TxAppl: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, vo, fee } = props;
+  const { tx, account, vo, estFee } = props;
+  const fee = estFee ? estFee : tx['fee'];
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -22,22 +23,16 @@ const TxAppl: FunctionalComponent = (props: any) => {
     <p class="has-text-centered has-text-weight-bold">${'Application'}</p>
     <p class="has-text-centered" style="color:red;">
       <i
-        >Warning: Application transactions execute code and should be carefully
-        reviewed before signing</i
+        >Warning: Application transactions execute code and should be carefully reviewed before
+        signing</i
       >
     </p>
     <div class="tabs is-centered mb-2">
       <ul>
-        <li
-          class=${tab === 'overview' ? 'is-active' : ''}
-          onClick=${() => setTab('overview')}
-        >
+        <li class=${tab === 'overview' ? 'is-active' : ''} onClick=${() => setTab('overview')}>
           <a>Overview</a>
         </li>
-        <li
-          class=${tab === 'details' ? 'is-active' : ''}
-          onClick=${() => setTab('details')}
-        >
+        <li class=${tab === 'details' ? 'is-active' : ''} onClick=${() => setTab('details')}>
           <a>Details</a>
         </li>
       </ul>
@@ -132,12 +127,10 @@ const TxAppl: FunctionalComponent = (props: any) => {
         `}
         <div class="is-flex">
           <p
-            class="${vo && vo['fee']
-              ? (' ' + vo['fee']['className']).trimRight()
-              : ''}"
+            class="${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}"
             style="width: 40%;"
           >
-            ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'}
+            ${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}
           </p>
           <p style="width: 60%;"><span>${fee / 1e6} Algos</span></p>
         </div>

@@ -4,7 +4,8 @@ import { useState } from 'preact/hooks';
 
 const TxPay: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, vo, fee } = props;
+  const { tx, account, vo, estFee } = props;
+  const fee = estFee ? estFee : tx['fee'];
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -54,14 +55,8 @@ const TxPay: FunctionalComponent = (props: any) => {
             <p style="width: 30%;">Sending:</p>
             <p style="width: 70%;">${tx.amount / 1e6} Algos</p>
           </div>
-          <div
-            class="is-flex${vo && vo['fee']
-              ? (' ' + vo['fee']['className']).trimRight()
-              : ''}"
-          >
-            <p style="width: 30%;">
-              ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'}
-            </p>
+          <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
+            <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
             <p style="width: 70%;">${fee / 1e6} Algos</p>
           </div>
           <div class="is-flex">

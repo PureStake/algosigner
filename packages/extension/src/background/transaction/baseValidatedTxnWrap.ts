@@ -14,7 +14,7 @@ export class BaseValidatedTxnWrap {
   constructor(
     params: any,
     txnType: any,
-    validateExtraFields: boolean = true,
+    v1Validations: boolean = true,
     requiredParamsSet: Array<string> = undefined
   ) {
     this.transaction = new txnType();
@@ -67,14 +67,14 @@ export class BaseValidatedTxnWrap {
     }
 
     // Throwing error here so that extra fields can be combined.
-    if (validateExtraFields && extraFields.length > 0) {
+    if (v1Validations && extraFields.length > 0) {
       throw new InvalidTransactionStructure(
         `Creation of ${txnType.name} has extra or invalid fields: ${extraFields.toString()}.`
       );
     }
 
     // If we don't have a flatFee or it is falsy and we have a non-zero fee, create a warning.
-    if (!params['flatFee'] && params['fee'] && params['fee'] > 0) {
+    if (v1Validations && !params['flatFee'] && params['fee'] && params['fee'] > 0) {
       this.validityObject['flatFee'] = new ValidationResponse({
         status: ValidationStatus.Warning,
         info: 'The fee is subject to change without flatFee enabled.',

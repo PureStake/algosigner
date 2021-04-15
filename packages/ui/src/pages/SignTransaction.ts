@@ -122,6 +122,7 @@ const SignTransaction: FunctionalComponent = () => {
     }
   }
 
+  const transactionWrap = request && request.body && request.body.params;
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
@@ -135,7 +136,6 @@ const SignTransaction: FunctionalComponent = () => {
               ${request.favIconUrl &&
               html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
-                <!-- prettier-ignore -->
                 <span>${request.originTitle} wants to sign a transaction for </span>
                 <span style="color:${ledger.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
                   ${ledger}
@@ -144,70 +144,70 @@ const SignTransaction: FunctionalComponent = () => {
             </div>
           </section>
           <section id="txAlerts" class="section py-0">
-            ${request.body.params.validityObject &&
-            html`<${TxAlert} vo=${request.body.params.validityObject} />`}
+            ${transactionWrap.validityObject &&
+            html`<${TxAlert} vo=${transactionWrap.validityObject} />`}
           </section>
           <section class="section py-0">
-            ${request.body.params.transaction.type === 'pay' &&
+            ${transactionWrap.transaction.type === 'pay' &&
             html`
               <${TxPay}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                estFee=${transactionWrap.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
             `}
-            ${request.body.params.transaction.type === 'keyreg' &&
+            ${transactionWrap.transaction.type === 'keyreg' &&
             html`
               <${TxKeyreg}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                estFee=${transactionWrap.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
             `}
-            ${request.body.params.transaction.type === 'acfg' &&
+            ${transactionWrap.transaction.type === 'acfg' &&
             html`
               <${TxAcfg}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                dt=${request.body.params.txDerivedTypeText}
-                fee=${request.body.params.estimatedFee}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                dt=${transactionWrap.txDerivedTypeText}
+                estFee=${transactionWrap.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
             `}
-            ${request.body.params.transaction.type === 'axfer' &&
+            ${transactionWrap.transaction.type === 'axfer' &&
             html`
               <${TxAxfer}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                dt=${request.body.params.txDerivedTypeText}
-                fee=${request.body.params.estimatedFee}
-                da=${request.body.params.displayAmount}
-                un=${request.body.params.unitName}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                dt=${transactionWrap.txDerivedTypeText}
+                estFee=${transactionWrap.estimatedFee}
+                da=${transactionWrap.displayAmount}
+                un=${transactionWrap.unitName}
                 account=${account}
                 ledger=${ledger}
               />
             `}
-            ${request.body.params.transaction.type === 'afrz' &&
+            ${transactionWrap.transaction.type === 'afrz' &&
             html`
               <${TxAfrz}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                estFee=${transactionWrap.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />
             `}
-            ${request.body.params.transaction.type === 'appl' &&
+            ${transactionWrap.transaction.type === 'appl' &&
             html`
               <${TxAppl}
-                tx=${request.body.params.transaction}
-                vo=${request.body.params.validityObject}
-                fee=${request.body.params.estimatedFee}
+                tx=${transactionWrap.transaction}
+                vo=${transactionWrap.validityObject}
+                estFee=${transactionWrap.estimatedFee}
                 account=${account}
                 ledger=${ledger}
               />

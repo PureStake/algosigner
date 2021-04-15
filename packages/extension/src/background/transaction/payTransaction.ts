@@ -27,7 +27,7 @@ class PaymentTx implements IPaymentTx {
 ///
 export class PayTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Pay Algos';
-  constructor(params: IPaymentTx, validateExtraFields: boolean) {
-    super(params, PaymentTx, validateExtraFields);
+  constructor(params: IPaymentTx, v1Validations: boolean) {
+    super(params, PaymentTx, v1Validations);
   }
 }

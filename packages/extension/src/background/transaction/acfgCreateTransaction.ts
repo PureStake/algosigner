@@ -35,7 +35,7 @@ class AssetCreateTx implements IAssetCreateTx {
 ///
 export class AssetCreateTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Create Asset';
-  constructor(params: IAssetCreateTx, validateExtraFields: boolean) {
-    super(params, AssetCreateTx, validateExtraFields);
+  constructor(params: IAssetCreateTx, v1Validations: boolean) {
+    super(params, AssetCreateTx, v1Validations);
   }
 }

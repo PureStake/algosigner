@@ -27,7 +27,7 @@ class AssetFreezeTx implements IAssetFreezeTx {
 ///
 export class AssetFreezeTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Freeze Asset';
-  constructor(params: IAssetFreezeTx, validateExtraFields: boolean) {
-    super(params, AssetFreezeTx, validateExtraFields);
+  constructor(params: IAssetFreezeTx, v1Validations: boolean) {
+    super(params, AssetFreezeTx, v1Validations);
   }
 }

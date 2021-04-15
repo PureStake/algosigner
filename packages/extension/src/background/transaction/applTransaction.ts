@@ -37,7 +37,7 @@ export class ApplTx implements IApplTx {
 ///
 export class ApplTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Application';
-  constructor(params: IApplTx, validateExtraFields: boolean) {
-    super(params, ApplTx, validateExtraFields);
+  constructor(params: IApplTx, v1Validations: boolean) {
+    super(params, ApplTx, v1Validations);
   }
 }

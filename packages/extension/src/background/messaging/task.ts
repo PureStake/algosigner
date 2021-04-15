@@ -527,48 +527,27 @@ export class Task {
             return;
           } else {
             console.log('Last bracket');
-            // Get Ledger params
-            const conn = Settings.getBackendParams(
-              getLedgerFromGenesisId(transactionWraps[0].transaction.genesisID),
-              API.Algod
-            );
-            const sendPath = '/v2/transactions/params';
-            const fetchParams: any = {
-              headers: {
-                ...conn.apiKey,
+            console.log(d.body.params);
+            d.body.params.transactionWraps = transactionWraps;
+
+            extensionBrowser.windows.create(
+              {
+                url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
+                ...popupProperties,
               },
-              method: 'GET',
-            };
-
-            let url = conn.url;
-            if (conn.port.length > 0) url += ':' + conn.port;
-
-            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
-              transactionWraps.forEach((tx) => {
-                calculateEstimatedFee(tx, params);
-              });
-              d.body.params.transactionWraps = transactionWraps;
-              console.log(d.body.params);
-
-              extensionBrowser.windows.create(
-                {
-                  url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-                  ...popupProperties,
-                },
-                function (w) {
-                  if (w) {
-                    Task.requests[d.originTabID] = {
-                      window_id: w.id,
-                      message: d,
-                    };
-                    // Send message with tx info
-                    setTimeout(function () {
-                      extensionBrowser.runtime.sendMessage(d);
-                    }, 500);
-                  }
+              function (w) {
+                if (w) {
+                  Task.requests[d.originTabID] = {
+                    window_id: w.id,
+                    message: d,
+                  };
+                  // Send message with tx info
+                  setTimeout(function () {
+                    extensionBrowser.runtime.sendMessage(d);
+                  }, 500);
                 }
-              );
-            });
+              }
+            );
           }
         },
         // algod
