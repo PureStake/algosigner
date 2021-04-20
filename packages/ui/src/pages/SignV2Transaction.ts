@@ -108,13 +108,21 @@ const SignV2Transaction: FunctionalComponent = () => {
   const toggleApproval = () => {
     const newApprovals = approvals.slice();
     newApprovals[activeTx] = !newApprovals[activeTx];
+    if (!approvals[activeTx]) {
+      for (let i = 0; i < newApprovals.length; i++) {
+        if (!newApprovals[i]) {
+          setActiveTx(i);
+          break;
+        }
+      }
+    }
     setApprovals(newApprovals);
   };
 
   const getApproval = (index) => {
     return approvals[index]
       ? html`
-          <span class="icon is-small" style="color: #f16522;">
+          <span class="icon is-small" style="color: #32CD32;">
             <i class="far fa-check-circle" aria-hidden="true"></i>
           </span>
         `
@@ -171,82 +179,90 @@ const SignV2Transaction: FunctionalComponent = () => {
 
   const isSignDisabled = transactionWraps.length > 1 && !approvals.every(Boolean);
 
+  const approvedAmount = approvals.filter((a) => a).length;
+  const approvedPercent = (approvedAmount * 100) / transactionWraps.length;
+
   const getWrapUI = (wrap, account) => {
     return html`
-      <section id="txAlerts" class="section py-0">
-        ${wrap.validityObject && html`<${TxAlert} vo=${wrap.validityObject} />`}
-      </section>
-      <section class="section py-0">
-        ${wrap.transaction.type === 'pay' &&
-        html`
-          <${TxPay}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            estFee=${wrap.estimatedFee}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-        ${wrap.transaction.type === 'keyreg' &&
-        html`
-          <${TxKeyreg}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            estFee=${wrap.estimatedFee}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-        ${wrap.transaction.type === 'acfg' &&
-        html`
-          <${TxAcfg}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            dt=${wrap.txDerivedTypeText}
-            estFee=${wrap.estimatedFee}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-        ${wrap.transaction.type === 'axfer' &&
-        html`
-          <${TxAxfer}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            dt=${wrap.txDerivedTypeText}
-            estFee=${wrap.estimatedFee}
-            da=${wrap.displayAmount}
-            un=${wrap.unitName}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-        ${wrap.transaction.type === 'afrz' &&
-        html`
-          <${TxAfrz}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            estFee=${wrap.estimatedFee}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-        ${wrap.transaction.type === 'appl' &&
-        html`
-          <${TxAppl}
-            tx=${wrap.transaction}
-            vo=${wrap.validityObject}
-            estFee=${wrap.estimatedFee}
-            account=${account}
-            ledger=${ledger}
-          />
-        `}
-      </section>
+      <div class="mb-3" style="overflow:auto; height: 360px;">
+        <section id="txAlerts" class="section py-0">
+          ${wrap.validityObject && html`<${TxAlert} vo=${wrap.validityObject} />`}
+        </section>
+        <section class="section py-0">
+          ${wrap.transaction.type === 'pay' &&
+          html`
+            <${TxPay}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              estFee=${wrap.estimatedFee}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+          ${wrap.transaction.type === 'keyreg' &&
+          html`
+            <${TxKeyreg}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              estFee=${wrap.estimatedFee}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+          ${wrap.transaction.type === 'acfg' &&
+          html`
+            <${TxAcfg}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              dt=${wrap.txDerivedTypeText}
+              estFee=${wrap.estimatedFee}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+          ${wrap.transaction.type === 'axfer' &&
+          html`
+            <${TxAxfer}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              dt=${wrap.txDerivedTypeText}
+              estFee=${wrap.estimatedFee}
+              da=${wrap.displayAmount}
+              un=${wrap.unitName}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+          ${wrap.transaction.type === 'afrz' &&
+          html`
+            <${TxAfrz}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              estFee=${wrap.estimatedFee}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+          ${wrap.transaction.type === 'appl' &&
+          html`
+            <${TxAppl}
+              tx=${wrap.transaction}
+              vo=${wrap.validityObject}
+              estFee=${wrap.estimatedFee}
+              account=${account}
+              ledger=${ledger}
+            />
+          `}
+        </section>
+      </div>
     `;
   };
 
   return html`
-    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+    <div
+      class="main-view is-flex-direction-column is-justify-content-space-between"
+      style="${transactionWraps.length > 1 ? 'min-height: 630px;' : ''}"
+    >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
       </div>
@@ -269,16 +285,15 @@ const SignV2Transaction: FunctionalComponent = () => {
       accounts.length == transactionWraps.length &&
       transactionWraps.length > 1 &&
       html`
-        <div class="px-5 is-flex" style="justify-content: space-between; align-items: center;">
+        <div class="px-5 pb-3 is-flex is-justify-content-space-between">
           <div class="dropdown ${dropdown ? 'is-active' : ''}">
             <div class="dropdown-trigger">
               <button
-                class="button is-light"
+                class="button is-light ${loading ? 'is-loading' : ''}"
                 onClick=${flipDropdown}
                 aria-haspopup="true"
                 aria-controls="dropdown-menu"
               >
-                ${getApproval(activeTx)}
                 <span>Transaction ${activeTx + 1} of ${transactionWraps.length}</span>
                 <span class="icon is-small">
                   <i class="fas fa-angle-down" aria-hidden="true"></i>
@@ -291,58 +306,65 @@ const SignV2Transaction: FunctionalComponent = () => {
                 ${transactionWraps.map(
                   (_, index) => html`
                     <a
-                      class="dropdown-item"
+                      class="dropdown-item pr-4 is-flex is-justify-content-space-between"
                       onClick=${() => {
                         setActiveTx(index);
                         flipDropdown();
                       }}
                     >
+                      <span>Transaction ${index + 1}</span>
                       ${getApproval(index)}
-                      <span class="ml-1">Transaction ${index + 1}</span>
                     </a>
                   `
                 )}
               </div>
             </div>
           </div>
-          <button class="button is-primary" onClick="${toggleApproval}">
+          <button
+            class="button is-primary ${loading ? 'is-loading' : ''}"
+            onClick="${toggleApproval}"
+          >
             <span>Approve</span>
             ${getApproval(activeTx)}
           </button>
         </div>
-        <div style="flex: 1; overflow:auto; max-height: 300px;">
-          ${getWrapUI(transactionWraps[activeTx], accounts[activeTx].name)}
+        ${getWrapUI(transactionWraps[activeTx], accounts[activeTx].name)}
+        <div class="is-flex is-flex-direction-column has-text-centered mb-3 mx-5">
+          <span>${approvedAmount} out of ${transactionWraps.length} transactions approved.</span>
+          <progress
+            class="progress ${approvedPercent < 100 ? 'is-primary' : 'is-success'}"
+            value="${approvedPercent}"
+            max="100"
+          />
         </div>
       `}
       ${request.body &&
       accounts.length == transactionWraps.length &&
       transactionWraps.length === 1 &&
+      html` ${getWrapUI(transactionWraps[0], accounts[0].name)} `}
+      ${request.body &&
       html`
-        <div style="flex: 1; overflow:auto; max-height: 400px;">
-          ${getWrapUI(transactionWraps[0], accounts[0].name)}
+        <div class="mx-5 mb-3" style="display: flex;">
+          <button id="rejectTx" class="button is-danger is-outlined px-6" onClick=${deny}>
+            Reject
+          </button>
+          <button
+            id="approveTx"
+            class="button is-primary ml-3"
+            style="flex: 1;"
+            onClick=${() => {
+              setAskAuth(true);
+            }}
+            disabled=${isSignDisabled}
+          >
+            ${transactionWraps.length > 1
+              ? isSignDisabled
+                ? 'Approve transactions first!'
+                : 'Sign all transactions!'
+              : 'Sign!'}
+          </button>
         </div>
       `}
-
-      <div class="mx-5 mb-3" style="display: flex;">
-        <button id="rejectTx" class="button is-danger is-outlined px-6" onClick=${deny}>
-          Reject
-        </button>
-        <button
-          id="approveTx"
-          class="button is-primary ml-3"
-          style="flex: 1;"
-          onClick=${() => {
-            setAskAuth(true);
-          }}
-          disabled=${isSignDisabled}
-        >
-          ${transactionWraps.length > 1
-            ? isSignDisabled
-              ? 'Approve transactions first!'
-              : 'Sign all transactions!'
-            : 'Sign!'}
-        </button>
-      </div>
     </div>
 
     ${askAuth &&

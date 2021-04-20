@@ -38,7 +38,7 @@ const Root = (props) => {
 const App = () => {
   return html`
       <${StoreProvider}>
-        <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
+        <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
             <${SignTransaction} path="/sign-transaction" />
             <${SignV2Transaction} path="/sign-v2-transaction" />
