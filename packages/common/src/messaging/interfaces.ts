@@ -1,7 +1,6 @@
-import {
-    JsonRpcResponse,JSONRPC_VERSION, JsonRpcMethod, JsonPayload, JsonRpcBody
-} from './types';
+/* eslint-disable no-unused-vars */
+import { JsonRpcResponse, JsonPayload } from './types';
 
 export interface IJsonRpc {
-    request(p: JsonPayload): Promise<JsonRpcResponse>;
+  request(p: JsonPayload): Promise<JsonRpcResponse>;
 }
