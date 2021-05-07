@@ -45,6 +45,8 @@ Note, there is not yet a test feature for networks, but one is planned.
 
 For an instance of Algod that uses the X-Algo-API-Token, just enter it as text into the field.
 
+![Network](network_config_images/network_headers.png)
+
 To use a custom API key value in the header of each request, for example for the PureStake API service, construct a JSON object with key value pairs to be added to the request, broke out by Algod or Indexer, for example:
 
 ```JSON
@@ -61,3 +63,5 @@ To use a custom API key value in the header of each request, for example for the
 ```
 
 Note, JSON object will need to be flattended to a single line.
+
+![Network](network_config_images/network_headers_json.png)
