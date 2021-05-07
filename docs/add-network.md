@@ -10,7 +10,8 @@ To add a new network you will need:
 
 - Algod URL
 - Indexer URL
-- Network Id, which must be unique for your networks
+- Network Id, which must be unique for your networks. This is listed as the `genesis-id` from the Algod API call "GET /versions" or from the the CLI command "goal node status"
+
 - API Key, potenitally optional depending on API hosting
 
 ## Setup
@@ -19,24 +20,27 @@ To add a new network you will need:
 
 ![Network](network_config_images/network_gear_home.png)
 
-- Select `Network Configuration`
+- Select Network Configuration
+
+![Network](network_config_images/settings_open.png)
+
+- Select New Network
 
 ![Network](network_config_images/network_config_open.png)
 
-- Select `New Network`
+### Enter Settings
 
 ![Network](network_config_images/network_add_details.png)
 
 - Give the Network a name to identify it
-- Add the unique Network Id
+- Add the unique Network Id (genesis-id)
 - Add the URLs for Algod and Indexer, including port if necessary
 - For the Network headers there are choices, depending on your API provider, see below for configuration details
 - Save the new Network
-- Open it and add accounts
 
-### Network Header
+### Network Headers
 
-For an instance of Algod that uses the X-Algo-API-Token, just enter it as string
+For an instance of Algod that uses the X-Algo-API-Token, just enter it as text into the field.
 
 To use a custom API key value in the header of each request, for example for the PureStake API service, construct a JSON object with key value pairs to be added to the request, broke out by Algod or Indexer, for example:
 
