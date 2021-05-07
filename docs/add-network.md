@@ -1,0 +1,56 @@
+# Adding a New Network to AlgoSigner
+
+AlgoSigner has default, built in access, to the Algorand MainNet and TestNet. Settings for these networks are locked, although developers may modify the source code themselves and build a custom copy.
+
+Users may add additional networks, for example the Algorand BetaNet or a local network created by the Algorand Sandbox project (), to AlgoSigner through the extension settings.
+
+## Requirements
+
+To add a new network you will need:
+
+- Algod URL
+- Indexer URL
+- Network Id, which must be unique for your networks
+- API Key, potenitally optional depending on API hosting
+
+## Setup
+
+- Open the extension and select the gear icon in the top right
+
+![Network](network_config_images/network_gear_home.png)
+
+- Select `Network Configuration`
+
+![Network](network_config_images/network_config_open.png)
+
+- Select `New Network`
+
+![Network](network_config_images/network_add_details.png)
+
+- Give the Network a name to identify it
+- Add the unique Network Id
+- Add the URLs for Algod and Indexer, including port if necessary
+- For the Network headers there are choices, depending on your API provider, see below for configuration details
+- Save the new Network
+- Open it and add accounts
+
+### Network Header
+
+For an instance of Algod that uses the X-Algo-API-Token, just enter it as string
+
+To use a custom API key value in the header of each request, for example for the PureStake API service, construct a JSON object with key value pairs to be added to the request, broke out by Algod or Indexer, for example:
+
+```JSON
+{
+	"Algod":
+	{
+		"x-api-key": "xxxxxxxxx"
+	},
+	"Indexer":
+	{
+		"x-api-key": "xxxxxxxxx"
+	}
+ }
+```
+
+Note, JSON object will need to be flattended to a single line.
