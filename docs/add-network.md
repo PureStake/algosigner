@@ -1,8 +1,8 @@
 # Adding a New Network to AlgoSigner
 
-AlgoSigner has default, built in access, to the Algorand MainNet and TestNet. Settings for these networks are locked, although developers may modify the source code themselves and build a custom copy.
+AlgoSigner has built in access to the Algorand MainNet and TestNet. Settings for these networks are locked in the installed extension, although developers may modify the source code themselves and build a version with alternate settings.
 
-Users may add additional networks, for example the Algorand BetaNet or a local network created by the Algorand Sandbox project (), to AlgoSigner through the extension settings.
+Users may add additional networks to AlgoSigner through the extension settings. For example adding the Algorand BetaNet or a local network created by the [Algorand Sandbox](https://github.com/algorand/sandbox).
 
 ## Requirements
 
