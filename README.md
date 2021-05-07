@@ -20,7 +20,7 @@ Minor release to address some bugs and usability issues:
 
 ## 1.4.0 Update
 
-- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.).
+- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.). [More information on adding a new Network](docs/add-network.md)
 - Navigation menu improvements
 - Logout!
 

@@ -37,6 +37,9 @@ To add a new network you will need:
 - Add the URLs for Algod and Indexer, including port if necessary
 - For the Network headers there are choices, depending on your API provider, see below for configuration details
 - Save the new Network
+- Add accounts to your new Network
+
+Note, there is not yet a test feature for networks, but one is planned.
 
 ### Network Headers
 
