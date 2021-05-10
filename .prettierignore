@@ -4,6 +4,5 @@
 .DS_Store
 **/coverage
 packages/crypto
-packages/common
 **/tsconfig.json
 .github
