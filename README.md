@@ -10,6 +10,12 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
+## 1.4.2 Update
+
+Minor release:
+
+- Limit timeouts with accounts that have deleted assets.
+
 ## 1.4.1 Update
 
 Minor release to address some bugs and usability issues:
