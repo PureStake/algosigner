@@ -81,6 +81,10 @@ $modal-close-top: 8px;
   height: 100vh;
 }
 
+.progress::-webkit-progress-value {
+  transition: width 0.5s ease;
+}
+
 a:hover {
   color: $orange-dark;
 }

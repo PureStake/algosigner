@@ -1,15 +1,22 @@
 import { Task } from './fn/task';
 import { Router } from './fn/router';
+import { Wallet } from './fn/wallet';
+import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 
 class Wrapper {
   private static instance: Wrapper;
   private task: Task = new Task();
   private router: Router = new Router();
 
+  public wallet: Wallet = new Wallet();
+  public encoding: object = {
+    msgpackToBase64: byteArrayToBase64,
+    base64ToMsgpack: base64ToByteArray,
+  };
+
   public connect: Function = this.task.connect;
   public sign: Function = this.task.sign;
   public signMultisig: Function = this.task.signMultisig;
-  public signV2: Function = this.task.signV2;
   public send: Function = this.task.send;
   public accounts: Function = this.task.accounts;
   public algod: Function = this.task.algod;

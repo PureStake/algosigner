@@ -25,3 +25,17 @@ export type MultisigTransaction = {
   readonly msig: any;
   readonly txn: Transaction;
 };
+
+export type WalletMultisigMetadata = {
+  readonly version: number;
+  readonly threshold: number;
+  readonly addrs: Array<string>;
+};
+
+export type WalletTransaction = {
+  readonly tx: string;
+  readonly signers?: Array<string>;
+  readonly message?: string;
+  readonly msig?: WalletMultisigMetadata;
+  readonly authAddr?: string;
+};

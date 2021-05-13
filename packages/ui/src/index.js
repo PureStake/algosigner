@@ -20,7 +20,7 @@ import Account from 'pages/Account';
 import SendAlgos from 'pages/SendAlgos';
 import AddAsset from 'pages/AddAsset';
 import SignTransaction from 'pages/SignTransaction';
-import SignV2Transaction from 'pages/SignV2Transaction';
+import SignWalletTransaction from 'pages/SignWalletTransaction';
 import SignMultisigTransaction from 'pages/SignMultisigTransaction';
 
 import { StoreProvider } from 'services/StoreContext';
@@ -41,7 +41,7 @@ const App = () => {
         <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
             <${SignTransaction} path="/sign-transaction" />
-            <${SignV2Transaction} path="/sign-v2-transaction" />
+            <${SignWalletTransaction} path="/sign-v2-transaction" />
             <${SignMultisigTransaction} path="/sign-multisig-transaction" />
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />

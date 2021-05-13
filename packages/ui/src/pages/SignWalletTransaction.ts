@@ -29,7 +29,7 @@ function deny() {
 
 let responseOriginTabID = 0;
 
-const SignV2Transaction: FunctionalComponent = () => {
+const SignWalletTransaction: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -50,7 +50,7 @@ const SignV2Transaction: FunctionalComponent = () => {
       // Check if the message is coming from the background script
       if (
         isFromExtension(sender.origin) &&
-        request.body.method == JsonRpcMethod.SignV2Transaction
+        request.body.method == JsonRpcMethod.SignWalletTransaction
       ) {
         setRequest(request);
         responseOriginTabID = request.originTabID;
@@ -71,7 +71,7 @@ const SignV2Transaction: FunctionalComponent = () => {
     setAuthError('');
     window.removeEventListener('beforeunload', deny);
 
-    sendMessage(JsonRpcMethod.SignV2Allow, params, function (response) {
+    sendMessage(JsonRpcMethod.SignAllowWalletTx, params, function (response) {
       if ('error' in response) {
         window.addEventListener('beforeunload', deny);
         setLoading(false);
@@ -384,4 +384,4 @@ const SignV2Transaction: FunctionalComponent = () => {
   `;
 };
 
-export default SignV2Transaction;
+export default SignWalletTransaction;

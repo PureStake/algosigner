@@ -1,7 +1,7 @@
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
 
-import { RequestErrors } from '@algosigner/common/types';
+import { RequestErrors, WalletTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { API, Ledger } from './types';
 import {
@@ -417,13 +417,13 @@ export class Task {
             });
           }
         },
-        [JsonRpcMethod.SignV2Transaction]: (d: any, resolve: Function, reject: Function) => {
+        [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
           let transactionArray;
           let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
           const validationErrors: Array<Error> = [];
 
           try {
-            transactionArray = d.body.params.transactions;
+            const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
             /**
              * In order to process the msgpack and make it compatible with our validator, we:
              * 0) Decode from base64 to Uint8Array msgpack
@@ -431,9 +431,11 @@ export class Task {
              * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
              * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
              */
-            transactionArray = transactionArray.map((tx) =>
+            transactionArray = walletTransactions.map((walletTx) =>
               removeEmptyFields(
-                algosdk.decodeUnsignedTransaction(base64ToByteArray(tx))._getDictForDisplay()
+                algosdk
+                  .decodeUnsignedTransaction(base64ToByteArray(walletTx.tx))
+                  ._getDictForDisplay()
               )
             );
             console.log(transactionArray);
@@ -982,12 +984,13 @@ export class Task {
           return true;
         },
         // sign-v2-allow
-        [JsonRpcMethod.SignV2Allow]: (request: any, sendResponse: Function) => {
+        [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID, accounts } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
-          const transactionObjs = message.body.params.transactions.map((tx) =>
-            algosdk.decodeUnsignedTransaction(base64ToByteArray(tx))
+          const walletTransactions: Array<WalletTransaction> = message.body.params.transactions;
+          const transactionObjs = walletTransactions.map((tx) =>
+            algosdk.decodeUnsignedTransaction(base64ToByteArray(tx.tx))
           );
 
           const signedTxs = [];
