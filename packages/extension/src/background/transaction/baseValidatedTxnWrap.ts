@@ -18,8 +18,8 @@ export class BaseValidatedTxnWrap {
     requiredParamsSet: Array<string> = undefined
   ) {
     this.transaction = new txnType();
-    var missingFields = [];
-    var extraFields = [];
+    const missingFields = [];
+    const extraFields = [];
 
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
@@ -31,7 +31,7 @@ export class BaseValidatedTxnWrap {
 
     // Check required values in the case where one of a set is required.
     if (requiredParamsSet && requiredParamsSet.length > 0) {
-      var foundValue = false;
+      let foundValue = false;
       requiredParamsSet.forEach((key) => {
         if (params[key] !== undefined && params[key] !== null) {
           foundValue = true;
@@ -67,7 +67,7 @@ export class BaseValidatedTxnWrap {
     }
 
     // Throwing error here so that extra fields can be combined.
-    if (v1Validations && extraFields.length > 0) {
+    if (extraFields.length > 0) {
       throw new InvalidTransactionStructure(
         `Creation of ${txnType.name} has extra or invalid fields: ${extraFields.toString()}.`
       );

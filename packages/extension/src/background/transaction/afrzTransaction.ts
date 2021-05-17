@@ -20,6 +20,8 @@ class AssetFreezeTx implements IAssetFreezeTx {
   lease?: any = null;
   reKeyTo?: any = null;
   flatFee?: any = null;
+  name?: string = null;
+  tag?: string = null;
 }
 
 ///

@@ -18,6 +18,8 @@ class AssetConfigTx implements IAssetConfigTx {
   lease?: any = null;
   reKeyTo?: any = null;
   flatFee?: any = null;
+  name?: string = null;
+  tag?: string = null;
 
   // Modifications must include one of these
   assetTotal?: number = null;

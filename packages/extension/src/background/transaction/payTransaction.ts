@@ -20,6 +20,8 @@ class PaymentTx implements IPaymentTx {
   group?: any = null;
   lease?: any = null;
   flatFee?: any = null;
+  name?: string = null;
+  tag?: string = null;
 }
 
 ///

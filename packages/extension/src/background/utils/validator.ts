@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-unused-vars */
 const algosdk = require('algosdk');
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { Settings } from '../config';
+
+const STRING_MAX_LENGTH = 1000;
 
 ///
 // Validation Status
 ///
 export enum ValidationStatus {
+  /* eslint-disable no-unused-vars */
   Valid = 0, // Field is valid or not one of the validated fields
   Invalid = 1, // Field value is invalid and should not be used
   Warning = 2, // Field is out of normal parameters and should be inspected closely
@@ -48,14 +50,6 @@ export function Validate(field: any, value: any): ValidationResponse {
   switch (field) {
     // Validate the addresses are accurate
     case 'to':
-      if (!algosdk.isValidAddress(value)) {
-        return new ValidationResponse({
-          status: ValidationStatus.Invalid,
-          info: 'Address does not adhere to a valid structure.',
-        });
-      } else {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
-      }
     case 'from':
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
@@ -65,6 +59,7 @@ export function Validate(field: any, value: any): ValidationResponse {
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       }
+    // Safety checks for numbers
     case 'amount':
     case 'assetIndex':
     case 'firstRound':
@@ -79,6 +74,22 @@ export function Validate(field: any, value: any): ValidationResponse {
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
+      }
+    // Safety checks for strings
+    case 'note':
+    case 'name':
+    case 'tag':
+      if (
+        value &&
+        (typeof value === 'string' || value instanceof String) &&
+        value.length < STRING_MAX_LENGTH
+      ) {
+        return new ValidationResponse({ status: ValidationStatus.Valid });
+      } else {
+        return new ValidationResponse({
+          status: ValidationStatus.Invalid,
+          info: 'Value exceeds permitted string length.',
+        });
       }
 
     // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
