@@ -18,8 +18,8 @@ export class ApplTx implements IApplTx {
   reKeyTo?: any = null;
   flatFee?: any = null;
 
-  appIndex?: any = null;
-  appOnComplete?: any = null;
+  appIndex: any = null;
+  appOnComplete: any = null;
   appAccounts?: any = null;
   appApprovalProgram?: any = null;
   appArgs?: any = null;

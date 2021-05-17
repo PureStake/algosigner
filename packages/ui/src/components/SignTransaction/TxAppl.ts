@@ -41,20 +41,14 @@ const TxAppl: FunctionalComponent = (props: any) => {
     ${tab === 'overview' &&
     html`
       <div>
-        ${tx.appIndex &&
-        html`
-          <div class="is-flex">
-            <p style="width: 40%;">Application Index:</p>
-            <p style="width: 60%;">${tx.appIndex}</p>
-          </div>
-        `}
-        ${tx.appOnComplete &&
-        html`
-          <div class="is-flex">
-            <p style="width: 40%;">On Complete:</p>
-            <p style="width: 60%;">${tx.appOnComplete}</p>
-          </div>
-        `}
+        <div class="is-flex">
+          <p style="width: 40%;">Application Index:</p>
+          <p style="width: 60%;">${tx.appIndex}</p>
+        </div>
+        <div class="is-flex">
+          <p style="width: 40%;">On Complete:</p>
+          <p style="width: 60%;">${tx.appOnComplete}</p>
+        </div>
         ${tx.appAccounts &&
         html`
           <div class="is-flex">
@@ -70,10 +64,11 @@ const TxAppl: FunctionalComponent = (props: any) => {
           </div>
         `}
         ${tx.appArgs &&
+        tx.appArgs.length &&
         html`
           <div class="is-flex">
             <p style="width: 40%;">Args:</p>
-            <p style="width: 60%;">${tx.appArgs}</p>
+            <p style="width: 60%;">${tx.appArgs.join(', ')}</p>
           </div>
         `}
         ${tx.appClearProgram &&
