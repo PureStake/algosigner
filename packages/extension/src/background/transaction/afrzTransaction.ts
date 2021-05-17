@@ -16,7 +16,7 @@ class AssetFreezeTx implements IAssetFreezeTx {
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
-  group?: any = null;
+  group?: string = null;
   lease?: any = null;
   reKeyTo?: any = null;
   flatFee?: any = null;

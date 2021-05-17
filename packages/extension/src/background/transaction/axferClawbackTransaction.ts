@@ -17,7 +17,7 @@ class AssetClawbackTx implements IAssetClawbackTx {
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
-  group?: any = null;
+  group?: string = null;
   lease?: any = null;
   reKeyTo?: any = null;
   assetRevocationTarget: string = undefined;

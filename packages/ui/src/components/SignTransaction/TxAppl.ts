@@ -41,6 +41,13 @@ const TxAppl: FunctionalComponent = (props: any) => {
     ${tab === 'overview' &&
     html`
       <div>
+        ${tx.group &&
+        html`
+          <div class="is-flex">
+            <p style="width: 40%;">Group ID:</p>
+            <p style="width: 60%;" class="truncate-text">${tx.group}</p>
+          </div>
+        `}
         <div class="is-flex">
           <p style="width: 40%;">Application Index:</p>
           <p style="width: 60%;">${tx.appIndex}</p>

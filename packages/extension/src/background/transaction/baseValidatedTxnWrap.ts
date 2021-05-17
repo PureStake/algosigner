@@ -58,7 +58,10 @@ export class BaseValidatedTxnWrap {
       } else {
         try {
           this.transaction[prop] = params[prop];
-          this.validityObject[prop] = Validate(prop, params[prop]) as ValidationResponse;
+          if (prop === 'group' && !v1Validations) {
+            this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
+          }
+          this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {
           logging.log(e);
           throw new Error(`Transaction has encountered an unknown error while processing.`);

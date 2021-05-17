@@ -24,7 +24,7 @@ class AssetCreateTx implements IAssetCreateTx {
   assetReserve?: string = null;
   assetFreeze?: string = null;
   assetClawback?: string = null;
-  group?: any = null;
+  group?: string = null;
   lease?: any = null;
   reKeyTo?: any = null;
   flatFee?: any = null;

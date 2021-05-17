@@ -79,6 +79,7 @@ export function Validate(field: any, value: any): ValidationResponse {
     case 'note':
     case 'name':
     case 'tag':
+    case 'group':
       if (
         value &&
         (typeof value === 'string' || value instanceof String) &&

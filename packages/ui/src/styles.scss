@@ -137,6 +137,12 @@ a:hover {
   border-left-color: #94b1c3;
 }
 
+.truncate-text {
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  max-width: 25ch;
+}
+
 #approveTx:disabled {
   color: $red;
 }

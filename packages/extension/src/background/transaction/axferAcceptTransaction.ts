@@ -16,7 +16,7 @@ class AssetAcceptTx implements IAssetAcceptTx {
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
-  group?: any = null;
+  group?: string = null;
   lease?: any = null;
   reKeyTo?: any = null;
   amount?: number = null;

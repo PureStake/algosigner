@@ -51,6 +51,13 @@ const TxPay: FunctionalComponent = (props: any) => {
       tab === 'overview' &&
       html`
         <div>
+          ${tx.group &&
+          html`
+            <div class="is-flex">
+              <p style="width: 30%;">Group ID:</p>
+              <p style="width: 70%;" class="truncate-text">${tx.group}</p>
+            </div>
+          `}
           <div class="is-flex">
             <p style="width: 30%;">Sending:</p>
             <p style="width: 70%;">${tx.amount / 1e6} Algos</p>
