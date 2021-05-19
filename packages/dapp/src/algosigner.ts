@@ -1,6 +1,5 @@
 import { Task } from './fn/task';
 import { Router } from './fn/router';
-import { Wallet } from './fn/wallet';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 
 class Wrapper {
@@ -8,7 +7,6 @@ class Wrapper {
   private task: Task = new Task();
   private router: Router = new Router();
 
-  public wallet: Wallet = new Wallet();
   public encoding: object = {
     msgpackToBase64: byteArrayToBase64,
     base64ToMsgpack: base64ToByteArray,
@@ -22,6 +20,7 @@ class Wrapper {
   public algod: Function = this.task.algod;
   public indexer: Function = this.task.indexer;
   public subscribe: Function = this.task.subscribe;
+  public signTxn: Function = this.task.signTxn;
 
   public static getInstance(): Wrapper {
     if (!Wrapper.instance) {

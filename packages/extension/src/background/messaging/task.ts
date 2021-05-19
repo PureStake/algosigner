@@ -434,7 +434,7 @@ export class Task {
             transactionArray = walletTransactions.map((walletTx) =>
               removeEmptyFields(
                 algosdk
-                  .decodeUnsignedTransaction(base64ToByteArray(walletTx.tx))
+                  .decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
                   ._getDictForDisplay()
               )
             );
@@ -989,8 +989,8 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
           const walletTransactions: Array<WalletTransaction> = message.body.params.transactions;
-          const transactionObjs = walletTransactions.map((tx) =>
-            algosdk.decodeUnsignedTransaction(base64ToByteArray(tx.tx))
+          const transactionObjs = walletTransactions.map((walletTx) =>
+            algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
           );
 
           const signedTxs = [];

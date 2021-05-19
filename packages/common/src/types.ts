@@ -33,7 +33,7 @@ export type WalletMultisigMetadata = {
 };
 
 export type WalletTransaction = {
-  readonly tx: string;
+  readonly txn: string;
   readonly signers?: Array<string>;
   readonly message?: string;
   readonly msig?: WalletMultisigMetadata;
