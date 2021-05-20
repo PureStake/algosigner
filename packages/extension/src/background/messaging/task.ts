@@ -18,7 +18,12 @@ import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
-import { NoDifferentLedgers } from '../../errors/v2Sign';
+import {
+  NoDifferentLedgers,
+  MultipleTxsRequireGroup,
+  NonMatchingGroup,
+  IncompleteOrDisorderedGroup,
+} from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 import { removeEmptyFields } from '@algosigner/common/utils';
@@ -417,8 +422,10 @@ export class Task {
             });
           }
         },
+        // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
-          let transactionArray;
+          let rawTxArray;
+          let processedTxArray;
           let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
           const validationErrors: Array<Error> = [];
 
@@ -431,14 +438,14 @@ export class Task {
              * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
              * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
              */
-            transactionArray = walletTransactions.map((walletTx) =>
-              removeEmptyFields(
-                algosdk
-                  .decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
-                  ._getDictForDisplay()
-              )
+            rawTxArray = walletTransactions.map((walletTx) =>
+              algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
             );
-            console.log(transactionArray);
+            processedTxArray = rawTxArray.map((rawTx) =>
+              removeEmptyFields(rawTx._getDictForDisplay())
+            );
+            console.log(rawTxArray);
+            console.log(processedTxArray);
           } catch (e) {
             logging.log(`Unable to parse transaction object(s). ${e}`);
             d.error = e;
@@ -446,15 +453,7 @@ export class Task {
             return;
           }
 
-          if (!transactionArray.every((tx) => transactionArray[0].genesisID === tx.genesisID)) {
-            const e = new NoDifferentLedgers();
-            logging.log(`Validation failed. ${e}`);
-            d.error = e;
-            reject(d);
-            return;
-          }
-
-          transactionWraps = transactionArray.map((tx, index) => {
+          transactionWraps = processedTxArray.map((tx, index) => {
             try {
               console.log(`Building wrap ${index} with:`);
               console.log(tx);
@@ -466,11 +465,63 @@ export class Task {
               validationErrors[index] = e;
             }
           });
+
           console.log('Wraps and errors');
           console.log(transactionWraps);
           console.log(validationErrors);
-          if (validationErrors.length || !transactionWraps || !transactionWraps.length) {
-            console.log('Errors or no wraps');
+
+          if (transactionWraps.length > 1) {
+            if (
+              !transactionWraps.every(
+                (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+              )
+            ) {
+              const e = new NoDifferentLedgers();
+              logging.log(`Validation failed. ${e}`);
+              d.error = e;
+              reject(d);
+              return;
+            }
+
+            const groupId = transactionWraps[0].transaction.group;
+            if (!groupId) {
+              const e = new MultipleTxsRequireGroup();
+              logging.log(`Validation failed. ${e}`);
+              d.error = e;
+              reject(d);
+              return;
+            }
+            if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
+              const e = new NonMatchingGroup();
+              logging.log(`Validation failed. ${e}`);
+              d.error = e;
+              reject(d);
+              return;
+            }
+
+            const recreatedGroupTxs = algosdk.assignGroupID(
+              rawTxArray.slice().map((tx) => {
+                delete tx.group;
+                return tx;
+              })
+            );
+            const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+            if (groupId !== recalculatedGroupID) {
+              const e = new IncompleteOrDisorderedGroup();
+              logging.log(`Validation failed. ${e}`);
+              d.error = e;
+              reject(d);
+              return;
+            }
+          }
+
+          if (
+            validationErrors.length ||
+            !transactionWraps ||
+            !transactionWraps.length ||
+            transactionWraps.length < rawTxArray.length
+          ) {
+            console.log('Errors or missing wraps');
             // We don't have transaction wraps or we have an building error, reject the transaction.
             let errorMessage = 'There was a problem validating the transaction(s): ';
             let validationMessages = '';
@@ -983,7 +1034,7 @@ export class Task {
           }
           return true;
         },
-        // sign-v2-allow
+        // sign-allow-wallet-tx
         [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID, accounts } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
