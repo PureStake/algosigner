@@ -10,20 +10,6 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.4.1 Update
-
-Minor release to address some bugs and usability issues:
-
-- Custom network headers creation simplified to allow use of either the Algorand standard header key or custom headers
-- Simultaneous AlgoSigner RPC calls through `algod` and `indexer` fix to prevent response mismatches
-- Logout bug fix: prevents error message on each logout
-
-## 1.4.0 Update
-
-- Beta support for adding custom networks within AlgoSigner (development networks, BetaNet, etc.).
-- Navigation menu improvements
-- Logout!
-
 ### Custom Networks
 
 - Network information can now be accessed by selecting "Network Configuration" in the options menu.
@@ -40,19 +26,6 @@ Minor release to address some bugs and usability issues:
 Upcoming feature releases will focus on adding Ledger device support and a more streamlined approach to creating and interacting with transactions in AlgoSigner.
 
 ## Previously delivered
-
-### Multisig Transactions
-
-- Multisig transactions can be signed individually through AlgoSigner.
-  - Using the associated msig for the transaction an available matching unsigned address will be selected if possible to sign the txn component.
-  - The resulting sign will return the a msig with only this signature in the blob and will need to be merged with other signatures before sending to the network.
-- An example of this can be seen in the [existing sample dApp multisig test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
-
-### Atomic Transactions
-
-- Grouped transactions intended for atomic transaction functionality need to be grouped outside of AlgoSigner, but can be signed individually.
-- The grouped transactions need to have their binary components concatenated to be accepted in the AlgoSigner send method.
-- An example of this can be seen in the [existing sample dApp group test](https://purestake.github.io/algosigner-dapp-example/tx-test/signTesting.html).
 
 ## Decentralized Applications
 
