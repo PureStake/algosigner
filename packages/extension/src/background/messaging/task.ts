@@ -424,13 +424,13 @@ export class Task {
         },
         // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
+          const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
           let rawTxArray;
           let processedTxArray;
           let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
           const validationErrors: Array<Error> = [];
 
           try {
-            const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
             /**
              * In order to process the msgpack and make it compatible with our validator, we:
              * 0) Decode from base64 to Uint8Array msgpack
@@ -459,7 +459,15 @@ export class Task {
               console.log(tx);
               const wrap = getValidatedTxnWrap(tx, tx['type'], false);
               console.log(wrap);
-              InternalMethods.checkValidAccount(wrap.transaction);
+              console.log(walletTransactions[index]);
+
+              const msigData = walletTransactions[index].msig;
+              if (msigData) {
+                wrap.msigData = msigData;
+              } else {
+                InternalMethods.checkValidAccount(wrap.transaction);
+              }
+
               return wrap;
             } catch (e) {
               validationErrors[index] = e;
@@ -470,56 +478,11 @@ export class Task {
           console.log(transactionWraps);
           console.log(validationErrors);
 
-          if (transactionWraps.length > 1) {
-            if (
-              !transactionWraps.every(
-                (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
-              )
-            ) {
-              const e = new NoDifferentLedgers();
-              logging.log(`Validation failed. ${e}`);
-              d.error = e;
-              reject(d);
-              return;
-            }
-
-            const groupId = transactionWraps[0].transaction.group;
-            if (!groupId) {
-              const e = new MultipleTxsRequireGroup();
-              logging.log(`Validation failed. ${e}`);
-              d.error = e;
-              reject(d);
-              return;
-            }
-            if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-              const e = new NonMatchingGroup();
-              logging.log(`Validation failed. ${e}`);
-              d.error = e;
-              reject(d);
-              return;
-            }
-
-            const recreatedGroupTxs = algosdk.assignGroupID(
-              rawTxArray.slice().map((tx) => {
-                delete tx.group;
-                return tx;
-              })
-            );
-            const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-            if (groupId !== recalculatedGroupID) {
-              const e = new IncompleteOrDisorderedGroup();
-              logging.log(`Validation failed. ${e}`);
-              d.error = e;
-              reject(d);
-              return;
-            }
-          }
-
           if (
             validationErrors.length ||
             !transactionWraps ||
             !transactionWraps.length ||
-            transactionWraps.length < rawTxArray.length
+            transactionWraps.some((w) => w === undefined)
           ) {
             console.log('Errors or missing wraps');
             // We don't have transaction wraps or we have an building error, reject the transaction.
@@ -580,6 +543,53 @@ export class Task {
             return;
           } else {
             console.log('Last bracket');
+            // Group validations
+            if (transactionWraps.length > 1) {
+              if (
+                !transactionWraps.every(
+                  (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+                )
+              ) {
+                const e = new NoDifferentLedgers();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              const groupId = transactionWraps[0].transaction.group;
+              if (!groupId) {
+                const e = new MultipleTxsRequireGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
+                const e = new NonMatchingGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              const recreatedGroupTxs = algosdk.assignGroupID(
+                rawTxArray.slice().map((tx) => {
+                  delete tx.group;
+                  return tx;
+                })
+              );
+              const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+              if (groupId !== recalculatedGroupID) {
+                const e = new IncompleteOrDisorderedGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+            }
+
             console.log(d.body.params);
             d.body.params.transactionWraps = transactionWraps;
 
@@ -1036,10 +1046,12 @@ export class Task {
         },
         // sign-allow-wallet-tx
         [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
-          const { passphrase, responseOriginTabID, accounts } = request.body.params;
+          const { passphrase, responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
           const walletTransactions: Array<WalletTransaction> = message.body.params.transactions;
+          const transactionsWraps: Array<BaseValidatedTxnWrap> =
+            message.body.params.transactionWraps;
           const transactionObjs = walletTransactions.map((walletTx) =>
             algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
           );
@@ -1051,6 +1063,26 @@ export class Task {
 
           try {
             const ledger = getLedgerFromGenesisId(transactionObjs[0].genesisID);
+            const neededAccounts: Array<string> = [];
+            walletTransactions.forEach((w, i) => {
+              const msig = w.msig;
+              const signers = w.signers;
+              if (signers) {
+                signers.forEach((a) => {
+                  if (!neededAccounts.includes(a)) {
+                    neededAccounts.push(a);
+                  }
+                });
+              } else if (msig) {
+                msig.addrs.forEach((a) => {
+                  if (!neededAccounts.includes(a)) {
+                    neededAccounts.push(a);
+                  }
+                });
+              } else {
+                neededAccounts.push(transactionsWraps[i].transaction.from);
+              }
+            });
 
             const context = new encryptionWrap(passphrase);
             context.unlock(async (unlockedValue: any) => {
@@ -1067,20 +1099,42 @@ export class Task {
                 MessageApi.send(message);
               }
               // Find addresses to send algos from
+              // We store them using the public address as dictionary key
               for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                for (let j = accounts.length - 1; j >= 0; j--) {
-                  if (unlockedValue[ledger][i].address === accounts[j].address) {
-                    recoveredAccounts[j] = algosdk.mnemonicToSecretKey(
-                      unlockedValue[ledger][i].mnemonic
-                    );
-                  }
+                const address = unlockedValue[ledger][i].address;
+                if (neededAccounts.includes(address)) {
+                  recoveredAccounts[address] = algosdk.mnemonicToSecretKey(
+                    unlockedValue[ledger][i].mnemonic
+                  );
                 }
               }
 
               transactionObjs.forEach((tx, index) => {
                 try {
                   const txID = tx.txID().toString();
-                  const signedBlob = tx.signTxn(recoveredAccounts[index].sk);
+                  const wrap = transactionsWraps[index];
+                  const msigData = wrap.msigData;
+                  let signedBlob;
+
+                  if (msigData) {
+                    const partialSigns = [];
+                    msigData.addrs.forEach((address) => {
+                      console.log(`Pre partial: ${index}`);
+                      const signature = algosdk.signMultisigTransaction(
+                        tx,
+                        msigData,
+                        recoveredAccounts[address].sk
+                      );
+                      console.log(signature);
+                      partialSigns.push(signature);
+                    });
+                    console.log('Pre merge');
+                    console.log(partialSigns);
+                    signedBlob = algosdk.mergeMultisigTransactions(partialSigns.map((p) => p.blob));
+                  } else {
+                    const address = wrap.transaction.from;
+                    signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                  }
                   const b64Obj = byteArrayToBase64(signedBlob);
 
                   signedTxs[index] = {

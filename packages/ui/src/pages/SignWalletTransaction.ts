@@ -39,7 +39,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const [activeTx, setActiveTx] = useState<number>(0);
   const [dropdown, setDropdown] = useState<boolean>(false);
   const [approvals, setApprovals] = useState<Array<boolean>>([]);
-  const [accounts, setAccounts] = useState<Array<any>>([]);
+  const [accountNames, setAccountNames] = useState<Array<string>>([]);
   let transactionWraps: Array<any> = [];
 
   useEffect(() => {
@@ -65,7 +65,6 @@ const SignWalletTransaction: FunctionalComponent = () => {
     const params = {
       passphrase: pwd,
       responseOriginTabID: responseOriginTabID,
-      accounts,
     };
     setLoading(true);
     setAuthError('');
@@ -87,18 +86,25 @@ const SignWalletTransaction: FunctionalComponent = () => {
     });
   };
 
-  const findAccounts = (ledger) => {
-    const newAccounts = accounts.slice();
-    for (let i = store[ledger].length - 1; i >= 0; i--) {
+  const findAccountNames = (ledger) => {
+    const newAccountNames = accountNames.slice();
+    for (let i = 0; i < store[ledger].length; i++) {
       transactionWraps.forEach((wrap, index) => {
-        if (store[ledger][i].address === wrap.transaction.from) {
-          if (newAccounts[index] === undefined) {
-            newAccounts[index] = store[ledger][i];
+        const lookupAddress = store[ledger][i].address;
+        const lookupName = store[ledger][i].name;
+        const msigData = wrap.msigData;
+        if (msigData && msigData.addrs.includes(lookupAddress)) {
+          if (newAccountNames[index]) {
+            newAccountNames[index] = `${newAccountNames[index]},\n${lookupName}`;
+          } else {
+            newAccountNames[index] = lookupName;
           }
+        } else if (lookupAddress === wrap.transaction.from) {
+          newAccountNames[index] = lookupName;
         }
       });
     }
-    setAccounts(newAccounts);
+    setAccountNames(newAccountNames);
   };
 
   const flipDropdown = () => {
@@ -140,8 +146,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
     if (!approvals.length && transactionWraps.length) {
       setApprovals(new Array(transactionWraps.length).fill(false));
     }
-    if (!accounts.length && transactionWraps.length) {
-      setAccounts(new Array(transactionWraps.length).fill({}));
+    if (!accountNames.length && transactionWraps.length) {
+      setAccountNames(new Array(transactionWraps.length).fill(''));
     }
 
     if (!ledger) {
@@ -151,7 +157,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
         if (transactionWraps[0].transaction.genesisID === l['genesisId']) {
           txLedger = l['name'];
           setLedger(txLedger);
-          findAccounts(txLedger);
+          findAccountNames(txLedger);
         }
       });
 
@@ -168,7 +174,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             });
 
             setLedger(txLedger);
-            findAccounts(txLedger);
+            findAccountNames(txLedger);
           }
         });
       } else {
@@ -282,7 +288,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
         </section>
       `}
       ${request.body &&
-      accounts.length == transactionWraps.length &&
+      accountNames.length == transactionWraps.length &&
       transactionWraps.length > 1 &&
       html`
         <div class="px-5 pb-3 is-flex is-justify-content-space-between">
@@ -328,7 +334,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             ${getApproval(activeTx)}
           </button>
         </div>
-        ${getWrapUI(transactionWraps[activeTx], accounts[activeTx].name)}
+        ${getWrapUI(transactionWraps[activeTx], accountNames[activeTx])}
         <div class="is-flex is-flex-direction-column has-text-centered mb-3 mx-5">
           <span>${approvedAmount} out of ${transactionWraps.length} transactions approved.</span>
           <progress
@@ -339,9 +345,9 @@ const SignWalletTransaction: FunctionalComponent = () => {
         </div>
       `}
       ${request.body &&
-      accounts.length == transactionWraps.length &&
+      accountNames.length == transactionWraps.length &&
       transactionWraps.length === 1 &&
-      html` ${getWrapUI(transactionWraps[0], accounts[0].name)} `}
+      html` ${getWrapUI(transactionWraps[0], accountNames[0])} `}
       ${request.body &&
       html`
         <div class="mx-5 mb-3" style="display: flex;">

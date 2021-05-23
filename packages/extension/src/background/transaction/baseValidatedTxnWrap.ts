@@ -1,3 +1,4 @@
+import { WalletMultisigMetadata } from '@algosigner/common/types';
 import { Validate, ValidationResponse, ValidationStatus } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
@@ -10,6 +11,7 @@ export class BaseValidatedTxnWrap {
   validityObject: object = {};
   txDerivedTypeText: string;
   estimatedFee: number;
+  msigData: WalletMultisigMetadata;
 
   constructor(
     params: any,
