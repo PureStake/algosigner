@@ -19,6 +19,8 @@ import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 import {
+  InvalidStructure,
+  InvalidMsigStructure,
   NoDifferentLedgers,
   MultipleTxsRequireGroup,
   NonMatchingGroup,
@@ -429,40 +431,61 @@ export class Task {
         // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
           const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
-          let rawTxArray;
-          let processedTxArray;
-          let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
+          const rawTxArray: Array<any> = [];
+          const processedTxArray: Array<any> = [];
+          const transactionWraps: Array<BaseValidatedTxnWrap> = [];
           const validationErrors: Array<Error> = [];
 
-          try {
-            /**
-             * In order to process the msgpack and make it compatible with our validator, we:
-             * 0) Decode from base64 to Uint8Array msgpack
-             * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
-             * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
-             * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
-             */
-            rawTxArray = walletTransactions.map((walletTx) =>
-              algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
-            );
-            processedTxArray = rawTxArray.map((rawTx) =>
-              removeEmptyFields(rawTx._getDictForDisplay())
-            );
-            console.log(rawTxArray);
-            console.log(processedTxArray);
-          } catch (e) {
-            logging.log(`Unable to parse transaction object(s). ${e}`);
-            d.error = e;
-            reject(d);
-            return;
-          }
-
-          transactionWraps = processedTxArray.map((tx, index) => {
+          walletTransactions.forEach((walletTx, index) => {
             try {
-              console.log(`Building wrap ${index} with:`);
+              console.log(`Processing transaction #${index}:`);
               console.log(walletTransactions[index]);
-              console.log(tx);
-              const wrap = getValidatedTxnWrap(tx, tx['type'], false);
+              // Runtime type checking
+              if (
+                // prettier-ignore
+                (walletTx.authAddr != null && typeof walletTx.authAddr !== 'string') ||
+                (walletTx.message != null && typeof walletTx.message !== 'string') ||
+                (!walletTx.txn || typeof walletTx.txn !== 'string') ||
+                (walletTx.signers != null && 
+                  (
+                    !Array.isArray(walletTx.signers) || 
+                    (Array.isArray(walletTx.signers) && (walletTx.signers as Array<any>).some((s)=>typeof s !== 'string'))
+                  )
+                ) ||
+                (walletTx.msig && typeof walletTx.msig !== 'object')
+              ) {
+                console.log('invalid wallet');
+                throw new InvalidStructure();
+              } else if (
+                // prettier-ignore
+                walletTx.msig && (
+                  (!walletTx.msig.threshold || typeof walletTx.msig.threshold !== 'number') ||
+                  (!walletTx.msig.version || typeof walletTx.msig.version !== 'number') ||
+                  (
+                    !walletTx.msig.addrs || 
+                    !Array.isArray(walletTx.msig.addrs) || 
+                    (Array.isArray(walletTx.msig.addrs) && (walletTx.msig.addrs as Array<any>).some((s)=>typeof s !== 'string'))
+                  )
+                )
+              ) {
+                console.log('invalid msig');
+                throw new InvalidMsigStructure();
+              }
+
+              /**
+               * In order to process the transaction and make it compatible with our validator, we:
+               * 0) Decode from base64 to Uint8Array msgpack
+               * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
+               * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
+               * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
+               */
+              const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
+              rawTxArray[index] = rawTx;
+              const processedTx = removeEmptyFields(rawTx._getDictForDisplay());
+              processedTxArray[index] = processedTx;
+              console.log(processedTx);
+              const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
+              transactionWraps[index] = wrap;
               const genesisID = wrap.transaction.genesisID;
               console.log(wrap);
 
@@ -489,13 +512,14 @@ export class Task {
             }
           });
 
-          console.log('Wraps and errors');
+          console.log('Raw, processed, wraps and errors');
+          console.log(rawTxArray);
+          console.log(processedTxArray);
           console.log(transactionWraps);
           console.log(validationErrors);
 
           if (
             validationErrors.length ||
-            !transactionWraps ||
             !transactionWraps.length ||
             transactionWraps.some((w) => w === undefined)
           ) {
@@ -605,7 +629,10 @@ export class Task {
               }
             } else {
               const wrap = transactionWraps[0];
-              if (!wrap.msigData && wrap.signers) {
+              if (
+                (!wrap.msigData && wrap.signers) ||
+                (wrap.msigData && wrap.signers && !wrap.signers.length)
+              ) {
                 const e = new InvalidSigners();
                 logging.log(`Validation failed. ${e}`);
                 d.error = e;

@@ -1,3 +1,21 @@
+export class InvalidStructure extends Error {
+  constructor(message?: any) {
+    message ? super(message) : super();
+    this.message = "The provided transaction object doesn't adhere to the correct structure.";
+    this.name = 'InvalidStructure';
+    Error.captureStackTrace(this, InvalidStructure);
+  }
+}
+
+export class InvalidMsigStructure extends Error {
+  constructor(message?: any) {
+    message ? super(message) : super();
+    this.message = "The provided multisig data doesn't adhere to the correct structure.";
+    this.name = 'InvalidMsigStructure';
+    Error.captureStackTrace(this, InvalidMsigStructure);
+  }
+}
+
 export class NoDifferentLedgers extends Error {
   constructor(message?: any) {
     message ? super(message) : super();
@@ -39,7 +57,7 @@ export class InvalidSigners extends Error {
   constructor(message?: any) {
     message ? super(message) : super();
     this.message =
-      'Signers should only be provided for multisigs or set as none (empty array) for reference-only transactions belonging to a group.';
+      'Signers array should only be provided for multisigs (at least one signer) or for reference-only transactions belonging to a group (empty array).';
     this.name = 'InvalidSigners';
     Error.captureStackTrace(this, InvalidSigners);
   }
