@@ -556,10 +556,10 @@ export class Task {
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
             const invalidKeys = {};
             transactionWraps.forEach((tx, index) => {
-              invalidKeys['index'] = [];
+              invalidKeys[index] = [];
               Object.entries(tx.validityObject).forEach(([key, value]) => {
                 if (value['status'] === ValidationStatus.Invalid) {
-                  invalidKeys[index].push(`${key}`);
+                  invalidKeys[index].push(`${key}: ${value['info']}`);
                 }
               });
               if (!invalidKeys[index].length) delete invalidKeys[index];
@@ -570,9 +570,9 @@ export class Task {
             Object.keys(invalidKeys).forEach((index) => {
               errorMessage =
                 errorMessage +
-                `Validation failed for transaction ${index} because of invalid properties [${invalidKeys[
+                `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
                   index
-                ].join(',')}]. `;
+                ].join(', ')}]. `;
             });
 
             d.error = {
