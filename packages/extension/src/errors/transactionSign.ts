@@ -1,6 +1,6 @@
 export class NoAccountMatch extends Error {
-  constructor(message?: any) {
-    message ? super(message) : super('No matching address(es) found on AlgoSigner.');
+  constructor(address: string) {
+    super(`No matching account found on AlgoSigner for address: "${address}".`);
     this.name = 'NoAccountMatch';
     Error.captureStackTrace(this, NoAccountMatch);
   }

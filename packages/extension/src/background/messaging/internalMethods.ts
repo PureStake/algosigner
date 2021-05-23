@@ -54,14 +54,15 @@ export class InternalMethods {
   // Checks if an address is a valid user account for a given ledger.
   public static checkValidAccount(tx: any): void {
     const ledger: string = getLedgerFromGenesisId(tx.genesisID);
+    const targetAddress = tx.from;
     let found = false;
     for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
-      if (session.wallet[ledger][i].address === tx.from) {
+      if (session.wallet[ledger][i].address === targetAddress) {
         found = true;
         break;
       }
     }
-    if (!found) throw new NoAccountMatch();
+    if (!found) throw new NoAccountMatch(targetAddress);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
