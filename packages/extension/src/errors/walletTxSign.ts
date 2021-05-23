@@ -34,3 +34,13 @@ export class IncompleteOrDisorderedGroup extends Error {
     Error.captureStackTrace(this, IncompleteOrDisorderedGroup);
   }
 }
+
+export class InvalidSigners extends Error {
+  constructor(message?: any) {
+    message ? super(message) : super();
+    this.message =
+      'Signers should only be provided for multisigs or set as none (empty array) for reference-only transactions belonging to a group.';
+    this.name = 'InvalidSigners';
+    Error.captureStackTrace(this, InvalidSigners);
+  }
+}

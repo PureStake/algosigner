@@ -93,14 +93,23 @@ const SignWalletTransaction: FunctionalComponent = () => {
         const lookupAddress = store[ledger][i].address;
         const lookupName = store[ledger][i].name;
         const msigData = wrap.msigData;
-        if (msigData && msigData.addrs.includes(lookupAddress)) {
-          if (newAccountNames[index]) {
-            newAccountNames[index] = `${newAccountNames[index]},\n${lookupName}`;
-          } else {
+        const signers = wrap.signers;
+        if (signers && !signers.length) {
+          newAccountNames[index] = "Reference Transaction (won't be signed)";
+        } else {
+          if (
+            msigData &&
+            msigData.addrs.includes(lookupAddress) &&
+            (!signers || signers.includes(lookupAddress))
+          ) {
+            if (newAccountNames[index]) {
+              newAccountNames[index] = `${newAccountNames[index]},\n${lookupName}`;
+            } else {
+              newAccountNames[index] = lookupName;
+            }
+          } else if (lookupAddress === wrap.transaction.from) {
             newAccountNames[index] = lookupName;
           }
-        } else if (lookupAddress === wrap.transaction.from) {
-          newAccountNames[index] = lookupName;
         }
       });
     }

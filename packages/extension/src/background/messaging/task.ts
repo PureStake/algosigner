@@ -23,6 +23,7 @@ import {
   MultipleTxsRequireGroup,
   NonMatchingGroup,
   IncompleteOrDisorderedGroup,
+  InvalidSigners,
 } from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
@@ -202,7 +203,10 @@ export class Task {
           let validationError = undefined;
           try {
             transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params['type']);
-            InternalMethods.checkValidAccount(transactionWrap.transaction);
+            InternalMethods.checkValidAccount(
+              transactionWrap.transaction.genesisID,
+              transactionWrap.transaction.from
+            );
           } catch (e) {
             logging.log(`Validation failed. ${e.message}`);
             validationError = e;
@@ -456,16 +460,27 @@ export class Task {
           transactionWraps = processedTxArray.map((tx, index) => {
             try {
               console.log(`Building wrap ${index} with:`);
+              console.log(walletTransactions[index]);
               console.log(tx);
               const wrap = getValidatedTxnWrap(tx, tx['type'], false);
+              const genesisID = wrap.transaction.genesisID;
               console.log(wrap);
-              console.log(walletTransactions[index]);
 
+              const signers = walletTransactions[index].signers;
               const msigData = walletTransactions[index].msig;
+              wrap.msigData = msigData;
+              wrap.signers = signers;
               if (msigData) {
+                if (signers && signers.length) {
+                  signers.forEach((address) => {
+                    InternalMethods.checkValidAccount(genesisID, address);
+                  });
+                }
                 wrap.msigData = msigData;
               } else {
-                InternalMethods.checkValidAccount(wrap.transaction);
+                if (!signers) {
+                  InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
+                }
               }
 
               return wrap;
@@ -583,6 +598,15 @@ export class Task {
               const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
               if (groupId !== recalculatedGroupID) {
                 const e = new IncompleteOrDisorderedGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+            } else {
+              const wrap = transactionWraps[0];
+              if (!wrap.msigData && wrap.signers) {
+                const e = new InvalidSigners();
                 logging.log(`Validation failed. ${e}`);
                 d.error = e;
                 reject(d);
@@ -1067,20 +1091,27 @@ export class Task {
             walletTransactions.forEach((w, i) => {
               const msig = w.msig;
               const signers = w.signers;
-              if (signers) {
-                signers.forEach((a) => {
-                  if (!neededAccounts.includes(a)) {
-                    neededAccounts.push(a);
+              // If signers are provided as an empty array, it means it's a reference transaction (not to be signed)
+              if (!(signers && !signers.length)) {
+                // If multisig is provided, we search for the provided signers
+                // Otherwise, we search for all the multisig addresses we have
+                if (msig) {
+                  if (signers) {
+                    signers.forEach((a) => {
+                      if (!neededAccounts.includes(a)) {
+                        neededAccounts.push(a);
+                      }
+                    });
+                  } else {
+                    msig.addrs.forEach((a) => {
+                      if (!neededAccounts.includes(a)) {
+                        neededAccounts.push(a);
+                      }
+                    });
                   }
-                });
-              } else if (msig) {
-                msig.addrs.forEach((a) => {
-                  if (!neededAccounts.includes(a)) {
-                    neededAccounts.push(a);
-                  }
-                });
-              } else {
-                neededAccounts.push(transactionsWraps[i].transaction.from);
+                } else {
+                  neededAccounts.push(transactionsWraps[i].transaction.from);
+                }
               }
             });
 
@@ -1110,39 +1141,55 @@ export class Task {
               }
 
               transactionObjs.forEach((tx, index) => {
-                try {
-                  const txID = tx.txID().toString();
-                  const wrap = transactionsWraps[index];
-                  const msigData = wrap.msigData;
-                  let signedBlob;
+                const signers = walletTransactions[index].signers;
+                // If it's a reference transaction we return null, otherwise we try sign
+                if (signers && !signers.length) {
+                  signedTxs[index] = null;
+                } else {
+                  try {
+                    const txID = tx.txID().toString();
+                    const wrap = transactionsWraps[index];
+                    const msigData = wrap.msigData;
+                    let signedBlob;
 
-                  if (msigData) {
-                    const partialSigns = [];
-                    msigData.addrs.forEach((address) => {
-                      console.log(`Pre partial: ${index}`);
-                      const signature = algosdk.signMultisigTransaction(
-                        tx,
-                        msigData,
-                        recoveredAccounts[address].sk
-                      );
-                      console.log(signature);
-                      partialSigns.push(signature);
-                    });
-                    console.log('Pre merge');
-                    console.log(partialSigns);
-                    signedBlob = algosdk.mergeMultisigTransactions(partialSigns.map((p) => p.blob));
-                  } else {
-                    const address = wrap.transaction.from;
-                    signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                    if (msigData) {
+                      const partialSigns = [];
+                      // We use the provided signers or all of the available addresses on the Multisig metadata
+                      const signingAddresses = signers ? signers : msigData.addrs;
+                      signingAddresses.forEach((address) => {
+                        if (recoveredAccounts[address]) {
+                          console.log(`Pre partial: ${index}`);
+                          const signature = algosdk.signMultisigTransaction(
+                            tx,
+                            msigData,
+                            recoveredAccounts[address].sk
+                          );
+                          console.log(signature);
+                          partialSigns.push(signature);
+                        }
+                      });
+                      console.log('Pre merge');
+                      console.log(partialSigns);
+                      if (partialSigns.length > 1) {
+                        signedBlob = algosdk.mergeMultisigTransactions(
+                          partialSigns.map((p) => p.blob)
+                        );
+                      } else {
+                        signedBlob = partialSigns[0].blob;
+                      }
+                    } else {
+                      const address = wrap.transaction.from;
+                      signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                    }
+                    const b64Obj = byteArrayToBase64(signedBlob);
+
+                    signedTxs[index] = {
+                      txID: txID,
+                      blob: b64Obj,
+                    };
+                  } catch (e) {
+                    signErrors[index] = e.message;
                   }
-                  const b64Obj = byteArrayToBase64(signedBlob);
-
-                  signedTxs[index] = {
-                    txID: txID,
-                    blob: b64Obj,
-                  };
-                } catch (e) {
-                  signErrors[index] = e.message;
                 }
               });
 

@@ -12,6 +12,7 @@ export class BaseValidatedTxnWrap {
   txDerivedTypeText: string;
   estimatedFee: number;
   msigData: WalletMultisigMetadata;
+  signers: Array<string>;
 
   constructor(
     params: any,
