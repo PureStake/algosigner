@@ -204,7 +204,8 @@ export class Task {
           let transactionWrap = undefined;
           let validationError = undefined;
           try {
-            transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params['type']);
+            const txn = d.body.params;
+            transactionWrap = getValidatedTxnWrap(txn, txn['type']);
             InternalMethods.checkValidAccount(
               transactionWrap.transaction.genesisID,
               transactionWrap.transaction.from
@@ -873,11 +874,7 @@ export class Task {
 
               const txn = { ...message.body.params.transaction };
 
-              Object.keys({ ...message.body.params.transaction }).forEach((key) => {
-                if (txn[key] === undefined || txn[key] === null) {
-                  delete txn[key];
-                }
-              });
+              removeEmptyFields(txn);
 
               // Modify base64 encoded fields
               if ('note' in txn && txn.note !== undefined) {

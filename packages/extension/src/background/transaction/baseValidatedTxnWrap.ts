@@ -63,6 +63,8 @@ export class BaseValidatedTxnWrap {
           this.transaction[prop] = params[prop];
           if (prop === 'group' && !v1Validations) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
+          } else if (prop === 'note') {
+            this.transaction[prop] = Buffer.from(params[prop]).toString();
           }
           this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {
