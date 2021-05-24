@@ -1138,6 +1138,7 @@ export class Task {
                 }
               }
             });
+            console.log(`Needed accounts (${neededAccounts.length}): ${neededAccounts}`);
 
             const context = new encryptionWrap(passphrase);
             context.unlock(async (unlockedValue: any) => {
@@ -1165,9 +1166,12 @@ export class Task {
               }
 
               transactionObjs.forEach((tx, index) => {
+                console.log(`Trying to sign tx ${index}`);
+                console.log(tx);
                 const signers = walletTransactions[index].signers;
                 // If it's a reference transaction we return null, otherwise we try sign
                 if (signers && !signers.length) {
+                  console.log("It's a reference transaction");
                   signedTxs[index] = null;
                 } else {
                   try {
@@ -1177,31 +1181,48 @@ export class Task {
                     let signedBlob;
 
                     if (msigData) {
-                      const partialSigns = [];
+                      console.log("We're dealing with multisig");
+                      const partiallySignedBlobs = [];
                       // We use the provided signers or all of the available addresses on the Multisig metadata
-                      const signingAddresses = signers ? signers : msigData.addrs;
+                      const signingAddresses = (signers ? signers : msigData.addrs).filter(
+                        (a) => recoveredAccounts[a]
+                      );
                       signingAddresses.forEach((address) => {
                         if (recoveredAccounts[address]) {
-                          console.log(`Pre partial: ${index}`);
-                          const signature = algosdk.signMultisigTransaction(
-                            tx,
-                            msigData,
-                            recoveredAccounts[address].sk
+                          partiallySignedBlobs.push(
+                            algosdk.signMultisigTransaction(
+                              tx,
+                              msigData,
+                              recoveredAccounts[address].sk
+                            ).blob
                           );
-                          console.log(signature);
-                          partialSigns.push(signature);
                         }
                       });
-                      console.log('Pre merge');
-                      console.log(partialSigns);
-                      if (partialSigns.length > 1) {
-                        signedBlob = algosdk.mergeMultisigTransactions(
-                          partialSigns.map((p) => p.blob)
-                        );
+                      if (partiallySignedBlobs.length > 1) {
+                        // If there's more than one partially signed transaction, we merge the signatures by hand
+                        const signatures = [];
+                        partiallySignedBlobs.forEach((partial) => {
+                          const decoded = algosdk.decodeSignedTransaction(partial);
+                          const signed = decoded.msig.subsig.find((s) => !!s.s);
+                          console.log(algosdk.encodeAddress(signed.pk));
+                          console.log(decoded.msig.subsig);
+                          signatures[algosdk.encodeAddress(signed.pk)] = signed.s;
+                        });
+                        const mergedTx = algosdk.decodeObj(partiallySignedBlobs[0]);
+                        mergedTx.msig.subsig.forEach((subsig) => {
+                          if (!subsig.s) {
+                            const lookupSig = signatures[algosdk.encodeAddress(subsig.pk)];
+                            if (lookupSig) {
+                              subsig.s = lookupSig;
+                            }
+                          }
+                        });
+                        signedBlob = algosdk.encodeObj(mergedTx);
                       } else {
-                        signedBlob = partialSigns[0].blob;
+                        signedBlob = partiallySignedBlobs[0];
                       }
                     } else {
+                      console.log("We're dealing with a regular transaction");
                       const address = wrap.transaction.from;
                       signedBlob = tx.signTxn(recoveredAccounts[address].sk);
                     }
@@ -1212,6 +1233,7 @@ export class Task {
                       blob: b64Obj,
                     };
                   } catch (e) {
+                    logging.log(`Signing failed. ${e.message}`);
                     signErrors[index] = e.message;
                   }
                 }
