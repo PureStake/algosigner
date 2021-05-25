@@ -13,7 +13,7 @@ export function isFromExtension(origin: string): boolean {
 export function removeEmptyFields(obj: { [index: string]: any }): any {
   Object.keys(obj).forEach((key: string) => {
     if (obj.hasOwnProperty(key)) {
-      if (!obj[key] || obj[key].length === 0) delete obj[key];
+      if (obj[key] === null || obj[key] === undefined || obj[key].length === 0) delete obj[key];
     }
   });
   return obj;

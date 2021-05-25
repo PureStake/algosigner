@@ -985,11 +985,7 @@ export class Task {
                 const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
                 // Use the received txn component of the transaction, but remove undefined and null values
-                Object.keys({ ...msig_txn.txn }).forEach((key) => {
-                  if (msig_txn.txn[key] === undefined || msig_txn.txn[key] === null) {
-                    delete msig_txn.txn[key];
-                  }
-                });
+                removeEmptyFields(msig_txn.txn);
 
                 // Modify base64 encoded fields
                 if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
