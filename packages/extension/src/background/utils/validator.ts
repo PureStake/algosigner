@@ -96,7 +96,6 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
     case 'fee':
       try {
-        console.log(`Getting ready to test fee: ${value}, type:${typeof value}`);
         if (!Number.isSafeInteger(value) || parseInt(value) < 0) {
           return new ValidationResponse({
             status: ValidationStatus.Invalid,

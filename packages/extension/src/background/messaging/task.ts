@@ -1239,7 +1239,7 @@ export class Task {
                 message.error = 'There was a problem signing the transaction(s): ';
                 if (transactionObjs.length > 1) {
                   signErrors.forEach((error, index) => {
-                    message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
+                    message.error += `\nOn transaction ${index}, the error was: ${error}`;
                   });
                 } else {
                   message.error += signErrors[0];

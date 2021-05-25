@@ -34,15 +34,16 @@ export class BaseValidatedTxnWrap {
 
     // Check required values in the case where one of a set is required.
     if (requiredParamsSet && requiredParamsSet.length > 0) {
-      let foundValue = false;
+      const foundRequiredParams = [];
       requiredParamsSet.forEach((key) => {
         if (params[key] !== undefined && params[key] !== null) {
-          foundValue = true;
+          foundRequiredParams.push(key);
         }
       });
-      if (!foundValue) {
-        missingFields.push(`Transaction requires one parameter from:[${requiredParamsSet}]`);
-      }
+      const missingRequiredParams = requiredParamsSet.filter(
+        (p) => !foundRequiredParams.includes(p)
+      );
+      missingFields.concat(missingRequiredParams);
     }
 
     // Throwing error here so that missing fields can be combined.
