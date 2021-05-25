@@ -18,7 +18,15 @@ import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
-import { NoDifferentLedgers } from '../../errors/v2Sign';
+import {
+  InvalidStructure,
+  InvalidMsigStructure,
+  NoDifferentLedgers,
+  MultipleTxsRequireGroup,
+  NonMatchingGroup,
+  IncompleteOrDisorderedGroup,
+  InvalidSigners,
+} from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 import { removeEmptyFields } from '@algosigner/common/utils';
@@ -196,8 +204,12 @@ export class Task {
           let transactionWrap = undefined;
           let validationError = undefined;
           try {
-            transactionWrap = getValidatedTxnWrap(d.body.params, d.body.params['type']);
-            InternalMethods.checkValidAccount(transactionWrap.transaction);
+            const txn = d.body.params;
+            transactionWrap = getValidatedTxnWrap(txn, txn['type']);
+            InternalMethods.checkValidAccount(
+              transactionWrap.transaction.genesisID,
+              transactionWrap.transaction.from
+            );
           } catch (e) {
             logging.log(`Validation failed. ${e.message}`);
             validationError = e;
@@ -417,60 +429,102 @@ export class Task {
             });
           }
         },
+        // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
-          let transactionArray;
-          let transactionWraps: Array<BaseValidatedTxnWrap> = undefined;
+          const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
+          const rawTxArray: Array<any> = [];
+          const processedTxArray: Array<any> = [];
+          const transactionWraps: Array<BaseValidatedTxnWrap> = [];
           const validationErrors: Array<Error> = [];
 
-          try {
-            const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
-            /**
-             * In order to process the msgpack and make it compatible with our validator, we:
-             * 0) Decode from base64 to Uint8Array msgpack
-             * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
-             * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
-             * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
-             */
-            transactionArray = walletTransactions.map((walletTx) =>
-              removeEmptyFields(
-                algosdk
-                  .decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
-                  ._getDictForDisplay()
-              )
-            );
-            console.log(transactionArray);
-          } catch (e) {
-            logging.log(`Unable to parse transaction object(s). ${e}`);
-            d.error = e;
-            reject(d);
-            return;
-          }
-
-          if (!transactionArray.every((tx) => transactionArray[0].genesisID === tx.genesisID)) {
-            const e = new NoDifferentLedgers();
-            logging.log(`Validation failed. ${e}`);
-            d.error = e;
-            reject(d);
-            return;
-          }
-
-          transactionWraps = transactionArray.map((tx, index) => {
+          walletTransactions.forEach((walletTx, index) => {
             try {
-              console.log(`Building wrap ${index} with:`);
-              console.log(tx);
-              const wrap = getValidatedTxnWrap(tx, tx['type'], false);
+              console.log(`Processing transaction #${index}:`);
+              console.log(walletTransactions[index]);
+              // Runtime type checking
+              if (
+                // prettier-ignore
+                (walletTx.authAddr != null && typeof walletTx.authAddr !== 'string') ||
+                (walletTx.message != null && typeof walletTx.message !== 'string') ||
+                (!walletTx.txn || typeof walletTx.txn !== 'string') ||
+                (walletTx.signers != null && 
+                  (
+                    !Array.isArray(walletTx.signers) || 
+                    (Array.isArray(walletTx.signers) && (walletTx.signers as Array<any>).some((s)=>typeof s !== 'string'))
+                  )
+                ) ||
+                (walletTx.msig && typeof walletTx.msig !== 'object')
+              ) {
+                console.log('invalid wallet');
+                throw new InvalidStructure();
+              } else if (
+                // prettier-ignore
+                walletTx.msig && (
+                  (!walletTx.msig.threshold || typeof walletTx.msig.threshold !== 'number') ||
+                  (!walletTx.msig.version || typeof walletTx.msig.version !== 'number') ||
+                  (
+                    !walletTx.msig.addrs || 
+                    !Array.isArray(walletTx.msig.addrs) || 
+                    (Array.isArray(walletTx.msig.addrs) && (walletTx.msig.addrs as Array<any>).some((s)=>typeof s !== 'string'))
+                  )
+                )
+              ) {
+                console.log('invalid msig');
+                throw new InvalidMsigStructure();
+              }
+
+              /**
+               * In order to process the transaction and make it compatible with our validator, we:
+               * 0) Decode from base64 to Uint8Array msgpack
+               * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
+               * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
+               * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
+               */
+              const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
+              rawTxArray[index] = rawTx;
+              const processedTx = removeEmptyFields(rawTx._getDictForDisplay());
+              processedTxArray[index] = processedTx;
+              console.log(processedTx);
+              const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
+              transactionWraps[index] = wrap;
+              const genesisID = wrap.transaction.genesisID;
               console.log(wrap);
-              InternalMethods.checkValidAccount(wrap.transaction);
+
+              const signers = walletTransactions[index].signers;
+              const msigData = walletTransactions[index].msig;
+              wrap.msigData = msigData;
+              wrap.signers = signers;
+              if (msigData) {
+                if (signers && signers.length) {
+                  signers.forEach((address) => {
+                    InternalMethods.checkValidAccount(genesisID, address);
+                  });
+                }
+                wrap.msigData = msigData;
+              } else {
+                if (!signers) {
+                  InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
+                }
+              }
+
               return wrap;
             } catch (e) {
               validationErrors[index] = e;
             }
           });
-          console.log('Wraps and errors');
+
+          console.log('Raw, processed, wraps and errors');
+          console.log(rawTxArray);
+          console.log(processedTxArray);
           console.log(transactionWraps);
           console.log(validationErrors);
-          if (validationErrors.length || !transactionWraps || !transactionWraps.length) {
-            console.log('Errors or no wraps');
+
+          if (
+            validationErrors.length ||
+            !transactionWraps.length ||
+            transactionWraps.some((w) => w === undefined)
+          ) {
+            console.log('Errors or missing wraps');
             // We don't have transaction wraps or we have an building error, reject the transaction.
             let errorMessage = 'There was a problem validating the transaction(s): ';
             let validationMessages = '';
@@ -503,10 +557,10 @@ export class Task {
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
             const invalidKeys = {};
             transactionWraps.forEach((tx, index) => {
-              invalidKeys['index'] = [];
+              invalidKeys[index] = [];
               Object.entries(tx.validityObject).forEach(([key, value]) => {
                 if (value['status'] === ValidationStatus.Invalid) {
-                  invalidKeys[index].push(`${key}`);
+                  invalidKeys[index].push(`${key}: ${value['info']}`);
                 }
               });
               if (!invalidKeys[index].length) delete invalidKeys[index];
@@ -517,9 +571,9 @@ export class Task {
             Object.keys(invalidKeys).forEach((index) => {
               errorMessage =
                 errorMessage +
-                `Validation failed for transaction ${index} because of invalid properties [${invalidKeys[
+                `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
                   index
-                ].join(',')}]. `;
+                ].join(', ')}]. `;
             });
 
             d.error = {
@@ -529,6 +583,65 @@ export class Task {
             return;
           } else {
             console.log('Last bracket');
+            // Group validations
+            if (transactionWraps.length > 1) {
+              if (
+                !transactionWraps.every(
+                  (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+                )
+              ) {
+                const e = new NoDifferentLedgers();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              const groupId = transactionWraps[0].transaction.group;
+              if (!groupId) {
+                const e = new MultipleTxsRequireGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
+                const e = new NonMatchingGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+
+              const recreatedGroupTxs = algosdk.assignGroupID(
+                rawTxArray.slice().map((tx) => {
+                  delete tx.group;
+                  return tx;
+                })
+              );
+              const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+              if (groupId !== recalculatedGroupID) {
+                const e = new IncompleteOrDisorderedGroup();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+            } else {
+              const wrap = transactionWraps[0];
+              if (
+                (!wrap.msigData && wrap.signers) ||
+                (wrap.msigData && wrap.signers && !wrap.signers.length)
+              ) {
+                const e = new InvalidSigners();
+                logging.log(`Validation failed. ${e}`);
+                d.error = e;
+                reject(d);
+                return;
+              }
+            }
+
             console.log(d.body.params);
             d.body.params.transactionWraps = transactionWraps;
 
@@ -761,11 +874,7 @@ export class Task {
 
               const txn = { ...message.body.params.transaction };
 
-              Object.keys({ ...message.body.params.transaction }).forEach((key) => {
-                if (txn[key] === undefined || txn[key] === null) {
-                  delete txn[key];
-                }
-              });
+              removeEmptyFields(txn);
 
               // Modify base64 encoded fields
               if ('note' in txn && txn.note !== undefined) {
@@ -876,11 +985,7 @@ export class Task {
                 const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
                 // Use the received txn component of the transaction, but remove undefined and null values
-                Object.keys({ ...msig_txn.txn }).forEach((key) => {
-                  if (msig_txn.txn[key] === undefined || msig_txn.txn[key] === null) {
-                    delete msig_txn.txn[key];
-                  }
-                });
+                removeEmptyFields(msig_txn.txn);
 
                 // Modify base64 encoded fields
                 if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
@@ -983,12 +1088,14 @@ export class Task {
           }
           return true;
         },
-        // sign-v2-allow
+        // sign-allow-wallet-tx
         [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
-          const { passphrase, responseOriginTabID, accounts } = request.body.params;
+          const { passphrase, responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
           const walletTransactions: Array<WalletTransaction> = message.body.params.transactions;
+          const transactionsWraps: Array<BaseValidatedTxnWrap> =
+            message.body.params.transactionWraps;
           const transactionObjs = walletTransactions.map((walletTx) =>
             algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
           );
@@ -1000,6 +1107,34 @@ export class Task {
 
           try {
             const ledger = getLedgerFromGenesisId(transactionObjs[0].genesisID);
+            const neededAccounts: Array<string> = [];
+            walletTransactions.forEach((w, i) => {
+              const msig = w.msig;
+              const signers = w.signers;
+              // If signers are provided as an empty array, it means it's a reference transaction (not to be signed)
+              if (!(signers && !signers.length)) {
+                // If multisig is provided, we search for the provided signers
+                // Otherwise, we search for all the multisig addresses we have
+                if (msig) {
+                  if (signers) {
+                    signers.forEach((a) => {
+                      if (!neededAccounts.includes(a)) {
+                        neededAccounts.push(a);
+                      }
+                    });
+                  } else {
+                    msig.addrs.forEach((a) => {
+                      if (!neededAccounts.includes(a)) {
+                        neededAccounts.push(a);
+                      }
+                    });
+                  }
+                } else {
+                  neededAccounts.push(transactionsWraps[i].transaction.from);
+                }
+              }
+            });
+            console.log(`Needed accounts (${neededAccounts.length}): ${neededAccounts}`);
 
             const context = new encryptionWrap(passphrase);
             context.unlock(async (unlockedValue: any) => {
@@ -1016,28 +1151,87 @@ export class Task {
                 MessageApi.send(message);
               }
               // Find addresses to send algos from
+              // We store them using the public address as dictionary key
               for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                for (let j = accounts.length - 1; j >= 0; j--) {
-                  if (unlockedValue[ledger][i].address === accounts[j].address) {
-                    recoveredAccounts[j] = algosdk.mnemonicToSecretKey(
-                      unlockedValue[ledger][i].mnemonic
-                    );
-                  }
+                const address = unlockedValue[ledger][i].address;
+                if (neededAccounts.includes(address)) {
+                  recoveredAccounts[address] = algosdk.mnemonicToSecretKey(
+                    unlockedValue[ledger][i].mnemonic
+                  );
                 }
               }
 
               transactionObjs.forEach((tx, index) => {
-                try {
-                  const txID = tx.txID().toString();
-                  const signedBlob = tx.signTxn(recoveredAccounts[index].sk);
-                  const b64Obj = byteArrayToBase64(signedBlob);
+                console.log(`Trying to sign tx ${index}`);
+                console.log(tx);
+                const signers = walletTransactions[index].signers;
+                // If it's a reference transaction we return null, otherwise we try sign
+                if (signers && !signers.length) {
+                  console.log("It's a reference transaction");
+                  signedTxs[index] = null;
+                } else {
+                  try {
+                    const txID = tx.txID().toString();
+                    const wrap = transactionsWraps[index];
+                    const msigData = wrap.msigData;
+                    let signedBlob;
 
-                  signedTxs[index] = {
-                    txID: txID,
-                    blob: b64Obj,
-                  };
-                } catch (e) {
-                  signErrors[index] = e.message;
+                    if (msigData) {
+                      console.log("We're dealing with multisig");
+                      const partiallySignedBlobs = [];
+                      // We use the provided signers or all of the available addresses on the Multisig metadata
+                      const signingAddresses = (signers ? signers : msigData.addrs).filter(
+                        (a) => recoveredAccounts[a]
+                      );
+                      signingAddresses.forEach((address) => {
+                        if (recoveredAccounts[address]) {
+                          partiallySignedBlobs.push(
+                            algosdk.signMultisigTransaction(
+                              tx,
+                              msigData,
+                              recoveredAccounts[address].sk
+                            ).blob
+                          );
+                        }
+                      });
+                      if (partiallySignedBlobs.length > 1) {
+                        // If there's more than one partially signed transaction, we merge the signatures by hand
+                        const signatures = [];
+                        partiallySignedBlobs.forEach((partial) => {
+                          const decoded = algosdk.decodeSignedTransaction(partial);
+                          const signed = decoded.msig.subsig.find((s) => !!s.s);
+                          console.log(algosdk.encodeAddress(signed.pk));
+                          console.log(decoded.msig.subsig);
+                          signatures[algosdk.encodeAddress(signed.pk)] = signed.s;
+                        });
+                        const mergedTx = algosdk.decodeObj(partiallySignedBlobs[0]);
+                        mergedTx.msig.subsig.forEach((subsig) => {
+                          if (!subsig.s) {
+                            const lookupSig = signatures[algosdk.encodeAddress(subsig.pk)];
+                            if (lookupSig) {
+                              subsig.s = lookupSig;
+                            }
+                          }
+                        });
+                        signedBlob = algosdk.encodeObj(mergedTx);
+                      } else {
+                        signedBlob = partiallySignedBlobs[0];
+                      }
+                    } else {
+                      console.log("We're dealing with a regular transaction");
+                      const address = wrap.transaction.from;
+                      signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                    }
+                    const b64Obj = byteArrayToBase64(signedBlob);
+
+                    signedTxs[index] = {
+                      txID: txID,
+                      blob: b64Obj,
+                    };
+                  } catch (e) {
+                    logging.log(`Signing failed. ${e.message}`);
+                    signErrors[index] = e.message;
+                  }
                 }
               });
 
@@ -1045,7 +1239,7 @@ export class Task {
                 message.error = 'There was a problem signing the transaction(s): ';
                 if (transactionObjs.length > 1) {
                   signErrors.forEach((error, index) => {
-                    message.error += `\nOn transaction ${index + 1}, the error was: ${error}`;
+                    message.error += `\nOn transaction ${index}, the error was: ${error}`;
                   });
                 } else {
                   message.error += signErrors[0];

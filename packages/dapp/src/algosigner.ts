@@ -1,6 +1,11 @@
 import { Task } from './fn/task';
 import { Router } from './fn/router';
-import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
+import {
+  base64ToByteArray,
+  byteArrayToBase64,
+  stringToByteArray,
+  byteArrayToString,
+} from '@algosigner/common/encoding';
 
 class Wrapper {
   private static instance: Wrapper;
@@ -10,6 +15,8 @@ class Wrapper {
   public encoding: object = {
     msgpackToBase64: byteArrayToBase64,
     base64ToMsgpack: base64ToByteArray,
+    stringToByteArray,
+    byteArrayToString,
   };
 
   public connect: Function = this.task.connect;

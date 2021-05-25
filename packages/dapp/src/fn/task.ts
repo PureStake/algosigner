@@ -50,7 +50,7 @@ export class Task extends Runtime implements ITask {
   }
 
   /**
-   * @param transactions array of valid encoded transaction objects
+   * @param transactions array of valid wallet transaction objects
    * @returns array of signed transactions
    */
   signTxn(

@@ -1,3 +1,4 @@
+import { WalletMultisigMetadata } from '@algosigner/common/types';
 import { Validate, ValidationResponse, ValidationStatus } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
@@ -10,6 +11,8 @@ export class BaseValidatedTxnWrap {
   validityObject: object = {};
   txDerivedTypeText: string;
   estimatedFee: number;
+  msigData: WalletMultisigMetadata;
+  signers: Array<string>;
 
   constructor(
     params: any,
@@ -31,15 +34,16 @@ export class BaseValidatedTxnWrap {
 
     // Check required values in the case where one of a set is required.
     if (requiredParamsSet && requiredParamsSet.length > 0) {
-      let foundValue = false;
+      const foundRequiredParams = [];
       requiredParamsSet.forEach((key) => {
         if (params[key] !== undefined && params[key] !== null) {
-          foundValue = true;
+          foundRequiredParams.push(key);
         }
       });
-      if (!foundValue) {
-        missingFields.push(`Transaction requires one parameter from:[${requiredParamsSet}]`);
-      }
+      const missingRequiredParams = requiredParamsSet.filter(
+        (p) => !foundRequiredParams.includes(p)
+      );
+      missingFields.concat(missingRequiredParams);
     }
 
     // Throwing error here so that missing fields can be combined.
@@ -60,6 +64,8 @@ export class BaseValidatedTxnWrap {
           this.transaction[prop] = params[prop];
           if (prop === 'group' && !v1Validations) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
+          } else if (prop === 'note') {
+            this.transaction[prop] = Buffer.from(params[prop]).toString();
           }
           this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {
