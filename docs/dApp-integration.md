@@ -17,7 +17,7 @@ This guide covers the new v2 Transactions Signing method, docs for the legacy v1
 - [AlgoSigner.algod({ ledger: ‘MainNet|TestNet’, path: ‘algod v2 path’, ... })](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
 - [AlgoSigner.indexer({ ledger: ‘MainNet|TestNet’, path: ‘indexer v2 path’ })](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
 
-- [AlgoSigner.sign(txnObject)](#algosignersigntxnobject)
+- [AlgoSigner.signTxn([txnObjects,...])](#algosignersigntxntxnobjects)
 
 - [AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })](#algosignersend-ledger-mainnettestnet-txblob-)
 
@@ -151,36 +151,255 @@ AlgoSigner.indexer({
 
 Sent in transactions will be validated against the Algorand JS SDK transaction types - field names must match, and the whole transaction will be rejected otherwise.
 
-### AlgoSigner.sign(txnObject)
+### AlgoSigner.signTxn([txnObjects,...])
 
-Send a transaction object, conforming to the Algorand JS SDK, to AlgoSigner for approval. The Network is determined from the 'genesis-id' property. If approved, the response is a signed transaction object, with the binary blob field base64 encoded to prevent transmission issues.
+Send transaction objects, conforming to the Algorand JS SDK, to AlgoSigner for approval. The Network is determined from the 'genesis-id' property. If approved, the response is an array of signed transaction objects, with the binary blob field base64 encoded to prevent transmission issues.
 
 #### Transaction Requirements
 
-ALL NEW
+Transactions objects need to be presented with the following structure:
+
+```
+{
+  txn: Base64-encoded string of a transaction binary,
+  signers?: [optional] array of addresses to sign with (defaults to the sender),
+  multisig?: [optional] extra metadata needed for multisig transactions,
+};
+```
+
+In order to facilitate conversion between different formats and encodings, helper functions are available on the `AlgoSigner.encoding.*` namespace.
+
+Also available on transactions built with the JS SDK is the `.toByte()` method that converts the SDK transaction object into it's binary format.
 
 **Request**
 
 ```js
-REPLACE;
+AlgoSigner.signTxn([
+  {
+    txn: 'iqNhbXRko2ZlZc0D6KJmds4A259Go2dlbqx0ZXN0bmV0LXYxLjCiZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToio2dycMQgdsLAGqgrtwqqQS4UEN7O8CZHjfhPTwLHrB1A2pXwvKGibHbOANujLqNyY3bEIK0TEDcptY0uFvk2V5LDVzRfdz7O4freYHEuZbpI+6hMo3NuZMQglmyhKUPeU2KALzt/Jcs0GQ55k2vsqZ4pGeNlzpnYLbukdHlwZaNwYXk=',
+  },
+]);
 ```
+
+**NOTE:** Even though the method accepts an array of transactions, it's meant for atomic transactions. Please refrain from sending multiple non-atomic transactions.
 
 **Response**
 
 ```json
-{
-  "txID": "4F6GE5EBTBJ7DOTWKA3GK4JYARFDCVR5CYEXP6O27FUCE5SGFDYQ",
-  "blob": "gqNzaWfEQL6mW/7ss2HKAqsuHN/7ePx11wKSAvFocw5QEDvzSvrvJdzWYvT7ua8Lc0SS0zOmUDDaHQC/pGJ0PNqnu7W3qQKjdHhuiaNhbXQGo2ZlZc4AA7U4omZ2zgB+OrujZ2VurHRlc3RuZXQtdjEuMKJnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAH4+o6NyY3bEIHhydylNDQQhpD9QdKWejLCMBgb5UYJTGCfDW3KgLsI+o3NuZMQgZM5ZNuFgR8pz2dHBgDlmHolfGgF96zX/X4x2bnAJ3aqkdHlwZaNwYXk="
-}
+[
+  {
+    "txID": "4F6GE5EBTBJ7DOTWKA3GK4JYARFDCVR5CYEXP6O27FUCE5SGFDYQ",
+    "blob": "gqNzaWfEQL6mW/7ss2HKAqsuHN/7ePx11wKSAvFocw5QEDvzSvrvJdzWYvT7ua8Lc0SS0zOmUDDaHQC/pGJ0PNqnu7W3qQKjdHhuiaNhbXQGo2ZlZc4AA7U4omZ2zgB+OrujZ2VurHRlc3RuZXQtdjEuMKJnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAH4+o6NyY3bEIHhydylNDQQhpD9QdKWejLCMBgb5UYJTGCfDW3KgLsI+o3NuZMQgZM5ZNuFgR8pz2dHBgDlmHolfGgF96zX/X4x2bnAJ3aqkdHlwZaNwYXk="
+  }
+]
+```
+
+**Example**
+
+```js
+await AlgoSigner.connect();
+
+// Create an Algod client to get suggested transaction params
+const client = new algosdk.Algodv2(token, server, port, headers);
+const suggestedParams = await client.getTransactionParams().do();
+
+// Use the JS SDK to build a Transaction
+const sdkTx = new algosdk.Transaction({
+  to: 'RECEIVER_ADDRESS',
+  from: 'SENDER_ADDRESS',
+  amount: 100,
+  ...suggestedParams,
+});
+
+// Get the binary and base64 encode it
+const binaryTx = sdkTx.toByte();
+const base64Tx = AlgoSigner.encoding.msgpackToBase64(binaryTx);
+
+const signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64Tx,
+  },
+]);
+```
+
+The signed transactions can then be sent using the SDK (example below) or using the [AlgoSigner.send()](#algosignersend-ledger-mainnettestnet-txblob-) method.
+
+```js
+// Get the base64 encoded signed transaction and convert it to binary
+const binarySignedTx = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
+
+// Send the transaction through the SDK client
+await client.sendRawTransaction(binarySignedTx).do();
 ```
 
 #### Atomic Transactions
 
-WRITEUP
+For Atomic transactions, provide an array of transaction objects with the same group ID, _provided in the same order as when the group was assigned_.
 
-### AlgoSigner.signMultisig(txn)
+**Example**
 
-WRITEUP
+```js
+const tx1 = new algosdk.Transaction({
+  to: 'SECOND_ADDRESS',
+  from: 'FIRST_ADDRESS',
+  amount: 100,
+  ...suggestedParams,
+});
+const tx2 = new algosdk.Transaction({
+  to: 'FIRST_ADDRESS',
+  from: 'SECOND_ADDRESS',
+  amount: 100,
+  ...suggestedParams,
+});
+
+// Assign a Group ID to the transactions using the SDK
+algosdk.assignGroupID([tx1, tx2]);
+
+const binaryTxs = [tx1.toByte(), tx2.toByte()];
+const base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
+
+const signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64Txs[0],
+  },
+  {
+    txn: base64Txs[1],
+  },
+]);
+```
+
+The signed transaction array can then be sent using the SDK.
+
+```js
+const binarySignedTxs = signedTxs.map((signedTx) =>
+  AlgoSigner.encoding.base64ToMsgpack(signedTxs.blob)
+);
+await client.sendRawTransaction(binarySignedTxs).do();
+```
+
+In case not all group transactions belong to accounts on AlgoSigner, you can set the `signers` field of the transaction object as an empty array to specify that it's only being sent to AlgoSigner for reference and group validation, not for signing.
+
+_AlgoSigner.signTxn()_ will return _null_ in it's response array for the positions were reference transactions were sent.
+
+In these cases, you'd have to sign the missing transaction by your own means before it can be sent (by using the SDK, for instance).
+
+```js
+const tx1 = new algosdk.Transaction({
+  to: 'EXTERNAL_ACCOUNT',
+  from: 'ACCOUNT_IN_ALGOSIGNER',
+  amount: 100,
+  ...suggestedParams,
+});
+const tx2 = new algosdk.Transaction({
+  to: 'ACCOUNT_IN_ALGOSIGNER',
+  from: 'EXTERNAL_ACCOUNT',
+  amount: 100,
+  ...suggestedParams,
+});
+
+algosdk.assignGroupID([tx1, tx2]);
+const binaryTxs = [tx1.toByte(), tx2.toByte()];
+const base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
+
+const signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64Txs[0],
+  },
+  {
+    // This tells AlgoSigner that this transaction is not meant to be signed
+    txn: base64Txs[1],
+    signers: [],
+  },
+]);
+```
+
+Signing the remaining transaction with the SDK would look like this:
+
+```js
+// The AlgoSigner.signTxn() response would look like '[{ txID, blob }, null]'
+// Convert first transaction to binary from the response
+const signedTx1Binary = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
+// Sign leftover transaction with the SDK
+const externalAccount = algosdk.mnemonicToSecretKey('EXTERNAL_ACCOUNT_MNEMONIC');
+const signedTx2Binary = tx2.signTxn(externalAccount.sk);
+
+await client.sendRawTransaction([signedTx1Binary, signedTx2Binary]).do();
+```
+
+Alternatively, if you're using the [AlgoSigner.send()](#algosignersend-ledger-mainnettestnet-txblob-) to send the transaction, you have to merge the binaries before converting to a base64 encoded string.
+
+```js
+// Merge transaction binaries into a single Uint8Array
+let combinedBinaryTxns = new Uint8Array(signedTx1Binary.byteLength + signedTx2Binary.byteLength);
+combinedBinaryTxns.set(signedTx1Binary, 0);
+combinedBinaryTxns.set(signedTx2Binary, signedTx1Binary.byteLength);
+
+// Convert the combined array values back to base64
+const combinedBase64Txns = AlgoSigner.encoding.msgpackToBase64(combinedBinaryTxns);
+
+await AlgoSigner.send({
+  ledger: 'TestNet',
+  tx: combinedBase64Txns,
+});
+```
+
+### Multisig Transactions
+
+For Multisig transactions, an additional metadata object is required that adheres to the [Algorand multisig parameters](https://developer.algorand.org/docs/features/accounts/create/#how-to-generate-a-multisignature-account) structure when creating a new multisig account:
+
+```js
+{
+  version: number,
+  threshold: number,
+  addrs: string[]
+}
+```
+
+`AlgoSigner.signTxn()` will validate that the resulting multisig address made from the provided parameters matches the sender address and try to sign with every account on the `addrs` array that is also on AlgoSigner.
+
+**NOTE:** `AlgoSigner.signTxn()` only accepts unsigned multisig transactions. In case you need to add more signatures to partially signed multisig transactions, please use the SDK.
+
+**Example**
+
+```js
+const multisigParams = {
+  version: 1,
+  threshold: 1,
+  addrs: ['FIRST_ADDRESS', 'SECOND_ADDRESS', 'ADDRESS_NOT_IN_ALGOSIGNER'],
+};
+
+const multisigAddress = algosdk.multisigAddress(multisigParams);
+
+const multisigTx = new algosdk.Transaction({
+  to: 'RECEIVER_ADDRESS',
+  from: multisigAddress,
+  amount: 100,
+  ...suggestedParams,
+});
+
+// Get the binary and base64 encode it
+const binaryMultisigTx = multisigTx.toByte();
+const base64MultisigTx = AlgoSigner.encoding.msgpackToBase64(binaryMultisigTx);
+
+// This returns a partially signed Multisig Transaction with signatures for FIRST_ADDRESS and SECOND_ADDRESS
+const signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64MultisigTx,
+  },
+]);
+```
+
+In case you want to specify a subset of addresses to sign with, you can add them to the `signers` list on the transaction object, like so:
+
+```js
+// This returns a partially signed Multisig Transaction with signatures for SECOND_ADDRESS
+const signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64MultisigTx,
+    signers: ['SECOND_ADDRESS'],
+  },
+]);
+```
 
 ### AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })
 
