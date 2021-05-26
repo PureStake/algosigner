@@ -438,8 +438,6 @@ export class Task {
 
           walletTransactions.forEach((walletTx, index) => {
             try {
-              console.log(`Processing transaction #${index}:`);
-              console.log(walletTransactions[index]);
               // Runtime type checking
               if (
                 // prettier-ignore
@@ -454,7 +452,7 @@ export class Task {
                 ) ||
                 (walletTx.msig && typeof walletTx.msig !== 'object')
               ) {
-                console.log('invalid wallet');
+                logging.log('Invalid Wallet Transaction Structure');
                 throw new InvalidStructure();
               } else if (
                 // prettier-ignore
@@ -468,7 +466,7 @@ export class Task {
                   )
                 )
               ) {
-                console.log('invalid msig');
+                logging.log('Invalid Wallet Transaction Multisig Structure');
                 throw new InvalidMsigStructure();
               }
 
@@ -483,11 +481,9 @@ export class Task {
               rawTxArray[index] = rawTx;
               const processedTx = rawTx._getDictForDisplay();
               processedTxArray[index] = processedTx;
-              console.log(processedTx);
               const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
               transactionWraps[index] = wrap;
               const genesisID = wrap.transaction.genesisID;
-              console.log(wrap);
 
               const signers = walletTransactions[index].signers;
               const msigData = walletTransactions[index].msig;
@@ -512,18 +508,11 @@ export class Task {
             }
           });
 
-          console.log('Raw, processed, wraps and errors');
-          console.log(rawTxArray);
-          console.log(processedTxArray);
-          console.log(transactionWraps);
-          console.log(validationErrors);
-
           if (
             validationErrors.length ||
             !transactionWraps.length ||
             transactionWraps.some((w) => w === undefined)
           ) {
-            console.log('Errors or missing wraps');
             // We don't have transaction wraps or we have an building error, reject the transaction.
             let errorMessage = 'There was a problem validating the transaction(s): ';
             let validationMessages = '';
@@ -551,7 +540,6 @@ export class Task {
                 )
             )
           ) {
-            console.log('Invalid fields');
             // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
             // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
             const invalidKeys = {};
@@ -581,7 +569,6 @@ export class Task {
             reject(d);
             return;
           } else {
-            console.log('Last bracket');
             // Group validations
             if (transactionWraps.length > 1) {
               if (
@@ -641,7 +628,6 @@ export class Task {
               }
             }
 
-            console.log(d.body.params);
             d.body.params.transactionWraps = transactionWraps;
 
             extensionBrowser.windows.create(
@@ -1096,8 +1082,6 @@ export class Task {
 
           const signedTxs = [];
           const signErrors = [];
-          console.log('Signing');
-          console.log(transactionObjs);
 
           try {
             const ledger = getLedgerFromGenesisId(transactionObjs[0].genesisID);
@@ -1128,7 +1112,6 @@ export class Task {
                 }
               }
             });
-            console.log(`Needed accounts (${neededAccounts.length}): ${neededAccounts}`);
 
             const context = new encryptionWrap(passphrase);
             context.unlock(async (unlockedValue: any) => {
@@ -1156,12 +1139,9 @@ export class Task {
               }
 
               transactionObjs.forEach((tx, index) => {
-                console.log(`Trying to sign tx ${index}`);
-                console.log(tx);
                 const signers = walletTransactions[index].signers;
                 // If it's a reference transaction we return null, otherwise we try sign
                 if (signers && !signers.length) {
-                  console.log("It's a reference transaction");
                   signedTxs[index] = null;
                 } else {
                   try {
@@ -1171,7 +1151,6 @@ export class Task {
                     let signedBlob;
 
                     if (msigData) {
-                      console.log("We're dealing with multisig");
                       const partiallySignedBlobs = [];
                       // We use the provided signers or all of the available addresses on the Multisig metadata
                       const signingAddresses = (signers ? signers : msigData.addrs).filter(
@@ -1194,8 +1173,6 @@ export class Task {
                         partiallySignedBlobs.forEach((partial) => {
                           const decoded = algosdk.decodeSignedTransaction(partial);
                           const signed = decoded.msig.subsig.find((s) => !!s.s);
-                          console.log(algosdk.encodeAddress(signed.pk));
-                          console.log(decoded.msig.subsig);
                           signatures[algosdk.encodeAddress(signed.pk)] = signed.s;
                         });
                         const mergedTx = algosdk.decodeObj(partiallySignedBlobs[0]);
@@ -1212,7 +1189,6 @@ export class Task {
                         signedBlob = partiallySignedBlobs[0];
                       }
                     } else {
-                      console.log("We're dealing with a regular transaction");
                       const address = wrap.transaction.from;
                       signedBlob = tx.signTxn(recoveredAccounts[address].sk);
                     }
