@@ -22,6 +22,7 @@ import { TransactionType } from '@algosigner/common/types/transaction';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { removeEmptyFields } from '@algosigner/common/utils';
 
 /* eslint-disable-next-line @typescript-eslint/no-var-requires */
 const algosdk = require('algosdk');
@@ -36,6 +37,9 @@ export function getValidatedTxnWrap(
 ): BaseValidatedTxnWrap {
   let validatedTxnWrap: BaseValidatedTxnWrap = undefined;
   let error: Error = undefined;
+
+  // We clear the txn object of empty fields
+  removeEmptyFields(txn);
 
   switch (type.toLowerCase()) {
     case TransactionType.Pay:

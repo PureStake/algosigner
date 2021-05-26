@@ -29,7 +29,6 @@ import {
 } from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
-import { removeEmptyFields } from '@algosigner/common/utils';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 
 const popupProperties = {
@@ -482,7 +481,7 @@ export class Task {
                */
               const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
               rawTxArray[index] = rawTx;
-              const processedTx = removeEmptyFields(rawTx._getDictForDisplay());
+              const processedTx = rawTx._getDictForDisplay();
               processedTxArray[index] = processedTx;
               console.log(processedTx);
               const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
@@ -874,8 +873,6 @@ export class Task {
 
               const txn = { ...message.body.params.transaction };
 
-              removeEmptyFields(txn);
-
               // Modify base64 encoded fields
               if ('note' in txn && txn.note !== undefined) {
                 txn.note = new Uint8Array(Buffer.from(txn.note));
@@ -983,9 +980,6 @@ export class Task {
               if (account) {
                 // We can now use the found account match to get the sign key
                 const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-
-                // Use the received txn component of the transaction, but remove undefined and null values
-                removeEmptyFields(msig_txn.txn);
 
                 // Modify base64 encoded fields
                 if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
