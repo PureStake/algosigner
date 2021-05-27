@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable prefer-const */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
@@ -20,27 +16,26 @@ import Authenticate from 'components/Authenticate';
 import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
-import logging from '@algosigner/common/logging';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 
 function deny() {
   const params = {
     responseOriginTabID: responseOriginTabID,
   };
-  sendMessage(JsonRpcMethod.SignDeny, params, function () {});
+  sendMessage(JsonRpcMethod.SignDeny, params, function () {
+    // No callback
+  });
 }
 
 let responseOriginTabID = 0;
 
-const SignMultisigTransaction: FunctionalComponent = (props) => {
+const SignMultisigTransaction: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [account, setAccount] = useState<string>('');
   const [request, setRequest] = useState<any>({});
-  const [showTx, setShowTx] = useState<any>(null);
   const [ledger, setLedger] = useState<string>('');
 
   useEffect(() => {
@@ -69,7 +64,6 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
     };
     setLoading(true);
     setAuthError('');
-    setError('');
     window.removeEventListener('beforeunload', deny);
 
     sendMessage(JsonRpcMethod.SignAllowMultisig, params, function (response) {
@@ -81,7 +75,6 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
             setAuthError('Wrong passphrase');
             break;
           default:
-            setError(response.error);
             setAskAuth(false);
             break;
         }
@@ -90,7 +83,7 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
   };
 
   if (request.body) {
-    let tx = request.body.params.txn;
+    const tx = request.body.params.txn;
     // Search for account
     let txLedger;
     getBaseSupportedLedgers().forEach((l) => {
@@ -124,6 +117,7 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
     }
   }
 
+  const transactionWrap = request && request.body && request.body.params;
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
@@ -137,78 +131,78 @@ const SignMultisigTransaction: FunctionalComponent = (props) => {
               ${request.favIconUrl &&
               html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
-                ${request.originTitle} wants to sign a transaction for
-                ${ledger.toLowerCase() == 'mainnet'
-                  ? html`<span style="color:#f16522;">${ledger}</span>`
-                  : html`<span style="color:#222b60;">${ledger}</span>`}
+                <span>${request.originTitle} wants to sign a transaction for </span>
+                <span style="color:${ledger.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
+                  ${ledger}
+                </span>
               </h1>
             </div>
           </section>
           <section id="txAlerts" class="section py-0">
-            ${request.body.params.validityObject &&
-            html`<${TxAlert} vo=${request.body.params.validityObject} />`}
+            ${transactionWrap.validityObject &&
+            html`<${TxAlert} vo=${transactionWrap.validityObject} />`}
           </section>
           <section class="section py-0">
-            ${request.body.params.txn.type === 'pay' &&
+            ${transactionWrap.txn.type === 'pay' &&
             html`
               <${TxPay}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
-            ${request.body.params.txn.type === 'keyreg' &&
+            ${transactionWrap.txn.type === 'keyreg' &&
             html`
               <${TxKeyreg}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
-            ${request.body.params.txn.type === 'acfg' &&
+            ${transactionWrap.txn.type === 'acfg' &&
             html`
               <${TxAcfg}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
-                dt=${request.body.params.txDerivedTypeText}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
+                dt=${transactionWrap.txDerivedTypeText}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
-            ${request.body.params.txn.type === 'axfer' &&
+            ${transactionWrap.txn.type === 'axfer' &&
             html`
               <${TxAxfer}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
-                dt=${request.body.params.txDerivedTypeText}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
+                dt=${transactionWrap.txDerivedTypeText}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
-            ${request.body.params.txn.type === 'afrz' &&
+            ${transactionWrap.txn.type === 'afrz' &&
             html`
               <${TxAfrz}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
-            ${request.body.params.txn.type === 'appl' &&
+            ${transactionWrap.txn.type === 'appl' &&
             html`
               <${TxAppl}
-                tx=${request.body.params.txn}
-                vo=${request.body.params.validityObject}
+                tx=${transactionWrap.txn}
+                vo=${transactionWrap.validityObject}
                 account=${account}
                 ledger=${ledger}
-                fee=${request.body.params.estimatedFee}
+                fee=${transactionWrap.estimatedFee}
               />
             `}
           </section>

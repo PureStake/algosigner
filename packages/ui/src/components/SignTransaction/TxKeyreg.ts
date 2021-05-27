@@ -4,7 +4,8 @@ import { useState } from 'preact/hooks';
 
 const TxKeyreg: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, fee } = props;
+  const { tx, account, estFee } = props;
+  const fee = estFee ? estFee : tx['fee'];
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -24,16 +25,10 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
 
     <div class="tabs is-centered mb-2">
       <ul>
-        <li
-          class=${tab === 'overview' ? 'is-active' : ''}
-          onClick=${() => setTab('overview')}
-        >
+        <li class=${tab === 'overview' ? 'is-active' : ''} onClick=${() => setTab('overview')}>
           <a>Overview</a>
         </li>
-        <li
-          class=${tab === 'details' ? 'is-active' : ''}
-          onClick=${() => setTab('details')}
-        >
+        <li class=${tab === 'details' ? 'is-active' : ''} onClick=${() => setTab('details')}>
           <a>Details</a>
         </li>
       </ul>
@@ -42,6 +37,13 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
     ${tab === 'overview' &&
     html`
       <div>
+        ${tx.group &&
+        html`
+          <div class="is-flex">
+            <p style="width: 30%;">Group ID:</p>
+            <p style="width: 70%;" class="truncate-text">${tx.group}</p>
+          </div>
+        `}
         <div class="is-flex">
           <p style="width: 30%;">Vote Key:</p>
           <p style="width: 70%; word-break: break-word;">${tx.voteKey}</p>
@@ -51,9 +53,7 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
           <p style="width: 70%; word-break: break-word;">${tx.selectionKey}</p>
         </div>
         <div class="is-flex">
-          <p style="width: 30%;">
-            ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'}
-          </p>
+          <p style="width: 30%;"> ${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'} </p>
           <p style="width: 70%;">${fee / 1e6} Algos</p>
         </div>
       </div>

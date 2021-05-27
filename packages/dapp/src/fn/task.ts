@@ -2,7 +2,12 @@ import { ITask } from './interfaces';
 
 import { MessageBuilder } from '../messaging/builder';
 
-import { Transaction, RequestErrors, MultisigTransaction } from '@algosigner/common/types';
+import {
+  Transaction,
+  RequestErrors,
+  MultisigTransaction,
+  WalletTransaction,
+} from '@algosigner/common/types';
 import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
 import { Runtime } from '@algosigner/common/runtime/runtime';
 
@@ -42,5 +47,33 @@ export class Task extends Runtime implements ITask {
 
   subscribe(eventName: string, callback: Function) {
     Task.subscriptions[eventName] = callback;
+  }
+
+  /**
+   * @param transactions array of valid wallet transaction objects
+   * @returns array of signed transactions
+   */
+  signTxn(
+    transactions: Array<WalletTransaction>,
+    error: RequestErrors = RequestErrors.None
+  ): Promise<JsonPayload> {
+    const formatError = new Error(
+      'There was a problem with the transaction(s) recieved. Please provide an array of valid transaction objects.'
+    );
+    if (!Array.isArray(transactions) || !transactions.length) throw formatError;
+    transactions.forEach((walletTx) => {
+      if (
+        walletTx === null ||
+        typeof walletTx !== 'object' ||
+        walletTx.txn === null ||
+        !walletTx.txn.length
+      )
+        throw formatError;
+    });
+
+    const params = {
+      transactions: transactions,
+    };
+    return MessageBuilder.promise(JsonRpcMethod.SignWalletTransaction, params, error);
   }
 }

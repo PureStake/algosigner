@@ -10,7 +10,7 @@
   "scripts": {
     "install:extension": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);",
     "install:test": "(cd ./packages/test-project && npm install);",
-    "build": "(cd ./packages/common && npm run build); (cd ./packages/crypto && npm run build); (cd ./packages/storage && npm run build); (cd ./packages/ui && npm run build); (cd ./packages/extension && npm run build); (cd ./packages/dapp && npm run build);",
+    "build": "(cd ./packages/common && npm run build); (cd ./packages/crypto && npm run build); (cd ./packages/dapp && npm run build); (cd ./packages/storage && npm run build); (cd ./packages/ui && npm run build); (cd ./packages/extension && npm run build);",
     "build:ui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
     "build:extension": "cd ./packages/extension && npm run build && cp -r ./dist/* ../../dist/",
     "clean": "rm -rf ./dist/* && rm -rf ./packages/common/dist/* && rm -rf ./packages/crypto/dist/* && rm -rf ./packages/dapp/dist/* && rm -rf ./packages/extension/dist/* && rm -rf ./packages/storage/dist/* && rm -rf ./packages/ui/dist/* && rm -rf ./packages/dapp/lib/*",

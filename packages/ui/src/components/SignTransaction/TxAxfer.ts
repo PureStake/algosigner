@@ -4,7 +4,8 @@ import { useState } from 'preact/hooks';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, account, ledger, vo, dt, fee, da, un } = props;
+  const { tx, account, ledger, vo, dt, estFee, da, un } = props;
+  const fee = estFee ? estFee : tx['fee'];
 
   const txText = JSON.stringify(tx, null, 2);
 
@@ -47,6 +48,13 @@ const TxAxfer: FunctionalComponent = (props: any) => {
     ${tab === 'overview' &&
     html`
       <div>
+        ${tx.group &&
+        html`
+          <div class="is-flex">
+            <p style="width: 30%;">Group ID:</p>
+            <p style="width: 70%;" class="truncate-text">${tx.group}</p>
+          </div>
+        `}
         <div class="is-flex">
           <p style="width: 30%;">Asset:</p>
           <a
@@ -61,7 +69,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
           </a>
         </div>
         <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
-          <p style="width: 30%;"> ${!tx['flatFee'] ? 'Estimated fee:' : 'Fee:'} </p>
+          <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
           <p style="width: 70%;">${fee / 1e6} Algos</p>
         </div>
         <div class="is-flex">

@@ -1,3 +1,5 @@
+import { WalletTransaction } from '../types';
+
 export const JSONRPC_VERSION: string = '2.0';
 
 /* eslint-disable no-unused-vars */
@@ -8,9 +10,11 @@ export enum JsonRpcMethod {
   AuthorizationDeny = 'authorization-deny',
   SignAllow = 'sign-allow',
   SignAllowMultisig = 'sign-allow-multisig',
+  SignAllowWalletTx = 'sign-allow-wallet-tx',
   SignDeny = 'sign-deny',
   SignTransaction = 'sign-transaction',
   SignMultisigTransaction = 'sign-multisig-transaction',
+  SignWalletTransaction = 'sign-wallet-transaction',
   SendTransaction = 'send-transaction',
   Algod = 'algod',
   Indexer = 'indexer',
@@ -37,7 +41,9 @@ export enum JsonRpcMethod {
   GetLedgers = 'get-ledgers',
 }
 
-export type JsonPayload = { [key: string]: string | number | JsonPayload | undefined };
+export type JsonPayload = {
+  [key: string]: string | number | Array<WalletTransaction> | JsonPayload | undefined;
+};
 
 export type JsonRpcBody = {
   readonly jsonrpc: string;
