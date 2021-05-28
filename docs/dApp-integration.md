@@ -21,6 +21,8 @@ This guide covers the new v2 Transactions Signing method, docs for the legacy v1
 
 [Working with Custom Networks](#custom-networks)
 
+[Helper Functions](#helper-functions)
+
 ## Method Detail
 
 ### AlgoSigner.connect()
