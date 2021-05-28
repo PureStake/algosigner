@@ -200,11 +200,11 @@ AlgoSigner.signTxn([
 await AlgoSigner.connect();
 
 // Create an Algod client to get suggested transaction params
-const client = new algosdk.Algodv2(token, server, port, headers);
-const suggestedParams = await client.getTransactionParams().do();
+let client = new algosdk.Algodv2(token, server, port, headers);
+let suggestedParams = await client.getTransactionParams().do();
 
 // Use the JS SDK to build a Transaction
-const sdkTx = new algosdk.Transaction({
+let sdkTx = new algosdk.Transaction({
   to: 'RECEIVER_ADDRESS',
   from: 'SENDER_ADDRESS',
   amount: 100,
@@ -212,10 +212,10 @@ const sdkTx = new algosdk.Transaction({
 });
 
 // Get the binary and base64 encode it
-const binaryTx = sdkTx.toByte();
-const base64Tx = AlgoSigner.encoding.msgpackToBase64(binaryTx);
+let binaryTx = sdkTx.toByte();
+let base64Tx = AlgoSigner.encoding.msgpackToBase64(binaryTx);
 
-const signedTxs = await AlgoSigner.signTxn([
+let signedTxs = await AlgoSigner.signTxn([
   {
     txn: base64Tx,
   },
@@ -226,7 +226,7 @@ The signed transactions can then be sent using the SDK (example below) or using 
 
 ```js
 // Get the base64 encoded signed transaction and convert it to binary
-const binarySignedTx = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
+let binarySignedTx = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
 
 // Send the transaction through the SDK client
 await client.sendRawTransaction(binarySignedTx).do();
@@ -239,13 +239,13 @@ For Atomic transactions, provide an array of transaction objects with the same g
 **Example**
 
 ```js
-const tx1 = new algosdk.Transaction({
+let tx1 = new algosdk.Transaction({
   to: 'SECOND_ADDRESS',
   from: 'FIRST_ADDRESS',
   amount: 100,
   ...suggestedParams,
 });
-const tx2 = new algosdk.Transaction({
+let tx2 = new algosdk.Transaction({
   to: 'FIRST_ADDRESS',
   from: 'SECOND_ADDRESS',
   amount: 100,
@@ -255,10 +255,10 @@ const tx2 = new algosdk.Transaction({
 // Assign a Group ID to the transactions using the SDK
 algosdk.assignGroupID([tx1, tx2]);
 
-const binaryTxs = [tx1.toByte(), tx2.toByte()];
-const base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
+let binaryTxs = [tx1.toByte(), tx2.toByte()];
+let base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
 
-const signedTxs = await AlgoSigner.signTxn([
+let signedTxs = await AlgoSigner.signTxn([
   {
     txn: base64Txs[0],
   },
@@ -271,9 +271,7 @@ const signedTxs = await AlgoSigner.signTxn([
 The signed transaction array can then be sent using the SDK.
 
 ```js
-const binarySignedTxs = signedTxs.map((signedTx) =>
-  AlgoSigner.encoding.base64ToMsgpack(signedTxs.blob)
-);
+let binarySignedTxs = signedTxs.map((tx) => AlgoSigner.encoding.base64ToMsgpack(tx.blob));
 await client.sendRawTransaction(binarySignedTxs).do();
 ```
 
@@ -284,13 +282,13 @@ _AlgoSigner.signTxn()_ will return _null_ in it's response array for the positio
 In these cases, you'd have to sign the missing transaction by your own means before it can be sent (by using the SDK, for instance).
 
 ```js
-const tx1 = new algosdk.Transaction({
+let tx1 = new algosdk.Transaction({
   to: 'EXTERNAL_ACCOUNT',
   from: 'ACCOUNT_IN_ALGOSIGNER',
   amount: 100,
   ...suggestedParams,
 });
-const tx2 = new algosdk.Transaction({
+let tx2 = new algosdk.Transaction({
   to: 'ACCOUNT_IN_ALGOSIGNER',
   from: 'EXTERNAL_ACCOUNT',
   amount: 100,
@@ -298,10 +296,10 @@ const tx2 = new algosdk.Transaction({
 });
 
 algosdk.assignGroupID([tx1, tx2]);
-const binaryTxs = [tx1.toByte(), tx2.toByte()];
-const base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
+let binaryTxs = [tx1.toByte(), tx2.toByte()];
+let base64Txs = binaryTxs.map((binary) => AlgoSigner.encoding.msgpackToBase64(binary));
 
-const signedTxs = await AlgoSigner.signTxn([
+let signedTxs = await AlgoSigner.signTxn([
   {
     txn: base64Txs[0],
   },
@@ -318,10 +316,10 @@ Signing the remaining transaction with the SDK would look like this:
 ```js
 // The AlgoSigner.signTxn() response would look like '[{ txID, blob }, null]'
 // Convert first transaction to binary from the response
-const signedTx1Binary = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
+let signedTx1Binary = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
 // Sign leftover transaction with the SDK
-const externalAccount = algosdk.mnemonicToSecretKey('EXTERNAL_ACCOUNT_MNEMONIC');
-const signedTx2Binary = tx2.signTxn(externalAccount.sk);
+let externalAccount = algosdk.mnemonicToSecretKey('EXTERNAL_ACCOUNT_MNEMONIC');
+let signedTx2Binary = tx2.signTxn(externalAccount.sk);
 
 await client.sendRawTransaction([signedTx1Binary, signedTx2Binary]).do();
 ```
@@ -335,7 +333,7 @@ combinedBinaryTxns.set(signedTx1Binary, 0);
 combinedBinaryTxns.set(signedTx2Binary, signedTx1Binary.byteLength);
 
 // Convert the combined array values back to base64
-const combinedBase64Txns = AlgoSigner.encoding.msgpackToBase64(combinedBinaryTxns);
+let combinedBase64Txns = AlgoSigner.encoding.msgpackToBase64(combinedBinaryTxns);
 
 await AlgoSigner.send({
   ledger: 'TestNet',
@@ -362,15 +360,15 @@ For Multisig transactions, an additional metadata object is required that adhere
 **Example**
 
 ```js
-const multisigParams = {
+let multisigParams = {
   version: 1,
   threshold: 1,
   addrs: ['FIRST_ADDRESS', 'SECOND_ADDRESS', 'ADDRESS_NOT_IN_ALGOSIGNER'],
 };
 
-const multisigAddress = algosdk.multisigAddress(multisigParams);
+let multisigAddress = algosdk.multisigAddress(multisigParams);
 
-const multisigTx = new algosdk.Transaction({
+let multisigTx = new algosdk.Transaction({
   to: 'RECEIVER_ADDRESS',
   from: multisigAddress,
   amount: 100,
@@ -378,13 +376,14 @@ const multisigTx = new algosdk.Transaction({
 });
 
 // Get the binary and base64 encode it
-const binaryMultisigTx = multisigTx.toByte();
-const base64MultisigTx = AlgoSigner.encoding.msgpackToBase64(binaryMultisigTx);
+let binaryMultisigTx = multisigTx.toByte();
+let base64MultisigTx = AlgoSigner.encoding.msgpackToBase64(binaryMultisigTx);
 
 // This returns a partially signed Multisig Transaction with signatures for FIRST_ADDRESS and SECOND_ADDRESS
-const signedTxs = await AlgoSigner.signTxn([
+let signedTxs = await AlgoSigner.signTxn([
   {
     txn: base64MultisigTx,
+    msig: multisigParams,
   },
 ]);
 ```
@@ -393,9 +392,10 @@ In case you want to specify a subset of addresses to sign with, you can add them
 
 ```js
 // This returns a partially signed Multisig Transaction with signatures for SECOND_ADDRESS
-const signedTxs = await AlgoSigner.signTxn([
+let signedTxs = await AlgoSigner.signTxn([
   {
     txn: base64MultisigTx,
+    msig: multisigParams,
     signers: ['SECOND_ADDRESS'],
   },
 ]);
