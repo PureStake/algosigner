@@ -12,9 +12,11 @@ import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache, getAvailableLedgersExt } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
-import { getValidatedTxnWrap } from '../transaction/actions';
+import { getValidatedTxnWrap, getLedgerFromGenesisId } from '../transaction/actions';
+import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { NoAccountMatch } from '../../errors/transactionSign';
 
 const session = new Session();
 
@@ -50,11 +52,16 @@ export class InternalMethods {
   }
 
   // Checks if an address is a valid user account for a given ledger.
-  public static checkValidAccount(address: string, ledger: Ledger) {
-    for (var i = session.wallet[ledger].length - 1; i >= 0; i--) {
-      if (session.wallet[ledger][i].address === address) return true;
+  public static checkValidAccount(genesisID: string, address: string): void {
+    const ledger: string = getLedgerFromGenesisId(genesisID);
+    let found = false;
+    for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
+      if (session.wallet[ledger][i].address === address) {
+        found = true;
+        break;
+      }
     }
-    return false;
+    if (!found) throw new NoAccountMatch(address);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
@@ -530,7 +537,7 @@ export class InternalMethods {
         'Content-Type': 'application/x-binary',
       };
 
-      var transactionWrap = undefined;
+      let transactionWrap: BaseValidatedTxnWrap = undefined;
       try {
         transactionWrap = getValidatedTxnWrap(txn, txn['type']);
       } catch (e) {

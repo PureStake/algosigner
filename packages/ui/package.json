@@ -1,6 +1,6 @@
 {
   "name": "algosigner-ui",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "author": "https://developer.purestake.io",
   "description": "User interface built for AlgoSigner.",
   "private": true,
@@ -11,7 +11,7 @@
     "test-watch": "jest --watch"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.14.0",
+    "@fortawesome/fontawesome-free": "^5.15.0",
     "history": "^5.0.0",
     "htm": "^3.0.4",
     "mobx": "^5.15.6",
