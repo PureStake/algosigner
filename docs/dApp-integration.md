@@ -165,7 +165,7 @@ Transactions objects need to be presented with the following structure:
 };
 ```
 
-In order to facilitate conversion between different formats and encodings, helper functions are available on the `AlgoSigner.encoding.*` namespace.
+In order to facilitate conversion between different formats and encodings, [helper functions](#helper-functions) are available on the `AlgoSigner.encoding.*` namespace.
 
 Also available on transactions built with the JS SDK is the `.toByte()` method that converts the SDK transaction object into it's binary format.
 
@@ -418,7 +418,7 @@ AlgoSigner.send({
 { "txId": "OKU6A2QYMRSZAUEJUZL3PW5XKLTA6TKWQHIIBXDCO3KT5OHCULBA" }
 ```
 
-### Custom Networks
+## Custom Networks
 
 - Custom networks beta support is now in AlgoSigner. [Setup Guide](docs/add-network.md)
 - AlgoSigner.accounts(ledger) has changed such that calls now accept names that have been added to the user's custom network list as valid ledger names.
@@ -441,3 +441,14 @@ The dApp may return the following errors in case of users rejecting requests, or
 ```
 
 Errors may be passed back to the dApp from the Algorand JS SDK if a transaction is valid, but has some other issue - for example, insufficient funds in the sending account.
+
+## Helper Functions
+
+`AlgoSigner.enconding.*` contains a few different methods in order to help with the different formats and encodings that are needed when working with dApps and the SDK.
+
+```
+  AlgoSigner.encoding.msgpackToBase64(): receives a binary object (as a Uint8Array) and returns the corresponding base64 encoded string,
+  AlgoSigner.encoding.base64ToMsgpack(): receives a base64 encoded string and returns the corresponding binary object (as a Uint8Array),
+  AlgoSigner.encoding.stringToByteArray(): receives a plain unencoded string and returns the corresponding binary object (as a Uint8Array),
+  AlgoSigner.encoding.byteArrayToString(): receives a binary object (as a Uint8Array) and returns the corresponding plain unencoded string,
+```
