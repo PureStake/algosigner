@@ -4,6 +4,7 @@ import { Router, Route } from 'preact-router';
 import { createHashHistory } from 'history';
 import '@fortawesome/fontawesome-free/js/fontawesome';
 import '@fortawesome/fontawesome-free/js/solid';
+import '@fortawesome/fontawesome-free/js/regular';
 
 import MainHeader from 'components/MainHeader';
 import Footer from 'components/Footer';
@@ -19,11 +20,14 @@ import Account from 'pages/Account';
 import SendAlgos from 'pages/SendAlgos';
 import AddAsset from 'pages/AddAsset';
 import SignTransaction from 'pages/SignTransaction';
+import SignWalletTransaction from 'pages/SignWalletTransaction';
 import SignMultisigTransaction from 'pages/SignMultisigTransaction';
 
 import { StoreProvider } from 'services/StoreContext';
 
 require('./styles.scss');
+
+window.FontAwesome.config.autoReplaceSvg = 'nest';
 
 const mountNode = document.getElementById('root');
 
@@ -34,9 +38,10 @@ const Root = (props) => {
 const App = () => {
   return html`
       <${StoreProvider}>
-        <div style="overflow: hidden; width: 400px; height: 550px; display: flex; flex-direction: column;">
+        <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
             <${SignTransaction} path="/sign-transaction" />
+            <${SignWalletTransaction} path="/sign-v2-transaction" />
             <${SignMultisigTransaction} path="/sign-multisig-transaction" />
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
