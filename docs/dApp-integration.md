@@ -2,11 +2,7 @@
 
 # Integrating AlgoSigner to add Transaction Capabilities for dApps on Algorand
 
-AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, discover account addresses it holds, query the Network (make calls to AlgoD v2 or the Indexer) and request AlgoSigner to inquire the user to sign a transaction initiated by the application. **All methods of the injected library return a Promise that needs to be handled by the dApp.**
-
-A sample dApp was created to showcase the methods described here:
-
-- [Website](https://purestake.github.io/algosigner-dapp-example/) | [GitHub ](https://github.com/PureStake/algosigner-dapp-example)
+AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, discover account addresses it holds, query the Network (make calls to AlgoD v2 or the Indexer) and request AlgoSigner to request for the user to sign a transaction initiated by the application. **All methods of the injected library return a Promise that needs to be handled by the dApp.**
 
 This guide covers the new v2 Transactions Signing method, docs for the legacy v1 signing are [here](legacy-dApp-integration.md)
 
@@ -16,9 +12,7 @@ This guide covers the new v2 Transactions Signing method, docs for the legacy v1
 - [AlgoSigner.accounts({ ledger: ‘MainNet|TestNet’ })](#algosigneraccounts-ledger-mainnettestnet-)
 - [AlgoSigner.algod({ ledger: ‘MainNet|TestNet’, path: ‘algod v2 path’, ... })](#algosigneralgod-ledger-mainnettestnet-path-algod-v2-path--)
 - [AlgoSigner.indexer({ ledger: ‘MainNet|TestNet’, path: ‘indexer v2 path’ })](#algosignerindexer-ledger-mainnettestnet-path-indexer-v2-path-)
-
 - [AlgoSigner.signTxn([txnObjects,...])](#algosignersigntxntxnobjects)
-
 - [AlgoSigner.send({ ledger: ‘MainNet|TestNet’, txBlob })](#algosignersend-ledger-mainnettestnet-txblob-)
 
 ## Misc
@@ -26,6 +20,8 @@ This guide covers the new v2 Transactions Signing method, docs for the legacy v1
 [Rejection Messages](#rejection-messages)
 
 [Working with Custom Networks](#custom-networks)
+
+## Method Detail
 
 ### AlgoSigner.connect()
 
@@ -151,6 +147,8 @@ AlgoSigner.indexer({
 
 Sent in transactions will be validated against the Algorand JS SDK transaction types - field names must match, and the whole transaction will be rejected otherwise.
 
+This section covers the new v2 Signing. Additional end-to-end examples will be included in the next weeks.
+
 ### AlgoSigner.signTxn([txnObjects,...])
 
 Send transaction objects, conforming to the Algorand JS SDK, to AlgoSigner for approval. The Network is determined from the 'genesis-id' property. If approved, the response is an array of signed transaction objects, with the binary blob field base64 encoded to prevent transmission issues.
@@ -181,7 +179,7 @@ AlgoSigner.signTxn([
 ]);
 ```
 
-**NOTE:** Even though the method accepts an array of transactions, it's meant for atomic transactions. Please refrain from sending multiple non-atomic transactions.
+**NOTE:** Even though the method accepts an array of transactions, it requires atomic transactions with groupId and will error on non-atomic groups.
 
 **Response**
 

@@ -17,5 +17,3 @@ With the release of v2 signing, developers coding to the standard will be able t
 ### Developing a dApp
 
 - Read [v2 dApp Integration Guide](docs/dApp-integration.md)
-- Read [Sample v2 dApp project](https://github.com/PureStake/algosigner-dapp-example)
-- Try [Interactive v2 dApp](https://purestake.github.io/algosigner-dapp-example/)

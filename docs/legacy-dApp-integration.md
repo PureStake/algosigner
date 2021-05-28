@@ -6,12 +6,15 @@ AlgoSigner injects a JavaScript library into every web page the browser user vis
 
 A sample dApp was created to showcase the methods described here, you can find it at:
 
-- [Website dApp](https://purestake.github.io/algosigner-dapp-example/)
-- [GitHub dApp](https://github.com/PureStake/algosigner-dapp-example)
+- [Website](https://purestake.github.io/algosigner-dapp-example/) | [GitHub ](https://github.com/PureStake/algosigner-dapp-example)
 
 Sent in transactions will be validated against the Algorand JS SDK transaction types - field names must match, and the whole transaction will be rejected otherwise.
 
 Proxied requests are passed through to an API service - currently set to the PureStake API service. Endpoints available are limited to what the service exposes. The API backend may be configured by advanced users and is not guaranteed to respond as expected.
+
+This page documents the legacy AlgoSigner.sign() method, will be deprecated in a future release in favor of AlgoSigner.signTxn() covered [here](docs/dApp-integration.md).
+
+_The v1 Atomic transaction functionality will start warning extension users in the next major release and be deprecated entirely in two releases._
 
 ## [Existing Methods](#existing-methods)
 

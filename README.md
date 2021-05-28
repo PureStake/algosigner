@@ -10,6 +10,14 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
+## 1.5.0 Release
+
+This release features the new v2 Signing functionality for dApp developers. Designed to meet the upcoming Algorand Foundation standards it will greatly simplifying complex signing scenarios like Multisignature and Atomic. Encoding is standardized and new helper functions simplify the complexity.
+
+[v2 AlgoSigner methods](docs/dApp-integration.md)
+
+The v1 Atomic transaction functionality will start warning extension users in the next major release and be deprecated entirely in two releases.
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
@@ -30,7 +38,7 @@ Developing with v2 Transaction Signing
 Legacy v1 Transaction Signing
 
 - [v1 Guide](docs/legacy-signing.md)
-- [v1 AlgoSigner methods](legacy-dApp-integration.md)
+- [v1 AlgoSigner methods](docs/legacy-dApp-integration.md)
 
 ## Roadmap
 
