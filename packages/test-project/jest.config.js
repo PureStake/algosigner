@@ -9,4 +9,5 @@ module.exports = {
   // Ignoring the test directory for coverage
   collectCoverageFrom: ['**/src/*.{js,ts,tsx}'],
   coverageDirectory: './coverage',
+  testTimeout: 15000,
 };
