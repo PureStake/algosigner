@@ -30,6 +30,7 @@ import {
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
+import { removeEmptyFields } from '@algosigner/common/utils';
 
 const popupProperties = {
   type: 'popup',
@@ -858,6 +859,7 @@ export class Task {
               const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
 
               const txn = { ...message.body.params.transaction };
+              removeEmptyFields(txn);
 
               // Modify base64 encoded fields
               if ('note' in txn && txn.note !== undefined) {
@@ -966,6 +968,8 @@ export class Task {
               if (account) {
                 // We can now use the found account match to get the sign key
                 const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+
+                removeEmptyFields(msig_txn.txn);
 
                 // Modify base64 encoded fields
                 if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
