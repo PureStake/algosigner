@@ -75,7 +75,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
         html`
           <div class="is-flex">
             <p style="width: 40%;">Args:</p>
-            <p style="width: 60%;">${tx.appArgs.join(', ')}</p>
+            <p style="width: 60%;">[${tx.appArgs.join(', ')}]</p>
           </div>
         `}
         ${tx.appClearProgram &&
