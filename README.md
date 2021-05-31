@@ -18,6 +18,13 @@ This release features the new v2 Signing functionality for dApp developers. Desi
 
 The v1 Atomic transaction functionality will start warning extension users in the next major release and be deprecated entirely in two releases.
 
+### 1.5.1 Patch
+
+Improved Application Transaction workflow
+
+- `AppOnComplete` now defaults to 0
+- Improved readability on `AppArgs` during signing. The base64-encoded version will be shown.
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)

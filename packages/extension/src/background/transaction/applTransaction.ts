@@ -21,7 +21,7 @@ export class ApplTx implements IApplTx {
   tag?: string = null;
 
   appIndex: any = undefined;
-  appOnComplete: any = undefined;
+  appOnComplete: number = 0;
   appAccounts?: any = null;
   appApprovalProgram?: any = null;
   appArgs?: any = null;
