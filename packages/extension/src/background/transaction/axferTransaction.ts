@@ -7,10 +7,10 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 class AssetTransferTx implements IAssetTransferTx {
   type: string = undefined;
   assetIndex: number = undefined;
-  amount: number = undefined;
+  amount: number = 0;
+  from: string = undefined;
   to: string = undefined;
   closeRemainderTo?: string = null;
-  from: string = undefined;
   fee: number = undefined;
   firstRound: number = undefined;
   lastRound: number = undefined;
