@@ -142,7 +142,6 @@ test('Validate clawback transaction required fields', () => {
   expect(errorMessage).toContain('genesisID');
   expect(errorMessage).toContain('genesisHash');
   expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('amount');
   expect(errorMessage).toContain('assetIndex');
   expect(errorMessage).toContain('assetRevocationTarget');
 });

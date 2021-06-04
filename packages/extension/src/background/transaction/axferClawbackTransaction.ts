@@ -7,10 +7,10 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 class AssetClawbackTx implements IAssetClawbackTx {
   type: string = undefined;
   assetIndex: number = undefined;
-  amount: number = undefined;
-  closeRemainderTo?: string = null;
+  amount: number = 0;
   from: string = undefined;
   to: string = undefined;
+  closeRemainderTo?: string = null;
   fee: number = undefined;
   firstRound: number = undefined;
   lastRound: number = undefined;
