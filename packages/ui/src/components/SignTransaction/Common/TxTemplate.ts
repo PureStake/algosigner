@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 import { MULTISIG_TOOLTIP } from '@algosigner/common/strings';
 import TxAlert from './TxAlert';
 
-const TxPay: FunctionalComponent = (props: any) => {
+const TxTemplate: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
   const { tx, vo, account, msig, midsection, overview } = props;
 
@@ -67,4 +67,4 @@ const TxPay: FunctionalComponent = (props: any) => {
   `;
 };
 
-export default TxPay;
+export default TxTemplate;
