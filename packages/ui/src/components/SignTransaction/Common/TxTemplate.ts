@@ -53,14 +53,14 @@ const TxTemplate: FunctionalComponent = (props: any) => {
         </ul>
       </div>
 
-      ${tab === 'overview' && overview}
+      ${tab === 'overview' && html`<div style="height: 170px; overflow: auto;">${overview}</div>`}
       ${tab === 'details' &&
+      // prettier-ignore
       html`
         <div style="height: 170px; overflow: auto;">
           <pre style="background: #EFF4F7; border-radius: 5px;">
-          <code>${txText}</code>
-        </pre
-          >
+            <code>${txText}</code>
+          </pre>
         </div>
       `}
     </section>
