@@ -44,7 +44,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Approval Program:</p>
-          <p style="width: 60%;">${tx.appApprovalProgram}</p>
+          <p style="width: 60%;" class="truncate-text">${tx.appApprovalProgram}</p>
         </div>
       `}
       ${tx.appArgs &&
@@ -59,7 +59,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Clear Program:</p>
-          <p style="width: 60%;">${tx.appClearProgram}</p>
+          <p style="width: 60%;" class="truncate-text">${tx.appClearProgram}</p>
         </div>
       `}
       ${tx.appForeignApps &&
