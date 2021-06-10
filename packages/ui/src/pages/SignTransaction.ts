@@ -180,8 +180,8 @@ const SignTransaction: FunctionalComponent = () => {
               vo=${transactionWrap.validityObject}
               dt=${transactionWrap.txDerivedTypeText}
               estFee=${transactionWrap.estimatedFee}
-              da=${transactionWrap.displayAmount}
-              un=${transactionWrap.unitName}
+              da=${transactionWrap.assetInfo.displayAmount}
+              un=${transactionWrap.assetInfo.unitName}
               account=${account}
               ledger=${ledger}
             />
