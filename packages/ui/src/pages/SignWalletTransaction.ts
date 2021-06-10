@@ -240,8 +240,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
             vo=${wrap.validityObject}
             dt=${wrap.txDerivedTypeText}
             estFee=${wrap.estimatedFee}
-            da=${wrap.displayAmount}
-            un=${wrap.unitName}
+            da=${wrap.assetInfo.displayAmount}
+            un=${wrap.assetInfo.unitName}
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}

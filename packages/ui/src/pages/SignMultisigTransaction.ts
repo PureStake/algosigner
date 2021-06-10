@@ -174,6 +174,8 @@ const SignMultisigTransaction: FunctionalComponent = () => {
               tx=${transactionWrap.txn}
               vo=${transactionWrap.validityObject}
               dt=${transactionWrap.txDerivedTypeText}
+              da=${transactionWrap.assetInfo.displayAmount}
+              un=${transactionWrap.assetInfo.unitName}
               account=${account}
               ledger=${ledger}
               fee=${transactionWrap.estimatedFee}

@@ -3,6 +3,11 @@ import { Validate, ValidationResponse, ValidationStatus } from '../utils/validat
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 
+type AssetInfo = {
+  unitName: string;
+  displayAmount: string;
+};
+
 //
 // Base validated transaction wrap
 ///
@@ -11,6 +16,7 @@ export class BaseValidatedTxnWrap {
   validityObject: object = {};
   txDerivedTypeText: string;
   estimatedFee: number;
+  assetInfo: AssetInfo;
   msigData: WalletMultisigMetadata;
   signers: Array<string>;
 
