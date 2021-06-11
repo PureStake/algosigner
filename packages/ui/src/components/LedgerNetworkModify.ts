@@ -6,6 +6,7 @@ import { useObserver } from 'mobx-react-lite';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import Authenticate from 'components/Authenticate';
 import { StoreContext } from 'services/StoreContext';
+import { NETWORK_HEADERS_TOOLTIP } from '@algosigner/common/strings';
 
 import { sendMessage } from 'services/Messaging';
 
@@ -131,21 +132,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             <span>
               <i
                 id="cogheader"
-                class="fas fa-info-circle ml-1"
-                title='Network Headers use API Token:
- x-algo-api-token
-              
-Or use individual keys to Algod and Indexer with JSON:
- {
-	"Algod":
-	{
-		"x-api-key": "xxxxxxxxx"
-	},
-	"Indexer":
-	{
-		"x-api-key": "xxxxxxxxx"
-	}
- }'
+                class="fas fa-info-circle ml-1 has-tooltip-arrow has-tooltip-text-left has-tooltip-fade"
+                data-tooltip="${NETWORK_HEADERS_TOOLTIP}"
               >
               </i>
             </span>

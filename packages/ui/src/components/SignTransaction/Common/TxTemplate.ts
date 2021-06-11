@@ -25,7 +25,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
               ${msig &&
               html`
                 <span
-                  class="mr-2 has-text-primary has-tooltip-primary has-tooltip-right has-tooltip-arrow"
+                  class="mr-2 has-text-primary has-tooltip-primary has-tooltip-right has-tooltip-arrow has-tooltip-fade"
                   data-tooltip="${MULTISIG_TOOLTIP}"
                 >
                   Multisig:
