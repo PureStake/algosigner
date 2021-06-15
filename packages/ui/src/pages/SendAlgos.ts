@@ -229,7 +229,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
         <textarea
           placeholder="To address"
-          class="textarea mb-4"
+          class="textarea has-fixed-size mb-4"
           style="resize: none;"
           id="toAddress"
           value=${to}
@@ -238,7 +238,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         />
         <textarea
           placeholder="Note"
-          class="textarea mb-4"
+          class="textarea has-fixed-size mb-4"
           style="resize: none;"
           id="note"
           value=${note}
