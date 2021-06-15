@@ -168,10 +168,11 @@ span[data-tooltip] {
 .network-modify label {
   float: left;
   font-size: small;
+  margin-bottom: 0.25rem;
 }
 .network-modify input {
   font-size: smaller;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 .network-modify-footer button {
   width: 48%;
