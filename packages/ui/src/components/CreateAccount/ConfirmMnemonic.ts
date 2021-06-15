@@ -19,6 +19,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   const { account, nextStep, prevStep } = props;
   const [referenceMnemonic, setReferenceMnemonic] = useState<string>('');
   const [wordIndexArray, setWordIndexArray] = useState<Array<number>>([]);
+  const [lastWordIndex, setLastWordIndex] = useState<number>(-1);
   const [shuffledMnemonic, setShuffledMnemonic] = useState([]);
 
   useEffect(() => {
@@ -27,11 +28,18 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   }, []);
 
   const addWord = (e) => {
-    const index = +e.target.dataset['index'];
-
+    const newWordIndex = +e.target.dataset['index'];
     const newIndexArray = wordIndexArray.slice();
-    const availablePosition = newIndexArray.indexOf(-1);
-    newIndexArray[availablePosition] = index;
+
+    if (newWordIndex === lastWordIndex) {
+      const lastUsedIndex = newIndexArray.indexOf(lastWordIndex);
+      newIndexArray[lastUsedIndex] = -1;
+      setLastWordIndex(lastUsedIndex === 0 ? -1 : newIndexArray[lastUsedIndex - 1]);
+    } else {
+      const availablePosition = newIndexArray.indexOf(-1);
+      newIndexArray[availablePosition] = newWordIndex;
+      setLastWordIndex(newWordIndex);
+    }
 
     const newMnemonic = newIndexArray
       .filter((index) => index > -1)
@@ -42,8 +50,8 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
     setWordIndexArray(newIndexArray);
   };
 
-  const hasWord = (wordIndex) => {
-    return wordIndexArray.includes(wordIndex);
+  const disabledWord = (wordIndex) => {
+    return lastWordIndex !== wordIndex && wordIndexArray.includes(wordIndex);
   };
 
   // 5x5 grid
@@ -52,10 +60,12 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   const buttons: Array<any> = shuffledMnemonic.map(
     (word, index) => html`
       <button
-        class="button is-small is-fullwidth mt-3"
+        class="button is-small is-fullwidth mt-3 ${index === lastWordIndex
+          ? 'is-light is-link'
+          : ''}"
         id="${word}"
         data-index="${index}"
-        disabled=${hasWord(index)}
+        disabled=${disabledWord(index)}
         onClick=${addWord}
       >
         ${word}
