@@ -20,10 +20,29 @@ The v1 Atomic transaction functionality will start warning extension users in th
 
 ### 1.5.1 Patch
 
-Improved Application Transaction workflow
+Improved Application Transaction workflow:
 
-- `AppOnComplete` now defaults to 0
+- `AppOnComplete` now defaults to 0.
 - Improved readability on `AppArgs` during signing. The base64-encoded version will be shown.
+
+### 1.5.2 Patch
+
+v2 Signing Improvements:
+
+- Add informational tooltip on Multisig transactions.
+- Correctly fetch Asset Unit Name and Decimals Display Amount for AxferTxs.
+- `AppIndex` now defaults to 0.
+- Improved readability on `AppApprovalProgram` && `AppClearProgram` during signing. The base64-encoded version will be shown.
+
+Other Usability Improvements:
+
+- Enabled the option to remove the last selected word when confirming the Mnemonic during Account Creation.
+- Fixed bug that prevented Mnemonics with repeated words to be correctly confirmed during Account Creation.
+- Added scrollbar to transaction overview section of all signing methods. This helps with better visualization of transactions with many fields, such as Application Transactions.
+- UX Improvements for the Network Config screen:
+  - Added links to the documentation regarding custom networks.
+  - More responsive tooltip explaining the Network Headers field.
+  - UI Layout improvements.
 
 ## New Users
 
