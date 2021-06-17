@@ -35,14 +35,14 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.4.2",
     "jest-webextension-mock": "^3.6.1",
-    "mini-css-extract-plugin": "^0.9.0",
+    "mini-css-extract-plugin": "^1.6.0",
     "sass": "^1.26.10",
     "sass-loader": "^8.0.2",
     "ts-jest": "^26.3.0",
     "ts-loader": "^7.0.1",
     "typescript": "^3.9.7",
-    "webpack": "^4.44.1",
+    "webpack": "^5.39.1",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.11.2"
   }
 }
