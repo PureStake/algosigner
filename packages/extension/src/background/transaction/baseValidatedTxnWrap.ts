@@ -3,6 +3,11 @@ import { Validate, ValidationResponse, ValidationStatus } from '../utils/validat
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 
+type AssetInfo = {
+  unitName: string;
+  displayAmount: string;
+};
+
 //
 // Base validated transaction wrap
 ///
@@ -11,6 +16,7 @@ export class BaseValidatedTxnWrap {
   validityObject: object = {};
   txDerivedTypeText: string;
   estimatedFee: number;
+  assetInfo: AssetInfo;
   msigData: WalletMultisigMetadata;
   signers: Array<string>;
 
@@ -62,7 +68,10 @@ export class BaseValidatedTxnWrap {
       } else {
         try {
           this.transaction[prop] = params[prop];
-          if (prop === 'group' && !v1Validations) {
+          if (
+            (prop === 'group' || prop === 'appApprovalProgram' || prop === 'appClearProgram') &&
+            !v1Validations
+          ) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
           } else if (prop === 'appArgs' && !v1Validations) {
             this.transaction[prop] = this.transaction[prop].map((arg) =>

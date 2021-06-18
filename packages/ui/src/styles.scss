@@ -37,6 +37,9 @@ $input-radius: 12px;
 $modal-close-right: 4px;
 $modal-close-top: 8px;
 
+// TOOLTIP
+$tooltip-background-opacity: 1;
+
 // BOX
 // $box-shadow: none;
 
@@ -69,6 +72,7 @@ $modal-close-top: 8px;
 @import 'bulma/sass/components/dropdown.sass';
 @import 'bulma/sass/components/tabs.sass';
 @import 'bulma/sass/grid/columns.sass';
+@import '@creativebulma/bulma-tooltip';
 
 // Bulma Overrides
 .modal-content {
@@ -87,6 +91,10 @@ $modal-close-top: 8px;
 
 a:hover {
   color: $orange-dark;
+}
+
+span[data-tooltip] {
+  cursor: help !important;
 }
 
 // Custom classes
@@ -160,10 +168,11 @@ a:hover {
 .network-modify label {
   float: left;
   font-size: small;
+  margin-bottom: 0.25rem;
 }
 .network-modify input {
   font-size: smaller;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 .network-modify-footer button {
   width: 48%;

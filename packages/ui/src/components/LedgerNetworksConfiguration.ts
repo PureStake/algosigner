@@ -31,8 +31,17 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
 
   return useObserver(
     () => html`
-      <div className="box has-text-centered is-flex" style="flex-direction: column;">
-        <div><b className="mb-2">Network Configuration</b> - beta</div>
+      <div className="box has-text-centered is-flex pt-3" style="flex-direction: column;">
+        <div class="mb-2">
+          <div><b>Network Configuration</b></div>
+          <a
+            class="is-size-7"
+            target="_blank"
+            href="https://github.com/PureStake/algosigner/blob/develop/docs/add-network.md"
+            >More info</a
+          >
+        </div>
+
         <div style="flex: 1; text-align: -webkit-center;">
           ${!isNetConfigModalVisible &&
           html`
