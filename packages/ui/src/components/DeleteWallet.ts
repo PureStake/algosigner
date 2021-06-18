@@ -55,7 +55,7 @@ const DeleteWallet: FunctionalComponent = () => {
       </div>
     `}
     <div class="box is-flex pt-2" style="overflow-wrap: break-word; flex-direction: column;">
-      <b class="has-text-centered mb-5 is-size-5">You sure?</b>
+      <b class="has-text-centered mb-5 is-size-5">Are you sure?</b>
       <div style="flex: 1;">
         <p>Type "${CONFIRMATION_STRING}"</p>
         <input

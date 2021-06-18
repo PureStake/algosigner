@@ -74,7 +74,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
 
         <textarea
           id="enterMnemonic"
-          class="textarea"
+          class="textarea has-fixed-size"
           placeholder="apples butter king monkey nuts ..."
           rows="5"
           onInput=${handleInput}

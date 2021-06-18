@@ -9,10 +9,10 @@ export interface IApplTx extends IBaseTx {
   type: string;               //"appl"
 
   //apid: number,             //uint64	    "apid"	    ID of the application being configured or empty if creating.
-  appIndex: any;
+  appIndex: number;
 
   //apan: number,             //uint64	    "apan"	    Defines what additional actions occur with the transaction. See the OnComplete section of the TEAL spec for details.
-  appOnComplete: any;
+  appOnComplete: number;
 
   //apat?: string,            //Address	    "apat"	    List of accounts in addition to the sender that may be accessed from the application's approval-program and clear-state-program.
   appAccounts?: any;          //Expects Array[Addresses]

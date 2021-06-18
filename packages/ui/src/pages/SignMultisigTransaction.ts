@@ -7,7 +7,6 @@ import { isFromExtension } from '@algosigner/common/utils';
 
 import TxAcfg from 'components/SignTransaction/TxAcfg';
 import TxPay from 'components/SignTransaction/TxPay';
-import TxAlert from 'components/SignTransaction/TxAlert';
 import TxKeyreg from 'components/SignTransaction/TxKeyreg';
 import TxAxfer from 'components/SignTransaction/TxAxfer';
 import TxAfrz from 'components/SignTransaction/TxAfrz';
@@ -138,74 +137,70 @@ const SignMultisigTransaction: FunctionalComponent = () => {
               </h1>
             </div>
           </section>
-          <section id="txAlerts" class="section py-0">
-            ${transactionWrap.validityObject &&
-            html`<${TxAlert} vo=${transactionWrap.validityObject} />`}
-          </section>
-          <section class="section py-0">
-            ${transactionWrap.txn.type === 'pay' &&
-            html`
-              <${TxPay}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-            ${transactionWrap.txn.type === 'keyreg' &&
-            html`
-              <${TxKeyreg}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-            ${transactionWrap.txn.type === 'acfg' &&
-            html`
-              <${TxAcfg}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                dt=${transactionWrap.txDerivedTypeText}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-            ${transactionWrap.txn.type === 'axfer' &&
-            html`
-              <${TxAxfer}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                dt=${transactionWrap.txDerivedTypeText}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-            ${transactionWrap.txn.type === 'afrz' &&
-            html`
-              <${TxAfrz}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-            ${transactionWrap.txn.type === 'appl' &&
-            html`
-              <${TxAppl}
-                tx=${transactionWrap.txn}
-                vo=${transactionWrap.validityObject}
-                account=${account}
-                ledger=${ledger}
-                fee=${transactionWrap.estimatedFee}
-              />
-            `}
-          </section>
+          ${transactionWrap.txn.type === 'pay' &&
+          html`
+            <${TxPay}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
+          ${transactionWrap.txn.type === 'keyreg' &&
+          html`
+            <${TxKeyreg}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
+          ${transactionWrap.txn.type === 'acfg' &&
+          html`
+            <${TxAcfg}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              dt=${transactionWrap.txDerivedTypeText}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
+          ${transactionWrap.txn.type === 'axfer' &&
+          html`
+            <${TxAxfer}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              dt=${transactionWrap.txDerivedTypeText}
+              da=${transactionWrap.assetInfo.displayAmount}
+              un=${transactionWrap.assetInfo.unitName}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
+          ${transactionWrap.txn.type === 'afrz' &&
+          html`
+            <${TxAfrz}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
+          ${transactionWrap.txn.type === 'appl' &&
+          html`
+            <${TxAppl}
+              tx=${transactionWrap.txn}
+              vo=${transactionWrap.validityObject}
+              account=${account}
+              ledger=${ledger}
+              fee=${transactionWrap.estimatedFee}
+            />
+          `}
         `}
       </div>
 

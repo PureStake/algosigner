@@ -97,8 +97,11 @@ export class Task {
     Task.authorized_pool = [];
   }
 
-  private static modifyTransactionWrapWithAssetCoreInfo(transactionWrap, callback) {
+  private static async modifyTransactionWrapWithAssetCoreInfo(
+    transactionWrap: BaseValidatedTxnWrap
+  ) {
     // Adjust decimal places if we are using an axfer transaction
+
     if (transactionWrap.transaction['type'] === 'axfer') {
       const assetIndex = transactionWrap.transaction['assetIndex'];
       const ledger = getLedgerFromGenesisId(transactionWrap.transaction['genesisID']);
@@ -113,52 +116,46 @@ export class Task {
 
       let url = conn.url;
       if (conn.port.length > 0) url += ':' + conn.port;
-      Task.fetchAPI(`${url}${sendPath}`, fetchAssets)
-        .then((assets) => {
-          const params = assets['asset']['params'];
+      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((assets) => {
+        const assetInfo: any = {};
+        const params = assets['asset']['params'];
 
-          // Get relevant data from asset params
-          const decimals = params['decimals'];
-          const unitName = params['unit-name'];
+        // Get relevant data from asset params
+        const decimals = params['decimals'];
+        const unitName = params['unit-name'];
 
-          // Update the unit-name for the asset
-          if (unitName) {
-            transactionWrap.unitName = unitName;
+        // Update the unit-name for the asset
+        if (unitName) {
+          assetInfo.unitName = unitName;
+        }
+
+        // Get the display amount as a string to prevent screen deformation of large ints
+        let displayAmount = String(transactionWrap.transaction.amount);
+
+        // If we have decimals, then we need to set the display amount with them in mind
+        if (decimals && decimals > 0) {
+          // Append missing zeros, if needed
+          if (displayAmount.length < decimals) {
+            displayAmount = displayAmount.padStart(decimals, '0');
+          }
+          const offsetAmount = Math.abs(decimals - displayAmount.length);
+
+          // Apply decimal transition
+          displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
+            offsetAmount
+          )}`;
+
+          // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
+          if (displayAmount.startsWith('.')) {
+            displayAmount = '0'.concat(displayAmount);
           }
 
-          // Get the display amount as a string to prevent screen deformation of large ints
-          let displayAmount = String(transactionWrap.transaction.amount);
+          // Set new amount
+          assetInfo.displayAmount = displayAmount;
+        }
 
-          // If we have decimals, then we need to set the display amount with them in mind
-          if (decimals && decimals > 0) {
-            // Append missing zeros, if needed
-            if (displayAmount.length < decimals) {
-              displayAmount = displayAmount.padStart(decimals, '0');
-            }
-            const offsetAmount = Math.abs(decimals - displayAmount.length);
-
-            // Apply decimal transition
-            displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
-              offsetAmount
-            )}`;
-
-            // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
-            if (displayAmount.startsWith('.')) {
-              displayAmount = '0'.concat(displayAmount);
-            }
-
-            // Set new amount
-            transactionWrap.displayAmount = displayAmount;
-          }
-          callback && callback(transactionWrap);
-        })
-        .catch((ex) => {
-          // Could not get asset information for a transfer - attach error note
-          transactionWrap['error'] = ex['message'];
-          callback && callback(transactionWrap);
-        });
-    } else {
-      callback && callback(transactionWrap);
+        transactionWrap.assetInfo = assetInfo;
+      });
     }
   }
 
@@ -201,7 +198,7 @@ export class Task {
         },
         // sign-transaction
         [JsonRpcMethod.SignTransaction]: (d: any, resolve: Function, reject: Function) => {
-          let transactionWrap = undefined;
+          let transactionWrap: BaseValidatedTxnWrap = undefined;
           let validationError = undefined;
           try {
             const txn = d.body.params;
@@ -273,44 +270,36 @@ export class Task {
             let url = conn.url;
             if (conn.port.length > 0) url += ':' + conn.port;
 
-            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then(async (params) => {
               calculateEstimatedFee(transactionWrap, params);
+              await Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap);
+              d.body.params = transactionWrap;
 
-              Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap, (transactionWrap) => {
-                if (transactionWrap.error) {
-                  // There was an error building the asset info. Outright reject / allow with warning.
-                  //reject(d);
-                  //return;
-                }
-
-                d.body.params = transactionWrap;
-
-                extensionBrowser.windows.create(
-                  {
-                    url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
-                    ...popupProperties,
-                  },
-                  function (w) {
-                    if (w) {
-                      Task.requests[d.originTabID] = {
-                        window_id: w.id,
-                        message: d,
-                      };
-                      // Send message with tx info
-                      setTimeout(function () {
-                        extensionBrowser.runtime.sendMessage(d);
-                      }, 500);
-                    }
+              extensionBrowser.windows.create(
+                {
+                  url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
+                  ...popupProperties,
+                },
+                function (w) {
+                  if (w) {
+                    Task.requests[d.originTabID] = {
+                      window_id: w.id,
+                      message: d,
+                    };
+                    // Send message with tx info
+                    setTimeout(function () {
+                      extensionBrowser.runtime.sendMessage(d);
+                    }, 500);
                   }
-                );
-              });
+                }
+              );
             });
           }
         },
         [JsonRpcMethod.SignMultisigTransaction]: (d: any, resolve: Function, reject: Function) => {
           // TODO: Possible support for blob transfer on previously signed transactions
 
-          let transactionWrap = undefined;
+          let transactionWrap: BaseValidatedTxnWrap = undefined;
           let validationError = undefined;
           try {
             transactionWrap = getValidatedTxnWrap(d.body.params.txn, d.body.params.txn['type']);
@@ -377,60 +366,57 @@ export class Task {
             let url = conn.url;
             if (conn.port.length > 0) url += ':' + conn.port;
 
-            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then(async (params) => {
               calculateEstimatedFee(transactionWrap, params);
+              await Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap);
 
-              Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap, (transactionWrap) => {
-                if (transactionWrap.error) {
-                  // There was an error building the asset info. Outright reject / allow with warning.
-                  //reject(d);
-                  //return;
+              d.body.params.validityObject = transactionWrap.validityObject;
+              d.body.params.txn = transactionWrap.transaction;
+              d.body.params.estimatedFee = transactionWrap.estimatedFee;
+
+              const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
+              const session = InternalMethods.getHelperSession();
+              const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
+              const accounts = session.wallet[ledger];
+              const multisigAccounts = getSigningAccounts(accounts, msig_txn);
+
+              if (multisigAccounts.error) {
+                d.error = multisigAccounts.error.message;
+                reject(d);
+              } else {
+                if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
+                  d.body.params.account = multisigAccounts.accounts[0]['address'];
+                  d.body.params.name = multisigAccounts.accounts[0]['name'];
                 }
 
-                d.body.params.validityObject = transactionWrap.validityObject;
-                d.body.params.txn = transactionWrap.transaction;
-                d.body.params.estimatedFee = transactionWrap.estimatedFee;
-
-                const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
-                const session = InternalMethods.getHelperSession();
-                const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
-                const accounts = session.wallet[ledger];
-                const multisigAccounts = getSigningAccounts(accounts, msig_txn);
-
-                if (multisigAccounts.error) {
-                  d.error = multisigAccounts.error.message;
-                  reject(d);
-                } else {
-                  if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
-                    d.body.params.account = multisigAccounts.accounts[0]['address'];
-                    d.body.params.name = multisigAccounts.accounts[0]['name'];
-                  }
-
-                  extensionBrowser.windows.create(
-                    {
-                      url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
-                      ...popupProperties,
-                    },
-                    function (w) {
-                      if (w) {
-                        Task.requests[d.originTabID] = {
-                          window_id: w.id,
-                          message: d,
-                        };
-                        // Send message with tx info
-                        setTimeout(function () {
-                          extensionBrowser.runtime.sendMessage(d);
-                        }, 500);
-                      }
+                extensionBrowser.windows.create(
+                  {
+                    url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
+                    ...popupProperties,
+                  },
+                  function (w) {
+                    if (w) {
+                      Task.requests[d.originTabID] = {
+                        window_id: w.id,
+                        message: d,
+                      };
+                      // Send message with tx info
+                      setTimeout(function () {
+                        extensionBrowser.runtime.sendMessage(d);
+                      }, 500);
                     }
-                  );
-                }
-              });
+                  }
+                );
+              }
             });
           }
         },
         // sign-wallet-transaction
-        [JsonRpcMethod.SignWalletTransaction]: (d: any, resolve: Function, reject: Function) => {
+        [JsonRpcMethod.SignWalletTransaction]: async (
+          d: any,
+          resolve: Function,
+          reject: Function
+        ) => {
           const walletTransactions: Array<WalletTransaction> = d.body.params.transactions;
           const rawTxArray: Array<any> = [];
           const processedTxArray: Array<any> = [];
@@ -627,6 +613,11 @@ export class Task {
                 reject(d);
                 return;
               }
+            }
+
+            for (let i = 0; i < transactionWraps.length; i++) {
+              const wrap = transactionWraps[i];
+              await Task.modifyTransactionWrapWithAssetCoreInfo(wrap);
             }
 
             d.body.params.transactionWraps = transactionWraps;

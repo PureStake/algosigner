@@ -1,6 +1,6 @@
 {
   "name": "@algosigner/dapp",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "author": "https://developer.purestake.io",
   "description": "Sample DAPP for use with AlgoSigner.",
   "scripts": {
