@@ -1,17 +1,15 @@
-import { FunctionalComponent } from "preact";
+import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useContext, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
-import { sendMessage } from 'services/Messaging'
-import { StoreContext } from 'services/StoreContext'
+import { sendMessage } from 'services/Messaging';
 
-import Authenticate from 'components/Authenticate'
+import Authenticate from 'components/Authenticate';
 
 const AddAssetConfirm: FunctionalComponent = (props: any) => {
   const { asset, ledger, address, accountsAssetsIDs } = props;
-  const store:any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
@@ -26,21 +24,21 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
       passphrase: pwd,
       address: address,
       txnParams: {
-        type: "axfer",
+        type: 'axfer',
         assetIndex: asset['asset_id'],
         from: address,
         to: address,
-        amount: 0
-      }
+        amount: 0,
+      },
     };
 
     setLoading(true);
     setAuthError('');
-    sendMessage(JsonRpcMethod.SignSendTransaction, params, function(response) {
-      if ('error' in response) { 
+    sendMessage(JsonRpcMethod.SignSendTransaction, params, function (response) {
+      if (response && 'error' in response) {
         setLoading(false);
         switch (response.error) {
-          case "Login Failed":
+          case 'Login Failed':
             setAuthError('Wrong passphrase');
             break;
           default:
@@ -56,7 +54,10 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
   };
 
   return html`
-    ${ !askAuth && txId.length === 0 && !error && html`
+    ${!askAuth &&
+    txId.length === 0 &&
+    !error &&
+    html`
       <div class="box" style="overflow-wrap: break-word;">
         <div class="has-text-centered mb-2">
           <b>Adding Asset</b>
@@ -64,17 +65,17 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
           <span class="has-text-grey-light">${asset['asset_id']}</span>
         </div>
 
-
-        ${ asset.name && html`
+        ${asset.name &&
+        html`
           <div>
             <b>Asset name</b>
             <span class="is-pulled-right"><b>${asset.name}</b></span>
           </div>
         `}
-        ${ asset.name && asset['unit_name'] && html`
-          <hr class="my-2" />
-        `}
-        ${ asset['unit_name'] && asset['unit_name'].length > 0 && html`
+        ${asset.name && asset['unit_name'] && html` <hr class="my-2" /> `}
+        ${asset['unit_name'] &&
+        asset['unit_name'].length > 0 &&
+        html`
           <div>
             <b>Unit name</b>
             <span class="is-pulled-right"><b>${asset['unit_name']}</b></span>
@@ -82,9 +83,13 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
         `}
 
         <div class="has-text-centered mt-3">
-          <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${asset['asset_id']}`}
+          <a
+            href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
+              asset['asset_id']
+            }`}
             target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer"
+          >
             See asset details in GoalSeeker
           </a>
         </div>
@@ -97,32 +102,37 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
           id="addAsset"
           class="button is-primary is-fullwidth"
           onClick=${() => setAskAuth(true)}
-          disabled=${disabled}>
+          disabled=${disabled}
+        >
           ${disabled ? 'You already added this asset' : 'Add asset!'}
         </button>
       </div>
     `}
-
-    ${txId.length > 0 && html`
+    ${txId.length > 0 &&
+    html`
       <div class="box has-text-centered">
         <b>Transaction sent!</b>
         <div class="mt-3">
-          <a href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${txId}`}
+          <a
+            href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/transaction/${txId}`}
             target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener noreferrer"
+          >
             See transaction details in GoalSeeker
           </a>
         </div>
         <button
           id="backToWallet"
           class="button is-primary is-fullwidth mt-4"
-          onClick=${() => route(`/${ledger}/${address}`)}>
+          onClick=${() => route(`/${ledger}/${address}`)}
+        >
           Back to account!
         </button>
       </div>
     `}
-
-    ${ error !== undefined && error.length > 0 && html`
+    ${error !== undefined &&
+    error.length > 0 &&
+    html`
       <div class="box">
         <p class="has-text-danger has-text-weight-bold mb-2">
           Transaction failed with the following error:
@@ -130,14 +140,9 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
         <p id="tx-error">${error}</p>
       </div>
     `}
-
-    ${askAuth && html`
-      <${Authenticate}
-        error=${authError}
-        loading=${loading}
-        nextStep=${addAsset} />
-    `}
-  `
+    ${askAuth &&
+    html` <${Authenticate} error=${authError} loading=${loading} nextStep=${addAsset} /> `}
+  `;
 };
 
 export default AddAssetConfirm;

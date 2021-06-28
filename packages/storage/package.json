@@ -2,12 +2,14 @@
   "name": "algosigner-storage",
   "version": "1.5.2",
   "author": "https://developer.purestake.io",
+  "repository": "https://github.com/PureStake/algosigner",
+  "license": "MIT",
   "description": "Storage wrapper for saving and retrieving extention information in Algosigner.",
   "devDependencies": {
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.7",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.11"
+    "webpack": "^5.39.1",
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {},
   "scripts": {

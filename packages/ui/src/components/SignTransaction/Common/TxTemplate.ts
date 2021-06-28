@@ -34,7 +34,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
               ${account}
             </b>
           </div>
-          <div class="has-text-right">
+          <div class="has-text-right" style="min-width: 30px;">
             <b class="is-size-7 has-text-link">YOU</b>
           </div>
         </div>

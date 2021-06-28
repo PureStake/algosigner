@@ -39,6 +39,13 @@ export enum JsonRpcMethod {
   SaveNetwork = 'save-network',
   DeleteNetwork = 'delete-network',
   GetLedgers = 'get-ledgers',
+
+  // Ledger Device Methods
+  LedgerSaveAccount = 'ledger-save-account',
+  LedgerLinkAddress = 'ledger-link-address',
+  LedgerGetSessionTxn = 'ledger-get-session-txn',
+  LedgerSendTxnResponse = 'ledger-send-txn-response',
+  LedgerSignTransaction = 'ledger-sign-transaction',
 }
 
 export type JsonPayload = {

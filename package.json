@@ -3,6 +3,8 @@
   "version": "1.5.2",
   "author": "https://developer.purestake.io",
   "description": "Sign Algorand transactions in your browser with PureStake.",
+  "repository": "https://github.com/PureStake/algosigner",
+  "license": "MIT",
   "keywords": [
     "Algorand",
     "PureStake"
@@ -10,6 +12,8 @@
   "scripts": {
     "install:extension": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);",
     "install:test": "(cd ./packages/test-project && npm install);",
+    "removelocks": "rm -rf ./package-lock.json && find -path \"./packages/*\" -name \"package-lock.json\" -not -path \"*/node_modules/*\" -exec rm -rf {} \\;",
+    "update": "npm update && find -maxdepth 2 -path \"./packages/*\" -exec npm update {} \\;",
     "build": "(cd ./packages/common && npm run build); (cd ./packages/crypto && npm run build); (cd ./packages/dapp && npm run build); (cd ./packages/storage && npm run build); (cd ./packages/ui && npm run build); (cd ./packages/extension && npm run build);",
     "build:ui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
     "build:extension": "cd ./packages/extension && npm run build && cp -r ./dist/* ../../dist/",
@@ -18,7 +22,8 @@
     "prebuild": "rm -rf ./dist/*",
     "postbuild": "npm run copy",
     "postinstall": "npm run install:extension && npm run install:test",
-    "coveragetest": "cd ./packages/test-project && npm run coveragetest",
+    "rebuild": "npm run clean && npm run removelocks && npm install && npm run update && npm run build",
+    "coveragetest": "(cd ./packages/test-project && npm run coveragetest)",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "(cd ./packages/crypto && npm run test) && (cd ./packages/extension && npm run test) && (cd ./packages/ui && npm run test) && (cd ./packages/dapp && npm run test) && (cd ./packages/common && npm run test)",
     "test:e2e": "(cd ./packages/test-project && npm run test)",

@@ -1,6 +1,10 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { shallow } from 'enzyme';
 import { html } from 'htm/preact';
-import { sendMessage } from 'services/Messaging'
+import { sendMessage } from 'services/Messaging';
 import Login from './Login';
 
 jest.mock('services/Messaging');

@@ -22,7 +22,9 @@ import AddAsset from 'pages/AddAsset';
 import SignTransaction from 'pages/SignTransaction';
 import SignWalletTransaction from 'pages/SignWalletTransaction';
 import SignMultisigTransaction from 'pages/SignMultisigTransaction';
-
+import LinkHardwareAccount from 'pages/LinkHardwareAccount';
+import LedgerHardwareConnector from 'components/LedgerDevice/LedgerHardwareConnector';
+import LedgerHardwareSign from 'components/LedgerDevice/LedgerHardwareSign';
 import { StoreProvider } from 'services/StoreContext';
 
 require('./styles.scss');
@@ -57,6 +59,9 @@ const App = () => {
                   <${Account} path="/:ledger/:address" />
                   <${AddAsset} path="/:ledger/:address/add-asset" />
                   <${SendAlgos} path="/:ledger/:address/send" />
+                  <${LedgerHardwareConnector} path="/:ledger/ledger-hardware-connector" />
+                  <${LedgerHardwareSign} path="/:ledger/ledger-hardware-sign" />
+                  <${LinkHardwareAccount} path="/:ledger/link-hardware-account" />
                 </${Router}>
               </div>
               <${Footer} />
