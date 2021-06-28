@@ -14,8 +14,8 @@
     "jest": "27.0.0",
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.7",
-    "webpack": "^5.39.1",
-    "webpack-cli": "^4.7.2"
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "@types/jest": "^26.0.14",
