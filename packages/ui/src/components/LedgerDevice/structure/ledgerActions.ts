@@ -14,12 +14,22 @@ const getDevice = async () => {
     return ledgerTransport;
   }
 
-  // Create a transport
-  // TODO: Expand beyond hid, like bluetooth
-  const newTransport = await transport.hid.create();
+  try {
+    // Create a transport
+    // TODO: Expand beyond hid, like bluetooth
+    const newTransport = await transport.hid.create();
 
-  // After obtaining the transport use it to create the Algorand Ledger transport
-  ledgerTransport = new Algorand.default(newTransport);
+    // After obtaining the transport use it to create the Algorand Ledger transport
+    ledgerTransport = new Algorand.default(newTransport);
+  }
+  catch(e) {
+    if(e && ('message' in e)) {
+      throw e; 
+    }
+    else {
+      return {'message': 'Error creating the ledger transport. Please ensure device is connected and the Algorand app is open.'}
+    }
+  }
   return ledgerTransport;
 };
 
@@ -115,6 +125,11 @@ const getAddress = async (): Promise<LedgerActionResponse> => {
     });
   }
 
+  // Return error if we have one
+  if(lar.error) {
+    return lar;
+  }
+
   // Now attempt to get the default Algorand address
   await ledgerTransport
     .getAddress(_PATH)
@@ -143,9 +158,15 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
         e && 'message' in e
           ? { error: e.message }
           : { error: 'An unknown error has occured in connecting the Ledger device.' };
+      return lar;
     });
   }
 
+  // Return error if we have one
+  if(lar.error) {
+    return lar;
+  }
+  
   // Sign method accesps a message that is "hex" format, need to convert
   // and remove any empty fields before the conversion
   const txnResponse = cleanseBuildEncodeUnsignedTransaction(txn.transaction);

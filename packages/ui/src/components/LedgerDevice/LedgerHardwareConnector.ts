@@ -59,6 +59,13 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
           }
         });
       }
+    }).catch((response)=>{
+      setLoading(false);
+      setAskAuth(false);
+      setError('Error getting address from the Ledger hardware device.');
+      if ('error' in response) {
+        setError(`Error: ${response['error']}`);
+      }
     });
   };
 
