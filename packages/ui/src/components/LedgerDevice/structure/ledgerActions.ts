@@ -158,7 +158,6 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
         e && 'message' in e
           ? { error: e.message }
           : { error: 'An unknown error has occured in connecting the Ledger device.' };
-      return lar;
     });
   }
 

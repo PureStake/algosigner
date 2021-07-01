@@ -17,7 +17,7 @@ class Logging {
     level = level || LogLevel.Normal;
 
     // If we area below the current threshold then return
-    if (this.logThreshold === LogLevel.None || level < this.logThreshold) {
+    if (this.logThreshold === LogLevel.None || this.logThreshold < level) {
       return;
     }
 
