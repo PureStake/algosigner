@@ -21,7 +21,7 @@
     "htm": "^3.0.4",
     "mobx": "^5.15.6",
     "mobx-react-lite": "^2.2.2",
-    "preact": "^10.4.8",
+    "preact": "10.5.13",
     "preact-router": "^3.2.1",
     "qrcode-generator": "^1.4.4",
     "zxcvbn": "^4.4.2"
