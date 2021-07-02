@@ -9,12 +9,15 @@
 // custom handler for different message types, etc..
 import { MessageApi } from '../messaging/api';
 import { Task } from './task';
+import { MessageSource } from '@algosigner/common/messaging/types';
+import logging from '@algosigner/common/logging';
 
 export class Router {
   handler: Function;
   constructor() {
     this.handler = this.default;
     window.addEventListener('message', (event) => {
+      logging.log(`Router DApp message event: ${JSON.stringify(event)}`, 2);
       const d = event.data;
 
       try {
@@ -26,8 +29,8 @@ export class Router {
           }
         } else {
           if (Object.prototype.toString.call(d) === '[object Object]' && 'source' in d) {
-            if (d.source == 'extension') {
-              d.source = 'router';
+            if (d.source == MessageSource.Extension) {
+              d.source = MessageSource.Router;
               d.origin = window.location.origin;
               this.handler(d);
             }
