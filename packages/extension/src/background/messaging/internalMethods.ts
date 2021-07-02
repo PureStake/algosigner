@@ -342,7 +342,7 @@ export class InternalMethods {
           signedTxnEntries[i][1] = algosdk.encodeAddress(signedTxnEntries[i][1]['publicKey']);
         } else if (signedTxnEntries[i][0] === 'to') {
           signedTxnEntries[i][1] = algosdk.encodeAddress(signedTxnEntries[i][1]['publicKey']);
-        } else if (signedTxnEntries[i][1].constructor === Uint8Array) {
+        } else if (signedTxnEntries[i][1] && signedTxnEntries[i][1].constructor === Uint8Array) {
           //@ts-ignore
           signedTxnEntries[i][1] = Buffer.from(signedTxnEntries[i][1]).toString('base64');
         }

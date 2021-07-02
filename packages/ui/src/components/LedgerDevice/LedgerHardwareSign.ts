@@ -68,7 +68,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
       }
       const b64Response = Buffer.from(lar.message, 'base64').toString('base64');
       sendMessage(JsonRpcMethod.LedgerSendTxnResponse, { txn: b64Response }, function (response) {
-        logging.log(`UI: Ledger response: ${JSON.stringify(response)}`);
+        logging.log(`UI: Ledger response: ${JSON.stringify(response)}`, 2);
         if (response && 'error' in response) {
           setError(response['error']);
         }
