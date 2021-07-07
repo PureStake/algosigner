@@ -66,7 +66,7 @@ export class InternalMethods {
         break;
       }
     }
-    if (!found) throw new NoAccountMatch(address);
+    if (!found) throw new NoAccountMatch(address, ledger);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
