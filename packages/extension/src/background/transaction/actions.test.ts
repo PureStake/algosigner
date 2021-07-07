@@ -124,7 +124,6 @@ test('Validate pay transaction required fields', () => {
   expect(errorMessage).toContain('genesisHash');
   expect(errorMessage).toContain('to');
   expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('amount');
 });
 test('Validate clawback transaction required fields', () => {
   const preTransaction = {
