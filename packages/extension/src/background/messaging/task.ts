@@ -10,7 +10,7 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus } from '../utils/validator';
+import { ValidationStatus, ValidationResponse } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
@@ -116,6 +116,12 @@ export class Task {
 
       let url = conn.url;
       if (conn.port.length > 0) url += ':' + conn.port;
+
+      transactionWrap.assetInfo = {
+        unitName: '',
+        displayAmount: '',
+      };
+
       await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((asset) => {
         const assetInfo: any = {};
         const params = asset['params'];
@@ -155,6 +161,8 @@ export class Task {
         }
 
         transactionWrap.assetInfo = assetInfo;
+      }).catch((e) => {
+        logging.log(e.message);
       });
     }
   }
@@ -601,6 +609,11 @@ export class Task {
                 reject(d);
                 return;
               }
+
+              // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
+              transactionWraps.forEach((wrap) => {
+                wrap.validityObject['group'] = new ValidationResponse({ status: ValidationStatus.Valid });
+              });
             } else {
               const wrap = transactionWraps[0];
               if (
@@ -626,7 +639,7 @@ export class Task {
               {
                 url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
                 ...popupProperties,
-                height: popupProperties.height + (transactionWraps.length > 1 ? 80 : 0),
+                height: popupProperties.height + 80,
               },
               function (w) {
                 if (w) {
