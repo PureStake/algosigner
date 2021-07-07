@@ -85,7 +85,16 @@ export function Validate(field: any, value: any): ValidationResponse {
         (typeof value === 'string' || value instanceof String) &&
         value.length < STRING_MAX_LENGTH
       ) {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
+        // Group transactions are dangerous unless the whole group is provided.
+        // v2 flow handles this when the group is indeed provided.
+        if (field === 'group') {
+          return new ValidationResponse({
+            status: ValidationStatus.Dangerous,
+            info: `This is an atomic transaction that's part of an unknown group.`,
+          });
+        } else {
+          return new ValidationResponse({ status: ValidationStatus.Valid });
+        }
       } else {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,

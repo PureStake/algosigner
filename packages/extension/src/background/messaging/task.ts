@@ -10,7 +10,7 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus } from '../utils/validator';
+import { ValidationStatus, ValidationResponse } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
@@ -609,6 +609,11 @@ export class Task {
                 reject(d);
                 return;
               }
+
+              // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
+              transactionWraps.forEach((wrap) => {
+                wrap.validityObject['group'] = new ValidationResponse({ status: ValidationStatus.Valid });
+              });
             } else {
               const wrap = transactionWraps[0];
               if (
