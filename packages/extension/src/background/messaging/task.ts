@@ -116,6 +116,12 @@ export class Task {
 
       let url = conn.url;
       if (conn.port.length > 0) url += ':' + conn.port;
+
+      transactionWrap.assetInfo = {
+        unitName: '',
+        displayAmount: '',
+      };
+
       await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((asset) => {
         const assetInfo: any = {};
         const params = asset['params'];
@@ -155,6 +161,8 @@ export class Task {
         }
 
         transactionWrap.assetInfo = assetInfo;
+      }).catch((e) => {
+        logging.log(e.message);
       });
     }
   }
