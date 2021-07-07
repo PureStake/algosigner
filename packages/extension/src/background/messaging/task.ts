@@ -105,7 +105,7 @@ export class Task {
     if (transactionWrap.transaction['type'] === 'axfer') {
       const assetIndex = transactionWrap.transaction['assetIndex'];
       const ledger = getLedgerFromGenesisId(transactionWrap.transaction['genesisID']);
-      const conn = Settings.getBackendParams(ledger, API.Indexer);
+      const conn = Settings.getBackendParams(ledger, API.Algod);
       const sendPath = `/v2/assets/${assetIndex}`;
       const fetchAssets: any = {
         headers: {
@@ -116,9 +116,9 @@ export class Task {
 
       let url = conn.url;
       if (conn.port.length > 0) url += ':' + conn.port;
-      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((assets) => {
+      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((asset) => {
         const assetInfo: any = {};
-        const params = assets['asset']['params'];
+        const params = asset['params'];
 
         // Get relevant data from asset params
         const decimals = params['decimals'];
