@@ -626,7 +626,7 @@ export class Task {
               {
                 url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
                 ...popupProperties,
-                height: popupProperties.height + (transactionWraps.length > 1 ? 80 : 0),
+                height: popupProperties.height + 80,
               },
               function (w) {
                 if (w) {

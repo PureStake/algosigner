@@ -198,7 +198,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const getWrapUI = (wrap, account) => {
     return html`
-      <div class="mb-3" style="overflow:visible; height: 360px;">
+      <div class="mb-3" style="overflow:visible; height: 360px; flex-basis: 70%;">
         ${wrap.transaction.type === 'pay' &&
         html`
           <${TxPay}
@@ -276,7 +276,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
   return html`
     <div
       class="main-view is-flex-direction-column is-justify-content-space-between"
-      style="${transactionWraps.length > 1 ? 'min-height: 630px;' : ''}"
+      style="min-height: 630px;"
     >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
