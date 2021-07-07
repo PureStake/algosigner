@@ -1,10 +1,31 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
+import { isLedgerBaseSupported } from '@algosigner/common/utils';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
   const { tx, account, ledger, vo, dt, estFee, da, un, msig } = props;
   const fee = estFee ? estFee : tx['fee'];
+
+  let assetIndex = html`
+    <p
+      style="width: 70%"
+    >
+      ${tx.assetIndex}
+    </p>
+  `;
+  if (isLedgerBaseSupported(ledger)) {
+    assetIndex = html`
+      <a
+        style="width: 70%"
+        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${tx.assetIndex}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        ${tx.assetIndex}
+      </a>
+    `;
+  }
 
   const midsection = html`
     <p class="has-text-centered has-text-weight-bold">
@@ -32,16 +53,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       `}
       <div class="is-flex">
         <p style="width: 30%;">Asset:</p>
-        <a
-          style="width: 70%"
-          href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
-            tx.assetIndex
-          }`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          ${tx.assetIndex}
-        </a>
+        ${assetIndex}
       </div>
       <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
         <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
