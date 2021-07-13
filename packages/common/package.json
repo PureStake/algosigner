@@ -1,6 +1,6 @@
 {
   "name": "@algosigner/common",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "author": "https://developer.purestake.io",
   "description": "Common library functions for AlgoSigner.",
   "repository": "https://github.com/PureStake/algosigner",
