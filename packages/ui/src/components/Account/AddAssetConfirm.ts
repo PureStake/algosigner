@@ -122,7 +122,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
           </a>
         </div>
         <button
-          id="backToWallet"
+          id="backToAccount"
           class="button is-primary is-fullwidth mt-4"
           onClick=${() => route(`/${ledger}/${address}`)}
         >

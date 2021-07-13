@@ -26,15 +26,23 @@ async function selectAccount(account) {
   await extensionPage.waitForTimeout(500);
 }
 
+async function openAccountDetails(account) {
+  await selectAccount(account);
+  await extensionPage.waitForSelector('#accountName');
+  await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(account.name);
+  await extensionPage.click('#showDetails');
+}
+
 async function goBack() {
   await extensionPage.click('#goBack');
-  await extensionPage.waitForTimeout(500);
+  await extensionPage.waitForTimeout(250);
 }
 
 async function closeModal() {
   const modalSelector = '.modal.is-active button.modal-close';
   await extensionPage.waitForSelector(modalSelector);
   await extensionPage.click(modalSelector);
+  await extensionPage.waitForTimeout(250);
 }
 
 // Dapp Helpers
@@ -155,6 +163,7 @@ function appendSignToMultisigTransaction(partialTransaction, msigParams, mnemoni
 module.exports = {
   openExtension,
   selectAccount,
+  openAccountDetails,
   goBack,
   closeModal,
   getPopup,

@@ -14,10 +14,12 @@
   "scripts": {
     "github": "jest -i --group=github",
     "basic-dapp": "jest --group=basic-dapp",
-    "basic-ui": "jest --group=basic-ui",
+    "ui": "jest --group=ui",
+    "ui/accounts": "jest --group=ui/accounts",
+    "ui/transactions": "jest --group=ui/transactions",
     "app-dapp": "jest --group=app-dapp",
-    "dapp/multisig": "jest --group=dapp/multisig",
     "dapp": "jest --group=dapp",
+    "dapp/multisig": "jest --group=dapp/multisig",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && bash -c \"start chrome \"$(realpath ./coverage/lcov-report/index.html\"\")",
     "test": "jest -i --group=-github --group=-dapp-storage"
   }
