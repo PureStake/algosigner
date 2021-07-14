@@ -24,7 +24,7 @@ module.exports = {
   //devtool: 'source-map',
   optimization: {
     minimize: false,
-    namedModules: true,
+    moduleIds: 'named',
   },
   module: {
     rules: [

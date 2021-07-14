@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { shallow } from 'enzyme';
 import { html } from 'htm/preact';
 import AccountDetails from './AccountDetails';

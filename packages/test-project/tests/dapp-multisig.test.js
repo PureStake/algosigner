@@ -7,8 +7,7 @@
 const { accounts } = require('./common/constants');
 const {
   openExtension,
-  getLedgerParams,
-  signTransaction,
+  getLedgerSuggestedParams,
   sendTransaction,
   decodeBase64Blob,
   byteArrayToBase64,
@@ -24,7 +23,22 @@ let ledgerParams;
 let multisigTransaction;
 let signedTransactions = [];
 
-jest.setTimeout(10000);
+async function signTransaction(transaction) {
+  const signedTransaction = await dappPage.evaluate(async (transaction) => {
+    const signPromise = AlgoSigner.signMultisig(transaction)
+      .then((data) => {
+        return data;
+      })
+      .catch((error) => {
+        return error;
+      });
+    await window.authorizeSign();
+    return await Promise.resolve(signPromise);
+  }, transaction);
+  await expect(signedTransaction).toHaveProperty('txID');
+  await expect(signedTransaction).toHaveProperty('blob');
+  return signedTransaction;
+}
 
 describe('Wallet Setup', () => {
   beforeAll(async () => {
@@ -38,8 +52,7 @@ describe('dApp Setup', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
-    ledgerParams = await getLedgerParams();
-    console.log(`TestNet transaction params: [last-round: ${ledgerParams['last-round']}, ...]`);
+    ledgerParams = await getLedgerSuggestedParams();
     multisigTransaction = {
       msig: {
         subsig: msigAccount.subaccounts.map((acc) => {
@@ -53,11 +66,7 @@ describe('dApp Setup', () => {
         from: msigAccount.address,
         to: accounts.ui.address,
         amount: Math.ceil(Math.random() * 1000),
-        fee: ledgerParams['fee'],
-        firstRound: ledgerParams['last-round'],
-        lastRound: ledgerParams['last-round'] + 1000,
-        genesisID: ledgerParams['genesis-id'],
-        genesisHash: ledgerParams['genesis-hash'],
+        ...ledgerParams,
       },
     };
   });

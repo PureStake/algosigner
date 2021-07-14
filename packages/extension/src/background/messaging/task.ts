@@ -10,7 +10,7 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus } from '../utils/validator';
+import { ValidationStatus, ValidationResponse } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
@@ -105,7 +105,7 @@ export class Task {
     if (transactionWrap.transaction['type'] === 'axfer') {
       const assetIndex = transactionWrap.transaction['assetIndex'];
       const ledger = getLedgerFromGenesisId(transactionWrap.transaction['genesisID']);
-      const conn = Settings.getBackendParams(ledger, API.Indexer);
+      const conn = Settings.getBackendParams(ledger, API.Algod);
       const sendPath = `/v2/assets/${assetIndex}`;
       const fetchAssets: any = {
         headers: {
@@ -116,9 +116,15 @@ export class Task {
 
       let url = conn.url;
       if (conn.port.length > 0) url += ':' + conn.port;
-      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((assets) => {
+
+      transactionWrap.assetInfo = {
+        unitName: '',
+        displayAmount: '',
+      };
+
+      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((asset) => {
         const assetInfo: any = {};
-        const params = assets['asset']['params'];
+        const params = asset['params'];
 
         // Get relevant data from asset params
         const decimals = params['decimals'];
@@ -155,6 +161,8 @@ export class Task {
         }
 
         transactionWrap.assetInfo = assetInfo;
+      }).catch((e) => {
+        logging.log(e.message);
       });
     }
   }
@@ -601,6 +609,11 @@ export class Task {
                 reject(d);
                 return;
               }
+
+              // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
+              transactionWraps.forEach((wrap) => {
+                wrap.validityObject['group'] = new ValidationResponse({ status: ValidationStatus.Valid });
+              });
             } else {
               const wrap = transactionWraps[0];
               if (
@@ -626,7 +639,7 @@ export class Task {
               {
                 url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
                 ...popupProperties,
-                height: popupProperties.height + (transactionWraps.length > 1 ? 80 : 0),
+                height: popupProperties.height + 80,
               },
               function (w) {
                 if (w) {
@@ -808,6 +821,7 @@ export class Task {
           const { passphrase, responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
+          let holdResponse = false;
 
           const {
             from,
@@ -847,7 +861,11 @@ export class Task {
                 }
               }
 
-              const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+              // If the account is not a hardware account we need to get the mnemonic
+              let recoveredAccount;
+              if (!account.isHardware) {
+                recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+              }
 
               const txn = { ...message.body.params.transaction };
               removeEmptyFields(txn);
@@ -895,25 +913,48 @@ export class Task {
               try {
                 // This step transitions a raw object into a transaction style object
                 const builtTx = buildTransaction(txn);
-                // We are combining the tx id get and sign into one step/object because of legacy,
-                // this may not need to be the case any longer.
-                const signedTxn = {
-                  txID: builtTx.txID().toString(),
-                  blob: builtTx.signTxn(recoveredAccount.sk),
-                };
-                const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
 
-                message.response = {
-                  txID: signedTxn.txID,
-                  blob: b64Obj,
-                };
+                if (recoveredAccount) {
+                  // We recovered an account from within the saved extension data and can sign with it
+                  const txblob = builtTx.signTxn(recoveredAccount.sk);
+
+                  // We are combining the tx id get and sign into one step/object because of legacy,
+                  // this may not need to be the case any longer.
+                  const signedTxn = {
+                    txID: builtTx.txID().toString(),
+                    blob: txblob,
+                  };
+
+                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
+
+                  message.response = {
+                    txID: signedTxn.txID,
+                    blob: b64Obj,
+                  };
+                } else if (account.isHardware) {
+                  // The account is hardware based. We need to open the extension in tab to connect.
+                  // We will need to hold the response to dApps
+                  holdResponse = true;
+                  InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
+                    // We only have to worry about possible errors here
+                    if ('error' in response) {
+                      // Cancel the hold response since errors needs to be returned
+                      holdResponse = false;
+                      message.error = response.error;
+                    }
+                  });
+                }
               } catch (e) {
                 message.error = e.message;
               }
 
               // Clean class saved request
               delete Task.requests[responseOriginTabID];
-              MessageApi.send(message);
+
+              // Hardware signing will defer the response
+              if (!holdResponse) {
+                MessageApi.send(message);
+              }
             });
           } catch {
             // On error we should remove the task
@@ -1298,6 +1339,40 @@ export class Task {
         },
         [JsonRpcMethod.GetLedgers]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetLedgers](request, sendResponse);
+        },
+        [JsonRpcMethod.LedgerLinkAddress]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.LedgerLinkAddress](request, sendResponse);
+        },
+        [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
+        },
+        [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
+          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {
+            logging.log(
+              `Task method - LedgerSendTxnResponse - Returning: ${JSON.stringify(response)}`,
+              2
+            );
+
+            // Message indicates that this response will go to the DApp
+            if ('message' in response) {
+              // Send the response back to the origniating page
+              MessageApi.send(response.message);
+              // Also pass back the blob response to the caller
+              sendResponse(response.message.response);
+            } else {
+              // Send repsonse to the calling function
+              sendResponse(response);
+            }
+          });
+          return true;
+        },
+        [JsonRpcMethod.LedgerSaveAccount]: (request: any, sendResponse: Function) => {
+          try {
+            return InternalMethods[JsonRpcMethod.LedgerSaveAccount](request, sendResponse);
+          } catch {
+            sendResponse({ error: 'Account parameters invalid.' });
+            return false;
+          }
         },
       },
     };

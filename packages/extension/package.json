@@ -1,7 +1,9 @@
 {
   "name": "algosigner-extension",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "author": "https://developer.purestake.io",
+  "repository": "https://github.com/PureStake/algosigner",
+  "license": "MIT",
   "description": "Sign Algorand transactions in your browser with PureStake.",
   "keywords": [
     "Algorand",
@@ -9,13 +11,13 @@
   ],
   "devDependencies": {
     "@types/jest": "^26.0.14",
-    "jest": "^26.4.2",
+    "jest": "27.0.0",
     "jest-webextension-mock": "^3.6.1",
-    "ts-jest": "^26.3.0",
+    "ts-jest": "^27.0.0",
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.7",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "algosdk": "1.8.1"

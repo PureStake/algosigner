@@ -12,11 +12,16 @@ import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
 import { initializeCache, getAvailableLedgersExt } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
-import { getValidatedTxnWrap, getLedgerFromGenesisId } from '../transaction/actions';
+import {
+  calculateEstimatedFee,
+  getValidatedTxnWrap,
+  getLedgerFromGenesisId,
+} from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { NoAccountMatch } from '../../errors/transactionSign';
+import { extensionBrowser } from '@algosigner/common/chrome';
 
 const session = new Session();
 
@@ -61,7 +66,7 @@ export class InternalMethods {
         break;
       }
     }
-    if (!found) throw new NoAccountMatch(address);
+    if (!found) throw new NoAccountMatch(address, ledger);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
@@ -294,6 +299,165 @@ export class InternalMethods {
     return true;
   }
 
+  public static [JsonRpcMethod.LedgerLinkAddress](request: any, sendResponse: Function) {
+    const ledger = request.body.params.ledger;
+    extensionBrowser.tabs.create(
+      {
+        active: true,
+        url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/ledger-hardware-connector`),
+      },
+      (tab) => {
+        // Tab object is created here, but extension popover will close.
+        sendResponse(tab);
+      }
+    );
+    return true;
+  }
+  public static [JsonRpcMethod.LedgerGetSessionTxn](request: any, sendResponse: Function) {
+    if (session.txnWrap && 'body' in session.txnWrap) {
+      // The transaction may contain source and JSONRPC info, the body.params will be the transaction validation object
+      sendResponse(session.txnWrap.body.params);
+    } else {
+      sendResponse({ error: 'Transaction not found in session.' });
+    }
+    return true;
+  }
+
+  public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
+    if (session.txnWrap && 'body' in session.txnWrap) {
+      const txnBuf = Buffer.from(request.body.params.txn, 'base64');
+      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
+      const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
+
+      // Get the session transaction
+      const sessTxn = session.txnWrap.body.params.transaction;
+
+      // Set the fee to the estimate we showed on the screen for validation.
+      sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      const sessTxnEntries = Object.entries(sessTxn).sort();
+
+      // Update fields in the signed transaction that are not the same format
+      for (let i = 0; i < signedTxnEntries.length; i++) {
+        if (signedTxnEntries[i][0] === 'from') {
+          signedTxnEntries[i][1] = algosdk.encodeAddress(signedTxnEntries[i][1]['publicKey']);
+        } else if (signedTxnEntries[i][0] === 'to') {
+          signedTxnEntries[i][1] = algosdk.encodeAddress(signedTxnEntries[i][1]['publicKey']);
+        } else if (signedTxnEntries[i][1] && signedTxnEntries[i][1].constructor === Uint8Array) {
+          //@ts-ignore
+          signedTxnEntries[i][1] = Buffer.from(signedTxnEntries[i][1]).toString('base64');
+        }
+      }
+
+      logging.log(`Signed Txn: ${signedTxnEntries}`, 2);
+      logging.log(`Session Txn: ${sessTxnEntries}`, 2);
+
+      if (
+        signedTxnEntries['amount'] === sessTxnEntries['amount'] &&
+        signedTxnEntries['fee'] === sessTxnEntries['fee'] &&
+        signedTxnEntries['genesisID'] === sessTxnEntries['genesisID'] &&
+        signedTxnEntries['firstRound'] === sessTxnEntries['firstRound'] &&
+        signedTxnEntries['lastRound'] === sessTxnEntries['lastRound'] &&
+        signedTxnEntries['type'] === sessTxnEntries['type'] &&
+        signedTxnEntries['to'] === sessTxnEntries['to'] &&
+        signedTxnEntries['from'] === sessTxnEntries['from'] &&
+        signedTxnEntries['closeRemainderTo'] === sessTxnEntries['closeRemainderTo']
+      ) {
+        //Check the txnWrap for a dApp response and return the transaction
+        if (session.txnWrap.source === 'dapp') {
+          const message = session.txnWrap;
+          message.response = {
+            blob: request.body.params.txn,
+          };
+          sendResponse({ message: message });
+        }
+        // If this is a ui transaction then we need to also submit
+        else if (session.txnWrap.source === 'ui') {
+          const txHeaders = { 'Content-Type': 'application/x-binary' };
+          const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
+
+          const algod = this.getAlgod(ledger);
+          algod
+            .sendRawTransaction(txnBuf, txHeaders)
+            .do()
+            .then((resp: any) => {
+              sendResponse({ txId: resp.txId });
+            })
+            .catch((e: any) => {
+              if (e.message.includes('overspend'))
+                sendResponse({
+                  error: "Overspending. Your account doesn't have sufficient funds.",
+                });
+              else sendResponse({ error: e.message });
+            });
+        } else {
+          sendResponse({ error: 'Session transaction does not match the signed transaction.' });
+        }
+
+        // Clear the cached transaction
+        session.txnWrap.body.params.transaction = undefined;
+      } else {
+        sendResponse({ error: 'Transaction not found in session, unable to validate for send.' });
+      }
+    }
+    return true;
+  }
+
+  // Protected because this should only be called from within the ui or dapp sign methods
+  protected static [JsonRpcMethod.LedgerSignTransaction](request: any, sendResponse: Function) {
+    // Access store here here to save the transaction wrap to cache before the site picks it up.
+    // Explicitly using txnWrap on session instead of auth message for two reasons:
+    // 1) So it lives inside background sandbox containment.
+    // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
+    session.txnWrap = request;
+
+    // Transaction wrap will contain response message if from dApp and structure will be different
+    const ledger = getLedgerFromGenesisId(request.body.params.transaction.genesisID);
+    extensionBrowser.tabs.create(
+      {
+        active: true,
+        url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/ledger-hardware-sign`),
+      },
+      (tab) => {
+        // Tab object is created here, but extension popover will close.
+        sendResponse(tab);
+      }
+    );
+  }
+
+  public static [JsonRpcMethod.LedgerSaveAccount](request: any, sendResponse: Function) {
+    const { name, ledger, passphrase } = request.body.params;
+    // The value returned from the Ledger device is hex.
+    // This is passed directly to save and needs to be converted.
+    const address = algosdk.encodeAddress(Buffer.from(request.body.params.hexAddress, 'hex'));
+
+    this._encryptionWrap = new encryptionWrap(passphrase);
+    this._encryptionWrap.unlock((unlockedValue: any) => {
+      if ('error' in unlockedValue) {
+        sendResponse(unlockedValue);
+      } else {
+        const newAccount = {
+          address: address,
+          name: name,
+          isHardware: true,
+        };
+
+        if (!unlockedValue[ledger]) {
+          unlockedValue[ledger] = [];
+        }
+
+        unlockedValue[ledger].push(newAccount);
+        this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
+          if (isSuccessful) {
+            session.wallet = this.safeWallet(unlockedValue);
+            sendResponse(session.wallet);
+          } else {
+            sendResponse({ error: 'Lock failed' });
+          }
+        });
+      }
+    });
+    return true;
+  }
   public static [JsonRpcMethod.AccountDetails](request: any, sendResponse: Function) {
     const { ledger, address } = request.body.params;
     const algod = this.getAlgod(ledger);
@@ -520,7 +684,6 @@ export class InternalMethods {
         }
       }
 
-      var recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
       const params = await algod.getTransactionParams().do();
       const txn = {
         ...txnParams,
@@ -570,31 +733,61 @@ export class InternalMethods {
         sendResponse({ error: e });
         return;
       } else {
-        // We have a transaction which does not contain invalid fields, but may contain fields that are dangerous
-        // or ones we've flagged as needing to be reviewed. We can use a modified popup to allow the normal flow, but require extra scrutiny.
-        let signedTxn;
-        try {
-          const builtTx = buildTransaction(txn);
-          signedTxn = {
-            txID: builtTx.txID().toString(),
-            blob: builtTx.signTxn(recoveredAccount.sk),
-          };
-        } catch (e) {
-          sendResponse({ error: e.message });
-          return;
-        }
+        // We have a transaction which does not contain invalid fields,
+        // but may still contain fields that are dangerous
+        // or ones we've flagged as needing to be reviewed.
+        // Perform a change based on if this is a ledger device account
+        if (account.isHardware) {
+          // TODO: Temporary workaround by adding min-fee for estimate calculations since it's not in the sdk get params.
+          params['min-fee'] = 1000;
+          calculateEstimatedFee(transactionWrap, params);
 
-        algod
-          .sendRawTransaction(signedTxn.blob, txHeaders)
-          .do()
-          .then((resp: any) => {
-            sendResponse({ txId: resp.txId });
-          })
-          .catch((e: any) => {
-            if (e.message.includes('overspend'))
-              sendResponse({ error: "Overspending. Your account doesn't have sufficient funds." });
-            else sendResponse({ error: e.message });
-          });
+          // Pass the transaction wrap we can pass to the
+          // central sign ledger function for consistency
+          this[JsonRpcMethod.LedgerSignTransaction](
+            { source: 'ui', body: { params: transactionWrap } },
+            (response) => {
+              // We only have to worry about possible errors here so we can ignore the created tab
+              if ('error' in response) {
+                sendResponse(response);
+              } else {
+                // Respond with a 0 tx id so that the page knows not to try and show it.
+                sendResponse({ txId: 0 });
+              }
+            }
+          );
+
+          // Return to close connection
+          return true;
+        } else {
+          // We can use a modified popup to allow the normal flow, but require extra scrutiny.
+          const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+          let signedTxn;
+          try {
+            const builtTx = buildTransaction(txn);
+            signedTxn = {
+              txID: builtTx.txID().toString(),
+              blob: builtTx.signTxn(recoveredAccount.sk),
+            };
+          } catch (e) {
+            sendResponse({ error: e.message });
+            return false;
+          }
+
+          algod
+            .sendRawTransaction(signedTxn.blob, txHeaders)
+            .do()
+            .then((resp: any) => {
+              sendResponse({ txId: resp.txId });
+            })
+            .catch((e: any) => {
+              if (e.message.includes('overspend'))
+                sendResponse({
+                  error: "Overspending. Your account doesn't have sufficient funds.",
+                });
+              else sendResponse({ error: e.message });
+            });
+        }
       }
     });
 

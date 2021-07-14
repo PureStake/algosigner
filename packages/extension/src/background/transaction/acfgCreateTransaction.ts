@@ -6,7 +6,7 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class AssetCreateTx implements IAssetCreateTx {
   assetTotal: number = undefined;
-  assetDecimals: number = undefined;
+  assetDecimals?: number = null;
   type: string = undefined;
   from: string = undefined;
   fee: number = undefined;

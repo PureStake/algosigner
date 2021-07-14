@@ -281,7 +281,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p>Transaction sent with ID</p>
             <p id="txId" style="word-break: break-all;">${txId}</p>
             <button
-              id="backToWallet"
+              id="backToAccount"
               class="button is-primary is-fullwidth mt-4"
               onClick=${() => route(`/${matches.ledger}/${matches.address}`)}
             >
