@@ -108,6 +108,24 @@ async function ConnectAlgoSigner() {
 
     async function authorizeSignTxn() {
       const popup = await getPopup();
+
+      // Atomic txs Approval
+      try {
+        await popup.waitForTimeout(500);
+        const txAmount = await popup.$eval('.dropdown-trigger span', (e) => {
+          console.log(e);
+          return +e.innerText.slice(-1);
+        });
+        console.log(txAmount);
+
+        for (let i = 0; i < txAmount; i++) {
+          await popup.click('#toggleApproval');
+          await popup.waitForTimeout(250);
+        }
+      } catch (e) {
+        // Single transaction
+      }
+
       await popup.waitForSelector('#approveTx');
       await popup.click('#approveTx');
       await popup.waitForSelector('#enterPassword');

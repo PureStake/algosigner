@@ -304,7 +304,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
           <div class="dropdown ${dropdown ? 'is-active' : ''}">
             <div class="dropdown-trigger">
               <button
-                class="button is-light ${loading ? 'is-loading' : ''}"
+                class="button is-light"
                 onClick=${flipDropdown}
                 aria-haspopup="true"
                 aria-controls="dropdown-menu"
@@ -335,10 +335,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
               </div>
             </div>
           </div>
-          <button
-            class="button is-primary ${loading ? 'is-loading' : ''}"
-            onClick="${toggleApproval}"
-          >
+          <button class="button is-primary" id="toggleApproval" onClick="${toggleApproval}">
             <span>Approve</span>
             ${getApproval(activeTx)}
           </button>

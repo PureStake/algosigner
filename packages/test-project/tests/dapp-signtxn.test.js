@@ -224,6 +224,42 @@ describe('Single and Global Transaction Use cases', () => {
     expect(decodedTransaction.msig.subsig.length).toBe(3);
     expect(decodedTransaction.msig.subsig[0]).toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[1]).not.toHaveProperty('s');
+
+    describe('Group Transactions Use cases', () => {
+      test('Group Transaction with Reference Transaction', async () => {
+        const tx1 = buildSdkTx({
+          type: 'pay',
+          from: account1.address,
+          to: account2.address,
+          amount: Math.ceil(Math.random() * 1000),
+          ...ledgerParams,
+        });
+        const tx2 = buildSdkTx({
+          type: 'pay',
+          from: account2.address,
+          to: account1.address,
+          amount: Math.ceil(Math.random() * 1000),
+          ...ledgerParams,
+        });
+        const tx3 = buildSdkTx({
+          type: 'pay',
+          from: account1.address,
+          to: account2.address,
+          amount: Math.ceil(Math.random() * 1000),
+          ...ledgerParams,
+        });
+
+        unsignedTransactions = await algosdk.assignGroupID([tx1, tx2, tx3]);
+        unsignedTransactions = unsignedTransactions.map((txn) => prepareWalletTx(txn));
+        unsignedTransactions[2].signers = [];
+
+        const signedTransactions = await signTxn(unsignedTransactions);
+        await expect(signedTransactions[2]).toBeNull();
+        await expect(signedTransactions.filter((i) => i).length).toBe(2);
+      });
+
+      // @TODO: Add errors for mismatches, incomplete groups, etc
+    });
     expect(decodedTransaction.msig.subsig[2]).not.toHaveProperty('s');
   });
 });
