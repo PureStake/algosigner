@@ -48,7 +48,8 @@ describe('Create Account', () => {
   });
 
   test('Create An Account, Step 3 - Use Mnemonic', async () => {
-    await extensionPage.waitForSelector('#enterMnemonic');
+    // Wait for mnemonic word buttons to be available
+    await extensionPage.waitForSelector('[data-index]:not([disabled])');
 
     // We test the remove word functionality by first filling with random words
     const randomWords = [];

@@ -176,6 +176,8 @@ describe('UI Transactions Tests', () => {
 
     await closeModal();
     await goBack();
+    // Extra goBack to main screen
+    await goBack();
   });
 
   DeleteAccount(accounts.ui);
