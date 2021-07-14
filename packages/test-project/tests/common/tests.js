@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { selectAccount, goBack, closeModal, getPopup } = require('./helpers');
+const { openAccountDetails, goBack, closeModal, getPopup } = require('./helpers');
 
 // Common Tests
 async function WelcomePage() {
@@ -55,18 +55,33 @@ async function ImportAccount(account) {
     await extensionPage.click('#authButton');
   });
 
+  VerifyAccount(account);
+}
+
+async function VerifyAccount(account) {
   test(`Verify Account Info (${account.name})`, async () => {
-    await selectAccount(account);
-    await extensionPage.waitForSelector('#accountName');
-    await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(
-      account.name
-    );
-    await extensionPage.click('#showDetails');
+    await openAccountDetails(account);
     await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
       account.address
     );
     await closeModal();
     await goBack();
+  });
+}
+
+async function DeleteAccount(account) {
+  test(`Delete Account (${account.name})`, async () => {
+    await openAccountDetails(account);
+    await extensionPage.click('#deleteAccount');
+    await extensionPage.type('#enterPassword', wallet.password);
+    await extensionPage.waitForTimeout(200);
+    await extensionPage.click('#authButton');
+  });
+
+  test('Verify Account Deleted', async () => {
+    await extensionPage.waitForSelector('#addAccount');
+    const accountSelector = '#account_' + account.name.replace(/\s/g, '');
+    await expect(extensionPage.select(accountSelector)).rejects.toThrow();
   });
 }
 
@@ -90,6 +105,31 @@ async function ConnectAlgoSigner() {
       await popup.click('#authButton');
     }
     await dappPage.exposeFunction('authorizeSign', authorizeSign);
+
+    async function authorizeSignTxn() {
+      const popup = await getPopup();
+
+      // Atomic txs Approval
+      try {
+        await popup.waitForTimeout(500);
+        const txAmount = await popup.$eval('.dropdown-trigger span', (e) => +e.innerText.slice(-1));
+
+        for (let i = 0; i < txAmount; i++) {
+          await popup.click('#toggleApproval');
+          await popup.waitForTimeout(250);
+        }
+      } catch (e) {
+        // Single transaction
+      }
+
+      await popup.waitForSelector('#approveTx');
+      await popup.click('#approveTx');
+      await popup.waitForSelector('#enterPassword');
+      await popup.type('#enterPassword', wallet.password);
+      await popup.waitForSelector('#authButton');
+      await popup.click('#authButton');
+    }
+    await dappPage.exposeFunction('authorizeSignTxn', authorizeSignTxn);
   });
 
   test('Connect Dapp through content.js', async () => {
@@ -108,5 +148,7 @@ module.exports = {
   SelectTestNetLedger,
   CreateWallet,
   ImportAccount,
+  VerifyAccount,
+  DeleteAccount,
   ConnectAlgoSigner,
 };
