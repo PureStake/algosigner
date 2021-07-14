@@ -1,12 +1,13 @@
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 function srcPath(subdir) {
-    return path.join(__dirname, "./", subdir);
+  return path.join(__dirname, './', subdir);
 }
 
 module.exports = {
+  mode: 'production',
   entry: './src/index.js',
   output: {
     filename: 'main.js',
@@ -24,15 +25,15 @@ module.exports = {
         use: [
           MiniCssExtractPlugin.loader,
           {
-            loader: 'css-loader'
+            loader: 'css-loader',
           },
           {
             loader: require.resolve('sass-loader'),
             options: {
               implementation: require('sass'),
-            }
-          }
-        ]
+            },
+          },
+        ],
       },
       {
         test: /\.(png|jpe?g|gif|svg)$/i,
@@ -50,27 +51,24 @@ module.exports = {
   plugins: [
     // Generate a base html file and injects all generated css and js files
     new HtmlWebpackPlugin({
-      template: './index.html'
+      template: './index.html',
     }),
     new MiniCssExtractPlugin({
-      filename: 'styles.css'
+      filename: 'styles.css',
     }),
   ],
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js' ],
-    alias: { 
-      "react": "preact/compat",
-      "react-dom/test-utils": "preact/test-utils",
-      "react-dom": "preact/compat",
-      "@algosigner/common": path.resolve(__dirname, '../common/src'),
+    extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      'react': 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat',
+      '@algosigner/common': path.resolve(__dirname, '../common/src'),
     },
-    modules: [
-      path.resolve('./src'),
-      path.resolve('./node_modules')
-    ]
+    modules: [path.resolve('./src'), path.resolve('./node_modules')],
   },
   devServer: {
     contentBase: './dist',
-    port: 3000
+    port: 3000,
   },
 };

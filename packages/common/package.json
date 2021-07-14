@@ -1,13 +1,15 @@
 {
   "name": "@algosigner/common",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "author": "https://developer.purestake.io",
   "description": "Common library functions for AlgoSigner.",
+  "repository": "https://github.com/PureStake/algosigner",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^26.0.14",
-    "jest": "^26.4.1",
+    "jest": "27.0.0",
     "jest-webextension-mock": "^3.6.1",
-    "ts-jest": "^26.3.0",
+    "ts-jest": "^27.0.0",
     "ts-loader": "^8.0.3",
     "typescript": "^3.7.5"
   },

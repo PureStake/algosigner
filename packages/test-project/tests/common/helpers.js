@@ -26,29 +26,40 @@ async function selectAccount(account) {
   await extensionPage.waitForTimeout(500);
 }
 
+async function openAccountDetails(account) {
+  await selectAccount(account);
+  await extensionPage.waitForSelector('#accountName');
+  await expect(extensionPage.$eval('#accountName', (e) => e.innerText)).resolves.toBe(account.name);
+  await extensionPage.click('#showDetails');
+}
+
 async function goBack() {
   await extensionPage.click('#goBack');
-  await extensionPage.waitForTimeout(500);
+  await extensionPage.waitForTimeout(250);
 }
 
 async function closeModal() {
   const modalSelector = '.modal.is-active button.modal-close';
   await extensionPage.waitForSelector(modalSelector);
   await extensionPage.click(modalSelector);
+  await extensionPage.waitForTimeout(250);
 }
 
 // Dapp Helpers
 async function getPopup() {
   await dappPage.waitForTimeout(1500);
   const pages = await browser.pages();
-  return pages[pages.length - 1];
+  const popup = pages[pages.length - 1];
+
+  popup.on('console', (msg) => console.log('POPUP PAGE LOG:', msg.text()));
+  return popup;
 }
 
-async function getLedgerParams() {
-  const params = await dappPage.evaluate(() => {
+async function getLedgerSuggestedParams(ledger = 'TestNet') {
+  const params = await dappPage.evaluate((ledger) => {
     return Promise.resolve(
       AlgoSigner.algod({
-        ledger: 'TestNet',
+        ledger: ledger,
         path: '/v2/transactions/params',
       })
         .then((data) => {
@@ -58,7 +69,7 @@ async function getLedgerParams() {
           return error;
         })
     );
-  });
+  }, ledger);
 
   expect(params).toHaveProperty('consensus-version');
   expect(params).toHaveProperty('fee');
@@ -67,24 +78,15 @@ async function getLedgerParams() {
   expect(params).toHaveProperty('genesis-hash');
   expect(params).toHaveProperty('genesis-id');
   expect(params).toHaveProperty('last-round');
-  return params;
-}
 
-async function signTransaction(transaction) {
-  const signedTransaction = await dappPage.evaluate(async (transaction) => {
-    const signPromise = AlgoSigner.signMultisig(transaction)
-      .then((data) => {
-        return data;
-      })
-      .catch((error) => {
-        return error;
-      });
-    await window.authorizeSign();
-    return await Promise.resolve(signPromise);
-  }, transaction);
-  await expect(signedTransaction).toHaveProperty('txID');
-  await expect(signedTransaction).toHaveProperty('blob');
-  return signedTransaction;
+  return {
+    fee: params['fee'],
+    flatFee: true,
+    firstRound: params['last-round'],
+    lastRound: params['last-round'] + 1000,
+    genesisID: params['genesis-id'],
+    genesisHash: params['genesis-hash'],
+  };
 }
 
 async function sendTransaction(blob) {
@@ -155,11 +157,11 @@ function appendSignToMultisigTransaction(partialTransaction, msigParams, mnemoni
 module.exports = {
   openExtension,
   selectAccount,
+  openAccountDetails,
   goBack,
   closeModal,
   getPopup,
-  getLedgerParams,
-  signTransaction,
+  getLedgerSuggestedParams,
   sendTransaction,
   base64ToByteArray,
   byteArrayToBase64,

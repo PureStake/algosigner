@@ -44,7 +44,7 @@ const SettingsMenu: FunctionalComponent = () => {
   };
 
   return html`
-    <div class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
+    <div id="options-menu" class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
       <span class="icon">
         <i class="fas fa-cog" aria-hidden="true" />
       </span>

@@ -70,6 +70,11 @@ const Wallet: FunctionalComponent = () => {
                 Import existing account
               </${Link}>
             </div>
+            <div>
+              <${Link} class="button is-fullwidth mt-5" id="linkAccount" href=${`/${ledger}/link-hardware-account`}>
+                Link hardware device account
+              </${Link}>
+            </div>
           </div>
         </div>
         <button class="modal-close is-large" aria-label="close" onClick=${() =>

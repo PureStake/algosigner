@@ -10,39 +10,20 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.5.0 Release
+## 1.6.0 Release
 
-This release features the new v2 Signing functionality for dApp developers. Designed to meet the upcoming Algorand Foundation standards it will greatly simplifying complex signing scenarios like Multisignature and Atomic. Encoding is standardized and new helper functions simplify the complexity.
+### Functionality
+Added ability to use a Ledger device to add public addresses into AlgoSigner and for signing pay and asset transactions. For information about it how to use you can refer to the new readme.
 
-[v2 AlgoSigner methods](docs/dApp-integration.md)
+- [Ledger Readme](docs/ledger.md)
 
-The v1 Atomic transaction functionality will start warning extension users in the next major release and be deprecated entirely in two releases.
-
-### 1.5.1 Patch
-
-Improved Application Transaction workflow:
-
-- `AppOnComplete` now defaults to 0.
-- Improved readability on `AppArgs` during signing. The base64-encoded version will be shown.
-
-### 1.5.2 Patch
-
-v2 Signing Improvements:
-
-- Add informational tooltip on Multisig transactions.
-- Correctly fetch Asset Unit Name and Decimals Display Amount for AxferTxs.
-- `AppIndex` now defaults to 0.
-- Improved readability on `AppApprovalProgram` && `AppClearProgram` during signing. The base64-encoded version will be shown.
-
-Other Usability Improvements:
-
-- Enabled the option to remove the last selected word when confirming the Mnemonic during Account Creation.
-- Fixed bug that prevented Mnemonics with repeated words to be correctly confirmed during Account Creation.
-- Added scrollbar to transaction overview section of all signing methods. This helps with better visualization of transactions with many fields, such as Application Transactions.
-- UX Improvements for the Network Config screen:
-  - Added links to the documentation regarding custom networks.
-  - More responsive tooltip explaining the Network Headers field.
-  - UI Layout improvements.
+### Various Fixes
+- UI general improvements 
+- Improved validation handling in v2 signing 
+- Modified asset verification to use algod 
+- Fixed issue with 404's from asset lookups
+- Modify transactions without an amount to default to 0
+- Fixed issue with creating assets that have zero decimals 
 
 ## New Users
 

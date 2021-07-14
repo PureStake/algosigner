@@ -124,7 +124,6 @@ test('Validate pay transaction required fields', () => {
   expect(errorMessage).toContain('genesisHash');
   expect(errorMessage).toContain('to');
   expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('amount');
 });
 test('Validate clawback transaction required fields', () => {
   const preTransaction = {
@@ -180,7 +179,6 @@ test('Validate create transaction required fields', () => {
   expect(errorMessage).toContain('genesisHash');
   expect(errorMessage).toContain('from');
   expect(errorMessage).toContain('assetTotal');
-  expect(errorMessage).toContain('assetDecimals');
 });
 test('Validate destroy transaction required fields', () => {
   const preTransaction = {

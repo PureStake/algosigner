@@ -51,13 +51,22 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Validate the addresses are accurate
     case 'to':
     case 'from':
+    case 'closeRemainderTo':
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
           info: 'Address does not adhere to a valid structure.',
         });
       } else {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
+        // Close to types should issue a Dangerous validation warning if they contain values.
+        if (field === 'closeRemainderTo') {
+          return new ValidationResponse({
+            status: ValidationStatus.Dangerous,
+            info: `A 'close to' address is associated to this transaction.`,
+          });
+        } else {
+          return new ValidationResponse({ status: ValidationStatus.Valid });
+        }
       }
     // Safety checks for numbers
     case 'amount':
@@ -85,7 +94,16 @@ export function Validate(field: any, value: any): ValidationResponse {
         (typeof value === 'string' || value instanceof String) &&
         value.length < STRING_MAX_LENGTH
       ) {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
+        // Group transactions are dangerous unless the whole group is provided.
+        // v2 flow handles this when the group is indeed provided.
+        if (field === 'group') {
+          return new ValidationResponse({
+            status: ValidationStatus.Dangerous,
+            info: `This is an atomic transaction that's part of an unknown group.`,
+          });
+        } else {
+          return new ValidationResponse({ status: ValidationStatus.Valid });
+        }
       } else {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
@@ -120,17 +138,6 @@ export function Validate(field: any, value: any): ValidationResponse {
           status: ValidationStatus.Invalid,
           info: 'Value unable to be cast correctly to a numeric value.',
         });
-      }
-
-    // Close to types should issue a Dangerous validation warning if they contain values.
-    case 'closeRemainderTo':
-      if (value) {
-        return new ValidationResponse({
-          status: ValidationStatus.Dangerous,
-          info: 'A close to address is associated to this transaction.',
-        });
-      } else {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
       }
 
     case 'reKeyTo':

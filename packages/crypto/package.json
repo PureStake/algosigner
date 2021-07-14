@@ -1,17 +1,17 @@
 {
   "name": "algosigner-crypto",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "author": "https://developer.purestake.io",
   "description": "Cryptographic wrapper for saving and retrieving extention information in Algosigner.",
   "repository": {
     "type": "git",
     "url": "https://github.com/PureStake/algosigner/packages/crypto.git"
   },
-  "license": "",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^26.0.14",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.3.0",
+    "jest": "27.0.0",
+    "ts-jest": "^27.0.0",
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.7",
     "webpack": "^4.44.1",

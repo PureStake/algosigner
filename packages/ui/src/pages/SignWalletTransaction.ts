@@ -198,7 +198,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const getWrapUI = (wrap, account) => {
     return html`
-      <div class="mb-3" style="overflow:visible; height: 360px;">
+      <div class="mb-3" style="overflow:visible; height: 360px; flex-basis: 70%;">
         ${wrap.transaction.type === 'pay' &&
         html`
           <${TxPay}
@@ -276,7 +276,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
   return html`
     <div
       class="main-view is-flex-direction-column is-justify-content-space-between"
-      style="${transactionWraps.length > 1 ? 'min-height: 630px;' : ''}"
+      style="min-height: 630px;"
     >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
@@ -304,7 +304,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
           <div class="dropdown ${dropdown ? 'is-active' : ''}">
             <div class="dropdown-trigger">
               <button
-                class="button is-light ${loading ? 'is-loading' : ''}"
+                class="button is-light"
                 onClick=${flipDropdown}
                 aria-haspopup="true"
                 aria-controls="dropdown-menu"
@@ -335,10 +335,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
               </div>
             </div>
           </div>
-          <button
-            class="button is-primary ${loading ? 'is-loading' : ''}"
-            onClick="${toggleApproval}"
-          >
+          <button class="button is-primary" id="toggleApproval" onClick="${toggleApproval}">
             <span>Approve</span>
             ${getApproval(activeTx)}
           </button>

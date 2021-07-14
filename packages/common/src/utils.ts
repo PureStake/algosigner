@@ -1,4 +1,5 @@
 import { extensionBrowser } from './chrome';
+import { getBaseSupportedLedgers } from './types/ledgers';
 
 export function isFromExtension(origin: string): boolean {
   const s = origin.split('://');
@@ -17,4 +18,13 @@ export function removeEmptyFields(obj: { [index: string]: any }): any {
     }
   });
   return obj;
+}
+
+/**
+ * Check if a ledger belongs to our base supported ledgers (e.g: links to GoalSeeker)
+ * @param ledger 
+ * @returns boolean
+ */
+export function isLedgerBaseSupported(ledger: string): boolean {
+  return getBaseSupportedLedgers().map((l) => l.name.toLowerCase()).includes(ledger.toLowerCase());
 }
