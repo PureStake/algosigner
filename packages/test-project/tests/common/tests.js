@@ -112,11 +112,7 @@ async function ConnectAlgoSigner() {
       // Atomic txs Approval
       try {
         await popup.waitForTimeout(500);
-        const txAmount = await popup.$eval('.dropdown-trigger span', (e) => {
-          console.log(e);
-          return +e.innerText.slice(-1);
-        });
-        console.log(txAmount);
+        const txAmount = await popup.$eval('.dropdown-trigger span', (e) => +e.innerText.slice(-1));
 
         for (let i = 0; i < txAmount; i++) {
           await popup.click('#toggleApproval');
