@@ -105,6 +105,17 @@ async function ConnectAlgoSigner() {
       await popup.click('#authButton');
     }
     await dappPage.exposeFunction('authorizeSign', authorizeSign);
+
+    async function authorizeSignTxn() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#approveTx');
+      await popup.click('#approveTx');
+      await popup.waitForSelector('#enterPassword');
+      await popup.type('#enterPassword', wallet.password);
+      await popup.waitForSelector('#authButton');
+      await popup.click('#authButton');
+    }
+    await dappPage.exposeFunction('authorizeSignTxn', authorizeSignTxn);
   });
 
   test('Connect Dapp through content.js', async () => {
