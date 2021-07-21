@@ -8,7 +8,7 @@ class AssetFreezeTx implements IAssetFreezeTx {
   type: string = undefined;
   assetIndex: number = undefined;
   freezeAccount: string = undefined;
-  freezeState: boolean = undefined;
+  freezeState?: boolean = null;
   from: string = undefined;
   fee: number = undefined;
   firstRound: number = undefined;
