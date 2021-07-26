@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import transport from './ledgerTransport';
-import algosdk from 'algosdk';
+const algosdk = require('algosdk');
 const Algorand = require('@ledgerhq/hw-app-algorand');
-import { Transaction } from 'algosdk';
 import LedgerActionResponse from './ledgerActionsResponse';
 
 let ledgerTransport: typeof Algorand;
@@ -100,7 +99,7 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     }
   }
 
-  const builtTxn = new Transaction(txn);
+  const builtTxn = new algosdk.Transaction(txn);
 
   if ('group' in txn && txn['group']) {
     // Remap group field lost from cast
