@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import transport from './ledgerTransport';
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 const Algorand = require('@ledgerhq/hw-app-algorand');
-import { Transaction } from 'algosdk/src/transaction';
+import { Transaction } from 'algosdk';
 import LedgerActionResponse from './ledgerActionsResponse';
 
 let ledgerTransport: typeof Algorand;
@@ -21,13 +21,14 @@ const getDevice = async () => {
 
     // After obtaining the transport use it to create the Algorand Ledger transport
     ledgerTransport = new Algorand.default(newTransport);
-  }
-  catch(e) {
-    if(e && ('message' in e)) {
-      throw e; 
-    }
-    else {
-      return {'message': 'Error creating the ledger transport. Please ensure device is connected and the Algorand app is open.'}
+  } catch (e) {
+    if (e && 'message' in e) {
+      throw e;
+    } else {
+      return {
+        message:
+          'Error creating the ledger transport. Please ensure device is connected and the Algorand app is open.',
+      };
     }
   }
   return ledgerTransport;
@@ -126,7 +127,7 @@ const getAddress = async (): Promise<LedgerActionResponse> => {
   }
 
   // Return error if we have one
-  if(lar.error) {
+  if (lar.error) {
     return lar;
   }
 
@@ -162,10 +163,10 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
   }
 
   // Return error if we have one
-  if(lar.error) {
+  if (lar.error) {
     return lar;
   }
-  
+
   // Sign method accesps a message that is "hex" format, need to convert
   // and remove any empty fields before the conversion
   const txnResponse = cleanseBuildEncodeUnsignedTransaction(txn.transaction);

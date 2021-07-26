@@ -2,8 +2,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from './types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 jest.mock('../encryptionWrap');
 
@@ -295,7 +294,7 @@ describe('algosdk methods', () => {
     };
     const sendResponse = jest.fn();
 
-    const fooSpy = jest.spyOn(algosdk, 'Algodv2');
+    const fooSpy = jest.spyOn(algosdk as any, 'Algodv2');
     fooSpy.mockImplementationOnce(() => {
       return {
         accountInformation: () => {
@@ -362,8 +361,7 @@ describe('algosdk methods', () => {
           'sender': 'GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A',
           'sender-rewards': 0,
           'signature': {
-            sig:
-              'ZjD8XY8CxKnK/oXvc1bxKve2KQsxi5Yavmv9P84d/jtX10eux5nBqjoPowu3+Bs5xH3jRSNCmYgHmjZlEdD5DA==',
+            sig: 'ZjD8XY8CxKnK/oXvc1bxKve2KQsxi5Yavmv9P84d/jtX10eux5nBqjoPowu3+Bs5xH3jRSNCmYgHmjZlEdD5DA==',
           },
           'tx-type': 'pay',
         },
@@ -401,8 +399,12 @@ describe('algosdk methods', () => {
         {
           type: mockAlgodResponse['top-transactions'][0]['txn']['type'],
           amount: mockAlgodResponse['top-transactions'][0]['txn']['amt'],
-          sender: algosdk.encodeAddress(mockAlgodResponse['top-transactions'][0]['txn']['snd']),
-          receiver: algosdk.encodeAddress(mockAlgodResponse['top-transactions'][0]['txn']['rcv']),
+          sender: algosdk.encodeAddress(
+            new Uint8Array(mockAlgodResponse['top-transactions'][0]['txn']['snd'])
+          ),
+          receiver: algosdk.encodeAddress(
+            new Uint8Array(mockAlgodResponse['top-transactions'][0]['txn']['rcv'])
+          ),
           assetSender: undefined,
           assetName: undefined,
           id: undefined,
@@ -410,7 +412,7 @@ describe('algosdk methods', () => {
       ],
     };
 
-    const indexerSpy = jest.spyOn(algosdk, 'Indexer');
+    const indexerSpy = jest.spyOn(algosdk as any, 'Indexer');
     indexerSpy.mockImplementationOnce(() => {
       return {
         lookupAccountTransactions: () => {
@@ -424,7 +426,7 @@ describe('algosdk methods', () => {
       };
     });
 
-    const algodSpy = jest.spyOn(algosdk, 'Algodv2');
+    const algodSpy = jest.spyOn(algosdk as any, 'Algodv2');
     algodSpy.mockImplementationOnce(() => {
       return {
         pendingTransactionByAddress: () => {
@@ -487,7 +489,7 @@ describe('algosdk methods', () => {
       'current-round': 8775362,
     };
 
-    const fooSpy = jest.spyOn(algosdk, 'Indexer');
+    const fooSpy = jest.spyOn(algosdk as any, 'Indexer');
     fooSpy.mockImplementationOnce(() => {
       return {
         lookupAssetByID: () => {
