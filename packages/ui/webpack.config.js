@@ -2,9 +2,9 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-function srcPath(subdir) {
-  return path.join(__dirname, './', subdir);
-}
+// function srcPath(subdir) {
+//   return path.join(__dirname, './', subdir);
+// }
 
 module.exports = {
   mode: 'production',
@@ -64,6 +64,7 @@ module.exports = {
       'react-dom/test-utils': 'preact/test-utils',
       'react-dom': 'preact/compat',
       '@algosigner/common': path.resolve(__dirname, '../common/src'),
+      'stream': require.resolve('readable-stream'),
     },
     modules: [path.resolve('./src'), path.resolve('./node_modules')],
   },

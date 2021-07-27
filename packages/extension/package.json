@@ -15,12 +15,12 @@
     "jest-webextension-mock": "^3.6.1",
     "ts-jest": "^27.0.0",
     "ts-loader": "^7.0.5",
-    "typescript": "^3.9.7",
+    "typescript": "^4.3.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "algosdk": "1.8.1"
+    "algosdk": "1.9.1"
   },
   "scripts": {
     "build": "npm run clean && npm run bundle && npm run copy",

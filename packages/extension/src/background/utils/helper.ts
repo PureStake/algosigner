@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';

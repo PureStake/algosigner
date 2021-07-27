@@ -23,9 +23,7 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { removeEmptyFields } from '@algosigner/common/utils';
-
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 ///
 // Sign transaction and return.

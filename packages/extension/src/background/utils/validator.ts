@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { Settings } from '../config';
 
