@@ -31,11 +31,18 @@ import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
-const popupProperties = {
+const authPopupProperties = {
+  type: 'popup',
+  focused: true,
+  width: 400,
+  height: 550 + 34, // 34 additional for the title bar
+};
+
+const signPopupProperties = {
   type: 'popup',
   focused: true,
   width: 400 + 12,
-  height: 550 + 34,
+  height: 630 + 34,
 };
 
 export class Task {
@@ -189,7 +196,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/authorize'),
-                ...popupProperties,
+                ...authPopupProperties,
               },
               function (w: any) {
                 if (w) {
@@ -287,7 +294,7 @@ export class Task {
               extensionBrowser.windows.create(
                 {
                   url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
-                  ...popupProperties,
+                  ...signPopupProperties,
                 },
                 function (w) {
                   if (w) {
@@ -401,7 +408,7 @@ export class Task {
                 extensionBrowser.windows.create(
                   {
                     url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
-                    ...popupProperties,
+                    ...signPopupProperties,
                   },
                   function (w) {
                     if (w) {
@@ -641,8 +648,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-                ...popupProperties,
-                height: popupProperties.height + 80,
+                ...signPopupProperties,
               },
               function (w) {
                 if (w) {
