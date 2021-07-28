@@ -2,6 +2,15 @@ import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
 
+const ON_COMPLETE = [
+  "No-op",
+  "Opt-in",
+  "Close Out",
+  "Clear State",
+  "Update Application",
+  "Delete Application",
+]
+
 const TxAppl: FunctionalComponent = (props: any) => {
   const { tx, account, vo, estFee, msig } = props;
   const fee = estFee ? estFee : tx['fee'];
@@ -31,7 +40,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       </div>
       <div class="is-flex">
         <p style="width: 40%;">On Complete:</p>
-        <p style="width: 60%;">${tx.appOnComplete}</p>
+        <p style="width: 60%;">${`${tx.appOnComplete} - ${ON_COMPLETE[tx.appOnComplete]}`}</p>
       </div>
       ${tx.appAccounts &&
       html`
