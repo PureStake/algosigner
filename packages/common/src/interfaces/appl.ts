@@ -9,7 +9,7 @@ export interface IApplTx extends IBaseTx {
   type: string;               //"appl"
 
   //apid: number,             //uint64	    "apid"	    ID of the application being configured or empty if creating.
-  appIndex: number;
+  appIndex: BigInt;
 
   //apan: number,             //uint64	    "apan"	    Defines what additional actions occur with the transaction. See the OnComplete section of the TEAL spec for details.
   appOnComplete: number;

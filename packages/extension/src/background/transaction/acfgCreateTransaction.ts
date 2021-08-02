@@ -5,13 +5,13 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 // Mapping, validation and error checking for acfg create transactions prior to sign.
 ///
 class AssetCreateTx implements IAssetCreateTx {
-  assetTotal: number = undefined;
+  assetTotal: BigInt = undefined;
   assetDecimals?: number = null;
   type: string = undefined;
   from: string = undefined;
-  fee: number = undefined;
-  firstRound: number = undefined;
-  lastRound: number = undefined;
+  fee: BigInt = undefined;
+  firstRound: BigInt = undefined;
+  lastRound: BigInt = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;

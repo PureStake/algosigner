@@ -6,11 +6,11 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class AssetConfigTx implements IAssetConfigTx {
   type: string = undefined;
-  assetIndex: number = undefined;
+  assetIndex: BigInt = undefined;
   from: string = undefined;
-  fee: number = undefined;
-  firstRound: number = undefined;
-  lastRound: number = undefined;
+  fee: BigInt = undefined;
+  firstRound: BigInt = undefined;
+  lastRound: BigInt = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
@@ -22,7 +22,7 @@ class AssetConfigTx implements IAssetConfigTx {
   tag?: string = null;
 
   // Modifications must include one of these
-  assetTotal?: number = null;
+  assetTotal?: BigInt = null;
   assetDecimals?: number = null;
   assetDefaultFrozen?: boolean = null;
   assetUnitName?: string = null;

@@ -7,19 +7,19 @@ import { InvalidTransactionStructure } from '../../errors/validation';
 ///
 class AssetAcceptTx implements IAssetAcceptTx {
   type: string = undefined;
-  assetIndex: number = undefined;
+  assetIndex: BigInt = undefined;
   from: string = undefined;
-  fee: number = undefined;
+  fee: BigInt = undefined;
   to: any = undefined;
-  firstRound: number = undefined;
-  lastRound: number = undefined;
+  firstRound: BigInt = undefined;
+  lastRound: BigInt = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
   group?: string = null;
   lease?: any = null;
   reKeyTo?: any = null;
-  amount?: number = null;
+  amount?: BigInt = null;
   flatFee?: any = null;
   name?: string = null;
   tag?: string = null;

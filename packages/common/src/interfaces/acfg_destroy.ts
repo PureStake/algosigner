@@ -7,5 +7,5 @@ import { IBaseTx } from './baseTx';
 // prettier-ignore
 export interface IAssetDestroyTx extends IBaseTx {
   type: string,                   //"acfg"
-  assetIndex: number,             //uint64	"caid"	For re-configure or destroy transactions, this is the unique asset ID. On asset creation, the ID is set to zero.
+  assetIndex: BigInt,             //uint64	"caid"	For re-configure or destroy transactions, this is the unique asset ID. On asset creation, the ID is set to zero.
 }

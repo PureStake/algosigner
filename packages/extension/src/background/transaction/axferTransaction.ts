@@ -6,14 +6,14 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class AssetTransferTx implements IAssetTransferTx {
   type: string = undefined;
-  assetIndex: number = undefined;
-  amount: number = 0;
+  assetIndex: BigInt = undefined;
+  amount: BigInt = BigInt(0);
   from: string = undefined;
   to: string = undefined;
   closeRemainderTo?: string = null;
-  fee: number = undefined;
-  firstRound: number = undefined;
-  lastRound: number = undefined;
+  fee: BigInt = undefined;
+  firstRound: BigInt = undefined;
+  lastRound: BigInt = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
