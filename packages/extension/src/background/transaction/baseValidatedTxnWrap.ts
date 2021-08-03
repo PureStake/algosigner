@@ -30,12 +30,10 @@ export class BaseValidatedTxnWrap {
     const missingFields = [];
     const extraFields = [];
 
-    // if(v1Validations) {
-    //   this.validityObject['v1'] = new ValidationResponse({
-    //     status: ValidationStatus.Warning,
-    //     info: 'Version 1 transactions have been deprecated.',
-    //   });
-    // }
+    // Add support for BigInt serialization
+    (BigInt as any).prototype.toJSON = function () {
+      return this.toString();
+    };
 
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
