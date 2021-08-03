@@ -30,11 +30,6 @@ export class BaseValidatedTxnWrap {
     const missingFields = [];
     const extraFields = [];
 
-    // Add support for BigInt serialization
-    (BigInt as any).prototype.toJSON = function () {
-      return this.toString();
-    };
-
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
     Object.entries(this.transaction).forEach(([key, value]) => {
