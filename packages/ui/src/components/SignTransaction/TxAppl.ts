@@ -3,13 +3,13 @@ import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
 
 const ON_COMPLETE = [
-  "No-op",
-  "Opt-in",
-  "Close Out",
-  "Clear State",
-  "Update Application",
-  "Delete Application",
-]
+  'No-op',
+  'Opt-in',
+  'Close Out',
+  'Clear State',
+  'Update Application',
+  'Delete Application',
+];
 
 const TxAppl: FunctionalComponent = (props: any) => {
   const { tx, account, vo, estFee, msig } = props;
@@ -45,8 +45,12 @@ const TxAppl: FunctionalComponent = (props: any) => {
       ${tx.appAccounts &&
       html`
         <div class="is-flex">
-          <p style="width: 40%;">Accounts:</p>
-          <p style="width: 60%;">${tx.appAccounts}</p>
+          <p style="width: 40%;">App Accounts:</p>
+          <p style="width: 60%;">
+            ${tx.appAccounts.map((item) => {
+              return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
+            })}
+          </p>
         </div>
       `}
       ${tx.appApprovalProgram &&
@@ -61,7 +65,11 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Args:</p>
-          <p style="width: 60%;">[${tx.appArgs.join(', ')}]</p>
+          <p style="width: 60%;">
+            ${tx.appArgs.map((item) => {
+              return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
+            })}
+          </p>
         </div>
       `}
       ${tx.appClearProgram &&
@@ -75,14 +83,22 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Foreign Apps:</p>
-          <p style="width: 60%;">${tx.appForeignApps}</p>
+          <p style="width: 60%;">
+            ${tx.appForeignApps.map((item) => {
+              return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
+            })}
+          </p>
         </div>
       `}
       ${tx.appForeignAssets &&
       html`
         <div class="is-flex">
           <p style="width: 40%;">Foreign Assets:</p>
-          <p style="width: 60%;">${tx.appForeignAssets}</p>
+          <p style="width: 60%;">
+            ${tx.appForeignAssets.map((item) => {
+              return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
+            })}
+          </p>
         </div>
       `}
       ${tx.appGlobalInts &&

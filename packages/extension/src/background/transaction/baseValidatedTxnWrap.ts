@@ -1,3 +1,4 @@
+import algosdk from 'algosdk';
 import { WalletMultisigMetadata } from '@algosigner/common/types';
 import { Validate, ValidationResponse, ValidationStatus } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
@@ -75,6 +76,8 @@ export class BaseValidatedTxnWrap {
       } else {
         try {
           this.transaction[prop] = params[prop];
+          // This is where conversion for different keys happens
+          // This could be done for validation purposes or improving readability on the UI
           if (
             (prop === 'group' || prop === 'appApprovalProgram' || prop === 'appClearProgram') &&
             !v1Validations
@@ -84,6 +87,11 @@ export class BaseValidatedTxnWrap {
             this.transaction[prop] = this.transaction[prop].map((arg) =>
               Buffer.from(arg).toString('base64')
             );
+          } else if (prop === 'appAccounts' && !v1Validations) {
+            const accArray = params[prop];
+            if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
+              this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
+            }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
           }
