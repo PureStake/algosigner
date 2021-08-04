@@ -31,18 +31,21 @@ import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
+// 34 additional for the title bar
+const titleBarHeight = 34;
+
 const authPopupProperties = {
   type: 'popup',
   focused: true,
   width: 400,
-  height: 550 + 34, // 34 additional for the title bar
+  height: 550 + titleBarHeight, 
 };
 
 const signPopupProperties = {
   type: 'popup',
   focused: true,
   width: 400 + 12,
-  height: 630 + 34,
+  height: 630 + titleBarHeight,
 };
 
 export class Task {
