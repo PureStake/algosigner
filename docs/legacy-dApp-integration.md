@@ -12,7 +12,7 @@ Sent in transactions will be validated against the Algorand JS SDK transaction t
 
 Proxied requests are passed through to an API service - currently set to the PureStake API service. Endpoints available are limited to what the service exposes. The API backend may be configured by advanced users and is not guaranteed to respond as expected.
 
-This page documents the legacy AlgoSigner.sign() method, will be deprecated in a future release in favor of AlgoSigner.signTxn() covered [here](docs/dApp-integration.md).
+This page documents the legacy AlgoSigner.sign() method, will be deprecated in a future release in favor of AlgoSigner.signTxn() covered [here](dApp-integration.md).
 
 _The v1 Atomic transaction functionality will start warning extension users in the next major release and be deprecated entirely in two releases._
 
