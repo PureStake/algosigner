@@ -422,7 +422,7 @@ AlgoSigner.send({
 
 ## Custom Networks
 
-- Custom networks beta support is now in AlgoSigner. [Setup Guide](docs/add-network.md)
+- Custom networks beta support is now in AlgoSigner. [Setup Guide](add-network.md)
 - AlgoSigner.accounts(ledger) has changed such that calls now accept names that have been added to the user's custom network list as valid ledger names.
   - A non-matching ledger name will result in a error:
     - [RequestErrors.UnsupportedLedger] The provided ledger is not supported.

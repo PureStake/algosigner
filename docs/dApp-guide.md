@@ -16,4 +16,4 @@ With the release of v2 signing, developers coding to the standard will be able t
 
 ### Developing a dApp
 
-- Read [v2 dApp Integration Guide](docs/dApp-integration.md)
+- Read [v2 dApp Integration Guide](dApp-integration.md)
