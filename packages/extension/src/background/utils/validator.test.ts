@@ -54,7 +54,9 @@ test('Validate correct assetIndex', () => {
 });
 
 test('Validate invalid assetIndex', () => {
-  const result = Validate('assetIndex', -1);
+  let result = Validate('assetIndex', 9999999999999999999999999);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetIndex', -1);
   expect(result.status).toBe(ValidationStatus.Invalid);
 });
 
@@ -66,8 +68,12 @@ test('Validate correct rounds', () => {
 });
 
 test('Validate invalid rounds', () => {
-  const resultFirst = Validate('firstRound', -1);
-  const resultLast = Validate('lastRound', -1);
+  let resultFirst = Validate('firstRound', 9999999999999999999999999);
+  let resultLast = Validate('lastRound', 9999999999999999999999999);
+  expect(resultFirst.status).toBe(ValidationStatus.Invalid);
+  expect(resultLast.status).toBe(ValidationStatus.Invalid);
+  resultFirst = Validate('firstRound', -1);
+  resultLast = Validate('lastRound', -1);
   expect(resultFirst.status).toBe(ValidationStatus.Invalid);
   expect(resultLast.status).toBe(ValidationStatus.Invalid);
 });

@@ -69,8 +69,15 @@ export function Validate(field: any, value: any): ValidationResponse {
         }
       }
     // Safety checks for numbers
+    case 'firstRound':
+    case 'lastRound':
+    case 'assetIndex':
     case 'assetDecimals':
     case 'appOnComplete':
+    case 'appIndex':
+    case 'voteFirst':
+    case 'voteLast':
+    case 'voteKeyDilution':
       if (value && (!Number.isSafeInteger(value) || parseInt(value) < 0)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
@@ -80,15 +87,8 @@ export function Validate(field: any, value: any): ValidationResponse {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       }
     // Safety checks for BigInts
-    case 'firstRound':
-    case 'lastRound':
     case 'amount':
-    case 'assetIndex':
     case 'assetTotal':
-    case 'appIndex':
-    case 'voteFirst':
-    case 'voteLast':
-    case 'voteKeyDilution':
       try {
         if (value && BigInt(value) < 0) {
           return new ValidationResponse({
@@ -135,17 +135,17 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
     case 'fee':
       try {
-        if (BigInt(value) < 0) {
+        if (!Number.isSafeInteger(value) || parseInt(value) < 0) {
           return new ValidationResponse({
             status: ValidationStatus.Invalid,
-            info: 'The fee needs to be a positive value.',
+            info: 'Value unable to be cast correctly to a numeric value.',
           });
-        } else if (BigInt(value) > 1000000) {
+        } else if (parseInt(value) > 1000000) {
           return new ValidationResponse({
             status: ValidationStatus.Dangerous,
             info: 'The associated fee is very high compared to the minimum value.',
           });
-        } else if (BigInt(value) > 1000) {
+        } else if (parseInt(value) > 1000) {
           return new ValidationResponse({
             status: ValidationStatus.Warning,
             info: 'The fee is higher than the minimum value.',
@@ -154,7 +154,7 @@ export function Validate(field: any, value: any): ValidationResponse {
           return new ValidationResponse({ status: ValidationStatus.Valid });
         }
       } catch {
-        // For any case where the converting to bigint may fail.
+        // For any case where the parse int may fail.
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
           info: 'Value unable to be cast correctly to a numeric value.',

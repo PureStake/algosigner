@@ -11,9 +11,9 @@ class PaymentTx implements IPaymentTx {
   to: string = undefined;
   closeRemainderTo?: string = null;
   reKeyTo?: any = null;
-  fee: BigInt = undefined;
-  firstRound: BigInt = undefined;
-  lastRound: BigInt = undefined;
+  fee: number = undefined;
+  firstRound: number = undefined;
+  lastRound: number = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;

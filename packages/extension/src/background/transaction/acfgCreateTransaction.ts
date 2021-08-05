@@ -9,9 +9,9 @@ class AssetCreateTx implements IAssetCreateTx {
   assetDecimals?: number = null;
   type: string = undefined;
   from: string = undefined;
-  fee: BigInt = undefined;
-  firstRound: BigInt = undefined;
-  lastRound: BigInt = undefined;
+  fee: number = undefined;
+  firstRound: number = undefined;
+  lastRound: number = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;

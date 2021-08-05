@@ -7,9 +7,9 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 export class ApplTx implements IApplTx {
   type: string = undefined;
   from: string = undefined;
-  fee: BigInt = undefined;
-  firstRound: BigInt = undefined;
-  lastRound: BigInt = undefined;
+  fee: number = undefined;
+  firstRound: number = undefined;
+  lastRound: number = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
@@ -20,7 +20,7 @@ export class ApplTx implements IApplTx {
   name?: string = null;
   tag?: string = null;
 
-  appIndex: BigInt = BigInt(0);
+  appIndex: number = 0;
   appOnComplete: number = 0;
   appAccounts?: any = null;
   appApprovalProgram?: any = null;

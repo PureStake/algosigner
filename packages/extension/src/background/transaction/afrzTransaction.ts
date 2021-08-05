@@ -6,13 +6,13 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class AssetFreezeTx implements IAssetFreezeTx {
   type: string = undefined;
-  assetIndex: BigInt = undefined;
+  assetIndex: number = undefined;
   freezeAccount: string = undefined;
   freezeState?: boolean = null;
   from: string = undefined;
-  fee: BigInt = undefined;
-  firstRound: BigInt = undefined;
-  lastRound: BigInt = undefined;
+  fee: number = undefined;
+  firstRound: number = undefined;
+  lastRound: number = undefined;
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;

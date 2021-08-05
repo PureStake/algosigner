@@ -7,7 +7,7 @@ import { IBaseTx } from './baseTx';
 // prettier-ignore
 export interface IAssetAcceptTx extends IBaseTx {
   type: string,               //"axfer"
-  assetIndex: BigInt,         //uint64	  "xaid"	  The unique ID of the asset to be transferred.
+  assetIndex: number,         //uint64	  "xaid"	  The unique ID of the asset to be transferred.
   amount?: BigInt,	          //uint64	  "aamt"	  The amount of the asset to be transferred. A zero amount transferred to self allocates that asset in the account's Asset map.
   to: string,	                //Address	  "arcv"	  The recipient of the asset transfer. Must be self for Asset Accept.
 }

@@ -10,15 +10,8 @@ type AssetInfo = {
 };
 
 const BIGINT_FIELDS = [
-  'firstRound',
-  'lastRound',
   'amount',
-  'assetIndex',
   'assetTotal',
-  'appIndex',
-  'voteFirst',
-  'voteLast',
-  'voteKeyDilution',
 ];
 
 //
