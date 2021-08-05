@@ -8,6 +8,18 @@ type AssetInfo = {
   displayAmount: string;
 };
 
+const BIGINT_FIELDS = [
+  'firstRound',
+  'lastRound',
+  'amount',
+  'assetIndex',
+  'assetTotal',
+  'appIndex',
+  'voteFirst',
+  'voteLast',
+  'voteKeyDilution',
+];
+
 //
 // Base validated transaction wrap
 ///
@@ -79,6 +91,8 @@ export class BaseValidatedTxnWrap {
             );
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
+          } else if (BIGINT_FIELDS.includes(prop)) {
+            this.transaction[prop] = BigInt(params[prop]);
           }
           this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {
