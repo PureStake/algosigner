@@ -93,13 +93,13 @@ export function Validate(field: any, value: any): ValidationResponse {
         if (value && BigInt(value) < 0) {
           return new ValidationResponse({
             status: ValidationStatus.Invalid,
-            info: 'Value unable to be cast correctly to a numeric value.',
+            info: 'Number needs to have a positive value.',
           });
         } else {
           return new ValidationResponse({ status: ValidationStatus.Valid });
         }
       } catch {
-        // For any case where the parse int may fail.
+        // For any case where the converting to bigint may fail.
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
           info: 'Value unable to be cast correctly to a numeric value.',
@@ -154,7 +154,7 @@ export function Validate(field: any, value: any): ValidationResponse {
           return new ValidationResponse({ status: ValidationStatus.Valid });
         }
       } catch {
-        // For any case where the parse int may fail.
+        // For any case where the converting to bigint may fail.
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
           info: 'Value unable to be cast correctly to a numeric value.',
