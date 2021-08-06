@@ -22,7 +22,7 @@ class AssetConfigTx implements IAssetConfigTx {
   tag?: string = null;
 
   // Modifications must include one of these
-  assetTotal?: number = null;
+  assetTotal?: BigInt = null;
   assetDecimals?: number = null;
   assetDefaultFrozen?: boolean = null;
   assetUnitName?: string = null;

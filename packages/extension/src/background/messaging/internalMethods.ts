@@ -684,6 +684,7 @@ export class InternalMethods {
       const params = await algod.getTransactionParams().do();
       const txn = {
         ...txnParams,
+        amount: BigInt(txnParams.amount),
         fee: params.fee,
         firstRound: params.firstRound,
         lastRound: params.lastRound,

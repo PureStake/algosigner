@@ -9,6 +9,11 @@ type AssetInfo = {
   displayAmount: string;
 };
 
+const BIGINT_FIELDS = [
+  'amount',
+  'assetTotal',
+];
+
 //
 // Base validated transaction wrap
 ///
@@ -30,13 +35,6 @@ export class BaseValidatedTxnWrap {
     this.transaction = new txnType();
     const missingFields = [];
     const extraFields = [];
-
-    // if(v1Validations) {
-    //   this.validityObject['v1'] = new ValidationResponse({
-    //     status: ValidationStatus.Warning,
-    //     info: 'Version 1 transactions have been deprecated.',
-    //   });
-    // }
 
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
@@ -94,6 +92,8 @@ export class BaseValidatedTxnWrap {
             }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
+          } else if (BIGINT_FIELDS.includes(prop)) {
+            this.transaction[prop] = BigInt(params[prop]);
           }
           this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {
