@@ -145,10 +145,18 @@ span[data-tooltip] {
   border-left-color: #94b1c3;
 }
 
+// Used during the signing tx preview 
 .truncate-text {
   text-overflow: ellipsis;
   overflow-x: hidden;
   max-width: 25ch;
+  white-space: nowrap;
+  display: block;
+}
+
+// This is used for tx keys that have a list of values
+span.truncate-text:not(:first-child) {
+  margin-top: -6px;
 }
 
 #approveTx:disabled {

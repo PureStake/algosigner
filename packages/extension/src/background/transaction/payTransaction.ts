@@ -6,7 +6,7 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class PaymentTx implements IPaymentTx {
   type: string = undefined;
-  amount: number = 0;
+  amount: BigInt = BigInt(0);
   from: string = undefined;
   to: string = undefined;
   closeRemainderTo?: string = null;

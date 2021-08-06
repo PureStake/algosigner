@@ -156,26 +156,7 @@ describe('UI Transactions Tests', () => {
 
     await closeModal();
     await goBack();
-  });
 
-  test('Transaction Errors: Invalid Field - Amount', async () => {
-    await extensionPage.click('#sendTransfer');
-    await extensionPage.waitForSelector('#transferAmount');
-    await extensionPage.type('#transferAmount', '9999999999.999999');
-    await extensionPage.type('#toAddress', accounts.ui.address);
-    await extensionPage.type('#note', 'AutoTest Invalid Amount');
-    await extensionPage.click('#submitTransfer');
-    await extensionPage.waitForSelector('#enterPassword');
-    await extensionPage.type('#enterPassword', wallet.password);
-    await extensionPage.waitForSelector('#authButton');
-    await extensionPage.click('#authButton');
-    await extensionPage.waitForSelector('#tx-error');
-
-    let pageError = await extensionPage.$eval('#tx-error', (e) => e.innerText);
-    expect(pageError).toMatch('One or more fields are not valid. Please check and try again.');
-
-    await closeModal();
-    await goBack();
     // Extra goBack to main screen
     await goBack();
   });

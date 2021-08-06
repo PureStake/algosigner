@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { Settings } from '../config';
 
 const STRING_MAX_LENGTH = 1000;
+const GROUP_WARNING = `This is an atomic transaction that's part of an unknown group. Don’t sign it unless it came from a trusted application.`;
 
 ///
 // Validation Status
@@ -69,10 +69,12 @@ export function Validate(field: any, value: any): ValidationResponse {
         }
       }
     // Safety checks for numbers
-    case 'amount':
-    case 'assetIndex':
     case 'firstRound':
     case 'lastRound':
+    case 'assetIndex':
+    case 'assetDecimals':
+    case 'appOnComplete':
+    case 'appIndex':
     case 'voteFirst':
     case 'voteLast':
     case 'voteKeyDilution':
@@ -83,6 +85,25 @@ export function Validate(field: any, value: any): ValidationResponse {
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
+      }
+    // Safety checks for BigInts
+    case 'amount':
+    case 'assetTotal':
+      try {
+        if (value && BigInt(value) < 0) {
+          return new ValidationResponse({
+            status: ValidationStatus.Invalid,
+            info: 'Number needs to have a positive value.',
+          });
+        } else {
+          return new ValidationResponse({ status: ValidationStatus.Valid });
+        }
+      } catch {
+        // For any case where the converting to bigint may fail.
+        return new ValidationResponse({
+          status: ValidationStatus.Invalid,
+          info: 'Value unable to be cast correctly to a numeric value.',
+        });
       }
     // Safety checks for strings
     case 'note':
@@ -99,7 +120,7 @@ export function Validate(field: any, value: any): ValidationResponse {
         if (field === 'group') {
           return new ValidationResponse({
             status: ValidationStatus.Dangerous,
-            info: `This is an atomic transaction that's part of an unknown group.`,
+            info: GROUP_WARNING,
           });
         } else {
           return new ValidationResponse({ status: ValidationStatus.Valid });

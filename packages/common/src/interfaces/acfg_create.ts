@@ -7,8 +7,8 @@ import { IBaseTx } from './baseTx';
 // prettier-ignore
 export interface IAssetCreateTx extends IBaseTx {
   type: string,                   //"acfg"
-  assetTotal: number,             //uint64	  "t"	    The total number of base units of the asset to create. This number cannot be changed.
-  assetDecimals?: number,          //uint32	  "dc"	  The number of digits to use after the decimal point when displaying the asset. If 0, the asset is not divisible. If 1, the base unit of the asset is in tenths. If 2, the base unit of the asset is in hundredths.
+  assetTotal: BigInt,             //uint64	  "t"	    The total number of base units of the asset to create. This number cannot be changed.
+  assetDecimals?: number,         //uint32	  "dc"	  The number of digits to use after the decimal point when displaying the asset. If 0, the asset is not divisible. If 1, the base unit of the asset is in tenths. If 2, the base unit of the asset is in hundredths.
   assetDefaultFrozen?: boolean,   //bool	    "df"	  True to freeze holdings for this asset by default.
   assetUnitName?: string,         //string	  "un"	  The name of a unit of this asset. Supplied on creation. Example: USDT
   assetName?: string,             //string	  "an"	  The name of the asset. Supplied on creation. Example: Tether

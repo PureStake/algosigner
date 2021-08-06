@@ -1,3 +1,4 @@
+import algosdk from 'algosdk';
 import { WalletMultisigMetadata } from '@algosigner/common/types';
 import { Validate, ValidationResponse, ValidationStatus } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
@@ -7,6 +8,11 @@ type AssetInfo = {
   unitName: string;
   displayAmount: string;
 };
+
+const BIGINT_FIELDS = [
+  'amount',
+  'assetTotal',
+];
 
 //
 // Base validated transaction wrap
@@ -29,13 +35,6 @@ export class BaseValidatedTxnWrap {
     this.transaction = new txnType();
     const missingFields = [];
     const extraFields = [];
-
-    // if(v1Validations) {
-    //   this.validityObject['v1'] = new ValidationResponse({
-    //     status: ValidationStatus.Warning,
-    //     info: 'Version 1 transactions have been deprecated.',
-    //   });
-    // }
 
     // Cycle base transaction fields for this type of transaction to verify require fields are present.
     // Nullable type fields are being initialized to null instead of undefined.
@@ -75,6 +74,8 @@ export class BaseValidatedTxnWrap {
       } else {
         try {
           this.transaction[prop] = params[prop];
+          // This is where conversion for different keys happens
+          // This could be done for validation purposes or improving readability on the UI
           if (
             (prop === 'group' || prop === 'appApprovalProgram' || prop === 'appClearProgram') &&
             !v1Validations
@@ -84,8 +85,15 @@ export class BaseValidatedTxnWrap {
             this.transaction[prop] = this.transaction[prop].map((arg) =>
               Buffer.from(arg).toString('base64')
             );
+          } else if (prop === 'appAccounts' && !v1Validations) {
+            const accArray = params[prop];
+            if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
+              this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
+            }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
+          } else if (BIGINT_FIELDS.includes(prop)) {
+            this.transaction[prop] = BigInt(params[prop]);
           }
           this.validityObject[prop] = Validate(prop, this.transaction[prop]) as ValidationResponse;
         } catch (e) {

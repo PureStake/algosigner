@@ -9,6 +9,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
   const { tx, vo, account, msig, midsection, overview } = props;
 
   const txText = JSON.stringify(tx, null, 2);
+  const tabsStyle = 'height: 170px; overflow: auto;';
 
   return html`
     ${vo &&
@@ -53,15 +54,13 @@ const TxTemplate: FunctionalComponent = (props: any) => {
         </ul>
       </div>
 
-      ${tab === 'overview' && html`<div style="height: 170px; overflow: auto;">${overview}</div>`}
+      ${tab === 'overview' && html`<div style="${tabsStyle}">${overview}</div>`}
       ${tab === 'details' &&
       // prettier-ignore
       html`
-        <div style="height: 170px; overflow: auto;">
-          <pre style="background: #EFF4F7; border-radius: 5px;">
-            <code>${txText}</code>
-          </pre>
-        </div>
+        <pre style="background: #EFF4F7; border-radius: 5px; ${tabsStyle}">
+          <code>${txText}</code>
+        </pre>
       `}
     </section>
   `;
