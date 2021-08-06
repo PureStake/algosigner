@@ -38,6 +38,11 @@ const Root = (props) => {
 };
 
 const App = () => {
+  // Add support for BigInt serialization
+  BigInt.prototype.toJSON = function () {
+    return this.toString();
+  };
+  
   return html`
       <${StoreProvider}>
         <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">

@@ -5,7 +5,7 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 // Mapping, validation and error checking for acfg create transactions prior to sign.
 ///
 class AssetCreateTx implements IAssetCreateTx {
-  assetTotal: number = undefined;
+  assetTotal: BigInt = undefined;
   assetDecimals?: number = null;
   type: string = undefined;
   from: string = undefined;

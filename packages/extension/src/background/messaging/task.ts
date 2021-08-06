@@ -1,5 +1,4 @@
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
+import algosdk from 'algosdk';
 
 import { RequestErrors, WalletTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
@@ -32,11 +31,21 @@ import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
-const popupProperties = {
+// 34 additional for the title bar
+const titleBarHeight = 34;
+
+const authPopupProperties = {
+  type: 'popup',
+  focused: true,
+  width: 400,
+  height: 550 + titleBarHeight, 
+};
+
+const signPopupProperties = {
   type: 'popup',
   focused: true,
   width: 400 + 12,
-  height: 550 + 34,
+  height: 630 + titleBarHeight,
 };
 
 export class Task {
@@ -122,48 +131,50 @@ export class Task {
         displayAmount: '',
       };
 
-      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets).then((asset) => {
-        const assetInfo: any = {};
-        const params = asset['params'];
+      await Task.fetchAPI(`${url}${sendPath}`, fetchAssets)
+        .then((asset) => {
+          const assetInfo: any = {};
+          const params = asset['params'];
 
-        // Get relevant data from asset params
-        const decimals = params['decimals'];
-        const unitName = params['unit-name'];
+          // Get relevant data from asset params
+          const decimals = params['decimals'];
+          const unitName = params['unit-name'];
 
-        // Update the unit-name for the asset
-        if (unitName) {
-          assetInfo.unitName = unitName;
-        }
-
-        // Get the display amount as a string to prevent screen deformation of large ints
-        let displayAmount = String(transactionWrap.transaction.amount);
-
-        // If we have decimals, then we need to set the display amount with them in mind
-        if (decimals && decimals > 0) {
-          // Append missing zeros, if needed
-          if (displayAmount.length < decimals) {
-            displayAmount = displayAmount.padStart(decimals, '0');
-          }
-          const offsetAmount = Math.abs(decimals - displayAmount.length);
-
-          // Apply decimal transition
-          displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
-            offsetAmount
-          )}`;
-
-          // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
-          if (displayAmount.startsWith('.')) {
-            displayAmount = '0'.concat(displayAmount);
+          // Update the unit-name for the asset
+          if (unitName) {
+            assetInfo.unitName = unitName;
           }
 
-          // Set new amount
-          assetInfo.displayAmount = displayAmount;
-        }
+          // Get the display amount as a string to prevent screen deformation of large ints
+          let displayAmount = String(transactionWrap.transaction.amount);
 
-        transactionWrap.assetInfo = assetInfo;
-      }).catch((e) => {
-        logging.log(e.message);
-      });
+          // If we have decimals, then we need to set the display amount with them in mind
+          if (decimals && decimals > 0) {
+            // Append missing zeros, if needed
+            if (displayAmount.length < decimals) {
+              displayAmount = displayAmount.padStart(decimals, '0');
+            }
+            const offsetAmount = Math.abs(decimals - displayAmount.length);
+
+            // Apply decimal transition
+            displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
+              offsetAmount
+            )}`;
+
+            // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
+            if (displayAmount.startsWith('.')) {
+              displayAmount = '0'.concat(displayAmount);
+            }
+
+            // Set new amount
+            assetInfo.displayAmount = displayAmount;
+          }
+
+          transactionWrap.assetInfo = assetInfo;
+        })
+        .catch((e) => {
+          logging.log(e.message);
+        });
     }
   }
 
@@ -188,7 +199,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/authorize'),
-                ...popupProperties,
+                ...authPopupProperties,
               },
               function (w: any) {
                 if (w) {
@@ -286,7 +297,7 @@ export class Task {
               extensionBrowser.windows.create(
                 {
                   url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
-                  ...popupProperties,
+                  ...signPopupProperties,
                 },
                 function (w) {
                   if (w) {
@@ -400,7 +411,7 @@ export class Task {
                 extensionBrowser.windows.create(
                   {
                     url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
-                    ...popupProperties,
+                    ...signPopupProperties,
                   },
                   function (w) {
                     if (w) {
@@ -612,7 +623,9 @@ export class Task {
 
               // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
               transactionWraps.forEach((wrap) => {
-                wrap.validityObject['group'] = new ValidationResponse({ status: ValidationStatus.Valid });
+                wrap.validityObject['group'] = new ValidationResponse({
+                  status: ValidationStatus.Valid,
+                });
               });
             } else {
               const wrap = transactionWraps[0];
@@ -638,8 +651,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-                ...popupProperties,
-                height: popupProperties.height + 80,
+                ...signPopupProperties,
               },
               function (w) {
                 if (w) {
@@ -1204,23 +1216,7 @@ export class Task {
                         }
                       });
                       if (partiallySignedBlobs.length > 1) {
-                        // If there's more than one partially signed transaction, we merge the signatures by hand
-                        const signatures = [];
-                        partiallySignedBlobs.forEach((partial) => {
-                          const decoded = algosdk.decodeSignedTransaction(partial);
-                          const signed = decoded.msig.subsig.find((s) => !!s.s);
-                          signatures[algosdk.encodeAddress(signed.pk)] = signed.s;
-                        });
-                        const mergedTx = algosdk.decodeObj(partiallySignedBlobs[0]);
-                        mergedTx.msig.subsig.forEach((subsig) => {
-                          if (!subsig.s) {
-                            const lookupSig = signatures[algosdk.encodeAddress(subsig.pk)];
-                            if (lookupSig) {
-                              subsig.s = lookupSig;
-                            }
-                          }
-                        });
-                        signedBlob = algosdk.encodeObj(mergedTx);
+                        signedBlob = algosdk.mergeMultisigTransactions(partiallySignedBlobs);
                       } else {
                         signedBlob = partiallySignedBlobs[0];
                       }

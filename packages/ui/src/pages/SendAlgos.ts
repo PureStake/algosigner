@@ -84,8 +84,15 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     setAuthError('');
     setError('');
 
+    // We convert from String to BigInt while mantaining decimals.
     const decimals = 'decimals' in asset ? asset.decimals : 6;
-    const amountToSend = +amount * Math.pow(10, decimals);
+    const amountArray = amount.split('.');
+    const decimalsOnTheInput = amountArray.length > 1;
+    let amountToSend = BigInt(amountArray[0]) * BigInt(Math.pow(10, decimals));
+    if (decimalsOnTheInput) {
+      amountToSend += BigInt(amountArray[1]) * BigInt(Math.pow(10, decimals - amountArray[1].length));
+    }
+
 
     const params: any = {
       ledger: ledger,
@@ -95,7 +102,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         from: account.address,
         to: to,
         note: note,
-        amount: +amountToSend,
+        amount: amountToSend,
       },
     };
 

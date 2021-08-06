@@ -1,6 +1,4 @@
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const algosdk = require('algosdk');
-
+import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
@@ -28,11 +26,11 @@ const session = new Session();
 export class InternalMethods {
   private static _encryptionWrap: encryptionWrap | undefined;
 
-  public static getAlgod(ledger: string) {
+  public static getAlgod(ledger: string): algosdk.Algodv2 {
     const params = Settings.getBackendParams(ledger, API.Algod);
     return new algosdk.Algodv2(params.apiKey, params.url, params.port);
   }
-  public static getIndexer(ledger: string) {
+  public static getIndexer(ledger: string): algosdk.Indexer {
     const params = Settings.getBackendParams(ledger, API.Indexer);
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
   }
@@ -44,7 +42,7 @@ export class InternalMethods {
       safeWallet[key] = [];
 
       // Afterwards we can add in all the non-private keys and names into the safewallet
-      for (var j = 0; j < wallet[key].length; j++) {
+      for (let j = 0; j < wallet[key].length; j++) {
         const { address, name } = wallet[key][j];
         safeWallet[key].push({
           address: address,
@@ -326,7 +324,7 @@ export class InternalMethods {
   public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
     if (session.txnWrap && 'body' in session.txnWrap) {
       const txnBuf = Buffer.from(request.body.params.txn, 'base64');
-      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
+      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf) as any;
       const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
 
       // Get the session transaction
@@ -372,12 +370,11 @@ export class InternalMethods {
         }
         // If this is a ui transaction then we need to also submit
         else if (session.txnWrap.source === 'ui') {
-          const txHeaders = { 'Content-Type': 'application/x-binary' };
           const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
 
           const algod = this.getAlgod(ledger);
           algod
-            .sendRawTransaction(txnBuf, txHeaders)
+            .sendRawTransaction(txnBuf)
             .do()
             .then((resp: any) => {
               sendResponse({ txId: resp.txId });
@@ -667,7 +664,7 @@ export class InternalMethods {
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
     const { ledger, address, passphrase, txnParams } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
-    var algod = this.getAlgod(ledger);
+    const algod = this.getAlgod(ledger);
 
     this._encryptionWrap.unlock(async (unlockedValue: any) => {
       if ('error' in unlockedValue) {
@@ -687,6 +684,7 @@ export class InternalMethods {
       const params = await algod.getTransactionParams().do();
       const txn = {
         ...txnParams,
+        amount: BigInt(txnParams.amount),
         fee: params.fee,
         firstRound: params.firstRound,
         lastRound: params.lastRound,
@@ -695,10 +693,6 @@ export class InternalMethods {
       };
 
       if ('note' in txn) txn.note = new Uint8Array(Buffer.from(txn.note));
-
-      const txHeaders = {
-        'Content-Type': 'application/x-binary',
-      };
 
       let transactionWrap: BaseValidatedTxnWrap = undefined;
       try {
@@ -775,7 +769,7 @@ export class InternalMethods {
           }
 
           algod
-            .sendRawTransaction(signedTxn.blob, txHeaders)
+            .sendRawTransaction(signedTxn.blob)
             .do()
             .then((resp: any) => {
               sendResponse({ txId: resp.txId });

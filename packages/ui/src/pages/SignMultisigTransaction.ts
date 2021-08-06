@@ -118,11 +118,14 @@ const SignMultisigTransaction: FunctionalComponent = () => {
 
   const transactionWrap = request && request.body && request.body.params;
   return html`
-    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+    <div
+      class="main-view is-flex-direction-column is-justify-content-space-between"
+      style="min-height: 630px;"
+    >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
       </div>
-      <div style="flex: 1; overflow:auto; max-height: 400px;">
+      <div style="flex: 1; overflow:auto;">
         ${request.body &&
         html`
           <section class="hero">
