@@ -25,6 +25,11 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 - Modify transactions without an amount to default to 0
 - Fixed issue with creating assets that have zero decimals 
 
+### 1.6.1 Patch
+- `BigInt` support for `amount` and `assetTotal`
+- Algorand JS SDK `v1.9.1` support
+- Various improvements regarding Transaction fields validations and Signing UI clarity
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
