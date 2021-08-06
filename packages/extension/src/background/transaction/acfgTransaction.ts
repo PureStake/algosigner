@@ -8,7 +8,7 @@ class AssetConfigTx implements IAssetConfigTx {
   type: string = undefined;
   assetIndex: number = undefined;
   from: string = undefined;
-  fee: number = undefined;number
+  fee: number = undefined;
   firstRound: number = undefined;
   lastRound: number = undefined;
   note?: string = null;
