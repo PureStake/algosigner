@@ -16,7 +16,7 @@
     "@fortawesome/fontawesome-free": "^5.15.0",
     "@ledgerhq/hw-app-algorand": "^5.51.1",
     "@ledgerhq/hw-transport-webhid": "^5.46.0",
-    "algosdk": "1.10.1",
+    "algosdk": "1.11.0",
     "history": "^5.0.0",
     "htm": "^3.0.4",
     "mobx": "^5.15.6",
