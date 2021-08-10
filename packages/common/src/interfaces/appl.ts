@@ -32,11 +32,14 @@ export interface IApplTx extends IBaseTx {
   //apas?: string,            //Address	    "apas"	    Lists the assets whose AssetParams may be accessed by this application's approval-program and clear-state-program. The access is read-only.
   appForeignAssets?: any;
 
-  //apgs?: any,               //StateSchema	"apgs"	    Holds the maximum number of global state values defined within a StateSchema object.
-  appGlobalInts?: any;
-  appGlobalByteSlices?: any;
+  //apgs?: number,            //StateSchema	"apgs"	    Holds the maximum number of global state values defined within a StateSchema object.
+  appGlobalInts?: number;
+  appGlobalByteSlices?: number;
 
-  //apls?: any,               //StateSchema	"apls"	    Holds the maximum number of local state values defined within a StateSchema object.
-  appLocalInts?: any;
-  appLocalByteSlices?: any;
+  //apls?: number,            //StateSchema	"apls"	    Holds the maximum number of local state values defined within a StateSchema object.
+  appLocalInts?: number;
+  appLocalByteSlices?: number;
+
+  //apep?: number             //StateSchema "apep"      Number of additional pages allocated to the application's approval and clear state programs. Each ExtraProgramPages is 2048 bytes. The sum of ApprovalProgram and ClearStateProgram may not exceed 2048*(1+ExtraProgramPages) bytes.
+  extraPages?: number;
 }
