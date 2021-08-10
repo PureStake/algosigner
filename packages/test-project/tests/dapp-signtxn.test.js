@@ -104,6 +104,7 @@ describe('Single and Global Transaction Use cases', () => {
         to: invalidAccount.address,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
+        fee: 1000,
       })
     );
     unsignedTransactions = [txn];
@@ -132,6 +133,7 @@ describe('Single and Global Transaction Use cases', () => {
         to: invalidAccount.address,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
+        fee: 1000,
       })
     );
     txn.signers = [];
@@ -161,6 +163,7 @@ describe('Single and Global Transaction Use cases', () => {
       to: account1.address,
       amount: Math.ceil(Math.random() * 1000),
       ...ledgerParams,
+      fee: 1000,
     });
     unsignedTransactions = [prepareWalletTx(algosdk.assignGroupID([txn])[0])];
 
@@ -181,6 +184,7 @@ describe('Single and Global Transaction Use cases', () => {
         to: msigAccount.address,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
+        fee: 1000,
       })
     );
     multisigTxn.msig = {
@@ -229,13 +233,14 @@ describe('Single and Global Transaction Use cases', () => {
 });
 
 describe('Group Transactions Use cases', () => {
-  test('Group Transaction with Reference Transaction', async () => {
+  test('Group Transaction with Reference Transaction && Pooled Fee', async () => {
     const tx1 = buildSdkTx({
       type: 'pay',
       from: account1.address,
       to: account2.address,
       amount: Math.ceil(Math.random() * 1000),
       ...ledgerParams,
+      fee: 1000,
     });
     const tx2 = buildSdkTx({
       type: 'pay',

@@ -9,7 +9,7 @@ class AssetAcceptTx implements IAssetAcceptTx {
   type: string = undefined;
   assetIndex: number = undefined;
   from: string = undefined;
-  fee: number = undefined;
+  fee?: number = 0;
   to: any = undefined;
   firstRound: number = undefined;
   lastRound: number = undefined;

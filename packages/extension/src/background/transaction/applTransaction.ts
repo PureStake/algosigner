@@ -7,7 +7,7 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 export class ApplTx implements IApplTx {
   type: string = undefined;
   from: string = undefined;
-  fee: number = undefined;
+  fee?: number = 0;
   firstRound: number = undefined;
   lastRound: number = undefined;
   note?: string = null;

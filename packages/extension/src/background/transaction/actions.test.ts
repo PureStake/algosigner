@@ -117,7 +117,6 @@ test('Validate pay transaction required fields', () => {
   } catch (e) {
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
@@ -135,7 +134,6 @@ test('Validate clawback transaction required fields', () => {
   } catch (e) {
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
@@ -154,7 +152,6 @@ test('Validate accept transaction required fields', () => {
   } catch (e) {
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
@@ -172,7 +169,6 @@ test('Validate create transaction required fields', () => {
   } catch (e) {
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
@@ -191,7 +187,6 @@ test('Validate destroy transaction required fields', () => {
     console.log(e.message);
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
@@ -209,7 +204,6 @@ test('Validate modify asset transaction required fields', () => {
   } catch (e) {
     errorMessage = e.message;
   }
-  expect(errorMessage).toContain('fee');
   expect(errorMessage).toContain('firstRound');
   expect(errorMessage).toContain('lastRound');
   expect(errorMessage).toContain('genesisID');
