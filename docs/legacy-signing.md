@@ -8,6 +8,10 @@ The initial, v1, transaction signing remains in place and is documented and supp
 
 (v1 dApp integration)[legacy-dApp-integration.md]
 
+### Transition to v2
+- Examples of signing with v2 are available in the [dapp examples repo](https://purestake.github.io/algosigner-dapp-example/index.html).
+- An interactive transition guide that demonstrates the differences between v1 and v2 signing is available as a link from the dapp examples repo or directly access the [transition guide](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
+
 ### Multisig Transactions
 
 - Multisig transactions can be signed individually through AlgoSigner.
