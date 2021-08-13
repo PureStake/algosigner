@@ -14,6 +14,9 @@ DApp users can trust AlgoSigner to:
 
 With the release of v2 signing, developers coding to the standard will be able to use the same code with any Algorand Wallet.
 
+- Examples of signing with v2 are available in the [dapp examples repo](https://purestake.github.io/algosigner-dapp-example/index.html).
+- An interactive transition guide that demonstrates the differences between v1 and v2 signing is available as a link from the dapp examples repo or directly access the [transition guide](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
+
 ### Developing a dApp
 
 - Read [v2 dApp Integration Guide](dApp-integration.md)
