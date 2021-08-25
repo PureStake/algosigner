@@ -40,7 +40,7 @@ const TxPay: FunctionalComponent = (props: any) => {
       </div>
       <div class="is-flex">
         <p style="width: 30%;"><b>Total:</b></p>
-        <p style="width: 70%;">${(fee + tx.amount) / 1e6} Algos</p>
+        <p style="width: 70%;">${(+fee + +tx.amount) / 1e6} Algos</p>
       </div>
     </div>
   `;
