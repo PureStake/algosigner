@@ -1,9 +1,10 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useContext } from 'preact/hooks';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 import { sendMessage } from 'services/Messaging';
+import { StoreContext } from 'services/StoreContext';
 
 import TxAcfg from 'components/TransactionDetail/TxAcfg';
 import TxPay from 'components/TransactionDetail/TxPay';
@@ -15,6 +16,7 @@ import TxAppl from 'components/TransactionDetail/TxAppl';
 const BACKGROUND_REFRESH_TIMER: number = 10000;
 
 const TransactionsList: FunctionalComponent = (props: any) => {
+  const store: any = useContext(StoreContext);
   const { address, ledger } = props;
 
   const [date, setDate] = useState<any>(new Date());
@@ -158,7 +160,14 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
       case 'axfer':
         info = tx['asset-transfer-transaction']['amount'];
-        //TODO Close-to txs
+        store.getAssetDetails(ledger, address, (assets) => {
+          const id = tx['asset-transfer-transaction']['asset-id'];
+          const amount = info / Math.pow(10, assets[id].decimals);
+          if (assets[id]) {
+            info = `${amount} ${assets[id].unitName}`;
+          }
+        });
+        // TODO Close-to txs
         // Clawback if there is a sender in the transfer object
         if (tx['asset-transfer-transaction'].sender) {
           if (tx['asset-transfer-transaction'].receiver === address) {
@@ -189,7 +198,8 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       case 'appl':
         if ('application-id' in tx['application-transaction']) {
           subtitle = tx['application-transaction']['application-id'] || 'application';
-          title = tx['application-transaction']['on-completion'];
+          info = tx['application-transaction']['on-completion'];
+          title = 'Application';
         } else {
           subtitle = 'appl';
           title = 'Application Transaction';

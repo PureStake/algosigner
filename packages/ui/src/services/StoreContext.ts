@@ -62,7 +62,7 @@ export const StoreProvider = ({ children }) => {
         if (!availableLedgers.error) {
           updateLedgers = availableLedgers;
 
-          for (var i = 0; i < updateLedgers.length; i++) {
+          for (let i = 0; i < updateLedgers.length; i++) {
             const currentLedgerName = updateLedgers[i].name;
             if (currentLedgerName) {
               store[currentLedgerName] = newWallet[currentLedgerName];
@@ -74,12 +74,29 @@ export const StoreProvider = ({ children }) => {
     },
     updateAccountDetails: (ledger, details) => {
       console.log(details);
-      for (var i = store[ledger].length - 1; i >= 0; i--) {
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
         if (store[ledger][i].address === details.address) {
           store[ledger][i].details = details;
           break;
         }
       }
+    },
+    getAssetDetails: (ledger, address, callback) => {
+      const assetDetails: any = [];
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
+        if (store[ledger][i].address === address) {
+          store[ledger][i]['details']['assets'].forEach((a) => {
+            const id = a['asset-id'];
+            const asset = {
+              unitName: a['unit-name'],
+              decimals: a['decimals'],
+            };
+            assetDetails[id] = asset;
+          });
+          break;
+        }
+      }
+      callback(assetDetails);
     },
     saveRequest: (request) => {
       store.savedRequest = request;
