@@ -44,7 +44,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         pendingRef.current = response.pending;
         setResults(resultsRef.current);
         setPending(pendingRef.current);
-        if (pendingRef.current.length) {
+        if (pendingRef.current && pendingRef.current.length) {
           setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
         }
       }
@@ -66,7 +66,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       setResults(response.transactions);
       setPending(response.pending);
       // If there are still pending tx after the update, we request another background fetch
-      if (response.pending.length) {
+      if (response.pending && response.pending.length) {
         setTimeout(backgroundFetch, BACKGROUND_REFRESH_TIMER);
       }
 

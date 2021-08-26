@@ -1,3 +1,4 @@
+import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { Ledger, Backend, API } from './messaging/types';
 
@@ -88,9 +89,30 @@ export class Settings {
     if (ledger.genesisId && ledger.genesisId.indexOf('testnet') > -1) {
       defaultUrl = 'https://algosigner.api.purestake.io/testnet';
     }
+
+    // Setup port splits for algod and indexer - used in sandbox installs
+    let algodUrlPort = '';
+    let indexerUrlPort = '';
+    
+    try {
+      const algodUrlObj = new URL(ledger.algodUrl);
+      algodUrlPort = algodUrlObj.port;
+    }
+    catch {
+      logging.log(`Unable to parse the URL ${ledger.algodUrl}`)
+    }
+
+    try {
+      const indexerUrlObj = new URL(ledger.indexerUrl);
+      indexerUrlPort = indexerUrlObj.port;
+    }
+    catch {
+      logging.log(`Unable to parse the URL ${ledger.indexerUrl}`)
+    }
+
     this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = {
       url: ledger.algodUrl || `${defaultUrl}/algod`,
-      port: '',
+      port: algodUrlPort,
       apiKey: headersAlgod || headers,
       headers: headersAlgod || headers,
     };
@@ -98,7 +120,7 @@ export class Settings {
     // Add the indexer links
     this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = {
       url: ledger.indexerUrl || `${defaultUrl}/indexer`,
-      port: '',
+      port: indexerUrlPort,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
     };
@@ -141,7 +163,7 @@ export class Settings {
     // Here we have to grab data from injected networks instead of the backend
     return {
       url: this.backend_settings.InjectedNetworks[ledger][api].url,
-      port: '',
+      port: this.backend_settings.InjectedNetworks[ledger][api].port,
       apiKey: this.backend_settings.InjectedNetworks[ledger][api].apiKey,
       headers: this.backend_settings.InjectedNetworks[ledger][api].headers,
     };
