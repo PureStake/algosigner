@@ -1,6 +1,6 @@
 {
   "name": "algosigner-crypto",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "author": "https://developer.purestake.io",
   "description": "Cryptographic wrapper for saving and retrieving extention information in Algosigner.",
   "repository": {
