@@ -20,7 +20,7 @@ const getDevice = async () => {
 
     // After obtaining the transport use it to create the Algorand Ledger transport
     ledgerTransport = new Algorand.default(newTransport);
-  } catch (e) {
+  } catch (e: any) {
     if (e && 'message' in e) {
       throw e;
     } else {
