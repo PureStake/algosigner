@@ -19,6 +19,7 @@ const Account: FunctionalComponent = (props: any) => {
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
   const [showDetails, setShowDetails] = useState<boolean>(false);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
@@ -37,8 +38,14 @@ const Account: FunctionalComponent = (props: any) => {
       address: address,
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
-      setDetails(response);
-      store.updateAccountDetails(ledger, response);
+      if(response.error){
+        console.error(response.error);
+        setError('Error: Account details not accessible.');
+      }
+      else {
+        setDetails(response);
+        store.updateAccountDetails(ledger, response);
+      }
     });
   };
 
@@ -61,6 +68,7 @@ const Account: FunctionalComponent = (props: any) => {
       </p>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
+        ${details === null && error && html`<span>${error}</span>`}
         ${
           details &&
           html`

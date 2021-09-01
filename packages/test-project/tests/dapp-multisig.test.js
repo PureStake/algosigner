@@ -67,6 +67,7 @@ describe('dApp Setup', () => {
         to: accounts.ui.address,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
+        fee: 1000,
       },
     };
   });

@@ -5,7 +5,7 @@
 // prettier-ignore
 export interface IBaseTx {
   from: string,	        //Address	    "snd"	     The address of the account that pays the fee and amount. (Auto set by algosdk as the from.publicKey)
-  fee: number,	        //uint64	    "fee"	     Paid by the sender to the FeeSink to prevent denial-of-service. The minimum fee on Algorand is currently 1000 microAlgos.
+  fee?: number,	        //uint64	    "fee"	     Paid by the sender to the FeeSink to prevent denial-of-service. The minimum fee on Algorand is currently 1000 microAlgos.
   firstRound: number,	  //uint64	    "fv"	     The first round for when the transaction is valid. If the transaction is sent prior to this round it will be rejected by the network.
   lastRound: number,	  //uint64	    "lv"	     The ending round for which the transaction is valid. After this round, the transaction will be rejected by the network.
   note?: string,	      //[]byte	    "note"	   Any data up to 1000 bytes. (Buffer is created from the provided value)

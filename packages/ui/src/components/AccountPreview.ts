@@ -10,6 +10,7 @@ import { numFormat } from 'services/common';
 const AccountPreview: FunctionalComponent = (props: any) => {
   const { account, ledger } = props;
   const [results, setResults] = useState<any>(null);
+  const [error, setError] = useState<any>(null);
 
   const fetchApi = async () => {
     const params = {
@@ -17,7 +18,14 @@ const AccountPreview: FunctionalComponent = (props: any) => {
       address: account.address,
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
-      setResults(response);
+      if(response.error){
+        console.error(response.error);
+        setError('Error: Account details not accessible.');
+
+      }
+      else {
+        setResults(response);
+      }
     });
   };
 
@@ -38,7 +46,8 @@ const AccountPreview: FunctionalComponent = (props: any) => {
         <div class="is-size-7 has-text-right">
           ${results && results.assets && html` <b>${results.assets.length}</b> ASAs<br /> `}
           ${results && html` <b>${numFormat(results.amount / 1e6, 6)}</b> Algos `}
-          ${results === null && html` <span class="loader"></span> `}
+          ${results === null && error && html`<span>${error}</span>`}
+          ${results === null && !error && html` <span class="loader"></span> `}
         </div>
       </div>
     </div>
