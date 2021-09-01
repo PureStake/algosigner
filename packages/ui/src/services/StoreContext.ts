@@ -9,14 +9,13 @@ import { sendMessage } from 'services/Messaging';
 export const StoreContext = createContext(undefined);
 
 export const StoreProvider = ({ children }) => {
-  //const existingStore = sessionStorage.getItem('wallet');
   const store = useLocalStore(() => ({
     ledger: 'MainNet',
     availableLedgers: [],
     TestNet: [],
     MainNet: [],
     savedRequest: undefined,
-    setLedger: (ledger) => {
+    setLedger: (ledger: string) => {
       if (!ledger) {
         ledger = 'MainNet';
       } else if (!store[ledger]) {
@@ -24,7 +23,7 @@ export const StoreProvider = ({ children }) => {
       }
       store.ledger = ledger;
     },
-    deleteNetwork: (ledger, callback) => {
+    deleteNetwork: (ledger: string, callback: Function) => {
       delete store[ledger];
       store.setLedger('MainNet');
       // Reset available ledgers
@@ -36,7 +35,7 @@ export const StoreProvider = ({ children }) => {
         callback();
       });
     },
-    getAvailableLedgers: (callback) => {
+    getAvailableLedgers: (callback: Function) => {
       if (!store.availableLedgers || store.availableLedgers.length === 0) {
         try {
           sendMessage(JsonRpcMethod.GetLedgers, undefined, (response) => {
@@ -46,23 +45,23 @@ export const StoreProvider = ({ children }) => {
             callback(response);
           });
         } catch (e) {
-          const errorMsg = chrome.runtime.lastError || e.message;
+          const errorMsg = chrome.runtime.lastError || (e as any).message;
           callback({ error: errorMsg });
         }
       } else {
         callback(store.availableLedgers);
       }
     },
-    setAvailableLedgers: (ledgers) => {
+    setAvailableLedgers: (ledgers: any) => {
       store.availableLedgers = ledgers;
     },
-    updateWallet: (newWallet, callback) => {
+    updateWallet: (newWallet: any, callback: Function) => {
       let updateLedgers;
       store.getAvailableLedgers((availableLedgers) => {
         if (!availableLedgers.error) {
           updateLedgers = availableLedgers;
 
-          for (var i = 0; i < updateLedgers.length; i++) {
+          for (let i = 0; i < updateLedgers.length; i++) {
             const currentLedgerName = updateLedgers[i].name;
             if (currentLedgerName) {
               store[currentLedgerName] = newWallet[currentLedgerName];
@@ -72,14 +71,31 @@ export const StoreProvider = ({ children }) => {
         callback();
       });
     },
-    updateAccountDetails: (ledger, details) => {
+    updateAccountDetails: (ledger: string, details: any) => {
       console.log(details);
-      for (var i = store[ledger].length - 1; i >= 0; i--) {
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
         if (store[ledger][i].address === details.address) {
           store[ledger][i].details = details;
           break;
         }
       }
+    },
+    getAssetDetails: (ledger: string, address: string, callback: Function) => {
+      const assetDetails: any = [];
+      for (let i = store[ledger].length - 1; i >= 0; i--) {
+        if (store[ledger][i].address === address) {
+          store[ledger][i]['details']['assets'].forEach((a) => {
+            const id = a['asset-id'];
+            const asset = {
+              unitName: a['unit-name'],
+              decimals: a['decimals'],
+            };
+            assetDetails[id] = asset;
+          });
+          break;
+        }
+      }
+      callback(assetDetails);
     },
     saveRequest: (request) => {
       store.savedRequest = request;

@@ -12,7 +12,7 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
   voteLast: number = undefined;
   voteKeyDilution?: number = null;
   from: string = undefined;
-  fee: number = undefined;
+  fee?: number = 0;
   firstRound: number = undefined;
   lastRound: number = undefined;
   note?: string = null;

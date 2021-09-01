@@ -129,6 +129,13 @@ const TxAppl: FunctionalComponent = (props: any) => {
           <p style="width: 60%;">${tx.appLocalByteSlices}</p>
         </div>
       `}
+      ${tx.extraPages &&
+      html`
+        <div class="is-flex">
+          <p style="width: 40%;">Extra Pages:</p>
+          <p style="width: 60%;">${tx.extraPages}</p>
+        </div>
+      `}
       <div class="is-flex">
         <p
           class="${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}"

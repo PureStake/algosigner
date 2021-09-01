@@ -78,6 +78,11 @@ export function Validate(field: any, value: any): ValidationResponse {
     case 'voteFirst':
     case 'voteLast':
     case 'voteKeyDilution':
+    case 'appGlobalInts':
+    case 'appGlobalByteSlices':
+    case 'appLocalInts':
+    case 'appLocalByteSlices':
+    case 'extraPages':
       if (value && (!Number.isSafeInteger(value) || parseInt(value) < 0)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,

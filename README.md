@@ -30,6 +30,13 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 - Algorand JS SDK `v1.9.1` support
 - Various improvements regarding Transaction fields validations and Signing UI clarity
 
+### 1.6.2 Patch
+- Algorand JS SDK `v1.11.1` support
+  - Includes support for `extraPages` field on `Appl` txs
+- Fix display for `Total` amount for `Pay` txs
+- Network Config fix for local Sandbox nodes
+- More descriptive `Appl` and `Axfer` txs on the Transactions list
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)

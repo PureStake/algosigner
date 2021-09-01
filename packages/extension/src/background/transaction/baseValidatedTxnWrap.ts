@@ -76,6 +76,7 @@ export class BaseValidatedTxnWrap {
           this.transaction[prop] = params[prop];
           // This is where conversion for different keys happens
           // This could be done for validation purposes or improving readability on the UI
+          // Done more liberally on v2 since we use the unmodified transaction afterwards
           if (
             (prop === 'group' || prop === 'appApprovalProgram' || prop === 'appClearProgram') &&
             !v1Validations
@@ -89,6 +90,11 @@ export class BaseValidatedTxnWrap {
             const accArray = params[prop];
             if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
               this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
+            }
+          } else if (prop === 'freezeAccount' && !v1Validations) {
+            const account = params[prop];
+            if ('publicKey' in account) {
+              this.transaction[prop] = algosdk.encodeAddress(account.publicKey);
             }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
