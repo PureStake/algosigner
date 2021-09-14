@@ -166,10 +166,10 @@ export class Task {
               if (displayAmount.startsWith('.')) {
                 displayAmount = '0'.concat(displayAmount);
               }
-
-              // Set new amount
-              assetInfo.displayAmount = displayAmount;
             }
+
+            // Set new amount
+            assetInfo.displayAmount = displayAmount;
           }
 
           transactionWrap.assetInfo = assetInfo;
