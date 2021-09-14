@@ -37,6 +37,9 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 - Network Config fix for local Sandbox nodes
 - More descriptive `Appl` and `Axfer` txs on the Transactions list
 
+### 1.6.3 Patch
+- Fix display for `Amount` for `Axfer` Opt-in txs
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
