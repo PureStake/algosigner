@@ -128,12 +128,12 @@ export class Task {
 
       transactionWrap.assetInfo = {
         unitName: '',
-        displayAmount: '',
+        displayAmount: '0',
       };
 
       await Task.fetchAPI(`${url}${sendPath}`, fetchAssets)
         .then((asset) => {
-          const assetInfo: any = {};
+          const assetInfo: any = Object.assign({}, transactionWrap.assetInfo);
           const params = asset['params'];
 
           // Get relevant data from asset params
@@ -145,29 +145,31 @@ export class Task {
             assetInfo.unitName = unitName;
           }
 
-          // Get the display amount as a string to prevent screen deformation of large ints
-          let displayAmount = String(transactionWrap.transaction.amount);
+          if (transactionWrap.transaction.amount) {
+            // Get the display amount as a string to prevent screen deformation of large ints
+            let displayAmount = String(transactionWrap.transaction.amount);
 
-          // If we have decimals, then we need to set the display amount with them in mind
-          if (decimals && decimals > 0) {
-            // Append missing zeros, if needed
-            if (displayAmount.length < decimals) {
-              displayAmount = displayAmount.padStart(decimals, '0');
+            // If we have decimals, then we need to set the display amount with them in mind
+            if (decimals && decimals > 0) {
+              // Append missing zeros, if needed
+              if (displayAmount.length < decimals) {
+                displayAmount = displayAmount.padStart(decimals, '0');
+              }
+              const offsetAmount = Math.abs(decimals - displayAmount.length);
+
+              // Apply decimal transition
+              displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
+                offsetAmount
+              )}`;
+
+              // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
+              if (displayAmount.startsWith('.')) {
+                displayAmount = '0'.concat(displayAmount);
+              }
+
+              // Set new amount
+              assetInfo.displayAmount = displayAmount;
             }
-            const offsetAmount = Math.abs(decimals - displayAmount.length);
-
-            // Apply decimal transition
-            displayAmount = `${displayAmount.substr(0, offsetAmount)}.${displayAmount.substr(
-              offsetAmount
-            )}`;
-
-            // If we start with a decimal now after padding and applying, add a 0 to the beginning for legibility
-            if (displayAmount.startsWith('.')) {
-              displayAmount = '0'.concat(displayAmount);
-            }
-
-            // Set new amount
-            assetInfo.displayAmount = displayAmount;
           }
 
           transactionWrap.assetInfo = assetInfo;
