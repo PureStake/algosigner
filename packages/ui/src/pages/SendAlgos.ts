@@ -257,7 +257,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button
           id="submitTransfer"
           class="button is-primary is-fullwidth"
-          disabled=${to.length === 0 || +amount <= 0}
+          disabled=${to.length === 0 || +amount < 0}
           onClick=${() => setAskAuth(true)}
         >
           Send!
