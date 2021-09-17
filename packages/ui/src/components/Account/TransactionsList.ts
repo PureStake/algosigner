@@ -161,11 +161,15 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       case 'axfer':
         info = tx['asset-transfer-transaction']['amount'];
         store.getAssetDetails(ledger, address, (assets) => {
-          const id = tx['asset-transfer-transaction']['asset-id'];
-          const amount = info / Math.pow(10, assets[id].decimals);
-          if (assets[id]) {
+          const id = tx['asset-transfer-transaction']['asset-id'];    
+
+          // Check if the asset has not been deleted before getting info about it
+          if (assets[id]) {     
+            const dec = assets[id].decimals || 0;
+            const amount = info / Math.pow(10, dec);
             info = `${amount} ${assets[id].unitName}`;
           }
+
         });
         // TODO Close-to txs
         // Clawback if there is a sender in the transfer object
