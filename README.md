@@ -40,6 +40,10 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 ### 1.6.3 Patch
 - Fix display for `Amount` for `Axfer` Opt-in txs
 
+### 1.6.4 Patch
+- Allow for zero Algo pay transactions in UI
+- Fix stall for `Axfer` in txs list when decimals can't be obtained from the asset
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
