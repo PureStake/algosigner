@@ -50,30 +50,34 @@ export class Task extends Runtime implements ITask {
   }
 
   /**
-   * @param transactions array of valid wallet transaction objects
-   * @returns array of signed transactions
+   * @param transactionsOrGroups array or nested array of grouped transaction objects
+   * @returns array or nested array of signed transactions
    */
   signTxn(
-    transactions: Array<WalletTransaction>,
+    transactionsOrGroups: Array<WalletTransaction>,
     error: RequestErrors = RequestErrors.None
   ): Promise<JsonPayload> {
-    const formatError = new Error(
-      'There was a problem with the transaction(s) recieved. Please provide an array of valid transaction objects.'
-    );
-    if (!Array.isArray(transactions) || !transactions.length) throw formatError;
-    transactions.forEach((walletTx) => {
+    const formatError = new Error(RequestErrors.InvalidFormat);
+    // We check for empty arrays
+    if (!Array.isArray(transactionsOrGroups) || !transactionsOrGroups.length) throw formatError;
+    transactionsOrGroups.forEach((txOrGroup) => {
+      // We check for no null values and no empty nested arrays
       if (
-        walletTx === null ||
-        typeof walletTx !== 'object' ||
-        walletTx.txn === null ||
-        !walletTx.txn.length
+        txOrGroup === null ||
+        txOrGroup === undefined ||
+        (!Array.isArray(txOrGroup) && typeof txOrGroup === 'object' &&
+          (!txOrGroup.txn || (txOrGroup.txn && !txOrGroup.txn.length))
+        ) ||
+        (Array.isArray(txOrGroup) && 
+          (!txOrGroup.length || (txOrGroup.length && !txOrGroup.every((tx) => tx !== null)))
+        )
       )
         throw formatError;
     });
 
     const params = {
-      transactions: transactions,
+      transactions: transactionsOrGroups,
     };
-    return MessageBuilder.promise(JsonRpcMethod.SignWalletTransaction, params, error);
+    return MessageBuilder.promise(JsonRpcMethod.HandleWalletTransactions, params, error);
   }
 }

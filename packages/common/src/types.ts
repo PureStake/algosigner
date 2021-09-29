@@ -5,6 +5,7 @@ export enum RequestErrors {
   InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.',
   UnsupportedAlgod = '[RequestErrors.UnsupportedAlgod] The provided method is not supported.',
   UnsupportedLedger = '[RequestErrors.UnsupportedLedger] The provided ledger is not supported.',
+  InvalidFormat = '[RequestErrors.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
   Undefined = '[RequestErrors.Undefined] An undefined error occurred.',
 }
 
