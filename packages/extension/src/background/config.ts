@@ -1,6 +1,6 @@
-import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { Ledger, Backend, API } from './messaging/types';
+import { parseUrlServerAndPort } from './utils/networkUrlParser';
 
 export class Settings {
   static backend: Backend = Backend.PureStake;
@@ -91,36 +91,20 @@ export class Settings {
     }
 
     // Setup port splits for algod and indexer - used in sandbox installs
-    let algodUrlPort = '';
-    let indexerUrlPort = '';
-    
-    try {
-      const algodUrlObj = new URL(ledger.algodUrl);
-      algodUrlPort = algodUrlObj.port;
-    }
-    catch {
-      logging.log(`Unable to parse the URL ${ledger.algodUrl}`)
-    }
-
-    try {
-      const indexerUrlObj = new URL(ledger.indexerUrl);
-      indexerUrlPort = indexerUrlObj.port;
-    }
-    catch {
-      logging.log(`Unable to parse the URL ${ledger.indexerUrl}`)
-    }
+    const parsedAlgodUrlObj = parseUrlServerAndPort(ledger.algodUrl)
+    const parsedIndexerUrlObj = parseUrlServerAndPort(ledger.indexerUrl);
 
     this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = {
-      url: ledger.algodUrl || `${defaultUrl}/algod`,
-      port: algodUrlPort,
+      url: parsedAlgodUrlObj.server || `${defaultUrl}/algod`,
+      port: parsedAlgodUrlObj.port,
       apiKey: headersAlgod || headers,
       headers: headersAlgod || headers,
     };
 
     // Add the indexer links
     this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = {
-      url: ledger.indexerUrl || `${defaultUrl}/indexer`,
-      port: indexerUrlPort,
+      url: parsedIndexerUrlObj.server || `${defaultUrl}/indexer`,
+      port: parsedIndexerUrlObj.port,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
     };
