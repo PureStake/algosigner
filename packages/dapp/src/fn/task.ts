@@ -78,6 +78,6 @@ export class Task extends Runtime implements ITask {
     const params = {
       transactionsOrGroups: transactionsOrGroups,
     };
-    return MessageBuilder.promise(JsonRpcMethod.HandleWalletTransactions, params, error);
+    return MessageBuilder.promise(JsonRpcMethod.SignWalletTransaction, params, error);
   }
 }
