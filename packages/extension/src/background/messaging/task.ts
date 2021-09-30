@@ -434,11 +434,11 @@ export class Task {
           }
         },
         // handle-wallet-transactions
-        [JsonRpcMethod.HandleWalletTransactions]: (d: any, resolve: Function, reject: Function) => {
+        [JsonRpcMethod.HandleWalletTransactions]: async (d: any, resolve: Function, reject: Function) => {
           console.log(d);
           console.log('===== START NESTED HANDLING =====');
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
-            d.body.params.transactions;
+            d.body.params.transactionsOrGroups;
 
           console.log(transactionsOrGroups);
           // We check to see if it's a simple or nested array of transactions
@@ -491,22 +491,7 @@ export class Task {
 
           console.log('===== FINISH NESTED HANDLING =====');
 
-          try {
-            this.methods()['extension'][JsonRpcMethod.SignWalletTransaction](newRequest);
-          } catch (e) {
-            let errorMessage = 'There was a problem validating the transaction(s). ';
-
-            if (singleGroup) {
-              errorMessage += e.message;
-            } else {
-              errorMessage += `\nOn group 0: [${e.message}].`;
-            }
-            logging.log(errorMessage);
-            const error = new Error(errorMessage);
-            d.error = error;
-            reject(d);
-            return;
-          }
+          this.methods()['extension'][JsonRpcMethod.SignWalletTransaction](newRequest);
         },
         // send-transaction
         [JsonRpcMethod.SendTransaction]: (d: any, resolve: Function, reject: Function) => {
@@ -957,227 +942,244 @@ export class Task {
           return true;
         },
         // sign-wallet-transaction
-        [JsonRpcMethod.SignWalletTransaction]: async (d: any) => {
+        [JsonRpcMethod.SignWalletTransaction]: async (request: any, sendResponse: Function) => {
           console.log('===== START PREPARING UI =====');
-          console.log(d);
-          const groupsToSign: Array<Array<WalletTransaction>> = d.body.params.groupsToSign;
-          const currentGroup: number = d.body.params.currentGroup;
+          console.log(request);
+          const groupsToSign: Array<Array<WalletTransaction>> = request.body.params.groupsToSign;
+          const currentGroup: number = request.body.params.currentGroup;
           const walletTransactions: Array<WalletTransaction> = groupsToSign[currentGroup];
           const rawTxArray: Array<any> = [];
           const processedTxArray: Array<any> = [];
           const transactionWraps: Array<BaseValidatedTxnWrap> = [];
           const validationErrors: Array<Error> = [];
-
-          walletTransactions.forEach((walletTx, index) => {
-            try {
-              // Runtime type checking
-              if (
-                // prettier-ignore
-                (walletTx.authAddr != null && typeof walletTx.authAddr !== 'string') ||
-                (walletTx.message != null && typeof walletTx.message !== 'string') ||
-                (!walletTx.txn || typeof walletTx.txn !== 'string') ||
-                (walletTx.signers != null && 
-                  (
-                    !Array.isArray(walletTx.signers) || 
-                    (Array.isArray(walletTx.signers) && (walletTx.signers as Array<any>).some((s)=>typeof s !== 'string'))
+          try {
+            walletTransactions.forEach((walletTx, index) => {
+              try {
+                // Runtime type checking
+                if (
+                  // prettier-ignore
+                  (walletTx.authAddr != null && typeof walletTx.authAddr !== 'string') ||
+                  (walletTx.message != null && typeof walletTx.message !== 'string') ||
+                  (!walletTx.txn || typeof walletTx.txn !== 'string') ||
+                  (walletTx.signers != null && 
+                    (
+                      !Array.isArray(walletTx.signers) || 
+                      (Array.isArray(walletTx.signers) && (walletTx.signers as Array<any>).some((s)=>typeof s !== 'string'))
+                    )
+                  ) ||
+                  (walletTx.msig && typeof walletTx.msig !== 'object')
+                ) {
+                  logging.log('Invalid Wallet Transaction Structure');
+                  throw new InvalidStructure();
+                } else if (
+                  // prettier-ignore
+                  walletTx.msig && (
+                    (!walletTx.msig.threshold || typeof walletTx.msig.threshold !== 'number') ||
+                    (!walletTx.msig.version || typeof walletTx.msig.version !== 'number') ||
+                    (
+                      !walletTx.msig.addrs || 
+                      !Array.isArray(walletTx.msig.addrs) || 
+                      (Array.isArray(walletTx.msig.addrs) && (walletTx.msig.addrs as Array<any>).some((s)=>typeof s !== 'string'))
+                    )
                   )
-                ) ||
-                (walletTx.msig && typeof walletTx.msig !== 'object')
-              ) {
-                logging.log('Invalid Wallet Transaction Structure');
-                throw new InvalidStructure();
-              } else if (
-                // prettier-ignore
-                walletTx.msig && (
-                  (!walletTx.msig.threshold || typeof walletTx.msig.threshold !== 'number') ||
-                  (!walletTx.msig.version || typeof walletTx.msig.version !== 'number') ||
-                  (
-                    !walletTx.msig.addrs || 
-                    !Array.isArray(walletTx.msig.addrs) || 
-                    (Array.isArray(walletTx.msig.addrs) && (walletTx.msig.addrs as Array<any>).some((s)=>typeof s !== 'string'))
-                  )
-                )
-              ) {
-                logging.log('Invalid Wallet Transaction Multisig Structure');
-                throw new InvalidMsigStructure();
-              }
-
-              /**
-               * In order to process the transaction and make it compatible with our validator, we:
-               * 0) Decode from base64 to Uint8Array msgpack
-               * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
-               * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
-               * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
-               */
-              const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
-              rawTxArray[index] = rawTx;
-              const processedTx = rawTx._getDictForDisplay();
-              processedTxArray[index] = processedTx;
-              const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
-              transactionWraps[index] = wrap;
-              const genesisID = wrap.transaction.genesisID;
-
-              const signers = walletTransactions[index].signers;
-              const msigData = walletTransactions[index].msig;
-              wrap.msigData = msigData;
-              wrap.signers = signers;
-              if (msigData) {
-                if (signers && signers.length) {
-                  signers.forEach((address) => {
-                    InternalMethods.checkValidAccount(genesisID, address);
-                  });
+                ) {
+                  logging.log('Invalid Wallet Transaction Multisig Structure');
+                  throw new InvalidMsigStructure();
                 }
+
+                /**
+                 * In order to process the transaction and make it compatible with our validator, we:
+                 * 0) Decode from base64 to Uint8Array msgpack
+                 * 1) Use the 'decodeUnsignedTransaction' method of the SDK to parse the msgpack
+                 * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
+                 * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
+                 */
+                const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
+                rawTxArray[index] = rawTx;
+                const processedTx = rawTx._getDictForDisplay();
+                processedTxArray[index] = processedTx;
+                const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
+                transactionWraps[index] = wrap;
+                const genesisID = wrap.transaction.genesisID;
+
+                const signers = walletTransactions[index].signers;
+                const msigData = walletTransactions[index].msig;
                 wrap.msigData = msigData;
-              } else {
-                if (!signers) {
-                  InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
+                wrap.signers = signers;
+                if (msigData) {
+                  if (signers && signers.length) {
+                    signers.forEach((address) => {
+                      InternalMethods.checkValidAccount(genesisID, address);
+                    });
+                  }
+                  wrap.msigData = msigData;
+                } else {
+                  if (!signers) {
+                    InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
+                  }
                 }
+
+                return wrap;
+              } catch (e) {
+                validationErrors[index] = e;
               }
-
-              return wrap;
-            } catch (e) {
-              validationErrors[index] = e;
-            }
-          });
-
-          if (
-            validationErrors.length ||
-            !transactionWraps.length ||
-            transactionWraps.some((w) => w === undefined)
-          ) {
-            // We don't have transaction wraps or we have an building error, reject the transaction.
-            let errorMessage = 'There was a problem validating the transaction(s): ';
-            let validationMessages = '';
-
-            validationErrors.forEach((err, index) => {
-              validationMessages =
-                validationMessages +
-                `\nValidation failed for transaction ${index} due to: ${err.message}`;
             });
-            errorMessage +=
-              (validationMessages.length && validationMessages) ||
-              'Please verify the properties are valid.';
-            logging.log(errorMessage);
-            const error = new Error(errorMessage);
-            throw error;
-          } else if (
-            transactionWraps.some(
-              (tx) =>
-                tx.validityObject &&
-                Object.values(tx.validityObject).some(
-                  (value) => value['status'] === ValidationStatus.Invalid
-                )
-            )
-          ) {
-            // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-            // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            const invalidKeys = {};
-            transactionWraps.forEach((tx, index) => {
-              invalidKeys[index] = [];
-              Object.entries(tx.validityObject).forEach(([key, value]) => {
-                if (value['status'] === ValidationStatus.Invalid) {
-                  invalidKeys[index].push(`${key}: ${value['info']}`);
-                }
+
+            if (
+              validationErrors.length ||
+              !transactionWraps.length ||
+              transactionWraps.some((w) => w === undefined)
+            ) {
+              // We don't have transaction wraps or we have an building error, reject the transaction.
+              let errorMessage = '';
+              let validationMessages = '';
+
+              validationErrors.forEach((err, index) => {
+                validationMessages =
+                  validationMessages +
+                  `\nValidation failed for transaction ${index} due to: ${err.message}`;
               });
-              if (!invalidKeys[index].length) delete invalidKeys[index];
-            });
-
-            let errorMessage = '';
-
-            Object.keys(invalidKeys).forEach((index) => {
-              errorMessage =
-                errorMessage +
-                `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
-                  index
-                ].join(', ')}]. `;
-            });
-
-            logging.log(errorMessage);
-            const error = new Error(errorMessage);
-            throw error;
-          } else {
-            // Group validations
-            if (transactionWraps.length > 1) {
-              if (
-                !transactionWraps.every(
-                  (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
-                )
-              ) {
-                const e = new NoDifferentLedgers();
-                logging.log(`Validation failed. ${e}`);
-                throw e;
-              }
-
-              const groupId = transactionWraps[0].transaction.group;
-              if (!groupId) {
-                const e = new MultipleTxsRequireGroup();
-                logging.log(`Validation failed. ${e}`);
-                throw e;
-              }
-
-              if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-                const e = new NonMatchingGroup();
-                logging.log(`Validation failed. ${e}`);
-                throw e;
-              }
-
-              const recreatedGroupTxs = algosdk.assignGroupID(
-                rawTxArray.slice().map((tx) => {
-                  delete tx.group;
-                  return tx;
-                })
-              );
-              const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-              if (groupId !== recalculatedGroupID) {
-                const e = new IncompleteOrDisorderedGroup();
-                logging.log(`Validation failed. ${e}`);
-                throw e;
-              }
-
-              // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
-              transactionWraps.forEach((wrap) => {
-                wrap.validityObject['group'] = new ValidationResponse({
-                  status: ValidationStatus.Valid,
+              errorMessage +=
+                (validationMessages.length && validationMessages) ||
+                'Please verify the properties are valid.';
+              const error = new Error(errorMessage);
+              throw error;
+            } else if (
+              transactionWraps.some(
+                (tx) =>
+                  tx.validityObject &&
+                  Object.values(tx.validityObject).some(
+                    (value) => value['status'] === ValidationStatus.Invalid
+                  )
+              )
+            ) {
+              // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+              // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
+              const invalidKeys = {};
+              transactionWraps.forEach((tx, index) => {
+                invalidKeys[index] = [];
+                Object.entries(tx.validityObject).forEach(([key, value]) => {
+                  if (value['status'] === ValidationStatus.Invalid) {
+                    invalidKeys[index].push(`${key}: ${value['info']}`);
+                  }
                 });
+                if (!invalidKeys[index].length) delete invalidKeys[index];
               });
+
+              let errorMessage = '';
+
+              Object.keys(invalidKeys).forEach((index) => {
+                errorMessage =
+                  errorMessage +
+                  `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
+                    index
+                  ].join(', ')}]. `;
+              });
+
+              const error = new Error(errorMessage);
+              throw error;
             } else {
-              const wrap = transactionWraps[0];
-              if (
-                (!wrap.msigData && wrap.signers) ||
-                (wrap.msigData && wrap.signers && !wrap.signers.length)
-              ) {
-                const e = new InvalidSigners();
-                logging.log(`Validation failed. ${e}`);
-                throw e;
-              }
-            }
+              // Group validations
+              if (transactionWraps.length > 1) {
+                if (
+                  !transactionWraps.every(
+                    (wrap) =>
+                      transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+                  )
+                ) {
+                  const e = new NoDifferentLedgers();
+                  throw e;
+                }
 
-            for (let i = 0; i < transactionWraps.length; i++) {
-              const wrap = transactionWraps[i];
-              await Task.modifyTransactionWrapWithAssetCoreInfo(wrap);
-            }
+                const groupId = transactionWraps[0].transaction.group;
+                if (!groupId) {
+                  const e = new MultipleTxsRequireGroup();
+                  throw e;
+                }
 
-            d.body.params.transactionWraps = transactionWraps;
+                if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
+                  const e = new NonMatchingGroup();
+                  throw e;
+                }
 
-            console.log('===== FINISH PREPARING UI =====');
-            extensionBrowser.windows.create(
-              {
-                url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-                ...signPopupProperties,
-              },
-              function (w) {
-                if (w) {
-                  Task.requests[d.originTabID] = {
-                    window_id: w.id,
-                    message: d,
-                  };
-                  // Send message with tx info
-                  setTimeout(function () {
-                    extensionBrowser.runtime.sendMessage(d);
-                  }, 500);
+                const recreatedGroupTxs = algosdk.assignGroupID(
+                  rawTxArray.slice().map((tx) => {
+                    delete tx.group;
+                    return tx;
+                  })
+                );
+                const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+                if (groupId !== recalculatedGroupID) {
+                  const e = new IncompleteOrDisorderedGroup();
+                  throw e;
+                }
+
+                // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
+                transactionWraps.forEach((wrap) => {
+                  wrap.validityObject['group'] = new ValidationResponse({
+                    status: ValidationStatus.Valid,
+                  });
+                });
+              } else {
+                const wrap = transactionWraps[0];
+                if (
+                  (!wrap.msigData && wrap.signers) ||
+                  (wrap.msigData && wrap.signers && !wrap.signers.length)
+                ) {
+                  const e = new InvalidSigners();
+                  throw e;
                 }
               }
-            );
+
+              for (let i = 0; i < transactionWraps.length; i++) {
+                const wrap = transactionWraps[i];
+                await Task.modifyTransactionWrapWithAssetCoreInfo(wrap);
+              }
+
+              request.body.params.transactionWraps = transactionWraps;
+
+              console.log('===== FINISH PREPARING UI =====');
+              extensionBrowser.windows.create(
+                {
+                  url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
+                  ...signPopupProperties,
+                },
+                function (w) {
+                  if (w) {
+                    Task.requests[request.originTabID] = {
+                      window_id: w.id,
+                      message: request,
+                    };
+                    // Send message with tx info
+                    setTimeout(function () {
+                      extensionBrowser.runtime.sendMessage(request);
+                    }, 500);
+                  }
+                }
+              );
+            }
+          } catch (e) {
+            let errorMessage = 'There was a problem validating the transaction(s): ';
+
+            if (groupsToSign.length === 1) {
+              errorMessage += e.message;
+            } else {
+              errorMessage += `\nOn group ${currentGroup}: [${e.message}].`;
+            }
+            logging.log(errorMessage);
+
+            const newRequest = Object.assign({}, request);
+            newRequest.error = { message: errorMessage };
+            newRequest.body.method = JsonRpcMethod.SignWalletTransaction;
+
+            console.log('======== BEFORE THROW ========');
+            console.log(request);
+            console.log(newRequest);
+
+            // Clean class saved request
+            delete Task.requests[request.originTabID];
+            // sendResponse(request);
+            MessageApi.send(newRequest);
           }
         },
         // sign-allow-wallet-tx
@@ -1336,9 +1338,12 @@ export class Task {
               console.log(message);
               // In case of signing error, we abort everything.
               if (message.error) {
+                const newRequest = Object.assign({}, message);
+                newRequest.body.method = JsonRpcMethod.HandleWalletTransactions;
                 // Clean class saved request
                 delete Task.requests[responseOriginTabID];
-                MessageApi.send(message);
+                MessageApi.send(newRequest);
+                return;
               }
 
               // We check if there are more groups to sign
@@ -1367,7 +1372,13 @@ export class Task {
                   return;
                 }
               } else {
-                message.response = signedGroups;
+                let response;
+                if (signedGroups.length === 1) {
+                  response = signedGroups[0];
+                } else {
+                  response = signedGroups;
+                }
+                message.response = response;
                 // Clean class saved request
                 delete Task.requests[responseOriginTabID];
                 MessageApi.send(message);
@@ -1380,18 +1391,23 @@ export class Task {
           }
           return true;
         },
+        // sign-deny
         /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.SignDeny]: (request: any, sendResponse: Function) => {
           const { responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
+          console.log('========== BEGIN DENY ===========');
+          console.log(request);
+          console.log(message);
           auth.message.error = {
             message: RequestErrors.NotAuthorized,
           };
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
+          console.log('========== FINISH DENY ===========');
           setTimeout(() => {
             MessageApi.send(message);
           }, 100);
