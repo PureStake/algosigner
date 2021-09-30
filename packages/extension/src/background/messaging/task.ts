@@ -182,8 +182,6 @@ export class Task {
 
   // Intermediate function for Group of Groups handling
   private static signIndividualGroup = async (request: any) => {
-    console.log('===== START PREPARING UI =====');
-    console.log(request);
     const groupsToSign: Array<Array<WalletTransaction>> = request.body.params.groupsToSign;
     const currentGroup: number = request.body.params.currentGroup;
     const walletTransactions: Array<WalletTransaction> = groupsToSign[currentGroup];
@@ -377,7 +375,6 @@ export class Task {
 
         request.body.params.transactionWraps = transactionWraps;
 
-        console.log('===== FINISH PREPARING UI =====');
         extensionBrowser.windows.create(
           {
             url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
@@ -671,12 +668,9 @@ export class Task {
         },
         // handle-wallet-transactions
         [JsonRpcMethod.SignWalletTransaction]: async (d: any, resolve: Function, reject: Function) => {
-          console.log(d);
-          console.log('===== START NESTED HANDLING =====');
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
             d.body.params.transactionsOrGroups;
 
-          console.log(transactionsOrGroups);
           // We check to see if it's a simple or nested array of transactions
           const singleGroup = (transactionsOrGroups as Array<WalletTransaction>).every(
             (walletTx) =>
@@ -698,7 +692,6 @@ export class Task {
                   walletTx.txn.length
               )
           );
-          console.log(`Single: ${singleGroup}, Multiple: ${multipleGroups}`);
 
           // If none of the formats match up, we throw an error
           if (!singleGroup && !multipleGroups) {
@@ -714,13 +707,9 @@ export class Task {
           if (multipleGroups) {
             groupsToSign = transactionsOrGroups as Array<Array<WalletTransaction>>;
           }
-          console.log(groupsToSign);
-
           d.body.params.groupsToSign = groupsToSign;
           d.body.params.currentGroup = 0;
           d.body.params.signedGroups = [];
-
-          console.log('===== FINISH NESTED HANDLING =====');
 
           Task.signIndividualGroup(d);
         },
@@ -1186,15 +1175,6 @@ export class Task {
             algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
           );
 
-          console.log('===== START BACKGROUND SIGNING =====');
-          console.log(`Current group: ${currentGroup}, Single: ${singleGroup}`);
-          console.log(`UI ID: ${responseOriginTabID}`);
-          console.log(auth);
-          console.log(walletTransactions);
-
-          // const groupsToSign: Array<Array<WalletTransaction>> = request.body.params.groupsToSign;
-          // const currentGroup: number = d.body.params.currentGroup;
-
           const signedTxs = [];
           const signErrors = [];
 
@@ -1324,8 +1304,6 @@ export class Task {
                 signedGroups[currentGroup] = signedTxs;
               }
 
-              console.log('After error processing');
-              console.log(message);
               // In case of signing error, we abort everything.
               if (message.error) {
                 // Clean class saved request
@@ -1337,10 +1315,6 @@ export class Task {
               // We check if there are more groups to sign
               message.body.params.currentGroup = currentGroup + 1;
               message.body.params.signedGroups = signedGroups;
-              console.log('Accumulated groups after sign:');
-              console.log(signedGroups);
-              console.log('===== FINISH BACKGROUND SIGNING =====');
-
               if (message.body.params.currentGroup < groupsToSign.length) {
                 try {
                   Task.signIndividualGroup(message);
@@ -1384,16 +1358,12 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
-          console.log('========== BEGIN DENY ===========');
-          console.log(request);
-          console.log(message);
           auth.message.error = {
             message: RequestErrors.NotAuthorized,
           };
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
-          console.log('========== FINISH DENY ===========');
           setTimeout(() => {
             MessageApi.send(message);
           }, 100);
