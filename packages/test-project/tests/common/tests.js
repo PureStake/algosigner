@@ -119,7 +119,7 @@ async function ConnectAlgoSigner() {
           await popup.waitForTimeout(250);
         }
       } catch (e) {
-        // Single transaction
+        // Maybe a Single transaction
       }
 
       await popup.waitForSelector('#approveTx');
@@ -130,6 +130,21 @@ async function ConnectAlgoSigner() {
       await popup.click('#authButton');
     }
     await dappPage.exposeFunction('authorizeSignTxn', authorizeSignTxn);
+
+    // Groups of Groups Approvals
+    async function authorizeSignTxnGroups(amount) {
+      const popup = await getPopup();
+      for (let i = 0; i < amount; i++) {
+        try {
+          await authorizeSignTxn();
+          await popup.waitForTimeout(2000);
+        } catch (e) {
+          console.log('Error:');
+          console.log(e);
+        }
+      }
+    }
+    await dappPage.exposeFunction('authorizeSignTxnGroups', authorizeSignTxnGroups);
   });
 
   test('Connect Dapp through content.js', async () => {
