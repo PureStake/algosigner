@@ -181,7 +181,7 @@ AlgoSigner.signTxn([
 ]);
 ```
 
-**NOTE:** Even though the method accepts an array of transactions, it requires atomic transactions with groupId and will error on non-atomic groups.
+**NOTE:** Even though the method accepts an array of transactions, it requires atomic transactions that have a groupId and will error on non-atomic groups.
 
 **Response**
 
@@ -220,6 +220,42 @@ let signedTxs = await AlgoSigner.signTxn([
     txn: base64Tx,
   },
 ]);
+```
+Alternatively, you can provide multiple arrays of transactions at once. Same rules regarding the contents of the groups apply.
+
+**Request**
+
+```js
+AlgoSigner.signTxn([
+  [
+    {
+      txn: 'iqNhbXRko2ZlZc0D6KJmds4A259Go2dlbqx0ZXN0bmV0LXYxLjCiZ2jEIEhjtRiks8hOyBDyLU8QgcsPcfBZp6wg3sYvf3DlCToio2dycMQgdsLAGqgrtwqqQS4UEN7O8CZHjfhPTwLHrB1A2pXwvKGibHbOANujLqNyY3bEIK0TEDcptY0uFvk2V5LDVzRfdz7O4freYHEuZbpI+6hMo3NuZMQglmyhKUPeU2KALzt/Jcs0GQ55k2vsqZ4pGeNlzpnYLbukdHlwZaNwYXk=',
+    },
+  ],
+  [
+    {
+      txn: 'iaRhZnJ6w6RmYWRkxCCWbKEpQ95TYoAvO38lyzQZDnmTa+ypnikZ42XOmdgtu6RmYWlkzgDITmiiZnbOAQNjIKNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4BA2cIo3NuZMQglmyhKUPeU2KALzt/Jcs0GQ55k2vsqZ4pGeNlzpnYLbukdHlwZaRhZnJ6',
+    },
+  ],
+]);
+```
+**Response**
+
+```json
+[
+  [
+    {
+      "txID": "4F6GE5EBTBJ7DOTWKA3GK4JYARFDCVR5CYEXP6O27FUCE5SGFDYQ",
+      "blob": "gqNzaWfEQL6mW/7ss2HKAqsuHN/7ePx11wKSAvFocw5QEDvzSvrvJdzWYvT7ua8Lc0SS0zOmUDDaHQC/pGJ0PNqnu7W3qQKjdHhuiaNhbXQGo2ZlZc4AA7U4omZ2zgB+OrujZ2VurHRlc3RuZXQtdjEuMKJnaMQgSGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiKibHbOAH4+o6NyY3bEIHhydylNDQQhpD9QdKWejLCMBgb5UYJTGCfDW3KgLsI+o3NuZMQgZM5ZNuFgR8pz2dHBgDlmHolfGgF96zX/X4x2bnAJ3aqkdHlwZaNwYXk="
+    }
+  ],
+  [
+    {
+      "txID": "QK4XYJYGN7CLER25SKT3DV4UWNI5DVYXRBJRZEUWYA523EU5ZB7A",
+      "blob": "gqNzaWfEQC8ZIPYimAypJD2TmEQjuWxEEk8/gJbBegEHdtyKr6TuA78otKIEB9PYQimgMLGn87YOEB6GgRe5vjWRTuWGsAqjdHhuiaRhZnJ6w6RmYWRkxCCWbKEpQ95TYoAvO38lyzQZDnmTa+ypnikZ42XOmdgtu6RmYWlkzgDITmiiZnbOAQNjO6NnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4BA2cjo3NuZMQglmyhKUPeU2KALzt/Jcs0GQ55k2vsqZ4pGeNlzpnYLbukdHlwZaRhZnJ6"
+    }
+  ]
+]
 ```
 
 The signed transactions can then be sent using the SDK (example below) or using the [AlgoSigner.send()](#algosignersend-ledger-mainnettestnet-txblob-) method.
@@ -439,6 +475,7 @@ The dApp may return the following errors in case of users rejecting requests, or
     InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.',
     UnsupportedAlgod = '[RequestErrors.UnsupportedAlgod] The provided method is not supported.',
     UnsupportedLedger = '[RequestErrors.UnsupportedLedger] The provided ledger is not supported.',
+    InvalidFormat = '[RequestErrors.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
     Undefined = '[RequestErrors.Undefined] An undefined error occurred.',
 ```
 

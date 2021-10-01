@@ -44,6 +44,12 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 - Allow for zero Algo pay transactions in UI
 - Fix stall for `Axfer` in txs list when decimals can't be obtained from the asset
 
+### 1.6.5 Patch
+- Fixed duplicate Port on Custom Network calls
+- Added support for receiving an array of arrays when using `signTxn()`
+  - Each inner array should still contain transactions **belonging to a same group**
+  - Updated error message when providing an incorrect format of transactions to reflect this change
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
