@@ -32,7 +32,7 @@ const prepareWalletTx = (tx) => {
   };
 };
 
-async function signTxn(transactions, testFunction) {
+async function signTxn(transactionsToSign, testFunction) {
   const timestampedName = `popupTest-${new Date().getTime().toString()}`;
   if (testFunction) {
     await dappPage.exposeFunction(timestampedName, async () => {
@@ -46,8 +46,8 @@ async function signTxn(transactions, testFunction) {
 
   await dappPage.waitForTimeout(2000);
   const signedTransactions = await dappPage.evaluate(
-    async (transactions, testFunction, testTimestamp) => {
-      const signPromise = AlgoSigner.signTxn(transactions)
+    async (transactionsToSign, testFunction, testTimestamp) => {
+      const signPromise = AlgoSigner.signTxn(transactionsToSign)
         .then((data) => {
           return data;
         })
@@ -58,10 +58,11 @@ async function signTxn(transactions, testFunction) {
       if (testFunction) {
         await window[testTimestamp]();
       }
-      await window.authorizeSignTxn();
+
+      await window['authorizeSignTxn']();
       return await Promise.resolve(signPromise);
     },
-    transactions,
+    transactionsToSign,
     !!testFunction,
     timestampedName
   );
@@ -210,7 +211,7 @@ describe('Single and Global Transaction Use cases', () => {
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
     expect(decodedTransaction.msig).toHaveProperty('subsig');
-    expect(decodedTransaction.msig.subsig.length).toBe(3);
+    expect(decodedTransaction.msig.subsig).toHaveLength(3);
     expect(decodedTransaction.msig.subsig[0]).toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[1]).toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[2]).not.toHaveProperty('s');
@@ -225,7 +226,7 @@ describe('Single and Global Transaction Use cases', () => {
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
     expect(decodedTransaction.msig).toHaveProperty('subsig');
-    expect(decodedTransaction.msig.subsig.length).toBe(3);
+    expect(decodedTransaction.msig.subsig).toHaveLength(3);
     expect(decodedTransaction.msig.subsig[0]).toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[1]).not.toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[2]).not.toHaveProperty('s');
@@ -263,7 +264,7 @@ describe('Group Transactions Use cases', () => {
 
     const signedTransactions = await signTxn(unsignedTransactions);
     await expect(signedTransactions[2]).toBeNull();
-    await expect(signedTransactions.filter((i) => i).length).toBe(2);
+    await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
   });
 
   // @TODO: Add errors for mismatches, incomplete groups, etc

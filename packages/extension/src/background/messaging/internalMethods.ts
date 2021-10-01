@@ -311,6 +311,7 @@ export class InternalMethods {
     );
     return true;
   }
+
   public static [JsonRpcMethod.LedgerGetSessionTxn](request: any, sendResponse: Function) {
     if (session.txnWrap && 'body' in session.txnWrap) {
       // The transaction may contain source and JSONRPC info, the body.params will be the transaction validation object
@@ -455,6 +456,7 @@ export class InternalMethods {
     });
     return true;
   }
+
   public static [JsonRpcMethod.AccountDetails](request: any, sendResponse: Function) {
     const { ledger, address } = request.body.params;
     const algod = this.getAlgod(ledger);
@@ -935,6 +937,7 @@ export class InternalMethods {
       sendResponse({ error: e.message });
     }
   }
+
   public static [JsonRpcMethod.GetLedgers](request: any, sendResponse: Function) {
     getAvailableLedgersExt((availableLedgers) => {
       sendResponse(availableLedgers);
