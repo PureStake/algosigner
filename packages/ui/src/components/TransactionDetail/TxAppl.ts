@@ -23,6 +23,13 @@ const TxAppl: FunctionalComponent = (props: any) => {
         <strong>On Completion: </strong>
         <span>${tx['application-transaction']['on-completion']}</span>
       </p>
+      ${tx['inner-txns'] && tx['inner-txns'].length &&
+      html`
+        <p>
+          <strong>Inner Transactions: </strong>
+          <span>${tx['inner-txns'].length}</span>
+        </p>
+      `}
       <p>
         <strong>Block: </strong>
         <span>${tx['confirmed-round']}</span>
