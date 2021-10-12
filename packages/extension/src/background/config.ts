@@ -1,3 +1,4 @@
+import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { Ledger, Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
@@ -49,8 +50,8 @@ export class Settings {
     return injectedNetworks;
   }
 
-  private static setInjectedHeaders(ledger: LedgerTemplate) {
-    if (!this.backend_settings.InjectedNetworks[ledger.name]) {
+  private static setInjectedHeaders(ledger: LedgerTemplate, isCheckOnly?: boolean) {
+    if (!this.backend_settings.InjectedNetworks[ledger.name] && !isCheckOnly) {
       console.log('Error: Ledger headers can not be updated. Ledger not available.');
       return;
     }
@@ -93,8 +94,9 @@ export class Settings {
     // Setup port splits for algod and indexer - used in sandbox installs
     const parsedAlgodUrlObj = parseUrlServerAndPort(ledger.algodUrl)
     const parsedIndexerUrlObj = parseUrlServerAndPort(ledger.indexerUrl);
-
-    this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = {
+    
+    // Add algod links
+    const injectedAlgod = {
       url: parsedAlgodUrlObj.server || `${defaultUrl}/algod`,
       port: parsedAlgodUrlObj.port,
       apiKey: headersAlgod || headers,
@@ -102,14 +104,24 @@ export class Settings {
     };
 
     // Add the indexer links
-    this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = {
+    const injectedIndexer = {
       url: parsedIndexerUrlObj.server || `${defaultUrl}/indexer`,
       port: parsedIndexerUrlObj.port,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
     };
 
-    this.backend_settings.InjectedNetworks[ledger.name].headers = headers;
+    if (isCheckOnly) { 
+      return {
+        'algod': injectedAlgod,
+        'indexer': injectedIndexer
+      }
+    }
+    else {
+      this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = injectedAlgod;
+      this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = injectedIndexer; 
+      this.backend_settings.InjectedNetworks[ledger.name].headers = headers;
+    }
   }
 
   public static addInjectedNetwork(ledger: LedgerTemplate) {
@@ -120,6 +132,7 @@ export class Settings {
     };
 
     this.setInjectedHeaders(ledger);
+    logging.log(`Added Network:\n${JSON.stringify(this.backend_settings.InjectedNetworks[ledger.name],null,1)}`,2);
   }
 
   public static updateInjectedNetwork(updatedLedger: LedgerTemplate) {
@@ -131,6 +144,8 @@ export class Settings {
     this.backend_settings.InjectedNetworks[updatedLedger.name].indexerUrl =
       updatedLedger.indexerUrl;
     this.setInjectedHeaders(updatedLedger);
+
+    logging.log(`Updated Network:\n${JSON.stringify(this.backend_settings.InjectedNetworks[updatedLedger.name],null,1)}`,2);
   }
 
   public static getBackendParams(ledger: string, api: API) {
@@ -151,5 +166,10 @@ export class Settings {
       apiKey: this.backend_settings.InjectedNetworks[ledger][api].apiKey,
       headers: this.backend_settings.InjectedNetworks[ledger][api].headers,
     };
+  }
+
+  public static checkNetwork(ledger: LedgerTemplate) {
+    const networks  = this.setInjectedHeaders(ledger, true);
+    return networks;
   }
 }
