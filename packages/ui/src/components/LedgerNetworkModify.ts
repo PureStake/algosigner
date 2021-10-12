@@ -24,6 +24,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const [networkAlgodUrl, setNetworkAlgodUrl] = useState<string>(props.algodUrl || '');
   const [networkIndexerUrl, setNetworkIndexerUrl] = useState<string>(props.indexerUrl || '');
   const [networkHeaders, setNetworkHeaders] = useState<string>(props.headers || '');
+  const [checkStatus, setCheckStatus] = useState<string>('gray');
 
   const deleteNetwork = (pwd: string) => {
     setLoading(true);
@@ -56,6 +57,32 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     });
   };
 
+  const checkNetwork = () => {
+    setLoading(true);
+    setAuthError('');
+    setCheckStatus('');
+    setError('');
+    const params = {
+      name: networkName,
+      genesisId: networkId,
+      symbol: networkSymbol,
+      algodUrl: networkAlgodUrl,
+      indexerUrl: networkIndexerUrl,
+      headers: networkHeaders
+    };
+    
+    sendMessage(JsonRpcMethod.CheckNetwork, params, (response) => {
+      setLoading(false);
+      if (response.algod.error || response.indexer.error) {
+        // Error display
+        setCheckStatus('red');
+        setError(JSON.stringify({'algod': response.algod.error || 'Success', 'indexer': response.indexer.error || 'Success'}));
+      } else {
+        setCheckStatus('green');
+      }
+    });
+  }
+
   const saveNetwork = (pwd) => {
     setLoading(true);
     setAuthError('');
@@ -71,6 +98,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     };
 
     sendMessage(JsonRpcMethod.SaveNetwork, params, function (response) {
+      setLoading(false);
       if (response.error) {
         // Error display
         console.log(response.error);
@@ -95,6 +123,16 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     () => html`
       <div>
         <div class="network-modify">
+          <div style="float: right; font-size: small; margin: -4px 4px 0px 0px;">
+            <button
+              style="background-color: rgb(240 240 240 / .1); border-color: rgba(200, 200, 200, 0.3); border-width: 1px; border-radius: 4px; cursor: pointer; font-size: smaller;"
+              id="checkNetwork"
+              onClick=${() => {checkNetwork()}}
+              >
+                Check URLs
+                <i style="padding-left: 3px; font-size: medium; color: ${checkStatus}" class="far fa-check-circle green"></i>
+            </button>
+          </div>
           <label>Display Name</label>
           <input
             id="networkName"

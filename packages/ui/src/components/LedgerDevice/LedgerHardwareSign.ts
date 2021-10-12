@@ -32,8 +32,8 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           if (response.error) {
             setError(response.error);
           } else {
-            getBaseSupportedLedgers().forEach((l) => {
-              if (response.transaction.genesisID === l['genesisId']) {
+            getBaseSupportedLedgers().forEach((l) => { 
+              if (response.genesisID === l['genesisId']) {
                 setLedger(l['name']);
 
                 // Update the ledger dropdown to the signing one
@@ -44,9 +44,8 @@ const LedgerHardwareSign: FunctionalComponent = () => {
             });
 
             // Update account value to the signer
-            setAccount(response.transaction.from);
+            setAccount(response.from);
 
-            // Set the visible transaction
             setTxn(response);
           }
         });
@@ -55,7 +54,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
         logging.log(`${JSON.stringify(ex)}`, 2);
       }
     }
-  });
+  }, []);
 
   const ledgerSignTransaction = () => {
     setLoading(true);
@@ -124,7 +123,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                   <${TxPay}
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     account=${account}
                     ledger=${ledger}
                   />
@@ -134,7 +133,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                   <${TxKeyreg}
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     account=${account}
                     ledger=${ledger}
                   />
@@ -145,7 +144,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
                     dt=${txn.txDerivedTypeText}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     account=${account}
                     ledger=${ledger}
                   />
@@ -156,7 +155,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
                     dt=${txn.txDerivedTypeText}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     da=${txn.displayAmount}
                     un=${txn.unitName}
                     account=${account}
@@ -168,7 +167,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                   <${TxAfrz}
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     account=${account}
                     ledger=${ledger}
                   />
@@ -178,7 +177,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                   <${TxAppl}
                     tx=${txn.transaction}
                     vo=${txn.validityObject}
-                    fee=${txn.estimatedFee}
+                    estFee=${txn.estimatedFee}
                     account=${account}
                     ledger=${ledger}
                   />

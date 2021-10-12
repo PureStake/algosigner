@@ -15,11 +15,24 @@ const portURLs = [
     ['https://[::/128]:4001','https://[::/128]','4001'],
     ['https://[0:0:0:0:0:0:0:0]:4001','https://[::]','4001'],
     ['https://subdomain.domain.com:4001','https://subdomain.domain.com','4001'],
-    ['https://subdomain.domain.com:4001/foo/bar','https://subdomain.domain.com','4001'],
-    ['https://user:pass@subdomain.domain.com:4001/foo/bar?index=1&limit=10','https://user:pass@subdomain.domain.com','4001']
+    ['https://subdomain.domain.com:4001/foo/bar','https://subdomain.domain.com/foo/bar','4001'],
+    ['https://user:pass@subdomain.domain.com:4001/foo/bar?index=1&limit=10','https://user:pass@subdomain.domain.com/foo/bar','4001']
 ];
 test.each(portURLs)(
     'Validate URLs with ports (%s)',
+    (inputUrl, expectedServer, expectedPort) => {
+        const result = parseUrlServerAndPort(inputUrl);
+        expect(result["server"]).toBe(expectedServer);
+        expect(result["port"]).toBe(expectedPort);
+    }
+);
+
+const pathURLs = [
+    ['https://betanet-algorand.api.purestake.io/ps2','https://betanet-algorand.api.purestake.io/ps2',''],
+    ['https://betanet-algorand.api.purestake.io/idx2','https://betanet-algorand.api.purestake.io/idx2',''],
+];
+test.each(pathURLs)(
+    'Validate URLs with paths (%s)',
     (inputUrl, expectedServer, expectedPort) => {
         const result = parseUrlServerAndPort(inputUrl);
         expect(result["server"]).toBe(expectedServer);
@@ -36,8 +49,8 @@ const noPortURLs = [
     ['https://[::/128]','https://[::/128]',''],
     ['https://[0:0:0:0:0:0:0:0]','https://[::]',''],
     ['https://subdomain.domain.com','https://subdomain.domain.com',''],
-    ['https://subdomain.domain.com/foo/bar','https://subdomain.domain.com',''],
-    ['https://user:pass@subdomain.domain.com/foo/bar?index=1&limit=10','https://user:pass@subdomain.domain.com','']
+    ['https://subdomain.domain.com/foo/bar','https://subdomain.domain.com/foo/bar',''],
+    ['https://user:pass@subdomain.domain.com/foo/bar?index=1&limit=10','https://user:pass@subdomain.domain.com/foo/bar','']
 ];
 test.each(noPortURLs)(
     'Validate URLs without ports (%s)',
@@ -72,8 +85,8 @@ const noProtocolURLs = [
     ['[::/128]:4001','[::/128]','4001'],
     ['[0:0:0:0:0:0:0:0]:4001','[0:0:0:0:0:0:0:0]','4001'],
     ['subdomain.domain.com:4001','subdomain.domain.com','4001'],
-    ['subdomain.domain.com:4001/foo/bar','subdomain.domain.com','4001'],
-    ['user:pass@subdomain.domain.com:4001/foo/bar?index=1&limit=10','user:pass@subdomain.domain.com','4001']
+    ['subdomain.domain.com:4001/foo/bar','subdomain.domain.com/foo/bar','4001'],
+    ['user:pass@subdomain.domain.com:4001/foo/bar?index=1&limit=10','user:pass@subdomain.domain.com/foo/bar','4001']
 ];
 test.each(noProtocolURLs)(
     'Validate URLs without protocols (%s)',
