@@ -17,6 +17,8 @@ const openNetworkMenu = async () => {
   await extensionPage.waitForTimeout(500);
 }
 
+jest.setTimeout(20000);
+
 describe('Wallet Setup', () => {
   beforeAll(async () => {
     await openExtension();
@@ -88,7 +90,6 @@ describe('Create and Test Custom Networks', () => {
   });
 
   test('Test Deleting Networks', async () => {
-    jest.setTimeout(20000);
     await openNetworkMenu();
 
     // Delete E2ENet
