@@ -320,8 +320,7 @@ export class Task {
         if (transactionWraps.length > 1) {
           if (
             !transactionWraps.every(
-              (wrap) =>
-                transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+              (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
             const e = new NoDifferentLedgers();
@@ -411,7 +410,7 @@ export class Task {
       // sendResponse(request);
       MessageApi.send(request);
     }
-  }
+  };
 
   public static methods(): {
     [key: string]: {
@@ -667,7 +666,11 @@ export class Task {
           }
         },
         // handle-wallet-transactions
-        [JsonRpcMethod.SignWalletTransaction]: async (d: any, resolve: Function, reject: Function) => {
+        [JsonRpcMethod.SignWalletTransaction]: async (
+          d: any,
+          resolve: Function,
+          reject: Function
+        ) => {
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
             d.body.params.transactionsOrGroups;
 
@@ -1236,8 +1239,7 @@ export class Task {
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
                     );
-                  }
-                  else {
+                  } else {
                     hardwareAccounts.push(account.address);
                   }
                 }
@@ -1277,9 +1279,15 @@ export class Task {
                       } else {
                         signedBlob = partiallySignedBlobs[0];
                       }
+                      const b64Obj = byteArrayToBase64(signedBlob);
+
+                      signedTxs[index] = {
+                        txID: txID,
+                        blob: b64Obj,
+                      };
                     } else {
                       const address = wrap.transaction.from;
-                      if(recoveredAccounts[address]) {
+                      if (recoveredAccounts[address]) {
                         signedBlob = tx.signTxn(recoveredAccounts[address].sk);
                         const b64Obj = byteArrayToBase64(signedBlob);
 
@@ -1287,13 +1295,14 @@ export class Task {
                           txID: txID,
                           blob: b64Obj,
                         };
-                      }
-                      else if(hardwareAccounts.some((a) => a === address)) {
+                      } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
-                        if(!singleGroup){
-                          throw Error("Ledger hardware device signing not available for multiple transactions.");
+                        if (!singleGroup) {
+                          throw Error(
+                            'Ledger hardware device signing not available for multiple transactions.'
+                          );
                         }
-                        
+
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
                         // This will be where the transaction presented to the user
                         message.body.params.transaction = wrap;
@@ -1302,14 +1311,17 @@ export class Task {
                         // We will need to hold the response to dApps
                         holdResponse = true;
 
-                        InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
-                          // We only have to worry about possible errors here
-                          if ('error' in response) {
-                            // Cancel the hold response since errors needs to be returned
-                            holdResponse = false;
-                            message.error = response.error;
+                        InternalMethods[JsonRpcMethod.LedgerSignTransaction](
+                          message,
+                          (response) => {
+                            // We only have to worry about possible errors here
+                            if ('error' in response) {
+                              // Cancel the hold response since errors needs to be returned
+                              holdResponse = false;
+                              message.error = response.error;
+                            }
                           }
-                        });
+                        );
                       }
                     }
                   } catch (e) {
@@ -1485,21 +1497,21 @@ export class Task {
             const responseIndexer = {};
 
             await Task.fetchAPI(`${urlAlgod}${sendPathAlgod}`, paramsAlgod)
-            .then((response) => {
-              responseAlgod['message'] = response['message'] || response;
-            })
-            .catch((error) => {
-              responseAlgod['error'] = error.message || error;
-            });
+              .then((response) => {
+                responseAlgod['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseAlgod['error'] = error.message || error;
+              });
 
             await Task.fetchAPI(`${urlIndexer}${sendPathIndexer}`, paramsIndexer)
-            .then((response) => {
-              responseIndexer['message'] = response['message'] || response;
-            })
-            .catch((error) => {
-              responseIndexer['error'] = error.message || error;
-            });
-            sendResponse({'algod': responseAlgod, 'indexer': responseIndexer});
+              .then((response) => {
+                responseIndexer['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseIndexer['error'] = error.message || error;
+              });
+            sendResponse({ algod: responseAlgod, indexer: responseIndexer });
           });
           return true;
         },
@@ -1519,19 +1531,18 @@ export class Task {
               return;
             }
 
-            // V1 style transactions will only have 1 transaction and we can use the response. 
+            // V1 style transactions will only have 1 transaction and we can use the response.
             // V2 style transactions will have a transaction in the response.transaction object
-            // and wek only need the one transaction since Ledger doesn't multisign 
-            let txWrap = internalResponse; 
-            if(txWrap.transaction && txWrap.transaction.transaction){
+            // and wek only need the one transaction since Ledger doesn't multisign
+            let txWrap = internalResponse;
+            if (txWrap.transaction && txWrap.transaction.transaction) {
               txWrap = txWrap.transaction;
             }
-            
+
             // Send response or grab params to calculate an estimated fee if there isn't one
-            if(txWrap.estimatedFee) {
+            if (txWrap.estimatedFee) {
               sendResponse(txWrap);
-            }
-            else {
+            } else {
               const conn = Settings.getBackendParams(
                 getLedgerFromGenesisId(txWrap.transaction.genesisID),
                 API.Algod
@@ -1543,12 +1554,12 @@ export class Task {
                 },
                 method: 'GET',
               };
-    
+
               let url = conn.url;
               if (conn.port.length > 0) url += ':' + conn.port;
-              Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {      
-                if(txWrap.transaction.fee === params['min-fee']) {
-                  // This object was built on front end and fee should be 0 to prevent higher fees. 
+              Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+                if (txWrap.transaction.fee === params['min-fee']) {
+                  // This object was built on front end and fee should be 0 to prevent higher fees.
                   txWrap.transaction.fee = 0;
                 }
                 calculateEstimatedFee(txWrap, params);
