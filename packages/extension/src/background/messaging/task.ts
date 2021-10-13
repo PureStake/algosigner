@@ -320,8 +320,7 @@ export class Task {
         if (transactionWraps.length > 1) {
           if (
             !transactionWraps.every(
-              (wrap) =>
-                transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+              (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
             const e = new NoDifferentLedgers();
@@ -411,7 +410,7 @@ export class Task {
       // sendResponse(request);
       MessageApi.send(request);
     }
-  }
+  };
 
   public static methods(): {
     [key: string]: {
@@ -667,7 +666,11 @@ export class Task {
           }
         },
         // handle-wallet-transactions
-        [JsonRpcMethod.SignWalletTransaction]: async (d: any, resolve: Function, reject: Function) => {
+        [JsonRpcMethod.SignWalletTransaction]: async (
+          d: any,
+          resolve: Function,
+          reject: Function
+        ) => {
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
             d.body.params.transactionsOrGroups;
 
@@ -1174,6 +1177,7 @@ export class Task {
           const transactionObjs = walletTransactions.map((walletTx) =>
             algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn))
           );
+          let holdResponse = false;
 
           const signedTxs = [];
           const signErrors = [];
@@ -1223,14 +1227,21 @@ export class Task {
                 message.error = RequestErrors.UnsupportedLedger;
                 MessageApi.send(message);
               }
+
+              const hardwareAccounts = [];
+
               // Find addresses to send algos from
               // We store them using the public address as dictionary key
               for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                const address = unlockedValue[ledger][i].address;
-                if (neededAccounts.includes(address)) {
-                  recoveredAccounts[address] = algosdk.mnemonicToSecretKey(
-                    unlockedValue[ledger][i].mnemonic
-                  );
+                const account = unlockedValue[ledger][i];
+                if (neededAccounts.includes(account.address)) {
+                  if (!account.isHardware) {
+                    recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
+                      unlockedValue[ledger][i].mnemonic
+                    );
+                  } else {
+                    hardwareAccounts.push(account.address);
+                  }
                 }
               }
 
@@ -1268,16 +1279,51 @@ export class Task {
                       } else {
                         signedBlob = partiallySignedBlobs[0];
                       }
+                      const b64Obj = byteArrayToBase64(signedBlob);
+
+                      signedTxs[index] = {
+                        txID: txID,
+                        blob: b64Obj,
+                      };
                     } else {
                       const address = wrap.transaction.from;
-                      signedBlob = tx.signTxn(recoveredAccounts[address].sk);
-                    }
-                    const b64Obj = byteArrayToBase64(signedBlob);
+                      if (recoveredAccounts[address]) {
+                        signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                        const b64Obj = byteArrayToBase64(signedBlob);
 
-                    signedTxs[index] = {
-                      txID: txID,
-                      blob: b64Obj,
-                    };
+                        signedTxs[index] = {
+                          txID: txID,
+                          blob: b64Obj,
+                        };
+                      } else if (hardwareAccounts.some((a) => a === address)) {
+                        // Limit to single group transactions
+                        if (!singleGroup) {
+                          throw Error(
+                            'Ledger hardware device signing not available for multiple transactions.'
+                          );
+                        }
+
+                        // Now that we know it is a single group adjust the transaction property to be the current wrap
+                        // This will be where the transaction presented to the user
+                        message.body.params.transaction = wrap;
+
+                        // The account is hardware based. We need to open the extension in tab to connect.
+                        // We will need to hold the response to dApps
+                        holdResponse = true;
+
+                        InternalMethods[JsonRpcMethod.LedgerSignTransaction](
+                          message,
+                          (response) => {
+                            // We only have to worry about possible errors here
+                            if ('error' in response) {
+                              // Cancel the hold response since errors needs to be returned
+                              holdResponse = false;
+                              message.error = response.error;
+                            }
+                          }
+                        );
+                      }
+                    }
                   } catch (e) {
                     logging.log(`Signing failed. ${e.message}`);
                     signErrors[index] = e.message;
@@ -1341,7 +1387,11 @@ export class Task {
                 message.response = response;
                 // Clean class saved request
                 delete Task.requests[responseOriginTabID];
-                MessageApi.send(message);
+
+                // Hardware signing will defer the response
+                if (!holdResponse) {
+                  MessageApi.send(message);
+                }
               }
             });
           } catch {
@@ -1422,6 +1472,49 @@ export class Task {
         [JsonRpcMethod.SaveNetwork]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
         },
+        [JsonRpcMethod.CheckNetwork]: (request: any, sendResponse: Function) => {
+          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {
+            let urlAlgod = networks.algod.url;
+            if (networks.algod.port.length > 0) urlAlgod += ':' + networks.algod.port;
+            let urlIndexer = networks.indexer.url;
+            if (networks.indexer.port.length > 0) urlIndexer += ':' + networks.indexer.port;
+            const sendPathAlgod = `/v2/status/`;
+            const sendPathIndexer = '/v2/transactions?limit=1';
+            const paramsAlgod: any = {
+              headers: {
+                ...networks.algod.headers,
+              },
+              method: 'GET',
+            };
+            const paramsIndexer: any = {
+              headers: {
+                ...networks.indexer.headers,
+              },
+              method: 'GET',
+            };
+
+            const responseAlgod = {};
+            const responseIndexer = {};
+
+            await Task.fetchAPI(`${urlAlgod}${sendPathAlgod}`, paramsAlgod)
+              .then((response) => {
+                responseAlgod['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseAlgod['error'] = error.message || error;
+              });
+
+            await Task.fetchAPI(`${urlIndexer}${sendPathIndexer}`, paramsIndexer)
+              .then((response) => {
+                responseIndexer['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseIndexer['error'] = error.message || error;
+              });
+            sendResponse({ algod: responseAlgod, indexer: responseIndexer });
+          });
+          return true;
+        },
         [JsonRpcMethod.DeleteNetwork]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.DeleteNetwork](request, sendResponse);
         },
@@ -1432,7 +1525,49 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerLinkAddress](request, sendResponse);
         },
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
+          InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
+            if (internalResponse.error) {
+              sendResponse(internalResponse);
+              return;
+            }
+
+            // V1 style transactions will only have 1 transaction and we can use the response.
+            // V2 style transactions will have a transaction in the response.transaction object
+            // and wek only need the one transaction since Ledger doesn't multisign
+            let txWrap = internalResponse;
+            if (txWrap.transaction && txWrap.transaction.transaction) {
+              txWrap = txWrap.transaction;
+            }
+
+            // Send response or grab params to calculate an estimated fee if there isn't one
+            if (txWrap.estimatedFee) {
+              sendResponse(txWrap);
+            } else {
+              const conn = Settings.getBackendParams(
+                getLedgerFromGenesisId(txWrap.transaction.genesisID),
+                API.Algod
+              );
+              const sendPath = '/v2/transactions/params';
+              const fetchParams: any = {
+                headers: {
+                  ...conn.headers,
+                },
+                method: 'GET',
+              };
+
+              let url = conn.url;
+              if (conn.port.length > 0) url += ':' + conn.port;
+              Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+                if (txWrap.transaction.fee === params['min-fee']) {
+                  // This object was built on front end and fee should be 0 to prevent higher fees.
+                  txWrap.transaction.fee = 0;
+                }
+                calculateEstimatedFee(txWrap, params);
+                sendResponse(txWrap);
+              });
+            }
+          });
+          return true;
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {

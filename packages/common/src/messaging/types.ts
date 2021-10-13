@@ -37,6 +37,7 @@ export enum JsonRpcMethod {
   SignSendTransaction = 'sign-send-transaction',
   ChangeLedger = 'change-ledger',
   SaveNetwork = 'save-network',
+  CheckNetwork = 'check-network',
   DeleteNetwork = 'delete-network',
   GetLedgers = 'get-ledgers',
 

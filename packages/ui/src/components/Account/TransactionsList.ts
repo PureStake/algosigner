@@ -14,6 +14,14 @@ import TxAfrz from 'components/TransactionDetail/TxAfrz';
 import TxAppl from 'components/TransactionDetail/TxAppl';
 
 const BACKGROUND_REFRESH_TIMER: number = 10000;
+const INNER_TXN_DESCRIPTIONS = {
+  axfer: 'Asset Transfer',
+  pay: 'Payment',
+  afrz: 'Asset Freeze',
+  keyreg: 'Key Registration',
+  acfg: 'Asset Config',
+  appl: 'Application',
+};
 
 const TransactionsList: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
@@ -111,7 +119,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     fetchApi();
   };
 
-  const getTxInfo = (tx, date) => {
+  const getTxInfo = (tx, date): any => {
     function getTime(date, roundTime) {
       const MINUTESTHRESHOLD = 60000;
       const HOURSTHRESHOLD = 3600000;
@@ -139,7 +147,10 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       }
     }
 
+    const id = tx.id;
+    const time = getTime(date, tx['round-time']);
     let title, subtitle, info;
+
     switch (tx['tx-type']) {
       case 'pay':
         info = tx['payment-transaction'].amount / 1e6 + ' Algos';
@@ -161,15 +172,14 @@ const TransactionsList: FunctionalComponent = (props: any) => {
       case 'axfer':
         info = tx['asset-transfer-transaction']['amount'];
         store.getAssetDetails(ledger, address, (assets) => {
-          const id = tx['asset-transfer-transaction']['asset-id'];    
+          const id = tx['asset-transfer-transaction']['asset-id'];
 
           // Check if the asset has not been deleted before getting info about it
-          if (assets[id]) {     
+          if (assets[id]) {
             const dec = assets[id].decimals || 0;
             const amount = info / Math.pow(10, dec);
             info = `${amount} ${assets[id].unitName}`;
           }
-
         });
         // TODO Close-to txs
         // Clawback if there is a sender in the transfer object
@@ -211,21 +221,47 @@ const TransactionsList: FunctionalComponent = (props: any) => {
         break;
     }
 
+    return {
+      title,
+      subtitle,
+      info,
+      id,
+      time,
+    };
+  };
+
+  const getTxTemplate = (tx, date) => {
+    const { title, subtitle, info, id, time } = getTxInfo(tx, date);
     return html`
-      <div style="display: flex; justify-content: space-between;" data-transaction-id="${tx.id}">
+      <div style="display: flex; justify-content: space-between;" data-transaction-id="${id}">
         <div style="max-width: 60%; white-space: nowrap;">
-          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light"> ${subtitle} </h2>
+          <h2 class="subtitle is-size-7 is-uppercase has-text-grey-light">${subtitle}</h2>
           <h1 style="text-overflow: ellipsis; overflow: hidden;" class="title is-size-6">
             ${title}
           </h1>
         </div>
         <div class="has-text-right">
-          <h2 class="subtitle is-size-7 has-text-grey-light is-uppercase">
-            ${getTime(date, tx['round-time'])}
-          </h2>
+          <h2 class="subtitle is-size-7 has-text-grey-light is-uppercase">${time}</h2>
           <h1 class="title is-size-6">${info}</h1>
         </div>
       </div>
+      ${tx['inner-txns'] &&
+      html`
+        <span class="has-text-grey-light is-size-7 is-uppercase pt-2">Inner Transaction(s):</span>
+        <div class="is-size-7 pl-1">
+          ${tx['inner-txns'].map(
+            (inner: any) => {
+              const innerTxInfo = getTxInfo(inner, date);
+              return html`
+                <div class="is-flex is-justify-content-space-between">
+                  <i class="fas fa-angle-double-right mr-1" aria-hidden="true" />
+                  <span class="is-uppercase">${INNER_TXN_DESCRIPTIONS[inner['tx-type']]}</span>
+                  <div class="has-text-right is-flex-grow-1">${innerTxInfo.info}</div>
+                </div>
+              `;}
+          )}
+        </div>
+      `}
     `;
   };
 
@@ -324,7 +360,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
             style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
             onClick=${() => handleClick(tx)}
           >
-            ${getTxInfo(tx, date)}
+            ${getTxTemplate(tx, date)}
           </div>
         `
       )}

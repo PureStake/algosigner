@@ -865,6 +865,16 @@ export class InternalMethods {
     return true;
   }
 
+  public static [JsonRpcMethod.CheckNetwork](request: any, sendResponse: Function) {
+    try {
+      const networks =  Settings.checkNetwork(request.body.params)
+      sendResponse(networks);
+    }
+    catch (e) {
+      sendResponse({ error: e.message });
+    }
+  }
+  
   public static [JsonRpcMethod.SaveNetwork](request: any, sendResponse: Function) {
     try {
       // If we have a passphrase then we are modifying.

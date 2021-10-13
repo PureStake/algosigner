@@ -1,6 +1,6 @@
 {
   "name": "algorand-test-project",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
   "description": "Repository for tests",
@@ -16,6 +16,7 @@
     "basic-dapp": "jest --group=basic-dapp",
     "ui": "jest --group=ui",
     "ui/accounts": "jest --group=ui/accounts",
+    "ui/networks": "jest --group=ui/networks",
     "ui/transactions": "jest --group=ui/transactions",
     "app-dapp": "jest --group=app-dapp",
     "dapp": "jest --group=dapp --group=-dapp-storage",

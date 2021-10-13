@@ -41,8 +41,12 @@ export function parseUrlServerAndPort(urlInput:string):any {
                 }
                 if (urlObj.protocol) {
                     returnUrlObj.server = urlObj.protocol + '//' + returnUrlObj.server;
-                }
+                }        
+                if (urlObj.pathname && urlObj.pathname.replace(/^\//, '').length > 0) {               
+                    returnUrlObj.server = returnUrlObj.server + '/' + urlObj.pathname.replace(/^\//, '');
+                }               
             }
+            logging.log(`Parsed URL:${JSON.stringify(returnUrlObj)}`,2);
         }
         catch {
             urlSplit = true;
@@ -52,6 +56,7 @@ export function parseUrlServerAndPort(urlInput:string):any {
     if (urlSplit) {
         try {
             const urlArr = urlInput.split(':');
+            let modifiedPath = '';
             // A url with a 2 or 3 length may have either a user:pass or port
             // If there is an 8 length split it is an IPv6 address without a port or protocol
             if (urlArr.length > 1) {
@@ -61,9 +66,22 @@ export function parseUrlServerAndPort(urlInput:string):any {
                     const potentialPort = urlArr.pop();
                     // Quick cast to ensure port is numeric but a string
                     returnUrlObj.port = (parseInt(potentialPort) || undefined).toString();
+                  
+                    // If we fail to pull off the port or the last component had more info
+                    // add the remainder back to the url without the querystring
+                    if(!returnUrlObj.port || returnUrlObj.port.length < potentialPort.length) {
+                        modifiedPath = potentialPort.replace(returnUrlObj.port,'').split('?')[0];
+                    }
                 }    
             }
             returnUrlObj.server = urlArr.join(':');
+            
+            // If we have a path after the port removal add it
+            if(modifiedPath) {
+                returnUrlObj.server += modifiedPath;
+            }
+
+            logging.log(`Split URL:${JSON.stringify(returnUrlObj)}`,2);
         }
         catch {
             returnUrlObj.server = urlInput;
