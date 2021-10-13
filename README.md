@@ -50,6 +50,14 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
   - Each inner array should still contain transactions **belonging to a same group**
   - Updated error message when providing an incorrect format of transactions to reflect this change
 
+### 1.6.6 Patch
+- Support for Ledger device signing v2 transactions
+- Added check URLs button to Network Configuration
+- Support for Inner Transactions Display
+- Fix for custom networks with pathnames
+- Fix for rare infinite loop locking extension sign page
+- Fix for display of estimated fee for Ledger device sign
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)

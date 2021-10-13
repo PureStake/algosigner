@@ -1,5 +1,5 @@
 const algosdk = require('algosdk');
-const { extension } = require('./constants');
+const { extension, wallet } = require('./constants');
 
 // UI Helpers
 async function openExtension() {
@@ -43,6 +43,13 @@ async function closeModal() {
   await extensionPage.waitForSelector(modalSelector);
   await extensionPage.click(modalSelector);
   await extensionPage.waitForTimeout(250);
+}
+
+async function inputPassword() {
+  await extensionPage.waitForSelector('#enterPassword');
+  await extensionPage.type('#enterPassword', wallet.password);
+  await extensionPage.click('#authButton');
+  await extensionPage.waitForFunction(() => !document.querySelector('#authButton'));
 }
 
 // Dapp Helpers
@@ -160,6 +167,7 @@ module.exports = {
   openAccountDetails,
   goBack,
   closeModal,
+  inputPassword,
   getPopup,
   getLedgerSuggestedParams,
   sendTransaction,

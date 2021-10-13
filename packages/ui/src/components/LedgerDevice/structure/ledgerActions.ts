@@ -99,6 +99,29 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     }
   }
 
+  // Remap of BigInt values from strings creates issues in this cast 
+  // So forcing the two affected fields (amount,assetTotal) back to numeric
+  if ('amount' in txn) {
+    const parsed = parseInt(txn['amount']);
+    // Soft check on the result mating the txn amount because it is an expect int to string compare
+    if (isNaN(parsed) || parsed != txn['amount']) { 
+      errors.push('Ledger transaction amount must be an integer.'); 
+    }
+    else {
+      txn['amount'] = parsed;
+    }
+  }
+  if ('assetTotal' in txn) {
+    const parsed = parseInt(txn['assetTotal']);
+    // Soft check on the result mating the txn assetTotal because it is an expect int to string compare
+    if (isNaN(parsed) || parsed != txn['assetTotal']) { 
+      errors.push('Ledger transaction assetTotal must be an integer.'); 
+    }
+    else {
+      txn['assetTotal'] = parsed;
+    }
+  }
+
   const builtTxn = new algosdk.Transaction(txn);
 
   if ('group' in txn && txn['group']) {

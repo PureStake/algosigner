@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { openAccountDetails, goBack, closeModal, getPopup } = require('./helpers');
+const { openAccountDetails, goBack, closeModal, inputPassword, getPopup } = require('./helpers');
 
 // Common Tests
 async function WelcomePage() {
@@ -50,12 +50,10 @@ async function ImportAccount(account) {
     await extensionPage.type('#accountName', account.name);
     await extensionPage.type('#enterMnemonic', account.mnemonic);
     await extensionPage.click('#nextStep');
-    await extensionPage.waitForSelector('#enterPassword');
-    await extensionPage.type('#enterPassword', wallet.password);
-    await extensionPage.click('#authButton');
+    await inputPassword();
   });
 
-  VerifyAccount(account);
+  await VerifyAccount(account);
 }
 
 async function VerifyAccount(account) {

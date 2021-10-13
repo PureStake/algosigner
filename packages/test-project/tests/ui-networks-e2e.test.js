@@ -1,0 +1,115 @@
+/**
+ * Basic e2e tests for the AlgoSigner UI
+ *
+ * @group ui/networks
+ */
+
+const { accounts } = require('./common/constants');
+const { openExtension, inputPassword } = require('./common/helpers');
+const { CreateWallet, ImportAccount } = require('./common/tests');
+
+const openNetworkMenu = async () => {
+  await extensionPage.waitForTimeout(500);
+  await extensionPage.waitForSelector('#options-menu');
+  await extensionPage.click('#options-menu');
+  await extensionPage.waitForSelector('#showNetworkConfiguration');
+  await extensionPage.click('#showNetworkConfiguration');
+  await extensionPage.waitForTimeout(500);
+}
+
+jest.setTimeout(20000);
+
+describe('Wallet Setup', () => {
+  beforeAll(async () => {
+    await openExtension();
+  });
+
+  CreateWallet();
+});
+
+// Create a new network in AlgoSigner
+describe('Create and Test Custom Networks', () => {
+  const NetworkConfig = {
+    name: 'E2ENet',
+    id: 'testnet-v1.0',
+    algod: 'https://algosigner.api.purestake.io/testnet/algod',
+    indexer: 'https://algosigner.api.purestake.io/testnet/indexer',
+  };
+
+  const e2eNetSelector = `button#select${NetworkConfig.name}`;
+  const otherNet = 'OtherNet'
+  const otherNetSelector = `button#select${otherNet}`;
+
+  test('Add Custom TestNet and test it', async () => {
+    // Create network
+    await openNetworkMenu();
+    await extensionPage.click('#createNetwork');
+
+    // Fill wrong network config
+    await extensionPage.type('#networkName', NetworkConfig.name);
+    await extensionPage.type('#networkId', NetworkConfig.id);
+    await extensionPage.type('#networkAlgodUrl', NetworkConfig.indexer);
+    await extensionPage.type('#networkIndexerUrl', NetworkConfig.indexer);
+
+    // Test connection rejected
+    await extensionPage.click('#checkNetwork');
+    await extensionPage.waitForSelector('#networkError');
+    await expect(extensionPage.$eval('#networkError', (e) => e.innerText)).resolves.toContain(
+      'algod'
+    );
+    await expect(extensionPage.$eval('#networkError', (e) => e.innerText)).resolves.toContain(
+      'indexer'
+    );
+
+    // Fill correct network config
+    await extensionPage.evaluate(() => (document.getElementById('networkAlgodUrl').value = ''));
+    await extensionPage.type('#networkAlgodUrl', NetworkConfig.algod);
+
+    // Test connection succesful
+    await extensionPage.click('#checkNetwork');
+    await extensionPage.waitForSelector('#saveNetwork:not(disabled)');
+    await expect(extensionPage.select('#networkError')).rejects.toThrow();
+
+    // // Save Network
+    await extensionPage.waitForTimeout(2000);
+    await extensionPage.click('#saveNetwork:not(disabled)');
+  });
+
+  ImportAccount(accounts.ui);
+
+  test('Test Modifying Network', async () => {
+    await openNetworkMenu();
+    
+    // Change Network name
+    await extensionPage.click(`button#select${NetworkConfig.name}`);
+    await extensionPage.waitForSelector('#networkName');
+    await extensionPage.evaluate(() => (document.getElementById('networkName').value = ''));
+    await extensionPage.type('#networkName', otherNet);
+    await extensionPage.click('#saveNetwork');
+    await inputPassword();
+  });
+
+  test('Test Deleting Networks', async () => {
+    await openNetworkMenu();
+
+    // Delete E2ENet
+    await extensionPage.waitForSelector(e2eNetSelector);
+    await extensionPage.click(e2eNetSelector);
+    await extensionPage.click('#deleteNetwork');
+    await inputPassword();
+
+    // Check network was deleted
+    await openNetworkMenu();
+    await expect(extensionPage.select(e2eNetSelector)).rejects.toThrow();
+
+    // Delete OtherNet
+    await extensionPage.waitForSelector(otherNetSelector);
+    await extensionPage.click(otherNetSelector);
+    await extensionPage.click('#deleteNetwork');
+    await inputPassword();
+
+    // Check network was deleted
+    await openNetworkMenu();
+    await expect(extensionPage.select(otherNetSelector)).rejects.toThrow();
+  });
+});
