@@ -68,20 +68,25 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
-      headers: networkHeaders
+      headers: networkHeaders,
     };
-    
+
     sendMessage(JsonRpcMethod.CheckNetwork, params, (response) => {
       setLoading(false);
       if (response.algod.error || response.indexer.error) {
         // Error display
         setCheckStatus('red');
-        setError(JSON.stringify({'algod': response.algod.error || 'Success', 'indexer': response.indexer.error || 'Success'}));
+        setError(
+          JSON.stringify({
+            algod: response.algod.error || 'Success',
+            indexer: response.indexer.error || 'Success',
+          })
+        );
       } else {
         setCheckStatus('green');
       }
     });
-  }
+  };
 
   const saveNetwork = (pwd) => {
     setLoading(true);
@@ -110,7 +115,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     });
   };
 
-  const evaluateNextStep = (pwd) => {
+  const evaluateNextStep = (pwd: string) => {
     if (isDeleting) {
       deleteNetwork(pwd);
     } else {
@@ -127,10 +132,15 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             <button
               style="background-color: rgb(240 240 240 / .1); border-color: rgba(200, 200, 200, 0.3); border-width: 1px; border-radius: 4px; cursor: pointer; font-size: smaller;"
               id="checkNetwork"
-              onClick=${() => {checkNetwork()}}
-              >
-                Check URLs
-                <i style="padding-left: 3px; font-size: medium; color: ${checkStatus}" class="far fa-check-circle green"></i>
+              onClick=${() => {
+                checkNetwork();
+              }}
+            >
+              Check URLs
+              <i
+                style="font-size: medium; color: ${checkStatus}"
+                class="far fa-check-circle pl-1"
+              ></i>
             </button>
           </div>
           <label>Display Name</label>
@@ -172,7 +182,6 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
               href="https://github.com/PureStake/algosigner/blob/develop/docs/add-network.md#network-headers"
             >
               <i
-                id="cogheader"
                 class="fas fa-info-circle ml-1 has-tooltip-arrow has-tooltip-text-left has-tooltip-fade"
                 data-tooltip="${NETWORK_HEADERS_TOOLTIP}"
               />
@@ -194,10 +203,11 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       </div>
       ${isEditable &&
       html`
-        <div className="network-modify-footer mt-2">
+        <div className="network-modify-footer is-flex is-justify-content-space-between mt-2">
           <button
             id="deleteNetwork"
-            class="button is-danger is-link"
+            class="button is-danger is-flex-grow-1"
+            disabled="${loading}"
             onClick=${() => {
               setIsDeleting(true);
               setAskAuth(true);
@@ -207,7 +217,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
           </button>
           <button
             id="saveNetwork"
-            class="button is-link"
+            class="button is-link is-flex-grow-1 ml-1"
+            disabled="${loading}"
             onClick=${() => {
               if (isModify) {
                 setAskAuth(true);
@@ -238,7 +249,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
         `}
         ${error !== undefined &&
         error.length > 0 &&
-        html`<p class="mt-3 has-text-danger" style="height: 1.5em;"> ${error} </p>`}
+        html`<span id="networkError" class="mt-3 has-text-danger">${error}</span>`}
       `}
     `
   );
