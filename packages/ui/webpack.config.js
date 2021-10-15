@@ -1,6 +1,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 // function srcPath(subdir) {
 //   return path.join(__dirname, './', subdir);
@@ -56,6 +57,9 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'styles.css',
     }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -67,6 +71,10 @@ module.exports = {
       'stream': require.resolve('readable-stream'),
     },
     modules: [path.resolve('./src'), path.resolve('./node_modules')],
+    fallback: {
+      buffer: require.resolve('buffer'),
+      crypto: false,
+    },
   },
   devServer: {
     contentBase: './dist',
