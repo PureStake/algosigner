@@ -58,6 +58,10 @@ Added ability to use a Ledger device to add public addresses into AlgoSigner and
 - Fix for rare infinite loop locking extension sign page
 - Fix for display of estimated fee for Ledger device sign
 
+### 1.6.7 Patch
+- Update to SDK v1.12.0
+- Update to Webpack 5
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)

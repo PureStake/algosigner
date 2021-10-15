@@ -2,7 +2,7 @@ const { wallet, extension } = require('./constants');
 const { openAccountDetails, goBack, closeModal, inputPassword, getPopup } = require('./helpers');
 
 // Common Tests
-async function WelcomePage() {
+function WelcomePage() {
   test('Welcome Page Title', async () => {
     await expect(extensionPage.title()).resolves.toMatch(extension.name);
   });
@@ -17,7 +17,7 @@ async function WelcomePage() {
   });
 }
 
-async function SetPassword() {
+function SetPassword() {
   test('Set new Wallet Password', async () => {
     await extensionPage.type('#setPassword', wallet.password);
     await extensionPage.type('#confirmPassword', wallet.password);
@@ -25,7 +25,7 @@ async function SetPassword() {
   });
 }
 
-async function SelectTestNetLedger() {
+function SelectTestNetLedger() {
   test('Switch Ledger', async () => {
     await extensionPage.waitForSelector('#selectLedger');
     await extensionPage.click('#selectLedger');
@@ -34,13 +34,13 @@ async function SelectTestNetLedger() {
   });
 }
 
-async function CreateWallet() {
+function CreateWallet() {
   WelcomePage();
   SetPassword();
   SelectTestNetLedger();
 }
 
-async function ImportAccount(account) {
+function ImportAccount(account) {
   test(`Import Account ${account.name}`, async () => {
     await extensionPage.waitForSelector('#addAccount');
     await extensionPage.click('#addAccount');
@@ -51,12 +51,13 @@ async function ImportAccount(account) {
     await extensionPage.type('#enterMnemonic', account.mnemonic);
     await extensionPage.click('#nextStep');
     await inputPassword();
+    await extensionPage.waitForTimeout(2000);
   });
 
-  await VerifyAccount(account);
+  VerifyAccount(account);
 }
 
-async function VerifyAccount(account) {
+function VerifyAccount(account) {
   test(`Verify Account Info (${account.name})`, async () => {
     await openAccountDetails(account);
     await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
@@ -67,7 +68,7 @@ async function VerifyAccount(account) {
   });
 }
 
-async function DeleteAccount(account) {
+function DeleteAccount(account) {
   test(`Delete Account (${account.name})`, async () => {
     await openAccountDetails(account);
     await extensionPage.click('#deleteAccount');
@@ -84,7 +85,7 @@ async function DeleteAccount(account) {
 }
 
 // Dapp Tests
-async function ConnectAlgoSigner() {
+function ConnectAlgoSigner() {
   test('Expose Authorize Functions', async () => {
     async function authorizeDapp() {
       const popup = await getPopup();

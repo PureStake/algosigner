@@ -9,13 +9,13 @@ const { openExtension, inputPassword } = require('./common/helpers');
 const { CreateWallet, ImportAccount } = require('./common/tests');
 
 const openNetworkMenu = async () => {
-  await extensionPage.waitForTimeout(500);
+  await extensionPage.waitForTimeout(1000);
   await extensionPage.waitForSelector('#options-menu');
   await extensionPage.click('#options-menu');
   await extensionPage.waitForSelector('#showNetworkConfiguration');
   await extensionPage.click('#showNetworkConfiguration');
-  await extensionPage.waitForTimeout(500);
-}
+  await extensionPage.waitForTimeout(1000);
+};
 
 jest.setTimeout(20000);
 
@@ -37,7 +37,7 @@ describe('Create and Test Custom Networks', () => {
   };
 
   const e2eNetSelector = `button#select${NetworkConfig.name}`;
-  const otherNet = 'OtherNet'
+  const otherNet = 'OtherNet';
   const otherNetSelector = `button#select${otherNet}`;
 
   test('Add Custom TestNet and test it', async () => {
@@ -63,6 +63,7 @@ describe('Create and Test Custom Networks', () => {
 
     // Fill correct network config
     await extensionPage.evaluate(() => (document.getElementById('networkAlgodUrl').value = ''));
+    await extensionPage.waitForTimeout(1000);
     await extensionPage.type('#networkAlgodUrl', NetworkConfig.algod);
 
     // Test connection succesful
@@ -71,7 +72,7 @@ describe('Create and Test Custom Networks', () => {
     await expect(extensionPage.select('#networkError')).rejects.toThrow();
 
     // // Save Network
-    await extensionPage.waitForTimeout(2000);
+    await extensionPage.waitForTimeout(1000);
     await extensionPage.click('#saveNetwork:not(disabled)');
   });
 
@@ -79,9 +80,10 @@ describe('Create and Test Custom Networks', () => {
 
   test('Test Modifying Network', async () => {
     await openNetworkMenu();
-    
+
     // Change Network name
-    await extensionPage.click(`button#select${NetworkConfig.name}`);
+    await extensionPage.waitForSelector(e2eNetSelector);
+    await extensionPage.click(e2eNetSelector);
     await extensionPage.waitForSelector('#networkName');
     await extensionPage.evaluate(() => (document.getElementById('networkName').value = ''));
     await extensionPage.type('#networkName', otherNet);

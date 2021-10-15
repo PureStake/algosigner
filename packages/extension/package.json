@@ -1,6 +1,6 @@
 {
   "name": "algosigner-extension",
-  "version": "1.6.6",
+  "version": "1.6.7",
   "author": "https://developer.purestake.io",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
@@ -14,13 +14,14 @@
     "jest": "27.0.0",
     "jest-webextension-mock": "^3.6.1",
     "ts-jest": "^27.0.0",
-    "ts-loader": "^7.0.5",
-    "typescript": "^4.3.2",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.11"
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.4",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0"
   },
   "dependencies": {
-    "algosdk": "1.11.1"
+    "algosdk": "1.12.0",
+    "buffer": "^6.0.3"
   },
   "scripts": {
     "build": "npm run clean && npm run bundle && npm run copy",
