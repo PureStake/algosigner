@@ -40,6 +40,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const [approvals, setApprovals] = useState<Array<boolean>>([]);
   const [accountNames, setAccountNames] = useState<Array<string>>([]);
   let transactionWraps: Array<any> = [];
+  let currentGroup: number = 0;
+  let totalGroups: number = 0;
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((request, sender: any) => {
@@ -148,7 +150,10 @@ const SignWalletTransaction: FunctionalComponent = () => {
   };
 
   if (request.body && !transactionWraps.length) {
-    transactionWraps = request.body.params.transactionWraps;
+    const params = request.body.params;
+    transactionWraps = params.transactionWraps;
+    currentGroup = params.currentGroup + 1;
+    totalGroups = params.groupsToSign ? params.groupsToSign.length : 1;
 
     // Initialize per-tx variables
     if (!approvals.length && transactionWraps.length) {
@@ -280,6 +285,11 @@ const SignWalletTransaction: FunctionalComponent = () => {
     >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
+        ${totalGroups > 1 && html`
+          <span style="float: right;">
+            Signing group ${currentGroup} out of ${totalGroups}
+          </span>
+        `}
       </div>
       ${request.body &&
       html`
