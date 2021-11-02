@@ -471,6 +471,7 @@ AlgoSigner.send({
 The dApp may return the following errors in case of users rejecting requests, or errors in the request:
 
 ```
+    UserRejected = '[RequestError.UserRejected] The extension user does not authorize the request.',
     NotAuthorized = '[RequestError.NotAuthorized] The extension user does not authorize the request.',
     UnsupportedAlgod = '[RequestError.UnsupportedAlgod] The provided method is not supported.',
     UnsupportedLedger = '[RequestError.UnsupportedLedger] The provided ledger is not supported.',
