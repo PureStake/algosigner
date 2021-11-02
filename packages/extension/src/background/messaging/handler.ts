@@ -2,7 +2,7 @@ import { MessageApi } from './api';
 import { Task } from './task';
 import encryptionWrap from '../encryptionWrap';
 import { isFromExtension } from '@algosigner/common/utils';
-import { RequestErrors } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/types';
 import { JsonRpcMethod, MessageSource } from '@algosigner/common/messaging/types';
 import logging from '@algosigner/common/logging';
 
@@ -41,7 +41,7 @@ export class OnMessageHandler extends RequestValidation {
     try {
       request.origin = new URL(sender.url).origin;
     } catch (e) {
-      request.error = RequestErrors.NotAuthorized;
+      request.error = RequestError.NotAuthorized;
       MessageApi.send(request);
       return;
     }
@@ -79,9 +79,7 @@ export class OnMessageHandler extends RequestValidation {
       // Reject message if there's no wallet
       new encryptionWrap('').checkStorage((exist: boolean) => {
         if (!exist) {
-          request.error = {
-            message: RequestErrors.NotAuthorized,
-          };
+          request.error = RequestError.NotAuthorized;
           MessageApi.send(request);
         } else {
           if (OnMessageHandler.isAuthorization(method) && OnMessageHandler.isPublic(method)) {
@@ -100,7 +98,7 @@ export class OnMessageHandler extends RequestValidation {
                 });
             } else {
               // Origin is not authorized
-              request.error = RequestErrors.NotAuthorized;
+              request.error = RequestError.NotAuthorized;
               MessageApi.send(request);
             }
           }

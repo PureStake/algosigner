@@ -216,7 +216,7 @@ Due to limitations in Chrome internal messaging, AlgoSigner encodes the transact
 - Custom networks beta support is now in AlgoSigner.
 - AlgoSigner.accounts(ledger) has changed such that calls now accept names that have been added to the user's custom network list as valid ledger names.
   - A non-matching ledger name will result in a error:
-    - [RequestErrors.UnsupportedLedger] The provided ledger is not supported.
+    - [RequestError.UnsupportedLedger] The provided ledger is not supported.
   - An empty request will result with an error:
     - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisId":"testnet-v1.0"}].
 - Transaction requests will require a valid matching "genesisId", even for custom networks.
@@ -285,11 +285,10 @@ AlgoSigner.send({
 The dApp may return the following errors in case of users rejecting requests, or errors in the request:
 
 ```
-    NotAuthorized = '[RequestErrors.NotAuthorized] The extension user does not authorize the request.',
-    InvalidTransactionParams = '[RequestErrors.InvalidTransactionParams] Invalid transaction parameters.',
-    UnsupportedAlgod = '[RequestErrors.UnsupportedAlgod] The provided method is not supported.',
-    UnsupportedLedger = '[RequestErrors.UnsupportedLedger] The provided ledger is not supported.',
-    Undefined = '[RequestErrors.Undefined] An undefined error occurred.',
+    NotAuthorized = '[RequestError.NotAuthorized] The extension user does not authorize the request.',
+    UnsupportedAlgod = '[RequestError.UnsupportedAlgod] The provided method is not supported.',
+    UnsupportedLedger = '[RequestError.UnsupportedLedger] The provided ledger is not supported.',
+    Undefined = '[RequestError.Undefined] An undefined error occurred.',
 ```
 
 Errors may be passed back to the dApp from the Algorand JS SDK if a transaction is valid, but has some other issue - for example, insufficient funds in the sending account.

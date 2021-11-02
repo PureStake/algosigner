@@ -4,7 +4,7 @@ import { MessageBuilder } from '../messaging/builder';
 
 import {
   Transaction,
-  RequestErrors,
+  RequestError,
   MultisigTransaction,
   WalletTransaction,
 } from '@algosigner/common/types';
@@ -18,30 +18,30 @@ export class Task extends Runtime implements ITask {
     return MessageBuilder.promise(JsonRpcMethod.Authorization, {});
   }
 
-  accounts(params: JsonPayload, error: RequestErrors = RequestErrors.None): Promise<JsonPayload> {
+  accounts(params: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.Accounts, params as JsonPayload, error);
   }
 
-  sign(params: Transaction, error: RequestErrors = RequestErrors.None): Promise<JsonPayload> {
+  sign(params: Transaction, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.SignTransaction, params, error);
   }
 
   signMultisig(
     params: MultisigTransaction,
-    error: RequestErrors = RequestErrors.None
+    error: RequestError = RequestError.None
   ): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.SignMultisigTransaction, params, error);
   }
 
-  send(params: Transaction, error: RequestErrors = RequestErrors.None): Promise<JsonPayload> {
+  send(params: Transaction, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.SendTransaction, params, error);
   }
 
-  algod(params: JsonPayload, error: RequestErrors = RequestErrors.None): Promise<JsonPayload> {
+  algod(params: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.Algod, params, error);
   }
 
-  indexer(params: JsonPayload, error: RequestErrors = RequestErrors.None): Promise<JsonPayload> {
+  indexer(params: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.Indexer, params, error);
   }
 
@@ -55,9 +55,9 @@ export class Task extends Runtime implements ITask {
    */
   signTxn(
     transactionsOrGroups: Array<WalletTransaction>,
-    error: RequestErrors = RequestErrors.None
+    error: RequestError = RequestError.None
   ): Promise<JsonPayload> {
-    const formatError = new Error(RequestErrors.InvalidFormat);
+    const formatError = RequestError.InvalidFormat;
     // We check for empty arrays
     if (!Array.isArray(transactionsOrGroups) || !transactionsOrGroups.length) throw formatError;
     transactionsOrGroups.forEach((txOrGroup) => {

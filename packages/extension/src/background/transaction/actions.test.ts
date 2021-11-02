@@ -111,103 +111,121 @@ test('Validate pay transaction required fields', () => {
   const preTransaction = {
     type: 'pay',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'pay');
   } catch (e) {
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('to');
-  expect(errorMessage).toContain('from');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('to');
+  expect(data).toContain('from');
 });
 test('Validate clawback transaction required fields', () => {
   const preTransaction = {
     type: 'axfer',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('assetIndex');
-  expect(errorMessage).toContain('assetRevocationTarget');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('from');
+  expect(data).toContain('assetIndex');
+  expect(data).toContain('assetRevocationTarget');
 });
 test('Validate accept transaction required fields', () => {
   const preTransaction = {
     type: 'axfer',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('assetIndex');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('from');
+  expect(data).toContain('assetIndex');
 });
 test('Validate create transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('assetTotal');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('from');
+  expect(data).toContain('assetTotal');
 });
 test('Validate destroy transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     console.log(e.message);
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('assetIndex');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('from');
+  expect(data).toContain('assetIndex');
 });
 test('Validate modify asset transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',
   };
-  let errorMessage: string = undefined;
+  let message: string = undefined;
+  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
-    errorMessage = e.message;
+    message = e.message;
+    data = e.data;
   }
-  expect(errorMessage).toContain('firstRound');
-  expect(errorMessage).toContain('lastRound');
-  expect(errorMessage).toContain('genesisID');
-  expect(errorMessage).toContain('genesisHash');
-  expect(errorMessage).toContain('from');
-  expect(errorMessage).toContain('assetIndex');
+  expect(message).toContain('Validation failed');
+  expect(data).toContain('firstRound');
+  expect(data).toContain('lastRound');
+  expect(data).toContain('genesisID');
+  expect(data).toContain('genesisHash');
+  expect(data).toContain('from');
+  expect(data).toContain('assetIndex');
 });

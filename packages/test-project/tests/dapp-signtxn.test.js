@@ -121,7 +121,10 @@ describe('Single and Global Transaction Use cases', () => {
           });
       }, unsignedTransactions)
     ).resolves.toMatchObject({
-      message: expect.stringContaining('No matching account'),
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: expect.any(Number),
+      data: expect.stringContaining(accounts.ui.address),
+      name: expect.stringContaining('SigningError'),
     });
   });
 
@@ -152,6 +155,8 @@ describe('Single and Global Transaction Use cases', () => {
       }, unsignedTransactions)
     ).resolves.toMatchObject({
       message: expect.stringContaining('Signers array should only'),
+      code: expect.any(Number),
+      name: expect.stringContaining('InvalidSigners'),
     });
   });
 
@@ -265,6 +270,42 @@ describe('Group Transactions Use cases', () => {
     const signedTransactions = await signTxn(unsignedTransactions);
     await expect(signedTransactions[2]).toBeNull();
     await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
+  });
+
+  test('Max # of Transactions on Group', async () => {
+    const tx = buildSdkTx({
+      type: 'pay',
+      from: account1.address,
+      to: account2.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+
+    const txArray = [];
+    for (let i = 0; i < 16; i++) {
+      txArray.push(tx);
+    }
+    
+    unsignedTransactions = await algosdk.assignGroupID(txArray);
+    unsignedTransactions[16] = unsignedTransactions[0];
+    unsignedTransactions = unsignedTransactions.map((txn) => prepareWalletTx(txn));
+
+    await expect(
+      dappPage.evaluate((transaction) => {
+        return Promise.resolve(AlgoSigner.signTxn(transaction))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('16 transactions at a time'),
+      code: expect.any(Number),
+      name: expect.stringContaining('TooManyTransactions'),
+    });
   });
 
   // @TODO: Add errors for mismatches, incomplete groups, etc
