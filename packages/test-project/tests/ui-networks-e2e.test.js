@@ -12,8 +12,10 @@ const openNetworkMenu = async () => {
   await extensionPage.waitForTimeout(1000);
   await extensionPage.waitForSelector('#options-menu');
   await extensionPage.click('#options-menu');
+  await extensionPage.click('#options-menu');
   await extensionPage.waitForSelector('#showNetworkConfiguration');
   await extensionPage.click('#showNetworkConfiguration');
+  await extensionPage.waitForSelector('#selectMainNet');
   await extensionPage.waitForTimeout(1000);
 };
 
@@ -74,6 +76,7 @@ describe('Create and Test Custom Networks', () => {
     // // Save Network
     await extensionPage.waitForTimeout(1000);
     await extensionPage.click('#saveNetwork:not(disabled)');
+    await extensionPage.waitForTimeout(2000);
   });
 
   ImportAccount(accounts.ui);
@@ -87,7 +90,8 @@ describe('Create and Test Custom Networks', () => {
     await extensionPage.waitForSelector('#networkName');
     await extensionPage.evaluate(() => (document.getElementById('networkName').value = ''));
     await extensionPage.type('#networkName', otherNet);
-    await extensionPage.click('#saveNetwork');
+    await extensionPage.click('#saveNetwork:not(disabled)');
+    await extensionPage.click('#saveNetwork:not(disabled)');
     await inputPassword();
   });
 

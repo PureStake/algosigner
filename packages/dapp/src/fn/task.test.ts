@@ -1,6 +1,6 @@
 import { Task } from './task';
 import { MessageBuilder } from '../messaging/builder';
-import { RequestErrors } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 jest.mock('../messaging/builder');
@@ -24,7 +24,7 @@ describe('task tests', () => {
       note: 'NOTE',
       to: 'TOACC',
     };
-    const error = RequestErrors.None;
+    const error = RequestError.None;
     const task = new Task();
     task.sign(transaction, error);
     expect(MessageBuilder.promise).toHaveBeenLastCalledWith(
