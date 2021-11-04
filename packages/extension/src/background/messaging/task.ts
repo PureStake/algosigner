@@ -272,7 +272,7 @@ export class Task {
       if (
         validationErrors.length ||
         !transactionWraps.length ||
-        transactionWraps.some((w) => w === undefined)
+        transactionWraps.some((w) => w === undefined || w === null)
       ) {
         // We don't have transaction wraps or we have an building error, reject the transaction.
         let data = '';
