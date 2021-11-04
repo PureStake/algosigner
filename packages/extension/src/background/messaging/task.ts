@@ -272,16 +272,14 @@ export class Task {
       if (
         validationErrors.length ||
         !transactionWraps.length ||
-        transactionWraps.some((w) => w === undefined)
+        transactionWraps.some((w) => w === undefined || w === null)
       ) {
         // We don't have transaction wraps or we have an building error, reject the transaction.
         let data = '';
         let code = 4300;
 
         validationErrors.forEach((error, index) => {
-          data =
-            data +
-            `Validation failed for transaction ${index} due to: ${error.message}.`;
+          data = data + `Validation failed for transaction ${index} due to: ${error.message}.`;
           code = error.code && error.code < code ? error.code : code;
         });
         throw new SigningError(code, data);
@@ -325,7 +323,7 @@ export class Task {
               (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
-            throw new NoDifferentLedgers(); 
+            throw new NoDifferentLedgers();
           }
 
           const groupId = transactionWraps[0].transaction.group;
@@ -671,31 +669,35 @@ export class Task {
         ) => {
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
             d.body.params.transactionsOrGroups;
+          let hasSingleGroup = false;
+          let hasMultipleGroups = false;
 
-          // We check to see if it's a simple or nested array of transactions
-          const singleGroup = (transactionsOrGroups as Array<WalletTransaction>).every(
-            (walletTx) =>
-              !Array.isArray(walletTx) &&
-              typeof walletTx === 'object' &&
-              walletTx.txn &&
-              walletTx.txn.length
-          );
-          const multipleGroups = (transactionsOrGroups as Array<Array<WalletTransaction>>).every(
-            (walletTxArray) =>
-              Array.isArray(walletTxArray) &&
-              walletTxArray.length &&
-              walletTxArray.every(
-                (walletTx) =>
-                  walletTx &&
-                  !Array.isArray(walletTx) &&
-                  typeof walletTx === 'object' &&
-                  walletTx.txn &&
-                  walletTx.txn.length
-              )
-          );
+          if (transactionsOrGroups) {
+            // We check to see if it's a simple or nested array of transactions
+            hasSingleGroup = (transactionsOrGroups as Array<WalletTransaction>).every(
+              (walletTx) =>
+                !Array.isArray(walletTx) &&
+                typeof walletTx === 'object' &&
+                walletTx.txn &&
+                walletTx.txn.length
+            );
+            hasMultipleGroups = (transactionsOrGroups as Array<Array<WalletTransaction>>).every(
+              (walletTxArray) =>
+                Array.isArray(walletTxArray) &&
+                walletTxArray.length &&
+                walletTxArray.every(
+                  (walletTx) =>
+                    walletTx &&
+                    !Array.isArray(walletTx) &&
+                    typeof walletTx === 'object' &&
+                    walletTx.txn &&
+                    walletTx.txn.length
+                )
+            );
+          }
 
           // If none of the formats match up, we throw an error
-          if (!singleGroup && !multipleGroups) {
+          if (!transactionsOrGroups || (!hasSingleGroup && !hasMultipleGroups)) {
             logging.log(RequestError.InvalidFormat.message);
             d.error = RequestError.InvalidFormat;
             reject(d);
@@ -703,7 +705,7 @@ export class Task {
           }
 
           let groupsToSign = [transactionsOrGroups];
-          if (multipleGroups) {
+          if (hasMultipleGroups) {
             groupsToSign = transactionsOrGroups as Array<Array<WalletTransaction>>;
           }
           d.body.params.groupsToSign = groupsToSign;
