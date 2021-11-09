@@ -76,8 +76,8 @@ export class OnMessageHandler extends RequestValidation {
           break;
       }
     } else {
-      // Reject message if there's no wallet
       new encryptionWrap('').checkStorage((exist: boolean) => {
+        // Reject message if there's no wallet
         if (!exist) {
           request.error = RequestError.NotAuthorized;
           MessageApi.send(request);

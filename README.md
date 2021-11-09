@@ -10,6 +10,8 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
+## As of release 1.7.0 does not support incomplete atomic groups signing.
+
 ## 1.6.0 Release
 
 ### Functionality
@@ -87,8 +89,6 @@ Please use v2 when developing new apps and migrate existing apps that are still 
 
 ## Roadmap
 
-- v1 to v2 migration guide
-- Ledger support
 - UI improvements
 - Contribution guidelines
 
