@@ -121,6 +121,13 @@ export class BaseValidatedTxnWrap {
         info: V1_WARNING,
       });
 
+      // We mark atomic transactions as an invalid field for v1
+      if (params['group']) {
+        this.validityObject['group'] = new ValidationResponse({
+          status: ValidationStatus.Invalid,
+        });
+      }
+
       // If we don't have a flatFee or it is falsy and we have a non-zero fee, create a warning.
       if (!params['flatFee'] && params['fee'] && params['fee'] > 0) {
         this.validityObject['flatFee'] = new ValidationResponse({

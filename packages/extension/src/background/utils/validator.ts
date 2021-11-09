@@ -3,7 +3,6 @@ import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { Settings } from '../config';
 
 const STRING_MAX_LENGTH = 1000;
-const GROUP_WARNING = `This is an atomic transaction that's part of an unknown group. Don’t sign it unless it came from a trusted application.`;
 
 ///
 // Validation Status
@@ -120,16 +119,7 @@ export function Validate(field: any, value: any): ValidationResponse {
         (typeof value === 'string' || value instanceof String) &&
         value.length < STRING_MAX_LENGTH
       ) {
-        // Group transactions are dangerous unless the whole group is provided.
-        // v2 flow handles this when the group is indeed provided.
-        if (field === 'group') {
-          return new ValidationResponse({
-            status: ValidationStatus.Dangerous,
-            info: GROUP_WARNING,
-          });
-        } else {
-          return new ValidationResponse({ status: ValidationStatus.Valid });
-        }
+        return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
