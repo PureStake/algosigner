@@ -79,7 +79,8 @@ Developing with v2 Transaction Signing
 - [dApp development guide](docs/dApp-guide.md)
 - [v2 AlgoSigner methods](docs/dApp-integration.md)
 
-Legacy v1 Transaction Signing
+Legacy v1 Transaction Signing is going to be deprecated soon and is available only for reference purposes.
+Please use v2 when developing new apps and migrate existing apps that are still using v1 to v2 as soon as possible.
 
 - [v1 Guide](docs/legacy-signing.md)
 - [v1 AlgoSigner methods](docs/legacy-dApp-integration.md)
