@@ -345,13 +345,6 @@ export class Task {
           if (groupId !== recalculatedGroupID) {
             throw new IncompleteOrDisorderedGroup();
           }
-
-          // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
-          transactionWraps.forEach((wrap) => {
-            wrap.validityObject['group'] = new ValidationResponse({
-              status: ValidationStatus.Valid,
-            });
-          });
         } else {
           const wrap = transactionWraps[0];
           if (
@@ -359,6 +352,10 @@ export class Task {
             (wrap.msigData && wrap.signers && !wrap.signers.length)
           ) {
             throw new InvalidSigners();
+          }
+          // Incomplete atomic transactions are no longer being allowed
+          if (wrap.transaction.group) {
+            throw new IncompleteOrDisorderedGroup();
           }
         }
 
@@ -403,7 +400,6 @@ export class Task {
 
       // Clean class saved request
       delete Task.requests[request.originTabID];
-      // sendResponse(request);
       MessageApi.send(request);
     }
   };

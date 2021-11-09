@@ -10,6 +10,8 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
+## As of release 1.7.0 does not support incomplete atomic groups signing.
+
 ## 1.6.0 Release
 
 ### Functionality
@@ -79,15 +81,14 @@ Developing with v2 Transaction Signing
 - [dApp development guide](docs/dApp-guide.md)
 - [v2 AlgoSigner methods](docs/dApp-integration.md)
 
-Legacy v1 Transaction Signing
+Legacy v1 Transaction Signing is going to be deprecated soon and is available only for reference purposes.
+Please use v2 when developing new apps and migrate existing apps that are still using v1 to v2 as soon as possible.
 
 - [v1 Guide](docs/legacy-signing.md)
 - [v1 AlgoSigner methods](docs/legacy-dApp-integration.md)
 
 ## Roadmap
 
-- v1 to v2 migration guide
-- Ledger support
 - UI improvements
 - Contribution guidelines
 

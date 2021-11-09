@@ -111,8 +111,8 @@ describe('Single and Global Transaction Use cases', () => {
     unsignedTransactions = [txn];
 
     await expect(
-      dappPage.evaluate((transaction) => {
-        return Promise.resolve(AlgoSigner.signTxn(transaction))
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
           .then((data) => {
             return data;
           })
@@ -122,9 +122,9 @@ describe('Single and Global Transaction Use cases', () => {
       }, unsignedTransactions)
     ).resolves.toMatchObject({
       message: expect.stringContaining('There was a problem signing the transaction(s).'),
-      code: expect.any(Number),
-      data: expect.stringContaining(accounts.ui.address),
+      code: 4100,
       name: expect.stringContaining('SigningError'),
+      data: expect.stringContaining(accounts.ui.address),
     });
   });
 
@@ -144,8 +144,8 @@ describe('Single and Global Transaction Use cases', () => {
     unsignedTransactions = [txn];
 
     await expect(
-      dappPage.evaluate((transaction) => {
-        return Promise.resolve(AlgoSigner.signTxn(transaction))
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
           .then((data) => {
             return data;
           })
@@ -155,14 +155,14 @@ describe('Single and Global Transaction Use cases', () => {
       }, unsignedTransactions)
     ).resolves.toMatchObject({
       message: expect.stringContaining('Signers array should only'),
-      code: expect.any(Number),
+      code: 4300,
       name: expect.stringContaining('InvalidSigners'),
     });
   });
 
   // // @TODO: Wallet Transaction Structure check tests
 
-  test('Warning on Group ID for Single Transactions', async () => {
+  test('Reject on Group ID for Single Transactions', async () => {
     const txn = buildSdkTx({
       type: 'pay',
       from: account1.address,
@@ -171,14 +171,23 @@ describe('Single and Global Transaction Use cases', () => {
       ...ledgerParams,
       fee: 1000,
     });
-    unsignedTransactions = [prepareWalletTx(algosdk.assignGroupID([txn])[0])];
+    const groupedTransactions = algosdk.assignGroupID([txn, txn]);
+    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
 
-    await signTxn(unsignedTransactions, async () => {
-      const popup = await getPopup();
-      await popup.waitForSelector('#txAlerts');
-      await expect(
-        popup.$$eval('#danger-tx-list b', (arr) => arr.map((item) => item.innerText.slice(0, -1)))
-      ).resolves.toContain('group');
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('group is incomplete'),
+      code: 4300,
+      name: expect.stringContaining('IncompleteOrDisorderedGroup'),
     });
   });
 
@@ -292,8 +301,8 @@ describe('Group Transactions Use cases', () => {
     unsignedTransactions = unsignedTransactions.map((txn) => prepareWalletTx(txn));
 
     await expect(
-      dappPage.evaluate((transaction) => {
-        return Promise.resolve(AlgoSigner.signTxn(transaction))
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
           .then((data) => {
             return data;
           })
@@ -303,7 +312,7 @@ describe('Group Transactions Use cases', () => {
       }, unsignedTransactions)
     ).resolves.toMatchObject({
       message: expect.stringContaining('16 transactions at a time'),
-      code: expect.any(Number),
+      code: 4201,
       name: expect.stringContaining('TooManyTransactions'),
     });
   });
