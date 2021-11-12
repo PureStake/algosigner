@@ -97,6 +97,19 @@ export const StoreProvider = ({ children }) => {
       }
       callback(assetDetails);
     },
+    clearCache: (callback: Function) => {
+      store.getAvailableLedgers((storedLedgers) => {
+        storedLedgers.forEach((ledger) => {
+          const accounts = store[ledger.name];
+          if (accounts && accounts.length) {
+            store[ledger.name].forEach((account) => {
+              delete account.details;
+            });
+          }
+        });
+      });
+      callback();
+    },
     saveRequest: (request) => {
       store.savedRequest = request;
     },

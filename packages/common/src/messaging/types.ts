@@ -4,6 +4,7 @@ export const JSONRPC_VERSION: string = '2.0';
 
 /* eslint-disable no-unused-vars */
 export enum JsonRpcMethod {
+  // dApp methods
   Heartbeat = 'heartbeat',
   Authorization = 'authorization',
   AuthorizationAllow = 'authorization-allow',
@@ -19,6 +20,7 @@ export enum JsonRpcMethod {
   Algod = 'algod',
   Indexer = 'indexer',
   Accounts = 'accounts',
+
   // UI methods
   CreateWallet = 'create-wallet',
   DeleteWallet = 'delete-wallet',
