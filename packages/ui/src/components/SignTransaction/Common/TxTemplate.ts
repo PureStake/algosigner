@@ -14,9 +14,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
   return html`
     ${vo &&
     html`
-      <section id="txAlerts" class="section py-0">
-        <${TxAlert} vo=${vo} />
-      </section>
+      <${TxAlert} vo=${vo} />
     `}
     <section class="section py-0">
       <div class="box py-2 is-shadowless mb-3" style="background: #eff4f7;">

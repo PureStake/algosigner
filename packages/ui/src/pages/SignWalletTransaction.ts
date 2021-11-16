@@ -89,32 +89,38 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const findAccountNames = (ledger) => {
     const newAccountNames = accountNames.slice();
-    for (let i = 0; i < store[ledger].length; i++) {
-      transactionWraps.forEach((wrap, index) => {
-        const lookupAddress = store[ledger][i].address;
-        const lookupName = store[ledger][i].name;
-        const msigData = wrap.msigData;
-        const signers = wrap.signers;
-        if (signers && !signers.length) {
-          newAccountNames[index] = "Reference Transaction (won't be signed)";
-        } else {
-          if (
-            msigData &&
-            msigData.addrs.includes(lookupAddress) &&
-            (!signers || signers.includes(lookupAddress))
-          ) {
-            if (newAccountNames[index]) {
-              newAccountNames[index] = `${newAccountNames[index]}, ${lookupName}`;
-            } else {
+    if (store[ledger] && store[ledger].length) {
+      for (let i = 0; i < store[ledger].length; i++) {
+        transactionWraps.forEach((wrap, index) => {
+          const lookupAddress = store[ledger][i].address;
+          const lookupName = store[ledger][i].name;
+          const msigData = wrap.msigData;
+          const signers = wrap.signers;
+          if (signers && !signers.length) {
+            newAccountNames[index] = "Reference Transaction (won't be signed)";
+          } else {
+            if (
+              msigData &&
+              msigData.addrs.includes(lookupAddress) &&
+              (!signers || signers.includes(lookupAddress))
+            ) {
+              if (newAccountNames[index]) {
+                newAccountNames[index] = `${newAccountNames[index]}, ${lookupName}`;
+              } else {
+                newAccountNames[index] = lookupName;
+              }
+            } else if (lookupAddress === wrap.transaction.from) {
               newAccountNames[index] = lookupName;
             }
-          } else if (lookupAddress === wrap.transaction.from) {
-            newAccountNames[index] = lookupName;
           }
-        }
-      });
+        });
+      }
+      setAccountNames(newAccountNames);
+    } else {
+      setTimeout(() => {
+        findAccountNames(ledger);
+      }, 100);
     }
-    setAccountNames(newAccountNames);
   };
 
   const flipDropdown = () => {
