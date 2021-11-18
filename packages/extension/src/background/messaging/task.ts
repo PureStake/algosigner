@@ -9,7 +9,7 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus, ValidationResponse } from '../utils/validator';
+import { ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
@@ -462,9 +462,7 @@ export class Task {
             validationError instanceof InvalidTransactionStructure
           ) {
             // We don't have a transaction wrap, but we have a validation error.
-            d.error = {
-              message: validationError.message,
-            };
+            d.error = validationError;
             reject(d);
             return;
           } else if (!transactionWrap || validationError) {
@@ -472,11 +470,15 @@ export class Task {
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
-            d.error = {
-              message:
-                (validationError && validationError.message) ||
-                'Validation failed for transaction. Please verify the properties are valid.',
-            };
+
+            if (validationError && validationError.message) {
+              d.error = validationError;
+            } else {
+              d.error = {
+                message:
+                  'Validation failed for transaction. Please verify the properties are valid.',
+              };
+            }
             reject(d);
           } else if (
             transactionWrap.validityObject &&
@@ -559,9 +561,7 @@ export class Task {
             validationError instanceof InvalidTransactionStructure
           ) {
             // We don't have a transaction wrap, but we have a validation error.
-            d.error = {
-              message: validationError.message,
-            };
+            d.error = validationError;
             reject(d);
             return;
           } else if (!transactionWrap) {
@@ -569,11 +569,16 @@ export class Task {
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
-            d.error = {
-              message:
-                validationError ||
-                'Validation failed for transaction. Please verify the properties are valid.',
-            };
+
+
+            if (validationError && validationError.message) {
+              d.error = validationError;
+            } else {
+              d.error = {
+                message:
+                  'Validation failed for transaction. Please verify the properties are valid.',
+              };
+            }
             reject(d);
           } else if (
             transactionWrap.validityObject &&
