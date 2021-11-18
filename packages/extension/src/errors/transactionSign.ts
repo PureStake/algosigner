@@ -41,10 +41,3 @@ export class PendingTransaction extends RequestError {
     Error.captureStackTrace(this, PendingTransaction);
   }
 }
-
-export class LedgerError extends RequestError {
-  constructor(message?: any) {
-    super(message ? message : 'Another query processing', 4000, 'LedgerError');
-    Error.captureStackTrace(this, LedgerError);
-  }
-}
