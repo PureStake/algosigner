@@ -1465,10 +1465,36 @@ export class Task {
         },
         [JsonRpcMethod.CheckNetwork]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {
-            let urlAlgod = networks.algod.url;
-            if (networks.algod.port.length > 0) urlAlgod += ':' + networks.algod.port;
-            let urlIndexer = networks.indexer.url;
-            if (networks.indexer.port.length > 0) urlIndexer += ':' + networks.indexer.port;
+            //
+            // Pulls apart a URL so that the port number can be injected between the hostname and pathname.
+            //
+            function injectPortNo(inputUrl: string, portNo: string): string {
+                if (portNo.length > 0) {
+                    const parsedUrl = new URL(inputUrl); 
+    
+                    let outputUrl = parsedUrl.hostname;
+                    if (parsedUrl.password) {
+                        outputUrl = parsedUrl.password + '@' + outputUrl;
+                    }
+                    if (parsedUrl.username) {
+                        outputUrl = parsedUrl.username + ':' + outputUrl;
+                    }
+                    if (parsedUrl.protocol) {
+                        outputUrl = parsedUrl.protocol + '//' + outputUrl;
+                    }        
+                    outputUrl += ":" + networks.algod.port;
+                    if (parsedUrl.pathname && parsedUrl.pathname.replace(/^\//, '').length > 0) {               
+                        outputUrl = outputUrl + '/' + parsedUrl.pathname.replace(/^\//, '');
+                    }
+
+                    return outputUrl;
+                }
+                else {
+                    return inputUrl;
+                }
+            }
+            const urlAlgod = injectPortNo(networks.algod.url, networks.algod.port);
+            const urlIndexer = injectPortNo(networks.indexer.url, networks.indexer.port);
             const sendPathAlgod = `/v2/status/`;
             const sendPathIndexer = '/v2/transactions?limit=1';
             const paramsAlgod: any = {
