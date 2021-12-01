@@ -10,63 +10,26 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## As of release 1.7.0 does not support incomplete atomic groups signing.
+# As of release 1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
 
-## 1.6.0 Release
+## 1.7.0 Release
 
-### Functionality
-Added ability to use a Ledger device to add public addresses into AlgoSigner and for signing pay and asset transactions. For information about it how to use you can refer to the new readme.
+### Functionality updates
+As part of maintaining the standards set by the Algorand Foundation, we've begun to deprecate some of the older signing methods provided by AlgoSigner.
+- Incomplete atomic groups signing is no longer supported.
+- v1 Signing (`AlgoSigner.sign()` && `AlgoSigner.multisign()`) will stop being supported in the next major release.
+- Preliminary error codes were added to all of the errors that AlgoSigner could provide.
 
-- [Ledger Readme](docs/ledger.md)
+Also, a `Clear Cache` button was added to the Settings menu to help clear out issues mostly for developers.
 
-### Various Fixes
-- UI general improvements 
-- Improved validation handling in v2 signing 
-- Modified asset verification to use algod 
-- Fixed issue with 404's from asset lookups
-- Modify transactions without an amount to default to 0
-- Fixed issue with creating assets that have zero decimals 
-
-### 1.6.1 Patch
-- `BigInt` support for `amount` and `assetTotal`
-- Algorand JS SDK `v1.9.1` support
-- Various improvements regarding Transaction fields validations and Signing UI clarity
-
-### 1.6.2 Patch
-- Algorand JS SDK `v1.11.1` support
-  - Includes support for `extraPages` field on `Appl` txs
-- Fix display for `Total` amount for `Pay` txs
-- Network Config fix for local Sandbox nodes
-- More descriptive `Appl` and `Axfer` txs on the Transactions list
-
-### 1.6.3 Patch
-- Fix display for `Amount` for `Axfer` Opt-in txs
-
-### 1.6.4 Patch
-- Allow for zero Algo pay transactions in UI
-- Fix stall for `Axfer` in txs list when decimals can't be obtained from the asset
-
-### 1.6.5 Patch
-- Fixed duplicate Port on Custom Network calls
-- Added support for receiving an array of arrays when using `signTxn()`
-  - Each inner array should still contain transactions **belonging to a same group**
-  - Updated error message when providing an incorrect format of transactions to reflect this change
-
-### 1.6.6 Patch
-- Support for Ledger device signing v2 transactions
-- Added check URLs button to Network Configuration
-- Support for Inner Transactions Display
-- Fix for custom networks with pathnames
-- Fix for rare infinite loop locking extension sign page
-- Fix for display of estimated fee for Ledger device sign
-
-### 1.6.7 Patch
-- Update to SDK v1.12.0
-- Update to Webpack 5
+### Other changes
+- Fixed account name sometimes not being visible during signing.
+- When signing more than one group of transactions, there's now an Indicator on which group you're currently signing.
 
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
+- [Ledger Readme](docs/ledger.md)
 
 ## Adding Custom Networks
 
