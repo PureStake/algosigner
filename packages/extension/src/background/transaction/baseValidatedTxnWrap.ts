@@ -9,10 +9,8 @@ type AssetInfo = {
   displayAmount: string;
 };
 
-const BIGINT_FIELDS = [
-  'amount',
-  'assetTotal',
-];
+const BIGINT_FIELDS = ['amount', 'assetTotal'];
+const V1_WARNING = `This signing method is going to be deprecated in favor of the more secure 'AlgoSigner.signTxn()' method.`;
 
 //
 // Base validated transaction wrap
@@ -116,12 +114,27 @@ export class BaseValidatedTxnWrap {
       );
     }
 
-    // If we don't have a flatFee or it is falsy and we have a non-zero fee, create a warning.
-    if (v1Validations && !params['flatFee'] && params['fee'] && params['fee'] > 0) {
-      this.validityObject['flatFee'] = new ValidationResponse({
-        status: ValidationStatus.Warning,
-        info: 'The fee is subject to change without flatFee enabled.',
+    if (v1Validations) {
+      // We mark all v1 transactions as soon to be deprecated
+      this.validityObject['Deprecated'] = new ValidationResponse({
+        status: ValidationStatus.Dangerous,
+        info: V1_WARNING,
       });
+
+      // We mark atomic transactions as an invalid field for v1
+      if (params['group']) {
+        this.validityObject['group'] = new ValidationResponse({
+          status: ValidationStatus.Invalid,
+        });
+      }
+
+      // If we don't have a flatFee or it is falsy and we have a non-zero fee, create a warning.
+      if (!params['flatFee'] && params['fee'] && params['fee'] > 0) {
+        this.validityObject['flatFee'] = new ValidationResponse({
+          status: ValidationStatus.Warning,
+          info: 'The fee is subject to change without flatFee enabled.',
+        });
+      }
     }
   }
 }

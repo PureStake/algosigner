@@ -1,8 +1,9 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState } from 'preact/hooks';
+import { useState, useContext } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { StoreContext } from 'services/StoreContext';
 
 import HeaderComponent from './HeaderComponent';
 import DeleteWallet from 'components/DeleteWallet';
@@ -11,6 +12,7 @@ import { sendMessage } from 'services/Messaging';
 import LedgerNetworksConfiguration from './LedgerNetworksConfiguration';
 
 const SettingsMenu: FunctionalComponent = () => {
+  const store: any = useContext(StoreContext);
   const [active, setActive] = useState<boolean>(false);
   const [currentMenu, setCurrentMenu] = useState<string>('settings');
 
@@ -24,6 +26,13 @@ const SettingsMenu: FunctionalComponent = () => {
   const logout = () => {
     sendMessage(JsonRpcMethod.Logout, {}, function () {
       route('/login');
+    });
+  };
+
+  const clearCache = () => {
+    store.clearCache(() => {
+      route('/wallet');
+      flip();
     });
   };
 
@@ -74,6 +83,7 @@ const SettingsMenu: FunctionalComponent = () => {
             <a class="menu-item" id="showWalletDetails" onClick=${() => setCurrentMenu('delete')}
               >Delete wallet</a
             >
+            <a class="menu-item" onClick=${clearCache}>Clear cache</a>
             <a class="menu-item" onClick=${logout}>Log out</a>
           `
         }

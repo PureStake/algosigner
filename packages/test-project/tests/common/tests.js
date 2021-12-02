@@ -44,6 +44,8 @@ function ImportAccount(account) {
   test(`Import Account ${account.name}`, async () => {
     await extensionPage.waitForSelector('#addAccount');
     await extensionPage.click('#addAccount');
+    await extensionPage.click('#addAccount');
+    await extensionPage.waitForSelector('.modal.is-active');
     await extensionPage.waitForSelector('#importAccount');
     await extensionPage.click('#importAccount');
     await extensionPage.waitForSelector('#accountName');

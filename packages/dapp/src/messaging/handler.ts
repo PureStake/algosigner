@@ -1,5 +1,5 @@
 import { OnMessageListener } from './types';
-import { RequestErrors } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/types';
 
 export class OnMessageHandler {
   static promise(resolve: Function, reject: Function): OnMessageListener {
@@ -9,7 +9,7 @@ export class OnMessageHandler {
       } else if (event.data.response) {
         resolve(event.data.response);
       } else {
-        reject(RequestErrors.Undefined);
+        reject(RequestError.Undefined);
       }
     };
   }

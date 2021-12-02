@@ -2,11 +2,11 @@
 
 AlgoSigner launched in September 2020 with support for basic transaction signing. Over the following releases additional support for Multisig, Atomic, and Application transactions were added.
 
-The combination of the complexity of working with non-basic transaction and the creation of a new standard for Wallets by Foundation led to the creation of (v2 signing)[].
+The combination of the complexity of working with non-basic transaction and the creation of a new standard for Wallets by Foundation led to the creation of [v2 signing](dApp-guide.md).
 
-The initial, v1, transaction signing remains in place and is documented and supported.
+The initial, v1, transaction signing will be deprecated in a future release and is documented only for reference purposes.
 
-(v1 dApp integration)[legacy-dApp-integration.md]
+[v1 dApp integration](legacy-dApp-integration.md)
 
 ### Transition to v2
 - Examples of signing with v2 are available in the [dapp examples repo](https://purestake.github.io/algosigner-dapp-example/index.html).

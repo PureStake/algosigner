@@ -1,6 +1,6 @@
 import algosdk from 'algosdk';
 
-import { RequestErrors, WalletTransaction } from '@algosigner/common/types';
+import { RequestError, WalletTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { API, Ledger } from './types';
 import {
@@ -9,14 +9,15 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus, ValidationResponse } from '../utils/validator';
+import { ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
-import { InvalidTransactionStructure } from '../../errors/validation';
+import { PendingTransaction } from '../../errors/transactionSign';
+import { InvalidTransactionStructure, InvalidFields } from '../../errors/validation';
 import {
   InvalidStructure,
   InvalidMsigStructure,
@@ -25,6 +26,9 @@ import {
   NonMatchingGroup,
   IncompleteOrDisorderedGroup,
   InvalidSigners,
+  TooManyTransactions,
+  LedgerMultipleTransactions,
+  SigningError,
 } from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getSigningAccounts } from '../utils/multisig';
@@ -88,9 +92,7 @@ export class Task {
     // Check if there's a previous request from the same origin
     if (request.originTabID in Task.requests)
       return new Promise((resolve, reject) => {
-        request.error = {
-          message: 'Another query processing',
-        };
+        request.error = PendingTransaction;
         reject(request);
       });
     else Task.requests[request.originTabID] = request;
@@ -188,8 +190,13 @@ export class Task {
     const rawTxArray: Array<any> = [];
     const processedTxArray: Array<any> = [];
     const transactionWraps: Array<BaseValidatedTxnWrap> = [];
-    const validationErrors: Array<Error> = [];
+    const validationErrors: Array<RequestError> = [];
     try {
+      // We check if we're above the maximum supported group size
+      if (walletTransactions.length > TooManyTransactions.MAX_GROUP_SIZE) {
+        throw new TooManyTransactions();
+      }
+
       walletTransactions.forEach((walletTx, index) => {
         try {
           // Runtime type checking
@@ -265,22 +272,17 @@ export class Task {
       if (
         validationErrors.length ||
         !transactionWraps.length ||
-        transactionWraps.some((w) => w === undefined)
+        transactionWraps.some((w) => w === undefined || w === null)
       ) {
         // We don't have transaction wraps or we have an building error, reject the transaction.
-        let errorMessage = '';
-        let validationMessages = '';
+        let data = '';
+        let code = 4300;
 
-        validationErrors.forEach((err, index) => {
-          validationMessages =
-            validationMessages +
-            `\nValidation failed for transaction ${index} due to: ${err.message}`;
+        validationErrors.forEach((error, index) => {
+          data = data + `Validation failed for transaction ${index} due to: ${error.message}.`;
+          code = error.code && error.code < code ? error.code : code;
         });
-        errorMessage +=
-          (validationMessages.length && validationMessages) ||
-          'Please verify the properties are valid.';
-        const error = new Error(errorMessage);
-        throw error;
+        throw new SigningError(code, data);
       } else if (
         transactionWraps.some(
           (tx) =>
@@ -303,18 +305,16 @@ export class Task {
           if (!invalidKeys[index].length) delete invalidKeys[index];
         });
 
-        let errorMessage = '';
-
+        let data = '';
         Object.keys(invalidKeys).forEach((index) => {
-          errorMessage =
-            errorMessage +
+          data =
+            data +
             `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
               index
             ].join(', ')}]. `;
         });
 
-        const error = new Error(errorMessage);
-        throw error;
+        throw new InvalidFields(data);
       } else {
         // Group validations
         if (transactionWraps.length > 1) {
@@ -323,19 +323,16 @@ export class Task {
               (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
-            const e = new NoDifferentLedgers();
-            throw e;
+            throw new NoDifferentLedgers();
           }
 
           const groupId = transactionWraps[0].transaction.group;
           if (!groupId) {
-            const e = new MultipleTxsRequireGroup();
-            throw e;
+            throw new MultipleTxsRequireGroup();
           }
 
           if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-            const e = new NonMatchingGroup();
-            throw e;
+            throw new NonMatchingGroup();
           }
 
           const recreatedGroupTxs = algosdk.assignGroupID(
@@ -346,24 +343,19 @@ export class Task {
           );
           const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
           if (groupId !== recalculatedGroupID) {
-            const e = new IncompleteOrDisorderedGroup();
-            throw e;
+            throw new IncompleteOrDisorderedGroup();
           }
-
-          // If the whole group is provided and verified, we mark the group field as valid instead of dangerous
-          transactionWraps.forEach((wrap) => {
-            wrap.validityObject['group'] = new ValidationResponse({
-              status: ValidationStatus.Valid,
-            });
-          });
         } else {
           const wrap = transactionWraps[0];
           if (
             (!wrap.msigData && wrap.signers) ||
             (wrap.msigData && wrap.signers && !wrap.signers.length)
           ) {
-            const e = new InvalidSigners();
-            throw e;
+            throw new InvalidSigners();
+          }
+          // Incomplete atomic transactions are no longer being allowed
+          if (wrap.transaction.group) {
+            throw new IncompleteOrDisorderedGroup();
           }
         }
 
@@ -394,20 +386,20 @@ export class Task {
         );
       }
     } catch (e) {
-      let errorMessage = 'There was a problem validating the transaction(s): ';
+      let data = '';
 
       if (groupsToSign.length === 1) {
-        errorMessage += e.message;
+        data += e.data;
       } else {
-        errorMessage += `\nOn group ${currentGroup}: [${e.message}].`;
+        data += `On group ${currentGroup}: [${e.data}]. `;
       }
-      logging.log(errorMessage);
+      logging.log(data);
 
-      request.error = { message: errorMessage };
+      request.error = e;
+      request.error.data = data;
 
       // Clean class saved request
       delete Task.requests[request.originTabID];
-      // sendResponse(request);
       MessageApi.send(request);
     }
   };
@@ -470,9 +462,7 @@ export class Task {
             validationError instanceof InvalidTransactionStructure
           ) {
             // We don't have a transaction wrap, but we have a validation error.
-            d.error = {
-              message: validationError.message,
-            };
+            d.error = validationError;
             reject(d);
             return;
           } else if (!transactionWrap || validationError) {
@@ -480,11 +470,15 @@ export class Task {
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
-            d.error = {
-              message:
-                (validationError && validationError.message) ||
-                'Validation failed for transaction. Please verify the properties are valid.',
-            };
+
+            if (validationError && validationError.message) {
+              d.error = validationError;
+            } else {
+              d.error = {
+                message:
+                  'Validation failed for transaction. Please verify the properties are valid.',
+              };
+            }
             reject(d);
           } else if (
             transactionWrap.validityObject &&
@@ -567,9 +561,7 @@ export class Task {
             validationError instanceof InvalidTransactionStructure
           ) {
             // We don't have a transaction wrap, but we have a validation error.
-            d.error = {
-              message: validationError.message,
-            };
+            d.error = validationError;
             reject(d);
             return;
           } else if (!transactionWrap) {
@@ -577,11 +569,16 @@ export class Task {
             logging.log(
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
-            d.error = {
-              message:
-                validationError ||
-                'Validation failed for transaction. Please verify the properties are valid.',
-            };
+
+
+            if (validationError && validationError.message) {
+              d.error = validationError;
+            } else {
+              d.error = {
+                message:
+                  'Validation failed for transaction. Please verify the properties are valid.',
+              };
+            }
             reject(d);
           } else if (
             transactionWrap.validityObject &&
@@ -673,41 +670,43 @@ export class Task {
         ) => {
           const transactionsOrGroups: Array<WalletTransaction> | Array<Array<WalletTransaction>> =
             d.body.params.transactionsOrGroups;
+          let hasSingleGroup = false;
+          let hasMultipleGroups = false;
 
-          // We check to see if it's a simple or nested array of transactions
-          const singleGroup = (transactionsOrGroups as Array<WalletTransaction>).every(
-            (walletTx) =>
-              !Array.isArray(walletTx) &&
-              typeof walletTx === 'object' &&
-              walletTx.txn &&
-              walletTx.txn.length
-          );
-          const multipleGroups = (transactionsOrGroups as Array<Array<WalletTransaction>>).every(
-            (walletTxArray) =>
-              Array.isArray(walletTxArray) &&
-              walletTxArray.length &&
-              walletTxArray.every(
-                (walletTx) =>
-                  walletTx &&
-                  !Array.isArray(walletTx) &&
-                  typeof walletTx === 'object' &&
-                  walletTx.txn &&
-                  walletTx.txn.length
-              )
-          );
+          if (transactionsOrGroups) {
+            // We check to see if it's a simple or nested array of transactions
+            hasSingleGroup = (transactionsOrGroups as Array<WalletTransaction>).every(
+              (walletTx) =>
+                !Array.isArray(walletTx) &&
+                typeof walletTx === 'object' &&
+                walletTx.txn &&
+                walletTx.txn.length
+            );
+            hasMultipleGroups = (transactionsOrGroups as Array<Array<WalletTransaction>>).every(
+              (walletTxArray) =>
+                Array.isArray(walletTxArray) &&
+                walletTxArray.length &&
+                walletTxArray.every(
+                  (walletTx) =>
+                    walletTx &&
+                    !Array.isArray(walletTx) &&
+                    typeof walletTx === 'object' &&
+                    walletTx.txn &&
+                    walletTx.txn.length
+                )
+            );
+          }
 
           // If none of the formats match up, we throw an error
-          if (!singleGroup && !multipleGroups) {
-            logging.log(RequestErrors.InvalidFormat);
-            d.error = {
-              message: RequestErrors.InvalidFormat,
-            };
+          if (!transactionsOrGroups || (!hasSingleGroup && !hasMultipleGroups)) {
+            logging.log(RequestError.InvalidFormat.message);
+            d.error = RequestError.InvalidFormat;
             reject(d);
             return;
           }
 
           let groupsToSign = [transactionsOrGroups];
-          if (multipleGroups) {
+          if (hasMultipleGroups) {
             groupsToSign = transactionsOrGroups as Array<Array<WalletTransaction>>;
           }
           d.body.params.groupsToSign = groupsToSign;
@@ -824,9 +823,7 @@ export class Task {
           const accounts = session.wallet[d.body.params.ledger];
           // If we have requested a ledger but don't have it, respond with an error
           if (accounts === undefined) {
-            d.error = {
-              message: RequestErrors.UnsupportedLedger,
-            };
+            d.error = RequestError.UnsupportedLedger;
             reject(d);
             return;
           }
@@ -864,9 +861,7 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
-          auth.message.error = {
-            message: RequestErrors.NotAuthorized,
-          };
+          auth.message.error = RequestError.UserRejected;
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
@@ -910,7 +905,7 @@ export class Task {
               let account;
 
               if (unlockedValue[ledger] === undefined) {
-                message.error = RequestErrors.UnsupportedLedger;
+                message.error = RequestError.UnsupportedLedger;
                 MessageApi.send(message);
               }
               // Find address to send algos from
@@ -1224,7 +1219,7 @@ export class Task {
               const recoveredAccounts = [];
 
               if (unlockedValue[ledger] === undefined) {
-                message.error = RequestErrors.UnsupportedLedger;
+                message.error = RequestError.UnsupportedLedger;
                 MessageApi.send(message);
               }
 
@@ -1298,9 +1293,7 @@ export class Task {
                       } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
                         if (!singleGroup) {
-                          throw Error(
-                            'Ledger hardware device signing not available for multiple transactions.'
-                          );
+                          throw new LedgerMultipleTransactions();
                         }
 
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
@@ -1333,19 +1326,19 @@ export class Task {
 
               // We check if there were errors signing this group
               if (signErrors.length) {
-                let errorMessage = 'There was a problem signing the transaction(s): ';
+                let data = '';
                 if (transactionObjs.length > 1) {
                   signErrors.forEach((error, index) => {
-                    errorMessage += `\nOn transaction ${index}, the error was: ${error}`;
+                    data += `On transaction ${index}, the error was: ${error}.`;
                   });
                 } else {
-                  errorMessage += signErrors[0];
+                  data += signErrors[0];
                 }
                 if (!singleGroup) {
-                  errorMessage = `\nOn group ${currentGroup}: [${errorMessage}].`;
+                  data = `On group ${currentGroup}: [${data}].`;
                 }
-                message.error = errorMessage;
-                logging.log(errorMessage);
+                message.error = new SigningError(4000, data);
+                logging.log(data);
               } else {
                 signedGroups[currentGroup] = signedTxs;
               }
@@ -1370,7 +1363,7 @@ export class Task {
                   if (singleGroup) {
                     errorMessage += e.message;
                   } else {
-                    errorMessage += `\nOn group ${currentGroup}: [${e.message}].`;
+                    errorMessage += `On group ${currentGroup}: [${e.message}].`;
                   }
                   logging.log(errorMessage);
                   const error = new Error(errorMessage);
@@ -1408,9 +1401,7 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
-          auth.message.error = {
-            message: RequestErrors.NotAuthorized,
-          };
+          auth.message.error = RequestError.NotAuthorized;
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
