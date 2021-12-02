@@ -1,7 +1,7 @@
 import { extensionBrowser } from './chrome';
 import { logging } from './logging';
 import { isFromExtension } from './utils';
-import { RequestErrors, Transaction, TAccount, Note, Amount } from './types';
+import { RequestError, Transaction, TAccount, Note, Amount } from './types';
 
 test('Test chrome reference', () => {
   //@ts-ignore
@@ -18,7 +18,10 @@ test('Test extension parts', () => {
 });
 
 test('Type - RequestErrors undefined test', () => {
-  expect(RequestErrors.Undefined).toBe('[RequestErrors.Undefined] An undefined error occurred.');
+  expect(RequestError.Undefined).toMatchObject({
+    message: '[RequestError.Undefined] An undefined error occurred.',
+    code: 4000,
+  });
 });
 
 test('Type - Transaction', () => {

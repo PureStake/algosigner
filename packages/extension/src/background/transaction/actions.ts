@@ -19,6 +19,7 @@ import { AssetClawbackTransaction } from './axferClawbackTransaction';
 import { KeyregTransaction } from './keyregTransaction';
 import { ApplTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
+import { RequestError } from '@algosigner/common/types';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
@@ -34,7 +35,7 @@ export function getValidatedTxnWrap(
   v1Validations: boolean = true
 ): BaseValidatedTxnWrap {
   let validatedTxnWrap: BaseValidatedTxnWrap = undefined;
-  let error: Error = undefined;
+  let error: RequestError = undefined;
 
   // We clear the txn object of empty fields
   removeEmptyFields(txn);
@@ -55,7 +56,7 @@ export function getValidatedTxnWrap(
         try {
           validatedTxnWrap = new AssetCreateTransaction(txn as IAssetCreateTx, v1Validations);
         } catch (e) {
-          e.message = [error.message, e.message].join(' ');
+          e.data = [error.data, e.data].join(' ');
           error = e;
         }
       }
@@ -63,7 +64,7 @@ export function getValidatedTxnWrap(
         try {
           validatedTxnWrap = new AssetDestroyTransaction(txn as IAssetDestroyTx, v1Validations);
         } catch (e) {
-          e.message = [error.message, e.message].join(' ');
+          e.data = [error.data, e.data].join(' ');
           error = e;
         }
       }

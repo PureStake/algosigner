@@ -40,6 +40,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const [approvals, setApprovals] = useState<Array<boolean>>([]);
   const [accountNames, setAccountNames] = useState<Array<string>>([]);
   let transactionWraps: Array<any> = [];
+  let currentGroup: number = 0;
+  let totalGroups: number = 0;
 
   useEffect(() => {
     chrome.runtime.onMessage.addListener((request, sender: any) => {
@@ -87,32 +89,38 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const findAccountNames = (ledger) => {
     const newAccountNames = accountNames.slice();
-    for (let i = 0; i < store[ledger].length; i++) {
-      transactionWraps.forEach((wrap, index) => {
-        const lookupAddress = store[ledger][i].address;
-        const lookupName = store[ledger][i].name;
-        const msigData = wrap.msigData;
-        const signers = wrap.signers;
-        if (signers && !signers.length) {
-          newAccountNames[index] = "Reference Transaction (won't be signed)";
-        } else {
-          if (
-            msigData &&
-            msigData.addrs.includes(lookupAddress) &&
-            (!signers || signers.includes(lookupAddress))
-          ) {
-            if (newAccountNames[index]) {
-              newAccountNames[index] = `${newAccountNames[index]}, ${lookupName}`;
-            } else {
+    if (store[ledger] && store[ledger].length) {
+      for (let i = 0; i < store[ledger].length; i++) {
+        transactionWraps.forEach((wrap, index) => {
+          const lookupAddress = store[ledger][i].address;
+          const lookupName = store[ledger][i].name;
+          const msigData = wrap.msigData;
+          const signers = wrap.signers;
+          if (signers && !signers.length) {
+            newAccountNames[index] = "Reference Transaction (won't be signed)";
+          } else {
+            if (
+              msigData &&
+              msigData.addrs.includes(lookupAddress) &&
+              (!signers || signers.includes(lookupAddress))
+            ) {
+              if (newAccountNames[index]) {
+                newAccountNames[index] = `${newAccountNames[index]}, ${lookupName}`;
+              } else {
+                newAccountNames[index] = lookupName;
+              }
+            } else if (lookupAddress === wrap.transaction.from) {
               newAccountNames[index] = lookupName;
             }
-          } else if (lookupAddress === wrap.transaction.from) {
-            newAccountNames[index] = lookupName;
           }
-        }
-      });
+        });
+      }
+      setAccountNames(newAccountNames);
+    } else {
+      setTimeout(() => {
+        findAccountNames(ledger);
+      }, 100);
     }
-    setAccountNames(newAccountNames);
   };
 
   const flipDropdown = () => {
@@ -148,7 +156,10 @@ const SignWalletTransaction: FunctionalComponent = () => {
   };
 
   if (request.body && !transactionWraps.length) {
-    transactionWraps = request.body.params.transactionWraps;
+    const params = request.body.params;
+    transactionWraps = params.transactionWraps;
+    currentGroup = params.currentGroup + 1;
+    totalGroups = params.groupsToSign ? params.groupsToSign.length : 1;
 
     // Initialize per-tx variables
     if (!approvals.length && transactionWraps.length) {
@@ -280,6 +291,11 @@ const SignWalletTransaction: FunctionalComponent = () => {
     >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
+        ${totalGroups > 1 && html`
+          <span style="float: right;">
+            Signing group ${currentGroup} out of ${totalGroups}
+          </span>
+        `}
       </div>
       ${request.body &&
       html`
