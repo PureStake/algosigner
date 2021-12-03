@@ -325,7 +325,7 @@ export class InternalMethods {
   public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
     if (session.txnWrap && 'body' in session.txnWrap) {
       const txnBuf = Buffer.from(request.body.params.txn, 'base64');
-      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf) as any;
+      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
       const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
 
       // Get the session transaction

@@ -1297,8 +1297,13 @@ export class Task {
                         }
 
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
-                        // This will be where the transaction presented to the user
+                        // This will be where the transaction presented to the user in the first Ledger popup. 
+                        // This can probably be removed in favor of mapping to the current transaction
                         message.body.params.transaction = wrap;
+
+                        // Set the ledgerGroup in the message to the current group 
+                        // Since the signing will move into the next signs we need to know what group we were supposed to sign
+                        message.body.params.ledgerGroup = parseInt(currentGroup);
 
                         // The account is hardware based. We need to open the extension in tab to connect.
                         // We will need to hold the response to dApps
@@ -1517,46 +1522,7 @@ export class Task {
         },
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
-            if (internalResponse.error) {
-              sendResponse(internalResponse);
-              return;
-            }
-
-            // V1 style transactions will only have 1 transaction and we can use the response.
-            // V2 style transactions will have a transaction in the response.transaction object
-            // and wek only need the one transaction since Ledger doesn't multisign
-            let txWrap = internalResponse;
-            if (txWrap.transaction && txWrap.transaction.transaction) {
-              txWrap = txWrap.transaction;
-            }
-
-            // Send response or grab params to calculate an estimated fee if there isn't one
-            if (txWrap.estimatedFee) {
-              sendResponse(txWrap);
-            } else {
-              const conn = Settings.getBackendParams(
-                getLedgerFromGenesisId(txWrap.transaction.genesisID),
-                API.Algod
-              );
-              const sendPath = '/v2/transactions/params';
-              const fetchParams: any = {
-                headers: {
-                  ...conn.headers,
-                },
-                method: 'GET',
-              };
-
-              let url = conn.url;
-              if (conn.port.length > 0) url += ':' + conn.port;
-              Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
-                if (txWrap.transaction.fee === params['min-fee']) {
-                  // This object was built on front end and fee should be 0 to prevent higher fees.
-                  txWrap.transaction.fee = 0;
-                }
-                calculateEstimatedFee(txWrap, params);
-                sendResponse(txWrap);
-              });
-            }
+            sendResponse(internalResponse);
           });
           return true;
         },
