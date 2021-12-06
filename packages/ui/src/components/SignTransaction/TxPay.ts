@@ -1,9 +1,11 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
+
 import TxTemplate from './Common/TxTemplate';
+import ContactPreview from 'components/ContactPreview';
 
 const TxPay: FunctionalComponent = (props: any) => {
-  const { tx, account, vo, estFee, msig } = props;
+  const { tx, account, contact, vo, estFee, msig } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   const midsection = html`
@@ -12,13 +14,17 @@ const TxPay: FunctionalComponent = (props: any) => {
       <span>Payment</span>
     </p>
 
-    <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
-      <div style="display: flex; justify-content: space-between;">
-        <div>
-          <b style="word-break: break-all;">${tx.to}</b>
+    ${contact && html`<${ContactPreview} contact="${contact}" className="mt-2" />`}
+    ${!contact &&
+    html`
+      <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
+        <div style="display: flex; justify-content: space-between;">
+          <div>
+            <b style="word-break: break-all;">${tx.to}</b>
+          </div>
         </div>
       </div>
-    </div>
+    `}
   `;
 
   const overview = html`

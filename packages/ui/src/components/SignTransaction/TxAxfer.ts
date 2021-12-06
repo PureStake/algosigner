@@ -1,24 +1,22 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
-import TxTemplate from './Common/TxTemplate';
 import { isLedgerBaseSupported } from '@algosigner/common/utils';
 
+import TxTemplate from './Common/TxTemplate';
+import ContactPreview from 'components/ContactPreview';
+
 const TxAxfer: FunctionalComponent = (props: any) => {
-  const { tx, account, ledger, vo, dt, estFee, da, un, msig } = props;
+  const { tx, account, contact, ledger, vo, dt, estFee, da, un, msig } = props;
   const fee = estFee ? estFee : tx['fee'];
 
-  let assetIndex = html`
-    <p
-      style="width: 70%"
-    >
-      ${tx.assetIndex}
-    </p>
-  `;
+  let assetIndex = html`<p style="width: 70%">${tx.assetIndex}</p>`;
   if (isLedgerBaseSupported(ledger)) {
     assetIndex = html`
       <a
         style="width: 70%"
-        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${tx.assetIndex}`}
+        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
+          tx.assetIndex
+        }`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -32,14 +30,18 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       <span><i class="fas fa-arrow-down mr-3"></i></span>
       <span>${dt || 'Asset Transfer'}</span>
     </p>
-
-    <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
-      <div style="display: flex; justify-content: space-between;">
-        <div>
-          <b style="word-break: break-all;">${tx.to}</b>
+    
+    ${contact && html`<${ContactPreview} contact="${contact}" className="mt-2" />`}
+    ${!contact &&
+    html`
+      <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
+        <div style="display: flex; justify-content: space-between;">
+          <div>
+            <b style="word-break: break-all;">${tx.to}</b>
+          </div>
         </div>
       </div>
-    </div>
+    `}
   `;
 
   const overview = html`

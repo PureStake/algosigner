@@ -570,7 +570,6 @@ export class Task {
               'A transaction has failed because of an inability to build the specified transaction type.'
             );
 
-
             if (validationError && validationError.message) {
               d.error = validationError;
             } else {
@@ -1587,6 +1586,15 @@ export class Task {
             sendResponse({ error: 'Account parameters invalid.' });
             return false;
           }
+        },
+        [JsonRpcMethod.GetContacts]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetContacts](request, sendResponse);
+        },
+        [JsonRpcMethod.SaveContact]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.SaveContact](request, sendResponse);
+        },
+        [JsonRpcMethod.DeleteContact]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.DeleteContact](request, sendResponse);
         },
       },
     };

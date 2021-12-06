@@ -1,6 +1,6 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { useState, useContext, useEffect } from 'preact/hooks';
+import { useState, useContext, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
@@ -11,6 +11,8 @@ import { StoreContext } from 'services/StoreContext';
 
 import HeaderView from 'components/HeaderView';
 import Authenticate from 'components/Authenticate';
+import ContactPreview from 'components/ContactPreview';
+import algosdk from 'algosdk';
 
 const SendAlgos: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
@@ -20,15 +22,21 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [ddActive, setDdActive] = useState<boolean>(false);
+  const [modalActive, setModalActive] = useState<boolean>(false);
   // Asset {} is Algos
   const [asset, setAsset] = useState<any>({});
   const [to, setTo] = useState('');
+  const [contacts, setContacts] = useState<Array<any>>([]);
+  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [addingContact, setAddingContact] = useState<boolean>(false);
+  const [newContactName, setNewContactName] = useState<string>('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [txId, setTxId] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const inputRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
@@ -37,7 +45,21 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         break;
       }
     }
+    sendMessage(JsonRpcMethod.GetContacts, {}, function (response) {
+      setLoading(false);
+      if ('error' in response) {
+        setError(response.error.message);
+      } else {
+        setContacts(response);
+      }
+    });
   }, []);
+
+  useEffect(() => {
+    if (inputRef !== null && inputRef.current !== null) {
+      inputRef.current.focus();
+    }
+  }, [selectedContact]);
 
   let ddClass: string = 'dropdown is-right';
   if (ddActive) ddClass += ' is-active';
@@ -90,9 +112,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const decimalsOnTheInput = amountArray.length > 1;
     let amountToSend = BigInt(amountArray[0]) * BigInt(Math.pow(10, decimals));
     if (decimalsOnTheInput) {
-      amountToSend += BigInt(amountArray[1]) * BigInt(Math.pow(10, decimals - amountArray[1].length));
+      amountToSend +=
+        BigInt(amountArray[1]) * BigInt(Math.pow(10, decimals - amountArray[1].length));
     }
-
 
     const params: any = {
       ledger: ledger,
@@ -100,7 +122,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       address: account.address,
       txnParams: {
         from: account.address,
-        to: to,
+        to: to || selectedContact && selectedContact.address,
         note: note,
         amount: amountToSend,
       },
@@ -114,8 +136,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     }
 
     sendMessage(JsonRpcMethod.SignSendTransaction, params, function (response) {
+      setLoading(false);
       if ('error' in response) {
-        setLoading(false);
         switch (response.error) {
           case 'Login Failed':
             setAuthError('Wrong passphrase');
@@ -132,8 +154,65 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     });
   };
 
+  const saveContact = () => {
+    const params = {
+      name: newContactName,
+      address: to,
+    };
+    setLoading(true);
+    setError('');
+    sendMessage(JsonRpcMethod.SaveContact, params, function (response) {
+      setLoading(false);
+      if ('error' in response) {
+        setError(response.error.message);
+      } else {
+        goBack();
+      }
+    });
+  };
+
+  const goBack = () => {
+    route(`/${matches.ledger}/${matches.address}`);
+  }
+
+  const youIndicator = html`<b class="has-text-link">YOU</b>`;
+  const onSelectContact = (c) => {
+    setSelectedContact(c);
+    setTo('');
+    setModalActive(false);
+  };
+  const deselectContact = () => {
+    setTo(selectedContact.address);
+    setSelectedContact(null);
+  }
+
+  const disabled = (!selectedContact && !algosdk.isValidAddress(to)) || +amount < 0;
+
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
+      <div class="modal ${modalActive && 'is-active'}">
+        <div class="modal-background" />
+        <div class="modal-content" style="overflow: hidden;">
+          <div class="box" style="max-height: 100%;">
+            <div class="has-text-centered pb-2"><h5 class="title is-5">Contact List</h5></div>
+            <div style="height: 380px; overflow-y: auto; margin-right: -0.5rem;" class="pr-2">
+              ${contacts.map(
+                (c) =>
+                  html`<${ContactPreview}
+                    contact="${c}"
+                    style="cursor: pointer;"
+                    action="${() => onSelectContact(c)}"
+                  />`
+              )}
+            </div>
+          </div>
+          <button
+            class="modal-close is-large"
+            aria-label="close"
+            onClick=${() => setModalActive(false)}
+          />
+        </div>
+      </div>
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
         title="Send"
@@ -211,22 +290,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           </div>
         </div>
 
-        <b>From</b>
+        <div class="mb-2"><b>From</b></div>
         ${account.details &&
-        html`
-          <div
-            class="box py-2 mt-2 mb-0 is-flex"
-            style="background: #EFF4F7; box-shadow: none; justify-content: space-between; align-items: center;"
-          >
-            <div>
-              <h6 class="title is-6">${account.name}</h6>
-              <h6 class="subtitle is-6">
-                ${account.address.slice(0, 8)}.....${account.address.slice(-8)}
-              </h6>
-            </div>
-            <b class="has-text-link">YOU</b>
-          </div>
-        `}
+        html`<${ContactPreview} contact="${account}" rightSide=${youIndicator} />`}
 
         <div class="has-text-centered has-text-weight-bold my-2">
           <span><i class="fas fa-arrow-down mr-3"></i></span>
@@ -234,15 +300,41 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           ${!('asset-id' in asset) && html` <span>Payment</span> `}
         </div>
 
-        <textarea
-          placeholder="To address"
-          class="textarea has-fixed-size mb-4"
-          style="resize: none;"
-          id="toAddress"
-          value=${to}
-          rows="2"
-          onInput=${(e) => setTo(e.target.value)}
-        />
+        <div>
+          <i
+            class="far fa-address-book px-1"
+            style="position: relative; z-index: 3; top: 8px; left: 92%; cursor: pointer;"
+            aria-label="contacts"
+            onClick=${() => setModalActive(true)}
+          ></i>
+          ${!selectedContact &&
+          html`
+            <textarea
+              placeholder="To address"
+              class="textarea has-fixed-size mb-4 pr-6"
+              style="resize: none; margin-top: -22px;"
+              id="toAddress"
+              value=${to}
+              ref=${inputRef}
+              rows="2"
+              onInput=${(e) => setTo(e.target.value)}
+            />
+          `}
+          ${selectedContact &&
+          html`
+            <i
+              class="far fa-edit px-1"
+              style="position: relative; z-index: 3; top: 7px; left: 80%; cursor: pointer;"
+              aria-label="edit"
+              onClick=${() => deselectContact()}
+            ></i>
+            <${ContactPreview}
+              contact="${selectedContact}"
+              style="margin-top: -22px;"
+              className="mb-4"
+            />
+          `}
+        </div>
         <textarea
           placeholder="Note"
           class="textarea has-fixed-size mb-4"
@@ -257,7 +349,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <button
           id="submitTransfer"
           class="button is-primary is-fullwidth"
-          disabled=${to.length === 0 || +amount < 0}
+          disabled=${disabled}
           onClick=${() => setAskAuth(true)}
         >
           Send!
@@ -285,12 +377,46 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         <div class="modal-background"></div>
         <div class="modal-content">
           <div class="box">
-            <p>Transaction sent with ID</p>
-            <p id="txId" style="word-break: break-all;">${txId}</p>
+            <p>Transaction sent with ID:</p>
+            <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
+            ${!selectedContact && !contacts.find((c) => c.address === to) &&
+            html`
+              <p>This address is not on your contact list, would you like to save it?</p>
+              ${addingContact &&
+              html`
+                <div class="is-flex mt-2">
+                  <input
+                    class="input mr-2"
+                    id="newContactName"
+                    placeholder="Contact name"
+                    value=${newContactName}
+                    onInput=${(e) => setNewContactName(e.target.value)}
+                  />
+                  <button
+                    id="confirmNewContact"
+                    disabled=${loading}
+                    class="button is-success ${loading ? 'is-loading' : ''}"
+                    onClick=${() => saveContact()}
+                  >
+                    Save
+                  </button>
+                </div>
+              `}
+              ${!addingContact &&
+              html`
+                <button
+                  id="saveNewContact"
+                  class="button is-primary is-fullwidth"
+                  onClick=${() => setAddingContact(true)}
+                >
+                  Save new Contact
+                </button>
+              `}
+            `}
             <button
               id="backToAccount"
-              class="button is-primary is-fullwidth mt-4"
-              onClick=${() => route(`/${matches.ledger}/${matches.address}`)}
+              class="button is-primary is-fullwidth mt-2"
+              onClick=${() => goBack()}
             >
               Back to account!
             </button>

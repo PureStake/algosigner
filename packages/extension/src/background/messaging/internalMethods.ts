@@ -108,6 +108,8 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.setStorage('contacts', [], null);
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
       TestNet: [],
@@ -867,14 +869,13 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.CheckNetwork](request: any, sendResponse: Function) {
     try {
-      const networks =  Settings.checkNetwork(request.body.params)
+      const networks = Settings.checkNetwork(request.body.params);
       sendResponse(networks);
-    }
-    catch (e) {
+    } catch (e) {
       sendResponse({ error: e.message });
     }
   }
-  
+
   public static [JsonRpcMethod.SaveNetwork](request: any, sendResponse: Function) {
     try {
       // If we have a passphrase then we are modifying.
@@ -953,6 +954,72 @@ export class InternalMethods {
       sendResponse(availableLedgers);
     });
 
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetContacts](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      sendResponse(contacts);
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.SaveContact](request: any, sendResponse: Function) {
+    const { name, previousName, address } = request.body.params;
+
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      const newContact = {
+        name: name,
+        address: address,
+      };
+      const previousIndex = contacts.findIndex((contact) => contact.name === previousName);
+      if (previousIndex >= 0) {
+        contacts[previousIndex] = newContact;
+      } else {
+        contacts.push(newContact);
+      }
+
+      extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
+        if (isSuccessful) {
+          sendResponse(contacts);
+        } else {
+          sendResponse({ error: 'Lock failed' });
+        }
+      });
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.DeleteContact](request: any, sendResponse: Function) {
+    const { name } = request.body.params;
+
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      const contactIndex = contacts.findIndex((contact) => contact.name === name);
+      contacts.splice(contactIndex, 1);
+
+      extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
+        if (isSuccessful) {
+          sendResponse(contacts);
+        } else {
+          sendResponse({ error: 'Lock failed' });
+        }
+      });
+    });
     return true;
   }
 }

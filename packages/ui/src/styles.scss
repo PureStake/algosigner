@@ -56,6 +56,14 @@ $tooltip-background-opacity: 1;
   cursor: pointer;
 }
 
+.contact-preview.box {
+  display: flex;
+  background: $grey-lighter;
+  box-shadow: none;
+  justify-content: space-between;
+  align-items: center;
+}
+
 @import 'bulma/sass/utilities/_all.sass';
 @import 'bulma/sass/base/_all.sass';
 @import 'bulma/sass/helpers/_all.sass';
