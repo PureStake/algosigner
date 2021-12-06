@@ -149,8 +149,8 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 }
 
 ///
-// Takes an unsigned decoded transaction object and converts strings into Uint8Arrays
-// for note, appArgs, approval and close programs. Then returns a transactionBuilder encoded value
+// Takes the modified transaction request which contains groupsToSign
+// then from that will extract the first walletTransaction of the calculated group
 ///
 function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
   const { groupsToSign, currentGroup, ledgerGroup } = transaction;
