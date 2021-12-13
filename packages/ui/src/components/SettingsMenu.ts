@@ -6,6 +6,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { StoreContext } from 'services/StoreContext';
 
 import HeaderComponent from './HeaderComponent';
+import ContactList from 'components/ContactList';
 import DeleteWallet from 'components/DeleteWallet';
 import Logo from './Logo';
 import { sendMessage } from 'services/Messaging';
@@ -20,6 +21,9 @@ const SettingsMenu: FunctionalComponent = () => {
   if (active) menuClass += ' is-active';
 
   const flip = () => {
+    if (active) {
+      setCurrentMenu('settings');
+    }
     setActive(!active);
   };
 
@@ -38,6 +42,8 @@ const SettingsMenu: FunctionalComponent = () => {
 
   const getSubmenu = () => {
     switch (currentMenu) {
+      case 'contactList':
+        return html`<${ContactList} />`;
       case 'networkConfiguration':
         return html`<${LedgerNetworksConfiguration}
           closeFunction=${() => {
@@ -73,6 +79,13 @@ const SettingsMenu: FunctionalComponent = () => {
         ${
           currentMenu === 'settings' &&
           html`
+            <a
+              class="menu-item"
+              id="showContactList"
+              onClick=${() => setCurrentMenu('contactList')}
+            >
+              Contact List
+            </a>
             <a
               class="menu-item"
               id="showNetworkConfiguration"

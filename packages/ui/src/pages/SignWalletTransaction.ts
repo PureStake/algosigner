@@ -39,6 +39,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const [dropdown, setDropdown] = useState<boolean>(false);
   const [approvals, setApprovals] = useState<Array<boolean>>([]);
   const [accountNames, setAccountNames] = useState<Array<string>>([]);
+  const [contacts, setContacts] = useState<Array<any>>([]);
   let transactionWraps: Array<any> = [];
   let currentGroup: number = 0;
   let totalGroups: number = 0;
@@ -60,6 +61,15 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
     window.addEventListener('beforeunload', deny);
     return () => window.removeEventListener('beforeunload', deny);
+  }, []);
+
+  useEffect(() => {
+    sendMessage(JsonRpcMethod.GetContacts, {}, function (response) {
+      setLoading(false);
+      if (!('error' in response)) {
+        setContacts(response);
+      }
+    });
   }, []);
 
   const sign = (pwd: string) => {
@@ -208,6 +218,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const approvedPercent = (approvedAmount * 100) / transactionWraps.length;
 
   const getWrapUI = (wrap, account) => {
+    const to = wrap.transaction.to;
+    const contact = to ? contacts.find((c) => (c.address === to)) : null;
     return html`
       <div class="mb-3" style="overflow:visible; height: 360px; flex-basis: 70%;">
         ${wrap.transaction.type === 'pay' &&
@@ -219,6 +231,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            contact=${contact}
           />
         `}
         ${wrap.transaction.type === 'keyreg' &&
@@ -256,6 +269,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            contact=${contact}
           />
         `}
         ${wrap.transaction.type === 'afrz' &&
