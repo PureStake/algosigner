@@ -15,6 +15,7 @@ const SetAccountName: FunctionalComponent = (props: any) => {
           id="setAccountName"
           class="input mb-4"
           placeholder="Account name"
+          maxlength="15"
           value=${name}
           onInput=${(e) => setName(e.target.value)}
         />

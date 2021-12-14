@@ -138,6 +138,7 @@ const ContactList: FunctionalComponent = () => {
                 class="input mb-4"
                 id="contactName"
                 placeholder="Contact name"
+                maxlength="15"
                 value=${newName}
                 onInput=${(e) => setNewName(e.target.value)}
               />
@@ -145,6 +146,7 @@ const ContactList: FunctionalComponent = () => {
                 class="textarea has-fixed-size mb-4"
                 id="contactAddress"
                 placeholder="Contact address"
+                maxlength="58"
                 rows="2"
                 value=${newAddress}
                 onInput=${(e) => setNewAddress(e.target.value)}
