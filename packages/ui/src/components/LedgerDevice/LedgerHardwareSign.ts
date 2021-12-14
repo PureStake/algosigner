@@ -33,9 +33,18 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           if (response.error) {
             setError(response.error);
           } else {
-            const primaryTx = response.transactionWraps[0];
+            // Get the single transaction to sign and put it in the same format 
+            let primaryTx;
+            if (response.transactionWraps && response.transactionWraps.length > 0)
+            {
+              primaryTx = response.transactionWraps[0];
+            }
+            else {
+              primaryTx = { transaction: response.transaction, estimatedFee: response.estimatedFee, txDerivedTypeText: response.txDerivedTypeText };
+            }
+
             getBaseSupportedLedgers().forEach((l) => { 
-              if (primaryTx.genesisID === l['genesisId']) {
+              if (primaryTx.transaction?.genesisID === l['genesisId']) {
                 setLedger(l['name']);
 
                 // Update the ledger dropdown to the signing one
@@ -46,7 +55,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
             });
 
             // Update account value to the signer
-            setAccount(primaryTx.from);
+            setAccount(primaryTx.transaction?.from);
 
             setSessionTxnObj(response);
             setTxn(primaryTx);

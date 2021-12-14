@@ -990,6 +990,11 @@ export class Task {
                   // The account is hardware based. We need to open the extension in tab to connect.
                   // We will need to hold the response to dApps
                   holdResponse = true;
+
+                  // Create an encoded transaction for the ledger sign
+                  const encodedTxn =  Buffer.from(algosdk.encodeUnsignedTransaction(builtTx)).toString('base64');
+                  message.body.params.encodedTxn = encodedTxn;
+                  
                   InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
                     // We only have to worry about possible errors here
                     if ('error' in response) {
@@ -1292,7 +1297,7 @@ export class Task {
                         };
                       } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
-                        if (!singleGroup) {
+                        if (!singleGroup || transactionObjs.length > 1) {
                           throw new LedgerMultipleTransactions();
                         }
 
@@ -1469,45 +1474,34 @@ export class Task {
           return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
         },
         [JsonRpcMethod.CheckNetwork]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {
-            let urlAlgod = networks.algod.url;
-            if (networks.algod.port.length > 0) urlAlgod += ':' + networks.algod.port;
-            let urlIndexer = networks.indexer.url;
-            if (networks.indexer.port.length > 0) urlIndexer += ':' + networks.indexer.port;
-            const sendPathAlgod = `/v2/status/`;
-            const sendPathIndexer = '/v2/transactions?limit=1';
-            const paramsAlgod: any = {
-              headers: {
-                ...networks.algod.headers,
-              },
-              method: 'GET',
-            };
-            const paramsIndexer: any = {
-              headers: {
-                ...networks.indexer.headers,
-              },
-              method: 'GET',
-            };
+          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {           
+            const algodClient =  new algosdk.Algodv2(networks.algod.apiKey, networks.algod.url, networks.algod.port);  
+            const indexerClient = new algosdk.Indexer(networks.indexer.apiKey, networks.indexer.url, networks.indexer.port);
 
             const responseAlgod = {};
             const responseIndexer = {};
 
-            await Task.fetchAPI(`${urlAlgod}${sendPathAlgod}`, paramsAlgod)
+            (async () => { 
+              await algodClient.status().do()
               .then((response) => {
-                responseAlgod['message'] = response['message'] || response;
+                  responseAlgod['message'] = response['message'] || response;
               })
               .catch((error) => {
-                responseAlgod['error'] = error.message || error;
+                  responseAlgod['error'] = error.message || error;
               });
-
-            await Task.fetchAPI(`${urlIndexer}${sendPathIndexer}`, paramsIndexer)
-              .then((response) => {
-                responseIndexer['message'] = response['message'] || response;
+            })().then(() =>{
+              (async () => { 
+                await indexerClient.searchForTransactions().limit(1).do()
+                .then((response) => {
+                    responseAlgod['message'] = response['message'] || response;
+                })
+                .catch((error) => {
+                    responseAlgod['error'] = error.message || error;
+                });
+              })().then(() =>{
+                sendResponse({ algod: responseAlgod, indexer: responseIndexer });
               })
-              .catch((error) => {
-                responseIndexer['error'] = error.message || error;
-              });
-            sendResponse({ algod: responseAlgod, indexer: responseIndexer });
+            }) 
           });
           return true;
         },
@@ -1522,7 +1516,45 @@ export class Task {
         },
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
-            sendResponse(internalResponse);
+            // V2 transactions can just pass back
+            if(internalResponse.transactionsOrGroups) {
+              sendResponse(internalResponse);
+            }
+            // V1 transactions may need to have an estimated fee
+            else {
+              let txWrap = internalResponse;
+              if (txWrap.transaction && txWrap.transaction.transaction) {
+                txWrap = txWrap.transaction;
+              }
+
+              // Send response or grab params to calculate an estimated fee if there isn't one
+              if (txWrap.estimatedFee) {
+                sendResponse(txWrap);
+              } else {
+                const conn = Settings.getBackendParams(
+                  getLedgerFromGenesisId(txWrap.transaction.genesisID),
+                  API.Algod
+                );
+                const sendPath = '/v2/transactions/params';
+                const fetchParams: any = {
+                  headers: {
+                    ...conn.headers,
+                  },
+                  method: 'GET',
+                };
+
+                let url = conn.url;
+                if (conn.port.length > 0) url += ':' + conn.port;
+                Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
+                  if (txWrap.transaction.fee === params['min-fee']) {
+                    // This object was built on front end and fee should be 0 to prevent higher fees.
+                    txWrap.transaction.fee = 0;
+                  }
+                  calculateEstimatedFee(txWrap, params);
+                  sendResponse(txWrap);
+                });
+              }
+            }
           });
           return true;
         },

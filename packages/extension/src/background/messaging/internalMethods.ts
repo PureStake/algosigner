@@ -331,8 +331,10 @@ export class InternalMethods {
       // Get the session transaction
       const sessTxn = session.txnWrap.body.params.transaction;
 
-      // Set the fee to the estimate we showed on the screen for validation.
-      sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      // Set the fee to the estimate we showed on the screen for validation if there is one.
+      if(session.txnWrap.body.params.estimatedFee) {
+        sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      }
       const sessTxnEntries = Object.entries(sessTxn).sort();
 
       // Update fields in the signed transaction that are not the same format
@@ -364,10 +366,21 @@ export class InternalMethods {
         //Check the txnWrap for a dApp response and return the transaction
         if (session.txnWrap.source === 'dapp') {
           const message = session.txnWrap;
-          message.response = {
-            blob: request.body.params.txn,
-          };
+
+          // If v2 then it needs to return an array
+          if (session.txnWrap?.body?.params?.transactionsOrGroups) {
+            message.response = [{
+              blob: request.body.params.txn
+            }];
+          }
+          else {
+            message.response = {
+              blob: request.body.params.txn
+            };
+          }
+
           sendResponse({ message: message });
+
         }
         // If this is a ui transaction then we need to also submit
         else if (session.txnWrap.source === 'ui') {

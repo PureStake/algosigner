@@ -153,6 +153,17 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 // then from that will extract the first walletTransaction of the calculated group
 ///
 function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
+  // If coming from a v1 sign we will have an encodedTxn object
+  if(transaction.encodedTxn) {
+    const byteTxn = new Uint8Array(
+      Buffer.from(transaction.encodedTxn, 'base64')
+        .toString('binary')
+        .split('')
+        .map((x) => x.charCodeAt(0)));
+
+    return { transaction: byteTxn, error: '' };
+  }
+
   const { groupsToSign, currentGroup, ledgerGroup } = transaction;
 
   // Using ledgerGroup if provided since the user may sign multiple more by the time we sign. 
@@ -172,6 +183,7 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     }
   );
 
+  // If we didn't have a v1 txn then verify we have some transactionObjs
   if (transactionObjs.length === 0) {
     return { transaction: undefined, error: 'No signable transaction found in cached Ledger transactions.' };
   }
