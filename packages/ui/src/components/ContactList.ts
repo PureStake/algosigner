@@ -138,7 +138,7 @@ const ContactList: FunctionalComponent = () => {
                 class="input mb-4"
                 id="contactName"
                 placeholder="Contact name"
-                maxlength="15"
+                maxlength="32"
                 value=${newName}
                 onInput=${(e) => setNewName(e.target.value)}
               />
