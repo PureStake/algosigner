@@ -66,6 +66,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           id="accountName"
           class="input"
           placeholder="Account name"
+          maxlength="32"
           value=${name}
           onInput=${(e) => setName(e.target.value)}
         />

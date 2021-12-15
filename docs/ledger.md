@@ -1,7 +1,7 @@
 # AlgoSigner Ledger Periphreral Hardware Actions
 
 ## Overview:<hr />
-Allow the AlgoSigner extension to work with the primary Ledger device account via HID for transaction signing on pay and asset transactions. This includes transactions originating in the extension and from DApps. 
+Allow the AlgoSigner extension to work with Ledger device accounts via HID for transaction signing on pay and asset transactions. This includes transactions originating in the extension and from DApps. It does not work with multiple transactions found in groups and multisig.  
 
 It supports adding the account to your normal accounts tracking in the extension to supply both methods with the ability to sign. 
 
