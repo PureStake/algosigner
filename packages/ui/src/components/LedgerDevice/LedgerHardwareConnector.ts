@@ -20,7 +20,7 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   const [accounts, setAccounts] = useState<Array<object>>([
     { ledgerIndex: '-1', publicKey: 'Select...' },
   ]);
-  const [selectedAccount, setSelectedAccount] = useState<string>('-1');
+  const [selectedAccount, setSelectedAccount] = useState<string>('0');
 
   const handleAccountChange = async (e) => {
     setSelectedAccount(e.target.value);
