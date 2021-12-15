@@ -24,6 +24,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   const [txResponseHeader, setTxResponseHeader] = useState<string>('');
   const [txResponseDetail, setTxResponseDetail] = useState<string>('');
   const [ledger, setLedger] = useState<string>('');
+  const [sessionTxnObj, setSessionTxnObj] = useState<any>({});
 
   useEffect(() => {
     if (txn.transaction === undefined && error === '') {
@@ -32,8 +33,18 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           if (response.error) {
             setError(response.error);
           } else {
+            // Get the single transaction to sign and put it in the same format 
+            let primaryTx;
+            if (response.transactionWraps && response.transactionWraps.length > 0)
+            {
+              primaryTx = response.transactionWraps[0];
+            }
+            else {
+              primaryTx = { transaction: response.transaction, estimatedFee: response.estimatedFee, txDerivedTypeText: response.txDerivedTypeText };
+            }
+
             getBaseSupportedLedgers().forEach((l) => { 
-              if (response.genesisID === l['genesisId']) {
+              if (primaryTx.transaction?.genesisID === l['genesisId']) {
                 setLedger(l['name']);
 
                 // Update the ledger dropdown to the signing one
@@ -44,9 +55,10 @@ const LedgerHardwareSign: FunctionalComponent = () => {
             });
 
             // Update account value to the signer
-            setAccount(response.from);
+            setAccount(primaryTx.transaction?.from);
 
-            setTxn(response);
+            setSessionTxnObj(response);
+            setTxn(primaryTx);
           }
         });
       } catch (ex) {
@@ -59,7 +71,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   const ledgerSignTransaction = () => {
     setLoading(true);
     setError('');
-    ledgerActions.signTransaction(txn).then((lar) => {
+    ledgerActions.signTransaction(sessionTxnObj).then((lar) => {
       if (lar.error) {
         setError(lar.error);
         setLoading(false);
@@ -93,10 +105,10 @@ const LedgerHardwareSign: FunctionalComponent = () => {
       class="main-view"
       style="flex-direction: column; justify-content: space-between; overflow: hidden;"
     >
+      <div class="px-3 py-3 has-text-weight-bold is-size-5">
+        <p style="overflow: hidden; text-overflow: ellipsis;">Sign Using Ledger Device</p>
+      </div>
       <div class="top-view" style="flex: 1; overflow:auto;">
-        <div class="px-5 py-1 has-text-weight-bold is-size-5">
-          <p style="overflow: hidden; text-overflow: ellipsis;">Sign Using Ledger Device</p>
-        </div>
         ${isComplete &&
         html`
           <div class="box">

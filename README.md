@@ -20,11 +20,15 @@ As part of maintaining the standards set by the Algorand Foundation, we've begun
 - v1 Signing (`AlgoSigner.sign()` && `AlgoSigner.multisign()`) will stop being supported in the next major release.
 - Preliminary error codes were added to all of the errors that AlgoSigner could provide.
 
-Also, a `Clear Cache` button was added to the Settings menu to help clear out issues mostly for developers.
-
-### Other changes
+Other changes
+- A developer-oriented `Clear Cache` button was added to the Settings menu to help out with certain issues
 - Fixed account name sometimes not being visible during signing.
 - When signing more than one group of transactions, there's now an Indicator on which group you're currently signing.
+
+### 1.7.1 Patch
+
+- Added support for saving addresses as 'Contacts' for easier re-use
+- Added support for importing more than one address from a same ledger device
 
 ## New Users
 

@@ -108,6 +108,8 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.setStorage('contacts', [], null);
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
       TestNet: [],
@@ -325,14 +327,16 @@ export class InternalMethods {
   public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
     if (session.txnWrap && 'body' in session.txnWrap) {
       const txnBuf = Buffer.from(request.body.params.txn, 'base64');
-      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf) as any;
+      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
       const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
 
       // Get the session transaction
       const sessTxn = session.txnWrap.body.params.transaction;
 
-      // Set the fee to the estimate we showed on the screen for validation.
-      sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      // Set the fee to the estimate we showed on the screen for validation if there is one.
+      if(session.txnWrap.body.params.estimatedFee) {
+        sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      }
       const sessTxnEntries = Object.entries(sessTxn).sort();
 
       // Update fields in the signed transaction that are not the same format
@@ -364,10 +368,21 @@ export class InternalMethods {
         //Check the txnWrap for a dApp response and return the transaction
         if (session.txnWrap.source === 'dapp') {
           const message = session.txnWrap;
-          message.response = {
-            blob: request.body.params.txn,
-          };
+
+          // If v2 then it needs to return an array
+          if (session.txnWrap?.body?.params?.transactionsOrGroups) {
+            message.response = [{
+              blob: request.body.params.txn
+            }];
+          }
+          else {
+            message.response = {
+              blob: request.body.params.txn
+            };
+          }
+
           sendResponse({ message: message });
+
         }
         // If this is a ui transaction then we need to also submit
         else if (session.txnWrap.source === 'ui') {
@@ -867,14 +882,13 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.CheckNetwork](request: any, sendResponse: Function) {
     try {
-      const networks =  Settings.checkNetwork(request.body.params)
+      const networks = Settings.checkNetwork(request.body.params);
       sendResponse(networks);
-    }
-    catch (e) {
+    } catch (e) {
       sendResponse({ error: e.message });
     }
   }
-  
+
   public static [JsonRpcMethod.SaveNetwork](request: any, sendResponse: Function) {
     try {
       // If we have a passphrase then we are modifying.
@@ -953,6 +967,72 @@ export class InternalMethods {
       sendResponse(availableLedgers);
     });
 
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetContacts](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      sendResponse(contacts);
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.SaveContact](request: any, sendResponse: Function) {
+    const { name, previousName, address } = request.body.params;
+
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      const newContact = {
+        name: name,
+        address: address,
+      };
+      const previousIndex = contacts.findIndex((contact) => contact.name === previousName);
+      if (previousIndex >= 0) {
+        contacts[previousIndex] = newContact;
+      } else {
+        contacts.push(newContact);
+      }
+
+      extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
+        if (isSuccessful) {
+          sendResponse(contacts);
+        } else {
+          sendResponse({ error: 'Lock failed' });
+        }
+      });
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.DeleteContact](request: any, sendResponse: Function) {
+    const { name } = request.body.params;
+
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('contacts', (response: any) => {
+      let contacts = [];
+      if (response) {
+        contacts = response;
+      }
+      const contactIndex = contacts.findIndex((contact) => contact.name === name);
+      contacts.splice(contactIndex, 1);
+
+      extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
+        if (isSuccessful) {
+          sendResponse(contacts);
+        } else {
+          sendResponse({ error: 'Lock failed' });
+        }
+      });
+    });
     return true;
   }
 }
