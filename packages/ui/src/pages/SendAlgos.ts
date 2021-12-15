@@ -196,6 +196,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           <div class="box" style="max-height: 100%;">
             <div class="has-text-centered pb-2"><h5 class="title is-5">Contact List</h5></div>
             <div style="height: 380px; overflow-y: auto; margin-right: -0.5rem;" class="pr-2">
+              ${!contacts.length &&
+              html`
+                <div class="has-text-centered">
+                  <span>There are no contacts saved yet.</span>
+                </div>
+              `}
               ${contacts.map(
                 (c) =>
                   html`<${ContactPreview}
@@ -379,7 +385,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           <div class="box">
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
-            ${!selectedContact && !contacts.find((c) => c.address === to) &&
+            ${!selectedContact &&
+            !contacts.find((c) => c.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&
