@@ -18,12 +18,10 @@ const AccountPreview: FunctionalComponent = (props: any) => {
       address: account.address,
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
-      if(response.error){
+      if (response.error) {
         console.error(response.error);
         setError('Error: Account details not accessible.');
-
-      }
-      else {
+      } else {
         setResults(response);
       }
     });
@@ -40,7 +38,9 @@ const AccountPreview: FunctionalComponent = (props: any) => {
       id="account_${account.name.replace(/\s/g, '')}"
     >
       <div style="display: flex; justify-content: space-between;">
-        <div>
+        <div
+          style="max-width: 70%; overflow-wrap: break-word; line-height: 1.1;"
+        >
           <b>${account.name}</b>
         </div>
         <div class="is-size-7 has-text-right">

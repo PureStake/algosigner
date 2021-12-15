@@ -17,12 +17,14 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [accountsRetrieved, setAccountsRetrieved] = useState<boolean>(false);
-  const [accounts, setAccounts] = useState<Array<object>>([{'ledgerIndex':'-1', publicKey: 'Select...'}]);
+  const [accounts, setAccounts] = useState<Array<object>>([
+    { ledgerIndex: '-1', publicKey: 'Select...' },
+  ]);
   const [selectedAccount, setSelectedAccount] = useState<string>('-1');
 
   const handleAccountChange = async (e) => {
     setSelectedAccount(e.target.value);
-  }
+  };
 
   const getAllLedgerAddresses = async () => {
     setLoading(true);
@@ -31,28 +33,34 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
 
     const ddItems = new Array<object>();
     const storeLedgerAddresses = new Array<string>();
-    
-    for(let i=0;i<store[ledger]?.length;i++){
+
+    for (let i = 0; i < store[ledger]?.length; i++) {
       storeLedgerAddresses.push(store[ledger][i].address);
     }
 
-    ledgerActions.getAllAddresses().then((response) => {
-      if ('error' in response) {
-        setError(`Unable to obtain list of addresses. Verify the Ledger hardware device is connected and unlocked. ${response['error']}`);
-      } else {
-        for (let i=0; i < response.message?.length; i++){
-          if(!(storeLedgerAddresses?.includes(`${response.message[i].publicAddress}`))){
-            ddItems.push(response.message[i]);
+    ledgerActions
+      .getAllAddresses()
+      .then((response) => {
+        if ('error' in response) {
+          setError(
+            `Unable to obtain list of addresses. Verify the Ledger hardware device is connected and unlocked. ${response['error']}`
+          );
+        } else {
+          for (let i = 0; i < response.message?.length; i++) {
+            if (!storeLedgerAddresses?.includes(`${response.message[i].publicAddress}`)) {
+              ddItems.push(response.message[i]);
+            }
           }
+          setAccounts(ddItems);
+          setAccountsRetrieved(true);
         }
-        setAccounts(ddItems);
-        setAccountsRetrieved(true);
-      }
-    }).catch(e => {
-      setError(`Error: ${JSON.stringify(e)}`);
-    }).finally(() => setLoading(false));
-  }
-  
+      })
+      .catch((e) => {
+        setError(`Error: ${JSON.stringify(e)}`);
+      })
+      .finally(() => setLoading(false));
+  };
+
   // The save address requires a connection to the ledger device via a web page
   // This page acts as the extension opened in a new tab
   const saveLedgerAddress = (pwd) => {
@@ -62,46 +70,48 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
 
     const selectedHexAddress = accounts[selectedAccount]['hex'];
 
-    if(!selectedHexAddress) {
+    if (!selectedHexAddress) {
       setError('A public address was not selected.');
     } else {
-        const params = {
-          passphrase: pwd,
-          name: name.trim(),
-          ledger: ledger,
-          hexAddress: selectedHexAddress,
-        };
+      const params = {
+        passphrase: pwd,
+        name: name.trim(),
+        ledger: ledger,
+        hexAddress: selectedHexAddress,
+      };
 
-        sendMessage(JsonRpcMethod.LedgerSaveAccount, params, function (response) {
-          setLoading(false);
-          setAuthError('');
-          setError('');
-          if ('error' in response) {
-            switch (response['error']) {
-              case 'Login Failed':
-                setAuthError('Wrong passphrase');
-                break;
-              default:
-                setAskAuth(false);
-                setError(
-                  `Error saving address from the Ledger hardware device. ${response['error']}`
-                );
-                break;
-            }
-          } else {
-            setAskAuth(false);
-            setIsComplete(true);
+      sendMessage(JsonRpcMethod.LedgerSaveAccount, params, function (response) {
+        setLoading(false);
+        setAuthError('');
+        setError('');
+        if ('error' in response) {
+          switch (response['error']) {
+            case 'Login Failed':
+              setAuthError('Wrong passphrase');
+              break;
+            default:
+              setAskAuth(false);
+              setError(
+                `Error saving address from the Ledger hardware device. ${response['error']}`
+              );
+              break;
           }
-        });
-      }
+        } else {
+          setAskAuth(false);
+          setIsComplete(true);
+        }
+      });
+    }
   };
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-3 py-3 has-text-weight-bold is-size-5">
-          <p style="overflow: hidden; text-overflow: ellipsis;">Adding Hardware Account for ${ledger}</p>
+        <p style="overflow: hidden; text-overflow: ellipsis;"
+          >Adding Hardware Account for ${ledger}</p
+        >
       </div>
-      ${ isComplete &&
+      ${isComplete &&
       html`
         <div class="px-3" style="flex: 1;">
           <p> New account ${name} added for ${ledger}. </p>
@@ -109,51 +119,58 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
         </div>
       `}
       ${!isComplete &&
-        html`
-          <div class="px-3" style="flex: 1;">
-            <p>
-              Insert and unlock the hardware device, verify the Algorand application is open during this process.
-            </p>
-            ${ accountsRetrieved &&
-              html`
-              <div class="mt-3">
-                <label>Public Address:</label>
-                <select class="select" style="border-color: #8a9fa8;border-radius: 12px; 
-                  color: #363636; width: -webkit-fill-available" onChange=${handleAccountChange}>
-                    ${ accounts.map((acct) => html`<option value="${acct['ledgerIndex']}">${acct['publicAddress']}</option>`)}} 
-                </select>
-              </div>
-              <div class="mt-3">
-                <label>Account Name:</label>
-                <input
-                  id="accountName"
-                  class="input"
-                  placeholder="Account name"
-                  value=${name}
-                  onInput=${(e) => setName(e.target.value)}
-                />
-              </div>`           
-            }
-            <p class="mt-3 has-text-danger" style="height: 1.5em;">
-              ${error !== undefined && error.length > 0 && error}
-            </p>
-          </div>
-          <div style="padding: 1em;"> 
-            ${ accountsRetrieved && 
-              html`<button class="button is-primary is-fullwidth" 
-                id="nextStep"
-                onClick=${() => setAskAuth(true)}
-              >Add Address</button>`        
-            }
-            ${ !accountsRetrieved && 
-              html`<button class="button is-primary is-fullwidth ${loading ? 'is-loading' : ''}"
-              id="loadAccounts" 
-              onClick=${() => !loading && getAllLedgerAddresses()}
-              >Load Addresses</button>`
-            }
-          </div>
-        `
-      }
+      html`
+        <div class="px-3" style="flex: 1;">
+          <p>
+            Insert and unlock the hardware device, verify the Algorand application is open during
+            this process.
+          </p>
+          ${accountsRetrieved &&
+          html` <div class="mt-3">
+              <label>Public Address:</label>
+              <select
+                class="select"
+                style="border-color: #8a9fa8;border-radius: 12px; color: #363636; width: -webkit-fill-available;"
+                onChange=${handleAccountChange}
+              >
+                ${accounts.map(
+                  (acct) =>
+                    html`<option value="${acct['ledgerIndex']}">${acct['publicAddress']}</option>`
+                )}}
+              </select>
+            </div>
+            <div class="mt-3">
+              <label>Account Name:</label>
+              <input
+                id="accountName"
+                class="input"
+                placeholder="Account name"
+                maxlength="32"
+                value=${name}
+                onInput=${(e) => setName(e.target.value)}
+              />
+            </div>`}
+          <p class="mt-3 has-text-danger" style="height: 1.5em;">
+            ${error !== undefined && error.length > 0 && error}
+          </p>
+        </div>
+        <div style="padding: 1em;">
+          ${accountsRetrieved &&
+          html`<button
+            class="button is-primary is-fullwidth"
+            id="nextStep"
+            onClick=${() => setAskAuth(true)}
+            >Add Address</button
+          >`}
+          ${!accountsRetrieved &&
+          html`<button
+            class="button is-primary is-fullwidth ${loading ? 'is-loading' : ''}"
+            id="loadAccounts"
+            onClick=${() => !loading && getAllLedgerAddresses()}
+            >Load Addresses</button
+          >`}
+        </div>
+      `}
     </div>
 
     ${askAuth &&

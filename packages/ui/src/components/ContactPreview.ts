@@ -8,7 +8,7 @@ const ContactPreview: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="box contact-preview py-2 mb-2 ${namespace}" style="${style}" onClick=${action}>
-      <div>
+      <div style="max-width: 80%;">
         <h6 class="title is-6">${contact.name}</h6>
         <h6 class="subtitle is-6">
           ${contact.address.slice(0, 10)}.....${contact.address.slice(-10)}

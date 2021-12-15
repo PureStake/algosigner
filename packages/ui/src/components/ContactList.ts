@@ -138,6 +138,7 @@ const ContactList: FunctionalComponent = () => {
                 class="input mb-4"
                 id="contactName"
                 placeholder="Contact name"
+                maxlength="32"
                 value=${newName}
                 onInput=${(e) => setNewName(e.target.value)}
               />
@@ -145,6 +146,7 @@ const ContactList: FunctionalComponent = () => {
                 class="textarea has-fixed-size mb-4"
                 id="contactAddress"
                 placeholder="Contact address"
+                maxlength="58"
                 rows="2"
                 value=${newAddress}
                 onInput=${(e) => setNewAddress(e.target.value)}
@@ -224,6 +226,16 @@ const ContactList: FunctionalComponent = () => {
                 aria-label="edit contact"
                 onClick=${() => openEditModal(c.name, c.address)}
               ></i>
+              <a
+                style="position: relative; z-index: 3; top: 8px; left: 67%; cursor: pointer; color: inherit;"
+                class="has-tooltip-arrow has-tooltip-left has-tooltip-fade has-tooltip-primary"
+                target="_blank"
+                href=${`https://goalseeker.purestake.io/algorand/mainnet/account/${c.address}`}
+                data-tooltip="View on GoalSeeker"
+                aria-label="view address info on goal seeker"
+              >
+                <i class="far fa-user-circle px-1"></i>
+              </a>
               <${ContactPreview}
                 contact="${c}"
                 style="cursor: pointer; margin-top: -22px;"
