@@ -92,9 +92,9 @@ export class Settings {
     }
 
     // Setup port splits for algod and indexer - used in sandbox installs
-    const parsedAlgodUrlObj = parseUrlServerAndPort(ledger.algodUrl)
+    const parsedAlgodUrlObj = parseUrlServerAndPort(ledger.algodUrl);
     const parsedIndexerUrlObj = parseUrlServerAndPort(ledger.indexerUrl);
-    
+
     // Add algod links
     const injectedAlgod = {
       url: parsedAlgodUrlObj.server || `${defaultUrl}/algod`,
@@ -111,15 +111,14 @@ export class Settings {
       headers: headersIndexer || headers,
     };
 
-    if (isCheckOnly) { 
+    if (isCheckOnly) {
       return {
-        'algod': injectedAlgod,
-        'indexer': injectedIndexer
-      }
-    }
-    else {
+        algod: injectedAlgod,
+        indexer: injectedIndexer,
+      };
+    } else {
       this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = injectedAlgod;
-      this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = injectedIndexer; 
+      this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = injectedIndexer;
       this.backend_settings.InjectedNetworks[ledger.name].headers = headers;
     }
   }
@@ -132,20 +131,40 @@ export class Settings {
     };
 
     this.setInjectedHeaders(ledger);
-    logging.log(`Added Network:\n${JSON.stringify(this.backend_settings.InjectedNetworks[ledger.name],null,1)}`,2);
+    logging.log(
+      `Added Network:\n${JSON.stringify(
+        this.backend_settings.InjectedNetworks[ledger.name],
+        null,
+        1
+      )}`,
+      2
+    );
   }
 
-  public static updateInjectedNetwork(updatedLedger: LedgerTemplate) {
-    this.backend_settings.InjectedNetworks[updatedLedger.name].genesisId = updatedLedger.genesisId;
-    this.backend_settings.InjectedNetworks[updatedLedger.name].symbol = updatedLedger.symbol;
-    this.backend_settings.InjectedNetworks[updatedLedger.name].genesisHash =
+  public static updateInjectedNetwork(updatedLedger: LedgerTemplate, previousName: string = '') {
+    const targetName = updatedLedger.uniqueName;
+
+    if (previousName) {
+      this.deleteInjectedNetwork(previousName);
+      this.backend_settings.InjectedNetworks[targetName] = {};
+    }
+    this.backend_settings.InjectedNetworks[targetName].genesisId = updatedLedger.genesisId;
+    this.backend_settings.InjectedNetworks[targetName].symbol = updatedLedger.symbol;
+    this.backend_settings.InjectedNetworks[targetName].genesisHash =
       updatedLedger.genesisHash;
-    this.backend_settings.InjectedNetworks[updatedLedger.name].algodUrl = updatedLedger.algodUrl;
-    this.backend_settings.InjectedNetworks[updatedLedger.name].indexerUrl =
+    this.backend_settings.InjectedNetworks[targetName].algodUrl = updatedLedger.algodUrl;
+    this.backend_settings.InjectedNetworks[targetName].indexerUrl =
       updatedLedger.indexerUrl;
     this.setInjectedHeaders(updatedLedger);
 
-    logging.log(`Updated Network:\n${JSON.stringify(this.backend_settings.InjectedNetworks[updatedLedger.name],null,1)}`,2);
+    logging.log(
+      `Updated Network:\n${JSON.stringify(
+        this.backend_settings.InjectedNetworks[targetName],
+        null,
+        1
+      )}`,
+      2
+    );
   }
 
   public static getBackendParams(ledger: string, api: API) {
@@ -169,7 +188,7 @@ export class Settings {
   }
 
   public static checkNetwork(ledger: LedgerTemplate) {
-    const networks  = this.setInjectedHeaders(ledger, true);
+    const networks = this.setInjectedHeaders(ledger, true);
     return networks;
   }
 }
