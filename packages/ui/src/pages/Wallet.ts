@@ -21,7 +21,7 @@ const Wallet: FunctionalComponent = () => {
     const { ledger } = store;
     return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-        <div class="px-4 py-4" style="flex: 1">
+        <div class="px-4 py-4" style="flex: 1; overflow: auto; max-height: 430px;">
           ${
             store[ledger] &&
             store[ledger].length !== 0 &&
