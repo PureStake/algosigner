@@ -57,7 +57,7 @@ const Account: FunctionalComponent = (props: any) => {
             <i class="fas fa-chevron-left"></i>
           </span>
         </a>
-        <p style="width: 305px;">${account.name}</p>
+        <p style="width: 305px; overflow-wrap: break-word;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
           onClick=${() => setShowDetails(true)}>
