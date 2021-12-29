@@ -25,5 +25,5 @@
   },
   "content_security_policy": "script-src 'self' 'sha256-r3HgVicK23eFlaBe+glyMCfP98WwT3i3bmq8FxshKMY='; object-src 'self'",
   "web_accessible_resources": ["AlgoSigner.min.js"],
-  "permissions": ["storage"]
+  "permissions": ["storage", "tabs"]
 }

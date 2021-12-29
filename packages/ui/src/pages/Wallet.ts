@@ -17,6 +17,10 @@ const Wallet: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 
+  const openTab = (url)=>{
+    chrome.tabs.create({active: true, url: 'index.html#'+url});
+  }
+
   return useObserver(() => {
     const { ledger } = store;
     return html`
@@ -61,9 +65,9 @@ const Wallet: FunctionalComponent = () => {
         <div class="modal-content">
           <div class="box">
             <div>
-              <${Link} class="button is-fullwidth" id="createAccount" href=${`/${ledger}/create-account`}>
+              <button class="button is-fullwidth" id="createAccount" onClick=${() => {openTab(`/${ledger}/create-account`);}}>
                 Create new account
-              </${Link}>
+              </button>
             </div>
             <div>
               <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${ledger}/import-account`}>
