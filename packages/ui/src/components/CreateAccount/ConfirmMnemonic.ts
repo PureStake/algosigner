@@ -12,6 +12,7 @@ function shuffle(a) {
     a[i] = a[j];
     a[j] = x;
   }
+  a.sort((x, y) => x.localeCompare(y));
   return a;
 }
 

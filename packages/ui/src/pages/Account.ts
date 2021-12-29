@@ -21,6 +21,13 @@ const Account: FunctionalComponent = (props: any) => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
 
+  const rewardsTooltip =
+    details &&
+    `Algos: ${numFormat(
+      details['amount-without-pending-rewards'] / 1e6,
+      6
+    )}\nRewards: ${numFormat(details['pending-rewards'] / 1e6, 6)}`;
+
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
@@ -38,11 +45,10 @@ const Account: FunctionalComponent = (props: any) => {
       address: address,
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
-      if(response.error){
+      if (response.error) {
         console.error(response.error);
         setError('Error: Account details not accessible.');
-      }
-      else {
+      } else {
         setDetails(response);
         store.updateAccountDetails(ledger, response);
       }
@@ -57,7 +63,7 @@ const Account: FunctionalComponent = (props: any) => {
             <i class="fas fa-chevron-left"></i>
           </span>
         </a>
-        <p style="width: 305px;">${account.name}</p>
+        <p style="width: 305px; overflow-wrap: break-word;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
           onClick=${() => setShowDetails(true)}>
@@ -74,6 +80,12 @@ const Account: FunctionalComponent = (props: any) => {
           html`
             <span>${numFormat(details.amount / 1e6, 6)} </span>
             <span class="has-text-grey-light">Algos</span>
+            <i
+              class="far fa-question-circle px-1 has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+              data-tooltip="${rewardsTooltip}"
+              aria-label="${rewardsTooltip}"
+            >
+            </i>
           `
         }
       </span>

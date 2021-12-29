@@ -334,7 +334,7 @@ export class InternalMethods {
       const sessTxn = session.txnWrap.body.params.transaction;
 
       // Set the fee to the estimate we showed on the screen for validation if there is one.
-      if(session.txnWrap.body.params.estimatedFee) {
+      if (session.txnWrap.body.params.estimatedFee) {
         sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
       }
       const sessTxnEntries = Object.entries(sessTxn).sort();
@@ -371,18 +371,18 @@ export class InternalMethods {
 
           // If v2 then it needs to return an array
           if (session.txnWrap?.body?.params?.transactionsOrGroups) {
-            message.response = [{
-              blob: request.body.params.txn
-            }];
-          }
-          else {
+            message.response = [
+              {
+                blob: request.body.params.txn,
+              },
+            ];
+          } else {
             message.response = {
-              blob: request.body.params.txn
+              blob: request.body.params.txn,
             };
           }
 
           sendResponse({ message: message });
-
         }
         // If this is a ui transaction then we need to also submit
         else if (session.txnWrap.source === 'ui') {
@@ -891,9 +891,10 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.SaveNetwork](request: any, sendResponse: Function) {
     try {
+      const params = request.body.params;
       // If we have a passphrase then we are modifying.
       // There may be accounts attatched, if we match on a unique name, we should update.
-      if (request.body.params['passphrase'] !== undefined) {
+      if (params['passphrase'] !== undefined) {
         this._encryptionWrap = new encryptionWrap(request.body.params['passphrase']);
         this._encryptionWrap.unlock((unlockedValue: any) => {
           if ('error' in unlockedValue) {
@@ -902,14 +903,17 @@ export class InternalMethods {
           // We have evaluated the passphrase and it was valid.
         });
       }
+
+      const previousName = params['previousName'].toLowerCase();
+      const targetName = previousName ? previousName : params['name'].toLowerCase();
       const addedLedger = new LedgerTemplate({
-        name: request.body.params['name'],
-        genesisId: request.body.params['genesisId'],
-        genesisHash: request.body.params['genesisHash'],
-        symbol: request.body.params['symbol'],
-        algodUrl: request.body.params['algodUrl'],
-        indexerUrl: request.body.params['indexerUrl'],
-        headers: request.body.params['headers'],
+        name: params['name'],
+        genesisId: params['genesisId'],
+        genesisHash: params['genesisHash'],
+        symbol: params['symbol'],
+        algodUrl: params['algodUrl'],
+        indexerUrl: params['indexerUrl'],
+        headers: params['headers'],
       });
 
       // Specifically get the base ledgers to check and prevent them from being overriden.
@@ -919,19 +923,17 @@ export class InternalMethods {
         const comboLedgers = [...availiableLedgers];
 
         // Add the new ledger if it isn't there.
-        if (!comboLedgers.some((cledg) => cledg.uniqueName === addedLedger.uniqueName)) {
+        if (!comboLedgers.some((cledg) => cledg.uniqueName === targetName)) {
           comboLedgers.push(addedLedger);
 
           // Also add the ledger to the injected ledgers in settings
           Settings.addInjectedNetwork(addedLedger);
-        }
-        // If the new ledger name does exist, we sould update the values as long as it is not a default ledger.
-        else {
-          const matchingLedger = comboLedgers.find(
-            (cledg) => cledg.uniqueName === addedLedger.uniqueName
-          );
+        } else {
+          // If the new ledger name does exist, we sould update the values as long as it is not a default ledger.
+          const matchingLedger = comboLedgers.find((cledg) => cledg.uniqueName === targetName);
           if (!defaultLedgers.some((dledg) => dledg.uniqueName === matchingLedger.uniqueName)) {
-            Settings.updateInjectedNetwork(addedLedger);
+            Settings.updateInjectedNetwork(addedLedger, previousName);
+            matchingLedger.name = addedLedger.name;
             matchingLedger.genesisId = addedLedger.genesisId;
             matchingLedger.symbol = addedLedger.symbol;
             matchingLedger.genesisHash = addedLedger.genesisHash;
