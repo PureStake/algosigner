@@ -10,7 +10,6 @@ import { numFormat } from 'services/common';
 import { StoreContext } from 'services/StoreContext';
 import TransactionsList from 'components/Account/TransactionsList';
 import AssetsList from 'components/Account/AssetsList';
-import AccountDetails from 'components/Account/AccountDetails';
 import algo from 'assets/algo.png';
 
 const Account: FunctionalComponent = (props: any) => {
@@ -18,7 +17,6 @@ const Account: FunctionalComponent = (props: any) => {
   const { url, ledger, address } = props;
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
-  const [showDetails, setShowDetails] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
 
   const rewardsTooltip =
@@ -66,12 +64,12 @@ const Account: FunctionalComponent = (props: any) => {
         <p style="width: 305px; overflow-wrap: break-word;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
-          onClick=${() => setShowDetails(true)}>
+          onClick=${() => route(`${url}/details`)}>
           <span class="icon">
             <i style="vertical-align: middle;" class="fas fa-ellipsis-v"></i>
           </span>
         </button>
-      </p>
+      </div>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
         ${details === null && error && html`<span>${error}</span>`}
@@ -112,23 +110,6 @@ const Account: FunctionalComponent = (props: any) => {
     </div>
 
     <${TransactionsList} address=${address} ledger=${ledger}/>
-
-    ${
-      showDetails &&
-      html`
-        <div class="modal is-active">
-          <div class="modal-background" onClick=${() => setShowDetails(false)}></div>
-          <div class="modal-content">
-            <${AccountDetails} account=${account} ledger=${ledger} />
-          </div>
-          <button
-            class="modal-close is-large"
-            aria-label="close"
-            onClick=${() => setShowDetails(false)}
-          />
-        </div>
-      `
-    }
   `;
 };
 
