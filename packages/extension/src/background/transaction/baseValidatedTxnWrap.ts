@@ -89,11 +89,6 @@ export class BaseValidatedTxnWrap {
             if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
               this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
             }
-          } else if (prop === 'freezeAccount' && !v1Validations) {
-            const account = params[prop];
-            if ('publicKey' in account) {
-              this.transaction[prop] = algosdk.encodeAddress(account.publicKey);
-            }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();
           } else if (BIGINT_FIELDS.includes(prop)) {
