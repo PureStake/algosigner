@@ -105,7 +105,7 @@ const Account: FunctionalComponent = (props: any) => {
         details &&
         details.assets &&
         details.assets.length > 0 &&
-        html` <${AssetsList} assets=${details.assets} ledger=${ledger} /> `
+        html`<${AssetsList} assets=${details.assets} ledger=${ledger} address=${address} />`
       }
     </div>
 
