@@ -30,11 +30,11 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       <span><i class="fas fa-arrow-down mr-3"></i></span>
       <span>${dt || 'Asset Transfer'}</span>
     </p>
-    
+
     ${contact && html`<${ContactPreview} contact="${contact}" className="mt-2" />`}
     ${!contact &&
     html`
-      <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
+      <div class="box py-2 is-shadowless mt-2 mb-0" style="background: #eff4f7;">
         <div style="display: flex; justify-content: space-between;">
           <div>
             <b style="word-break: break-all;">${tx.to}</b>

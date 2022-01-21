@@ -9,18 +9,14 @@ const TxAfrz: FunctionalComponent = (props: any) => {
 
   const state = tx.freezeState ? 'Freeze' : 'Unfreeze';
 
-  let assetIndex = html`
-    <p
-      style="width: 70%"
-    >
-      ${tx.assetIndex}
-    </p>
-  `;
+  let assetIndex = html`<p style="width: 70%">${tx.assetIndex}</p>`;
   if (isLedgerBaseSupported(ledger)) {
     assetIndex = html`
       <a
         style="width: 70%"
-        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${tx.assetIndex}`}
+        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
+          tx.assetIndex
+        }`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -35,7 +31,7 @@ const TxAfrz: FunctionalComponent = (props: any) => {
       <span>Asset ${state}</span>
     </div>
 
-    <div class="box py-2 is-shadowless mt-3 mb-0" style="background: #eff4f7;">
+    <div class="box py-2 is-shadowless mt-2 mb-0" style="background: #eff4f7;">
       <div style="display: flex; justify-content: space-between;">
         <div>
           <b style="word-break: break-all;">${tx.freezeAccount}</b>
