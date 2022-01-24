@@ -6,6 +6,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 
 import ToClipboard from 'components/ToClipboard';
+import goalseekerIcon from 'assets/goalseeker.svg';
 
 const AssetDetails: FunctionalComponent = (props: any) => {
   const { asset, ledger } = props;
@@ -83,6 +84,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
             rel="noopener noreferrer"
           >
             See details in GoalSeeker
+            <img src=${goalseekerIcon} width="12" style="margin-bottom: -4px;" class="ml-1" />
           </a>
         </div>
       `}

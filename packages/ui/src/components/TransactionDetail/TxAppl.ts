@@ -1,6 +1,8 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 
+import goalseekerIcon from 'assets/goalseeker.svg';
+
 const TxAppl: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
 
@@ -23,7 +25,8 @@ const TxAppl: FunctionalComponent = (props: any) => {
         <strong>On Completion: </strong>
         <span>${tx['application-transaction']['on-completion']}</span>
       </p>
-      ${tx['inner-txns'] && tx['inner-txns'].length &&
+      ${tx['inner-txns'] &&
+      tx['inner-txns'].length &&
       html`
         <p>
           <strong>Inner Transactions: </strong>
@@ -43,6 +46,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
           rel="noopener noreferrer"
         >
           See details in GoalSeeker
+          <img src=${goalseekerIcon} width="12" style="margin-bottom: -4px;" class="ml-1" />
         </a>
       </div>
     </div>

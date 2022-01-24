@@ -7,6 +7,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 
 import Authenticate from 'components/Authenticate';
+import goalseekerIcon from 'assets/goalseeker.svg';
 
 const AddAssetConfirm: FunctionalComponent = (props: any) => {
   const { asset, ledger, address, accountsAssetsIDs } = props;
@@ -91,6 +92,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
             rel="noopener noreferrer"
           >
             See asset details in GoalSeeker
+            <img src=${goalseekerIcon} width="12" style="margin-bottom: -4px;" />
           </a>
         </div>
 
@@ -119,6 +121,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
             rel="noopener noreferrer"
           >
             See transaction details in GoalSeeker
+            <img src=${goalseekerIcon} width="12" style="margin-bottom: -4px;" class="ml-1" />
           </a>
         </div>
         <button

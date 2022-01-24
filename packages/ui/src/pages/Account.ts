@@ -10,7 +10,7 @@ import { numFormat } from 'services/common';
 import { StoreContext } from 'services/StoreContext';
 import TransactionsList from 'components/Account/TransactionsList';
 import AssetsList from 'components/Account/AssetsList';
-import algo from 'assets/algo.png';
+import algosIcon from 'assets/algo.png';
 
 const Account: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
@@ -21,10 +21,10 @@ const Account: FunctionalComponent = (props: any) => {
 
   const rewardsTooltip =
     details &&
-    `Algos: ${numFormat(
-      details['amount-without-pending-rewards'] / 1e6,
+    `Algos: ${numFormat(details['amount-without-pending-rewards'] / 1e6, 6)}\nRewards: ${numFormat(
+      details['pending-rewards'] / 1e6,
       6
-    )}\nRewards: ${numFormat(details['pending-rewards'] / 1e6, 6)}`;
+    )}`;
 
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
@@ -71,7 +71,7 @@ const Account: FunctionalComponent = (props: any) => {
         </button>
       </div>
       <span>
-        <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
+        <img src=${algosIcon} width="18" style="margin-bottom: -1px;" class="mr-1" />
         ${details === null && error && html`<span>${error}</span>`}
         ${
           details &&

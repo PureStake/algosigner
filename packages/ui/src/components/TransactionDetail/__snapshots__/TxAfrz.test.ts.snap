@@ -73,6 +73,12 @@ exports[`TxAfrz should match snapshot 1`] = `
       target="_blank"
     >
       See details in GoalSeeker
+      <img
+        className="ml-1"
+        src="test-file-stub"
+        style="margin-bottom: -4px;"
+        width="12"
+      />
     </a>
   </div>
 </div>

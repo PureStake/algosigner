@@ -1,14 +1,14 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 
+import goalseekerIcon from 'assets/goalseeker.svg';
+
 const TxKeyreg: FunctionalComponent = (props: any) => {
   const { tx, ledger } = props;
 
   return html`
     <div class="box" style="overflow-wrap: break-word;">
-      <p id="txTitle" class="has-text-centered has-text-weight-bold">
-        Key registration
-      </p>
+      <p id="txTitle" class="has-text-centered has-text-weight-bold">Key registration</p>
       <p data-transaction-id="${tx.id}">
         <strong>TxID: </strong>
         <span>${tx.id}</span>
@@ -30,6 +30,7 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
           rel="noopener noreferrer"
         >
           See details in GoalSeeker
+          <img src=${goalseekerIcon} width="12" style="margin-bottom: -4px;" class="ml-1" />
         </a>
       </div>
     </div>
