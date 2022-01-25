@@ -62,6 +62,7 @@ const AccountDetails: FunctionalComponent = (props: any) => {
   qr.addData(address);
   qr.make();
   const qrImg = qr.createDataURL(10, 1);
+  const ledgerName = ledger.toLowerCase();
 
   return html`
     <div class="px-4 py-3">
@@ -91,9 +92,19 @@ const AccountDetails: FunctionalComponent = (props: any) => {
         <span class="has-text-weight-bold is-size-5">Opted-in Apps</span>
         <div class="is-flex is-flex-direction-column">
           ${details['apps-local-state'].map(
-            (ca) => html`
+            (oia) => html`
               <span class="py-2" style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
-                ${ca.id}
+                ${oia.id}
+                <a
+                  style="cursor: pointer;"
+                  class="has-tooltip-arrow has-tooltip-right has-tooltip-fade has-tooltip-primary ml-1"
+                  target="_blank"
+                  href=${`https://goalseeker.purestake.io/algorand/${ledgerName}/application/${oia.id}`}
+                  data-tooltip="View on GoalSeeker"
+                  aria-label="view address info on goal seeker"
+                >
+                  <i class="fas fa-external-link-alt has-text-link-dark px-1"></i>
+                </a>
               </span>
             `
           )}
@@ -115,6 +126,16 @@ const AccountDetails: FunctionalComponent = (props: any) => {
                   <small class="has-text-grey-light is-pulled-right">${cas.index}</small>
                 `}
                 ${(!cas.params.name || cas.params.name.length === 0) && html`${cas.index}`}
+                <a
+                  style="cursor: pointer;"
+                  class="has-tooltip-arrow has-tooltip-right has-tooltip-fade has-tooltip-primary ml-1"
+                  target="_blank"
+                  href=${`https://goalseeker.purestake.io/algorand/${ledgerName}/asset/${cas.index}`}
+                  data-tooltip="View on GoalSeeker"
+                  aria-label="view address info on goal seeker"
+                >
+                  <i class="fas fa-external-link-alt has-text-link-dark px-1"></i>
+                </a>
               </span>
             `
           )}
@@ -129,13 +150,17 @@ const AccountDetails: FunctionalComponent = (props: any) => {
           ${details['created-apps'].map(
             (cap) => html`
               <span class="py-2" style="border-top: 1px solid rgba(138, 159, 168, 0.2);">
-                ${cap.params.name &&
-                cap.params.name.length > 0 &&
-                html`
-                  ${cap.params.name}
-                  <small class="has-text-grey-light is-pulled-right">${cap.index}</small>
-                `}
-                ${(!cap.params.name || cap.params.name.length === 0) && html`${cap.index}`}
+                ${cap.id}
+                <a
+                  style="cursor: pointer;"
+                  class="has-tooltip-arrow has-tooltip-right has-tooltip-fade has-tooltip-primary ml-1"
+                  target="_blank"
+                  href=${`https://goalseeker.purestake.io/algorand/${ledgerName}/application/${cap.id}`}
+                  data-tooltip="View on GoalSeeker"
+                  aria-label="view address info on goal seeker"
+                >
+                  <i class="fas fa-external-link-alt has-text-link-dark px-1"></i>
+                </a>
               </span>
             `
           )}

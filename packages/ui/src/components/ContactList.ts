@@ -6,6 +6,7 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 
 import ContactPreview from 'components/ContactPreview';
+import goalseekerIcon from 'assets/goalseeker.svg';
 import algosdk from 'algosdk';
 
 const ContactList: FunctionalComponent = () => {
@@ -227,14 +228,14 @@ const ContactList: FunctionalComponent = () => {
                 onClick=${() => openEditModal(c.name, c.address)}
               ></i>
               <a
-                style="position: relative; z-index: 3; top: 8px; left: 67%; cursor: pointer; color: inherit;"
-                class="has-tooltip-arrow has-tooltip-left has-tooltip-fade has-tooltip-primary"
+                style="position: relative; z-index: 3; top: 7px; left: 66%; cursor: pointer; color: inherit;"
+                class="has-tooltip-arrow has-tooltip-left has-tooltip-fade has-tooltip-primary px-1"
                 target="_blank"
                 href=${`https://goalseeker.purestake.io/algorand/mainnet/account/${c.address}`}
                 data-tooltip="View on GoalSeeker"
                 aria-label="view address info on goal seeker"
               >
-                <i class="far fa-user-circle px-1"></i>
+                <i class="fas fa-external-link-alt px-1"></i>
               </a>
               <${ContactPreview}
                 contact="${c}"
