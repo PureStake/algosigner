@@ -678,6 +678,130 @@ export class InternalMethods {
     return true;
   }
 
+  public static [JsonRpcMethod.AssetOptOut](request: any, sendResponse: Function) {
+    const { ledger, address, passphrase, id } = request.body.params;
+    this._encryptionWrap = new encryptionWrap(passphrase);
+    const algod = this.getAlgod(ledger);
+
+    this._encryptionWrap.unlock(async (unlockedValue: any) => {
+      if ('error' in unlockedValue) {
+        sendResponse(unlockedValue);
+        return false;
+      }
+      let account;
+
+      // Find address to send algos from
+      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+        if (unlockedValue[ledger][i].address === address) {
+          account = unlockedValue[ledger][i];
+          break;
+        }
+      }
+
+      const params = await algod.getTransactionParams().do();
+      const txn = {
+        type: 'axfer',
+        from: address,
+        to: address,
+        closeRemainderTo: address,
+        assetIndex: id,
+        fee: params.fee,
+        firstRound: params.firstRound,
+        lastRound: params.lastRound,
+        genesisID: params.genesisID,
+        genesisHash: params.genesisHash,
+      };
+
+      let transactionWrap: BaseValidatedTxnWrap = undefined;
+      try {
+        transactionWrap = getValidatedTxnWrap(txn, txn['type']);
+      } catch (e) {
+        logging.log(`Validation failed. ${e}`);
+        sendResponse({ error: `Validation failed. ${e}` });
+        return;
+      }
+      if (!transactionWrap) {
+        // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
+        logging.log(
+          'A transaction has failed because of an inability to build the specified transaction type.'
+        );
+        sendResponse({
+          error:
+            'A transaction has failed because of an inability to build the specified transaction type.',
+        });
+        return;
+      } else if (
+        transactionWrap.validityObject &&
+        Object.values(transactionWrap.validityObject).some(
+          (value) => value['status'] === ValidationStatus.Invalid
+        )
+      ) {
+        // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+        const e =
+          'One or more fields are not valid. Please check and try again.\n' +
+          Object.values(transactionWrap.validityObject)
+            .filter((value) => value['status'] === ValidationStatus.Invalid)
+            .map((vo) => vo['info']);
+        sendResponse({ error: e });
+        return;
+      } else {
+        // We have a transaction which does not contain invalid fields,
+        // but may still contain fields that are dangerous
+        // or ones we've flagged as needing to be reviewed.
+        // Perform a change based on if this is a ledger device account
+        if (account.isHardware) {
+          // TODO: Temporary workaround by adding min-fee for estimate calculations since it's not in the sdk get params.
+          params['min-fee'] = 1000;
+          calculateEstimatedFee(transactionWrap, params);
+
+          // Pass the transaction wrap we can pass to the
+          // central sign ledger function for consistency
+          this[JsonRpcMethod.LedgerSignTransaction](
+            { source: 'ui', body: { params: transactionWrap } },
+            (response) => {
+              // We only have to worry about possible errors here so we can ignore the created tab
+              if ('error' in response) {
+                sendResponse(response);
+              } else {
+                // Respond with a 0 tx id so that the page knows not to try and show it.
+                sendResponse({ txId: 0 });
+              }
+            }
+          );
+
+          // Return to close connection
+          return true;
+        } else {
+          // We can use a modified popup to allow the normal flow, but require extra scrutiny.
+          const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
+          let signedTxn;
+          try {
+            const builtTx = buildTransaction(txn);
+            signedTxn = {
+              txID: builtTx.txID().toString(),
+              blob: builtTx.signTxn(recoveredAccount.sk),
+            };
+          } catch (e) {
+            sendResponse({ error: e.message });
+            return false;
+          }
+
+          algod
+            .sendRawTransaction(signedTxn.blob)
+            .do()
+            .then((resp: any) => {
+              sendResponse({ txId: resp.txId });
+            })
+            .catch((e: any) => {
+              sendResponse({ error: e.message });
+            });
+        }
+      }
+    });
+
+    return true;
+  }
+
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
     const { ledger, address, passphrase, txnParams } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);

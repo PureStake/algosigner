@@ -8,7 +8,7 @@ import { sendMessage } from 'services/Messaging';
 import ToClipboard from 'components/ToClipboard';
 
 const AssetDetails: FunctionalComponent = (props: any) => {
-  const { asset, ledger } = props;
+  const { asset, ledger, optOutFn } = props;
   const [, setResults] = useState<number>(0);
 
   const fetchApi = async () => {
@@ -74,7 +74,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
             ${asset.creator.slice(0, 8)}.....${asset.creator.slice(-8)}
           </span>
         </p>
-        <div class="has-text-centered mt-3">
+        <div class="has-text-centered is-flex is-flex-direction-column mt-3">
           <a
             href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
               asset['asset-id']
@@ -84,6 +84,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
           >
             See details in GoalSeeker
           </a>
+          ${!(asset.amount > 0) && html`<a onClick=${optOutFn}>Opt-out of this asset</a>`}
         </div>
       `}
     </div>

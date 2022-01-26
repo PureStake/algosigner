@@ -5,6 +5,7 @@ import { IAssetDestroyTx } from '@algosigner/common/interfaces/acfg_destroy';
 import { IAssetFreezeTx } from '@algosigner/common/interfaces/afrz';
 import { IAssetTransferTx } from '@algosigner/common/interfaces/axfer';
 import { IAssetAcceptTx } from '@algosigner/common/interfaces/axfer_accept';
+import { IAssetCloseTx } from '@algosigner/common/interfaces/axfer_close';
 import { IAssetClawbackTx } from '@algosigner/common/interfaces/axfer_clawback';
 import { IKeyRegistrationTx } from '@algosigner/common/interfaces/keyreg';
 import { IApplTx } from '@algosigner/common/interfaces/appl';
@@ -15,6 +16,7 @@ import { AssetDestroyTransaction } from './acfgDestroyTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
 import { AssetAcceptTransaction } from './axferAcceptTransaction';
+import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetClawbackTransaction } from './axferClawbackTransaction';
 import { KeyregTransaction } from './keyregTransaction';
 import { ApplTransaction } from './applTransaction';
@@ -76,12 +78,20 @@ export function getValidatedTxnWrap(
       validatedTxnWrap = new AssetFreezeTransaction(txn as IAssetFreezeTx, v1Validations);
       break;
     case TransactionType.Axfer:
-      // Validate any of the 3 types of transactions that can occur with axfer
+      // Validate any of the 4 types of transactions that can occur with axfer
       // Use the first error as the passback error.
       try {
         validatedTxnWrap = new AssetAcceptTransaction(txn as IAssetAcceptTx, v1Validations);
       } catch (e) {
         error = e;
+      }
+      if (!validatedTxnWrap) {
+        try {
+          validatedTxnWrap = new AssetCloseTransaction(txn as IAssetCloseTx, v1Validations);
+        } catch (e) {
+          e.message = [error.message, e.message].join(' ');
+          error = e;
+        }
       }
       if (!validatedTxnWrap) {
         try {
