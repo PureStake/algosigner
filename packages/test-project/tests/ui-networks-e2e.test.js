@@ -98,16 +98,6 @@ describe('Create and Test Custom Networks', () => {
   test('Test Deleting Networks', async () => {
     await openNetworkMenu();
 
-    // Delete E2ENet
-    await extensionPage.waitForSelector(e2eNetSelector);
-    await extensionPage.click(e2eNetSelector);
-    await extensionPage.click('#deleteNetwork');
-    await inputPassword();
-
-    // Check network was deleted
-    await openNetworkMenu();
-    await expect(extensionPage.select(e2eNetSelector)).rejects.toThrow();
-
     // Delete OtherNet
     await extensionPage.waitForSelector(otherNetSelector);
     await extensionPage.click(otherNetSelector);
