@@ -10,7 +10,6 @@ import { numFormat } from 'services/common';
 import { StoreContext } from 'services/StoreContext';
 import TransactionsList from 'components/Account/TransactionsList';
 import AssetsList from 'components/Account/AssetsList';
-import AccountDetails from 'components/Account/AccountDetails';
 import algo from 'assets/algo.png';
 
 const Account: FunctionalComponent = (props: any) => {
@@ -18,8 +17,14 @@ const Account: FunctionalComponent = (props: any) => {
   const { url, ledger, address } = props;
   const [account, setAccount] = useState<any>({});
   const [details, setDetails] = useState<any>({});
-  const [showDetails, setShowDetails] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
+
+  const rewardsTooltip =
+    details &&
+    `Algos: ${numFormat(
+      details['amount-without-pending-rewards'] / 1e6,
+      6
+    )}\nRewards: ${numFormat(details['pending-rewards'] / 1e6, 6)}`;
 
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
@@ -38,11 +43,10 @@ const Account: FunctionalComponent = (props: any) => {
       address: address,
     };
     sendMessage(JsonRpcMethod.AccountDetails, params, function (response) {
-      if(response.error){
+      if (response.error) {
         console.error(response.error);
         setError('Error: Account details not accessible.');
-      }
-      else {
+      } else {
         setDetails(response);
         store.updateAccountDetails(ledger, response);
       }
@@ -57,15 +61,15 @@ const Account: FunctionalComponent = (props: any) => {
             <i class="fas fa-chevron-left"></i>
           </span>
         </a>
-        <p style="width: 305px;">${account.name}</p>
+        <p style="width: 305px; overflow-wrap: break-word;">${account.name}</p>
         <button id="showDetails"
           class="button is-outlined is-small is-primary is-pulled-right"
-          onClick=${() => setShowDetails(true)}>
+          onClick=${() => route(`${url}/details`)}>
           <span class="icon">
             <i style="vertical-align: middle;" class="fas fa-ellipsis-v"></i>
           </span>
         </button>
-      </p>
+      </div>
       <span>
         <img src=${algo} width="18" style="margin-bottom: -1px;" class="mr-1" />
         ${details === null && error && html`<span>${error}</span>`}
@@ -74,6 +78,12 @@ const Account: FunctionalComponent = (props: any) => {
           html`
             <span>${numFormat(details.amount / 1e6, 6)} </span>
             <span class="has-text-grey-light">Algos</span>
+            <i
+              class="far fa-question-circle px-1 has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+              data-tooltip="${rewardsTooltip}"
+              aria-label="${rewardsTooltip}"
+            >
+            </i>
           `
         }
       </span>
@@ -95,28 +105,11 @@ const Account: FunctionalComponent = (props: any) => {
         details &&
         details.assets &&
         details.assets.length > 0 &&
-        html` <${AssetsList} assets=${details.assets} ledger=${ledger} /> `
+        html`<${AssetsList} assets=${details.assets} ledger=${ledger} address=${address} />`
       }
     </div>
 
     <${TransactionsList} address=${address} ledger=${ledger}/>
-
-    ${
-      showDetails &&
-      html`
-        <div class="modal is-active">
-          <div class="modal-background" onClick=${() => setShowDetails(false)}></div>
-          <div class="modal-content">
-            <${AccountDetails} account=${account} ledger=${ledger} />
-          </div>
-          <button
-            class="modal-close is-large"
-            aria-label="close"
-            onClick=${() => setShowDetails(false)}
-          />
-        </div>
-      `
-    }
   `;
 };
 

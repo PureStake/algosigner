@@ -65,7 +65,7 @@ function VerifyAccount(account) {
     await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
       account.address
     );
-    await closeModal();
+    await goBack();
     await goBack();
   });
 }

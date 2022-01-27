@@ -17,6 +17,7 @@ import CreateAccount from 'pages/CreateAccount';
 import ImportAccount from 'pages/ImportAccount';
 import Wallet from 'pages/Wallet';
 import Account from 'pages/Account';
+import AccountDetails from 'pages/AccountDetails';
 import SendAlgos from 'pages/SendAlgos';
 import AddAsset from 'pages/AddAsset';
 import SignTransaction from 'pages/SignTransaction';
@@ -62,6 +63,7 @@ const App = () => {
                   <${CreateAccount} path="/:ledger/create-account" />
                   <${ImportAccount} path="/:ledger/import-account" />
                   <${Account} path="/:ledger/:address" />
+                  <${AccountDetails} path="/:ledger/:address/details" />
                   <${AddAsset} path="/:ledger/:address/add-asset" />
                   <${SendAlgos} path="/:ledger/:address/send" />
                   <${LedgerHardwareConnector} path="/:ledger/ledger-hardware-connector" />
