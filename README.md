@@ -30,6 +30,12 @@ Other changes
 - Added support for saving addresses as 'Contacts' for easier re-use
 - Added support for importing more than one address from a same ledger device
 
+### 1.7.2 Patch
+
+- Added support for Opting-out of ASAs from the UI
+- New Account Details page
+- Added Tooltip with Pending Rewards
+
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
