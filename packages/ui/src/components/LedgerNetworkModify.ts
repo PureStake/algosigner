@@ -26,6 +26,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const [networkHeaders, setNetworkHeaders] = useState<string>(props.headers || '');
   const [checkStatus, setCheckStatus] = useState<string>('gray');
 
+  const previousName = props.name ? props.name : '';
+
   const deleteNetwork = (pwd: string) => {
     setLoading(true);
     setAuthError('');
@@ -94,6 +96,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     setError('');
     const params = {
       name: networkName,
+      previousName: previousName,
       genesisId: networkId,
       symbol: networkSymbol,
       algodUrl: networkAlgodUrl,

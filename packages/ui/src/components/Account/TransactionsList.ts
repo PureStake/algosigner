@@ -383,7 +383,7 @@ const TransactionsList: FunctionalComponent = (props: any) => {
     </div>
 
     <div class=${`modal ${showTx ? 'is-active' : ''}`}>
-      <div class="modal-background"></div>
+      <div class="modal-background" onClick=${() => setShowTx(null)} />
       <div class="modal-content">${showTx}</div>
       <button class="modal-close is-large" aria-label="close" onClick=${() => setShowTx(null)} />
     </div>
