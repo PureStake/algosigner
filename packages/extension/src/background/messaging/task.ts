@@ -1410,7 +1410,7 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
-          auth.message.error = RequestError.NotAuthorized;
+          auth.message.error = RequestError.UserRejected;
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
