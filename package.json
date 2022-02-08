@@ -13,7 +13,7 @@
     "install:extension": "(cd ./packages/common && npm install); (cd ./packages/crypto && npm install); (cd ./packages/storage && npm install); (cd ./packages/ui && npm install); (cd ./packages/extension && npm install); (cd ./packages/dapp && npm install);",
     "install:test": "(cd ./packages/test-project && npm install);",
     "removelocks": "rm -rf ./package-lock.json && find . -path \"./packages/*\" -name \"package-lock.json\" -not -path \"*/node_modules/*\" -exec rm -rf {} \\;",
-    "removemodules": "rm -rf node_modules && find . -path \"./packages/*\" -name \"node_modules*\" -exec rm -rf {} \\;",
+    "removemodules": "rm -rf ./node_modules && find . -path \"./packages/*\" -type d -name \"node_modules\" -exec rm -rf {} +\\;",
     "build": "(cd ./packages/common && npm run build); (cd ./packages/crypto && npm run build); (cd ./packages/dapp && npm run build); (cd ./packages/storage && npm run build); (cd ./packages/ui && npm run build); (cd ./packages/extension && npm run build);",
     "build:ui": "cd ./packages/ui && npm run build && cp -r ./dist/* ../../dist/",
     "build:extension": "cd ./packages/extension && npm run build && cp -r ./dist/* ../../dist/",
