@@ -20,7 +20,7 @@
     "webpack-cli": "^4.9.0"
   },
   "dependencies": {
-    "algosdk": "1.13.0",
+    "algosdk": "1.13.1",
     "buffer": "^6.0.3"
   },
   "scripts": {
