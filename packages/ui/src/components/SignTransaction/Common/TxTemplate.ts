@@ -9,18 +9,15 @@ const TxTemplate: FunctionalComponent = (props: any) => {
   const { tx, vo, account, msig, midsection, overview } = props;
 
   const txText = JSON.stringify(tx, null, 2);
-  const tabsStyle = 'height: 170px; overflow: auto;';
+  const tabsStyle = 'height: 160px; overflow: auto;';
 
   return html`
-    ${vo &&
-    html`
-      <${TxAlert} vo=${vo} />
-    `}
+    ${vo && html`<${TxAlert} vo=${vo} />`}
     <section class="section py-0">
-      <div class="box py-2 is-shadowless mb-3" style="background: #eff4f7;">
+      <div class="box py-2 is-shadowless mb-2" style="background: #eff4f7;">
         <div style="display: flex; justify-content: space-between;">
           <div>
-            <b>
+            <b style="word-break: break-all;">
               ${msig &&
               html`
                 <span

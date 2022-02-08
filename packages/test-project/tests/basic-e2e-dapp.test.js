@@ -438,9 +438,9 @@ describe('dApp POST Txn Tests (plus Teal compile)', () => {
       var popup = pages[pages.length - 1];
       await appPage.waitForTimeout(500);
       await popup.waitForSelector('#txAlerts');
-      await expect(
-        popup.$eval('#danger-tx-list b', (e) => e.innerText)
-      ).resolves.toContain('Deprecate');
+      await expect(popup.$eval('#danger-tx-list', (e) => e.innerText)).resolves.toContain(
+        'Deprecated'
+      );
       await popup.waitForSelector('#approveTx');
       await popup.click('#approveTx', { waitUntil: 'networkidle' });
       await popup.waitForSelector('#enterPassword');

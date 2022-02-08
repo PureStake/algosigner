@@ -115,7 +115,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
     >
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
-        title="Add asset"
+        title="Opt-in to an asset"
       />
 
       <div class="control has-icons-right mb-2 mx-4">

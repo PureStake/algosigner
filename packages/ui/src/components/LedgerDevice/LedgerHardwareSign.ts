@@ -33,17 +33,19 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           if (response.error) {
             setError(response.error);
           } else {
-            // Get the single transaction to sign and put it in the same format 
+            // Get the single transaction to sign and put it in the same format
             let primaryTx;
-            if (response.transactionWraps && response.transactionWraps.length > 0)
-            {
+            if (response.transactionWraps && response.transactionWraps.length > 0) {
               primaryTx = response.transactionWraps[0];
-            }
-            else {
-              primaryTx = { transaction: response.transaction, estimatedFee: response.estimatedFee, txDerivedTypeText: response.txDerivedTypeText };
+            } else {
+              primaryTx = {
+                transaction: response.transaction,
+                estimatedFee: response.estimatedFee,
+                txDerivedTypeText: response.txDerivedTypeText,
+              };
             }
 
-            getBaseSupportedLedgers().forEach((l) => { 
+            getBaseSupportedLedgers().forEach((l) => {
               if (primaryTx.transaction?.genesisID === l['genesisId']) {
                 setLedger(l['name']);
 
@@ -108,7 +110,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
       <div class="px-3 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;">Sign Using Ledger Device</p>
       </div>
-      <div class="top-view" style="flex: 1; overflow:auto;">
+      <div class="top-view" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
         ${isComplete &&
         html`
           <div class="box">
@@ -119,17 +121,17 @@ const LedgerHardwareSign: FunctionalComponent = () => {
         `}
         ${isComplete === false &&
         html`
-          <div class="py-0 px-0">
-            <section id="txInfo" class="section py-0">
-              <p
-                >Insert the hardware device and verify the Algorand application is open before
+          <div class="py-0 px-4">
+            <section id="txInfo" class="py-0">
+              <p class="mb-2">
+                Insert the hardware device and verify the Algorand application is open before
                 continuing. Review data on the device for correctness.
               </p>
             </section>
             ${txn &&
             txn.transaction &&
             html`
-              <section class="section py-0 px-0" style="word-break: break-all;">
+              <div style="margin-left: -3rem; margin-right: -3rem;">
                 ${txn.transaction.type === 'pay' &&
                 html`
                   <${TxPay}
@@ -194,7 +196,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                     ledger=${ledger}
                   />
                 `}
-              </section>
+              </div>
             `}
           </div>
         `}

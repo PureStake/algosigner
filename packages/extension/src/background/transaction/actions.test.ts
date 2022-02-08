@@ -2,6 +2,7 @@ import { getValidatedTxnWrap } from './actions';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { AssetConfigTransaction } from './acfgTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
+import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
 
 test('Validate build of pay transaction', () => {
@@ -96,8 +97,31 @@ test('Validate build of axfer transaction', () => {
   };
 
   const result = getValidatedTxnWrap(preTransaction, 'axfer');
+  console.log(result)
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetTransferTransaction).toBe(true);
+});
+
+test('Validate build of axfer close transaction', () => {
+  const preTransaction = {
+    type: 'axfer',
+    from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    to: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    closeRemainderTo: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    fee: 1000,
+    assetIndex: 1,
+    amount: 12345,
+    firstRound: 1,
+    lastRound: 1001,
+    genesisID: 'testnet-v1.0',
+    genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    note: new Uint8Array(0),
+  };
+
+  const result = getValidatedTxnWrap(preTransaction, 'axfer');
+  console.log(result);
+  expect(result instanceof BaseValidatedTxnWrap).toBe(true);
+  expect(result instanceof AssetCloseTransaction).toBe(true);
 });
 
 test('Validate build of transaction', () => {

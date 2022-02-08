@@ -65,7 +65,7 @@ function VerifyAccount(account) {
     await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
       account.address
     );
-    await closeModal();
+    await goBack();
     await goBack();
   });
 }
@@ -107,6 +107,20 @@ function ConnectAlgoSigner() {
     }
     await dappPage.exposeFunction('authorizeSign', authorizeSign);
 
+    async function rejectDapp() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#denyAccess');
+      await popup.click('#denyAccess');
+    }
+    await dappPage.exposeFunction('rejectDapp', rejectDapp);
+
+    async function rejectSign() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#rejectTx');
+      await popup.click('#rejectTx');
+    }
+    await dappPage.exposeFunction('rejectSign', rejectSign);
+
     async function authorizeSignTxn() {
       const popup = await getPopup();
 
@@ -146,6 +160,42 @@ function ConnectAlgoSigner() {
       }
     }
     await dappPage.exposeFunction('authorizeSignTxnGroups', authorizeSignTxnGroups);
+  });
+
+  test('NotAuthorized error before connecting', async () => {
+    await expect(
+      dappPage.evaluate(() => {
+        return Promise.resolve(AlgoSigner.accounts())
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      })
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('[RequestError.NotAuthorized]'),
+      code: 4100,
+    });
+  });
+
+  test('UserRejected error upon connection refusal', async () => {
+    await expect(
+      dappPage.evaluate(async () => {
+        const connectPromise = AlgoSigner.connect();
+        await window['rejectDapp']();
+        return Promise.resolve(connectPromise)
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      })
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('[RequestError.UserRejected]'),
+      code: 4001,
+    });
   });
 
   test('Connect Dapp through content.js', async () => {

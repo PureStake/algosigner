@@ -60,7 +60,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
     html`
       <div class="box" style="overflow-wrap: break-word;">
         <div class="has-text-centered mb-2">
-          <b>Adding Asset</b>
+          <b>Opting-in to an Asset</b>
           <br />
           <span class="has-text-grey-light">${asset['asset_id']}</span>
         </div>
@@ -72,7 +72,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
             <span class="is-pulled-right"><b>${asset.name}</b></span>
           </div>
         `}
-        ${asset.name && asset['unit_name'] && html` <hr class="my-2" /> `}
+        ${asset.name && asset['unit_name'] && html`<hr class="my-2" />`}
         ${asset['unit_name'] &&
         asset['unit_name'].length > 0 &&
         html`
@@ -95,7 +95,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
         </div>
 
         <p class="has-text-centered has-text-grey-light my-3">
-          Adding an asset requires sending a transaction with a minimum transaction fee.
+          Opting-in to an asset requires sending a transaction with a minimum transaction fee.
         </p>
 
         <button
@@ -104,7 +104,7 @@ const AddAssetConfirm: FunctionalComponent = (props: any) => {
           onClick=${() => setAskAuth(true)}
           disabled=${disabled}
         >
-          ${disabled ? 'You already added this asset' : 'Add asset!'}
+          ${disabled ? 'You already opted-in to this asset' : 'Opt-in to asset!'}
         </button>
       </div>
     `}

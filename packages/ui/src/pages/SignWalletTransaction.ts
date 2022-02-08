@@ -219,9 +219,9 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const getWrapUI = (wrap, account) => {
     const to = wrap.transaction.to;
-    const contact = to ? contacts.find((c) => (c.address === to)) : null;
+    const contact = to ? contacts.find((c) => c.address === to) : null;
     return html`
-      <div class="mb-3" style="overflow:visible; height: 360px; flex-basis: 70%;">
+      <div class="mb-5" style="overflow:visible; height: 360px; flex-basis: 70%;">
         ${wrap.transaction.type === 'pay' &&
         html`
           <${TxPay}
@@ -305,10 +305,9 @@ const SignWalletTransaction: FunctionalComponent = () => {
     >
       <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
-        ${totalGroups > 1 && html`
-          <span style="float: right;">
-            Signing group ${currentGroup} out of ${totalGroups}
-          </span>
+        ${totalGroups > 1 &&
+        html`
+          <span style="float: right;">Signing group ${currentGroup} out of ${totalGroups}</span>
         `}
       </div>
       ${request.body &&
@@ -371,7 +370,10 @@ const SignWalletTransaction: FunctionalComponent = () => {
           </button>
         </div>
         ${getWrapUI(transactionWraps[activeTx], accountNames[activeTx])}
-        <div class="is-flex is-flex-direction-column has-text-centered mb-3 mx-5">
+        <div
+          class="is-flex is-flex-direction-column has-text-centered mb-3 mx-5"
+          style="margin-top: -1.5rem;"
+        >
           <span>${approvedAmount} out of ${transactionWraps.length} transactions approved.</span>
           <progress
             class="progress ${approvedPercent < 100 ? 'is-primary' : 'is-success'}"

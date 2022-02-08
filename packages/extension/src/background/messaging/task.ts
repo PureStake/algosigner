@@ -1410,7 +1410,7 @@ export class Task {
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
-          auth.message.error = RequestError.NotAuthorized;
+          auth.message.error = RequestError.UserRejected;
           extensionBrowser.windows.remove(auth.window_id);
           delete Task.requests[responseOriginTabID];
 
@@ -1462,6 +1462,9 @@ export class Task {
         },
         [JsonRpcMethod.AssetsVerifiedList]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.AssetsVerifiedList](request, sendResponse);
+        },
+        [JsonRpcMethod.AssetOptOut]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.AssetOptOut](request, sendResponse);
         },
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);

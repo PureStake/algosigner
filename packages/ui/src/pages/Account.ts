@@ -98,14 +98,14 @@ const Account: FunctionalComponent = (props: any) => {
       <div class="px-4">
         <span class="has-text-weight-bold is-size-5">Assets</span>
         <${Link} id="addAsset" style="font-size: 0.9em" class="is-pulled-right" href=${`${url}/add-asset`}>
-          <span class="icon"><i class="fas fa-plus-circle"></i></span> Add new asset
+          <span class="icon"><i class="fas fa-plus-circle"></i></span> Opt-in to an asset
         </${Link}>
       </div>
       ${
         details &&
         details.assets &&
         details.assets.length > 0 &&
-        html` <${AssetsList} assets=${details.assets} ledger=${ledger} /> `
+        html`<${AssetsList} assets=${details.assets} ledger=${ledger} address=${address} />`
       }
     </div>
 
