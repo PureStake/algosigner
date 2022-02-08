@@ -145,7 +145,7 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
         accounts.push(retrievedAccount);
       })
       .catch((e) => {
-        console.error(e);
+        console.log(e);
         // Abort on error and pass back the current foundIndex
         errorOnIndex = true;
         lar.error = e;
