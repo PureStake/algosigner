@@ -87,7 +87,7 @@ describe('Wallet Setup', () => {
   ImportAccount(account2);
 });
 
-describe('dApp Setup', () => {
+describe('dApp Connecting', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
@@ -96,6 +96,37 @@ describe('dApp Setup', () => {
 });
 
 describe('Single and Global Transaction Use cases', () => {
+  test('UserRejected error upon signing refusal', async () => {
+    const txn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: account1.address,
+        to: account1.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate(async (transactions) => {
+        const signPromise = AlgoSigner.signTxn(transactions);
+        await window.rejectSign();
+        return Promise.resolve(signPromise)
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('[RequestError.UserRejected]'),
+      code: 4001,
+    });
+  });
+
   test('Error on Missing account', async () => {
     const invalidAccount = accounts.ui;
     const txn = prepareWalletTx(

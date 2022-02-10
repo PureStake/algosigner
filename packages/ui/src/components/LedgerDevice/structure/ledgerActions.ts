@@ -4,19 +4,24 @@ const algosdk = require('algosdk');
 const Algorand = require('@ledgerhq/hw-app-algorand');
 import LedgerActionResponse from './ledgerActionsResponse';
 import { WalletTransaction } from '@algosigner/common/types';
-import { EncodedSignedTransaction } from 'algosdk';
+import { removeEmptyFields } from '@algosigner/common/utils';
+import { EncodedSignedTransaction, Transaction } from 'algosdk';
 
 let ledgerTransport: typeof Algorand;
 
 const _PATH = {
-    pathIndex: 0,
-    get primary() {
-        { return `44'/60'/0'/0/0`; }
-    },
-    get current() {
-      { return `44'/60'/${this.pathIndex}'/0/0`; }
+  pathIndex: 0,
+  get primary() {
+    {
+      return `44'/60'/0'/0/0`;
     }
-} 
+  },
+  get current() {
+    {
+      return `44'/60'/${this.pathIndex}'/0/0`;
+    }
+  },
+};
 
 const getDevice = async () => {
   // Check for the presence of an Algorand Ledger transport and return it if one exists
@@ -67,39 +72,39 @@ const findAccountIndex = async (fromAccount: string): Promise<number> => {
   let foundAccount = false;
   let hasError = false;
   const maxAccounts = 8; // Arbitrary - to prevent infinite loops
-  
-  // Reset path index to get all accounts for loop 
+
+  // Reset path index to get all accounts for loop
   _PATH.pathIndex = 0;
 
   // Convert fromAccount public address to hex publicKey
   const fromPubKey = Buffer.from(algosdk.decodeAddress(fromAccount).publicKey).toString('hex');
 
-  while(!foundAccount && !hasError && _PATH.pathIndex < maxAccounts) {
-  await ledgerTransport
-    .getAddress(_PATH.current)
-    .then((o: any) => {
-      if (o.publicKey === fromPubKey){
-        foundIndex = _PATH.pathIndex;
-        foundAccount = true;
-      }
-    })
-    .catch((e) => {
-      console.log(`Error when trying to find Ledger account. ${JSON.stringify(e)}`);
-      // Abort on error and pass back the current foundIndex
-      hasError = true;
-    })
-    .finally(() => {
-      if (!foundAccount) {
-        _PATH.pathIndex += 1;
-      }
-    });
+  while (!foundAccount && !hasError && _PATH.pathIndex < maxAccounts) {
+    await ledgerTransport
+      .getAddress(_PATH.current)
+      .then((o: any) => {
+        if (o.publicKey === fromPubKey) {
+          foundIndex = _PATH.pathIndex;
+          foundAccount = true;
+        }
+      })
+      .catch((e) => {
+        console.log(`Error when trying to find Ledger account. ${JSON.stringify(e)}`);
+        // Abort on error and pass back the current foundIndex
+        hasError = true;
+      })
+      .finally(() => {
+        if (!foundAccount) {
+          _PATH.pathIndex += 1;
+        }
+      });
   }
   return foundIndex;
-}
+};
 
 ///
 // Tries to get multiple Ledger accounts
-// Returns an array of publicKey addresses, encoded 
+// Returns an array of publicKey addresses, encoded
 ///
 const getAllAddresses = async (): Promise<LedgerActionResponse> => {
   const accounts = Array<object>();
@@ -107,7 +112,7 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
   const maxAccounts = 8; // Arbitrary - to prevent infinite loops
   let lar: LedgerActionResponse = {};
 
-  // Reset path index to get all 
+  // Reset path index to get all
   _PATH.pathIndex = 0;
 
   // If we haven't connected yet, do it now. This will prompt the tab to ask for device.
@@ -126,69 +131,83 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
     return lar;
   }
 
-  while(!errorOnIndex && _PATH.pathIndex < maxAccounts) {
+  while (!errorOnIndex && _PATH.pathIndex < maxAccounts) {
     const currentIndex = `${_PATH.pathIndex}`;
     await ledgerTransport
       .getAddress(_PATH.current)
       .then((o: any) => {
         const publicAddress: string = algosdk.encodeAddress(Buffer.from(o.publicKey, 'hex'));
-        const retrievedAccount = { 'ledgerIndex': currentIndex, 'hex': o.publicKey, 'publicAddress': publicAddress };
+        const retrievedAccount = {
+          ledgerIndex: currentIndex,
+          hex: o.publicKey,
+          publicAddress: publicAddress,
+        };
         accounts.push(retrievedAccount);
       })
       .catch((e) => {
-        console.log(e)
+        console.log(e);
         // Abort on error and pass back the current foundIndex
         errorOnIndex = true;
         lar.error = e;
       })
-      .finally(_PATH.pathIndex += 1);
+      .finally((_PATH.pathIndex += 1));
   }
 
   lar.message = accounts;
   return lar;
-}
+};
 
 ///
 // Takes the modified transaction request which contains groupsToSign
 // then from that will extract the first walletTransaction of the calculated group
 ///
 function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
-  // If coming from a v1 sign we will have an encodedTxn object
-  if(transaction.encodedTxn) {
-    const byteTxn = new Uint8Array(
-      Buffer.from(transaction.encodedTxn, 'base64')
-        .toString('binary')
-        .split('')
-        .map((x) => x.charCodeAt(0)));
+  // If there's no dApp structure, we're coming from the UI
+  if (!transaction.encodedTxn && !transaction.groupsToSign) {
+    const builtTx = new Transaction(removeEmptyFields(transaction.transaction));
+    const byteTxn = algosdk.encodeUnsignedTransaction(builtTx);
 
     return { transaction: byteTxn, error: '' };
   }
 
-  const { groupsToSign, currentGroup, ledgerGroup } = transaction;
+  // If coming from a v1 sign we will have an encodedTxn object
+  if (transaction.encodedTxn) {
+    const byteTxn = new Uint8Array(
+      Buffer.from(transaction.encodedTxn, 'base64')
+        .toString('binary')
+        .split('')
+        .map((x) => x.charCodeAt(0))
+    );
 
-  // Using ledgerGroup if provided since the user may sign multiple more by the time we sign. 
+    return { transaction: byteTxn, error: '' };
+  }
+
+  // Using ledgerGroup if provided since the user may sign multiple more by the time we sign.
   // Defaulting to current after, but making sure we don't go above the current length.
-  const txPositionInGroup = Math.min((ledgerGroup || currentGroup), groupsToSign.length - 1);
+  const { groupsToSign, currentGroup, ledgerGroup } = transaction;
+  const txPositionInGroup = Math.min(ledgerGroup || currentGroup || 0, groupsToSign.length - 1);
 
   const walletTransactions: Array<WalletTransaction> = groupsToSign[txPositionInGroup];
 
   const transactionObjs = walletTransactions.map((walletTx) => {
-    const byteWalletTxn =  new Uint8Array(
+    const byteWalletTxn = new Uint8Array(
       Buffer.from(walletTx.txn, 'base64')
         .toString('binary')
         .split('')
         .map((x) => x.charCodeAt(0))
     );
     return byteWalletTxn;
-    }
-  );
+  });
 
   // If we didn't have a v1 txn then verify we have some transactionObjs
   if (transactionObjs.length === 0) {
-    return { transaction: undefined, error: 'No signable transaction found in cached Ledger transactions.' };
+    return {
+      transaction: undefined,
+      error: 'No signable transaction found in cached Ledger transactions.',
+    };
   }
 
-  // Currently we only allow a single transaction going into Ledger. 
+  // Currently we only allow a single transaction going into Ledger.
   // TODO: To work with groups in the future this should grab the first acceptable one, not the first one overall.
   const encodedTxn = transactionObjs[0];
 
@@ -256,15 +275,14 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
   const decodedTxn = algosdk.decodeUnsignedTransaction(txnResponse.transaction);
   const message = Buffer.from(txnResponse.transaction).toString('hex');
 
-  // Since we currently don't support groups, logic, or rekeyed accounts on Ledger sign 
+  // Since we currently don't support groups, logic, or rekeyed accounts on Ledger sign
   // we can check just the from field to get the index
   const fromAccount = algosdk.encodeAddress(decodedTxn.from.publicKey);
   const foundIndex = await findAccountIndex(fromAccount);
   if (foundIndex === -1) {
-    lar.error = 'Transaction "from" field does not match any ledger account.'
+    lar.error = 'Transaction "from" field does not match any ledger account.';
     return lar;
-  }
-  else {
+  } else {
     _PATH.pathIndex = foundIndex;
 
     // Send the hex transaction to the Ledger device for signing
@@ -278,7 +296,7 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
         const encTxn = algosdk.encodeObj(sTxn);
 
         // Convert to base64 string for return
-        lar = { message: Buffer.from(encTxn, 'base64').toString('base64') }
+        lar = { message: Buffer.from(encTxn, 'base64').toString('base64') };
       })
       .catch((e) => {
         // If this is a known error from Ledger it will contain a message
@@ -287,7 +305,7 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
             ? { error: e.message }
             : { error: 'An unknown error has occured in connecting the Ledger device.' };
       });
-    
+
     return lar;
   }
 };
