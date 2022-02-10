@@ -10,8 +10,9 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-# As of release 1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
+# `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` will be deprecated mid April.
 
+## As of release 1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
 ## 1.7.0 Release
 
 ### Functionality updates
@@ -35,6 +36,14 @@ Other changes
 - Added support for Opting-out of ASAs from the UI
 - New Account Details page
 - Added Tooltip with Pending Rewards
+
+### 1.7.3 Patch
+
+- Fixed an error that prevented using Ledger devices when doing transactions from the UI
+- Fixed an issue where we were sending an incorrect error code on user refusal of transactions
+- Support for SDK v1.13.1
+- Renaming of `Add an asset` to `Opt-in to an asset`
+
 
 ## New Users
 
