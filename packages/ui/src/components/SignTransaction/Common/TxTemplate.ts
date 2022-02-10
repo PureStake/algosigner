@@ -17,7 +17,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
       <div class="box py-2 is-shadowless mb-2" style="background: #eff4f7;">
         <div style="display: flex; justify-content: space-between;">
           <div>
-            <b>
+            <b style="word-break: break-all;">
               ${msig &&
               html`
                 <span
