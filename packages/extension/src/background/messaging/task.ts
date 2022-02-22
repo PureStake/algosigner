@@ -345,16 +345,18 @@ export class Task {
           }
         }
 
-        // Verify group is presented as a whole
-        const recreatedGroupTxs = algosdk.assignGroupID(
-          rawTxArray.slice().map((tx) => {
-            delete tx.group;
-            return tx;
-          })
-        );
-        const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-        if (groupId !== recalculatedGroupID) {
-          throw new IncompleteOrDisorderedGroup();
+        if (groupId) {
+          // Verify group is presented as a whole
+          const recreatedGroupTxs = algosdk.assignGroupID(
+            rawTxArray.slice().map((tx) => {
+              delete tx.group;
+              return tx;
+            })
+          );
+          const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+          if (groupId !== recalculatedGroupID) {
+            throw new IncompleteOrDisorderedGroup();
+          }
         }
 
         for (let i = 0; i < transactionWraps.length; i++) {
