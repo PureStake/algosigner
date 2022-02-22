@@ -22,7 +22,7 @@ jobs:
           path-to-document: 'https://github.com/PureStake/algosigner-cla/blob/main/CLA.md' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'main'
-          allowlist: PureStake/algorand-devs
+          allowlist: janmarcano,fxgamundi,purestaketdb,PureBrent,mmaurello,ekenigs
 
          #below are the optional inputs - If the optional inputs are not given, then default values will be taken
           remote-organization-name: purestake
