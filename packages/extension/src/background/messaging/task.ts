@@ -317,6 +317,8 @@ export class Task {
         throw new InvalidFields(data);
       } else {
         // Group validations
+        const groupId = transactionWraps[0].transaction.group;
+
         if (transactionWraps.length > 1) {
           if (
             !transactionWraps.every(
@@ -326,24 +328,12 @@ export class Task {
             throw new NoDifferentLedgers();
           }
 
-          const groupId = transactionWraps[0].transaction.group;
           if (!groupId) {
             throw new MultipleTxsRequireGroup();
           }
 
           if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
             throw new NonMatchingGroup();
-          }
-
-          const recreatedGroupTxs = algosdk.assignGroupID(
-            rawTxArray.slice().map((tx) => {
-              delete tx.group;
-              return tx;
-            })
-          );
-          const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-          if (groupId !== recalculatedGroupID) {
-            throw new IncompleteOrDisorderedGroup();
           }
         } else {
           const wrap = transactionWraps[0];
@@ -353,8 +343,18 @@ export class Task {
           ) {
             throw new InvalidSigners();
           }
-          // Incomplete atomic transactions are no longer being allowed
-          if (wrap.transaction.group) {
+        }
+
+        if (groupId) {
+          // Verify group is presented as a whole
+          const recreatedGroupTxs = algosdk.assignGroupID(
+            rawTxArray.slice().map((tx) => {
+              delete tx.group;
+              return tx;
+            })
+          );
+          const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
+          if (groupId !== recalculatedGroupID) {
             throw new IncompleteOrDisorderedGroup();
           }
         }
