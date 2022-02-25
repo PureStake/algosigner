@@ -9,11 +9,15 @@ import HeaderView from 'components/HeaderView';
 import Authenticate from 'components/Authenticate';
 
 import { sendMessage } from 'services/Messaging';
+import { REFERENCE_ACCOUNT_TOOLTIP } from '@algosigner/common/strings';
+import algosdk from 'algosdk';
 
 const ImportAccount: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
   const { ledger } = props;
   const [mnemonic, setMnemonic] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [isRef, setIsRef] = useState<boolean>(false);
   const [name, setName] = useState<string>('');
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -21,12 +25,17 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const [error, setError] = useState<string>('');
 
   const matches = mnemonic.trim().split(/[\s\t\r\n]+/) || [];
-  const disabled = name.trim().length === 0 || matches.length !== 25;
+  const disabled =
+    name.trim().length === 0 ||
+    (!isRef && matches.length !== 25) ||
+    (isRef && !algosdk.isValidAddress(address));
 
   const importAccount = (pwd: string) => {
     const params = {
       passphrase: pwd,
       mnemonic: matches.join(' '),
+      address: address,
+      isRef: isRef,
       name: name.trim(),
       ledger: ledger,
     };
@@ -54,8 +63,12 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     });
   };
 
-  const handleInput = (e) => {
+  const handleMnemonicInput = (e) => {
     setMnemonic(e.target.value);
+  };
+
+  const handleAddressInput = (e) => {
+    setAddress(e.target.value);
   };
 
   return html`
@@ -64,23 +77,61 @@ const ImportAccount: FunctionalComponent = (props: any) => {
       <div class="px-3" style="flex: 1;">
         <input
           id="accountName"
-          class="input"
+          class="input mb-2"
           placeholder="Account name"
           maxlength="32"
           value=${name}
           onInput=${(e) => setName(e.target.value)}
         />
 
-        <p class="my-3"> Insert the 25 word mnemonic of the account you want to import </p>
+        <span>Choose the type of account you want to import:</span>
 
-        <textarea
-          id="enterMnemonic"
-          class="textarea has-fixed-size"
-          placeholder="apples butter king monkey nuts ..."
-          rows="5"
-          onInput=${handleInput}
-          value=${mnemonic}
-        />
+        <div class="tabs is-toggle is-fullwidth my-2" style="overflow: unset;">
+          <ul>
+            <li class="${!isRef ? 'is-active' : ''}">
+              <a onClick="${() => setIsRef(false)}">
+                <span>Normal</span>
+              </a>
+            </li>
+            <li class="${isRef ? 'is-active' : ''}">
+              <a onClick="${() => setIsRef(true)}">
+                <span>Reference</span>
+                <span
+                  style="border: none;"
+                  class="icon is-small has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-right has-tooltip-fade"
+                  data-tooltip="${REFERENCE_ACCOUNT_TOOLTIP}"
+                >
+                  <i class="fas fa-info-circle" aria-hidden="true" />
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        ${isRef &&
+        html`
+          <p class="mb-3">Insert the public address of the account:</p>
+          <textarea
+            id="enterAddress"
+            class="textarea has-fixed-size"
+            placeholder="4XNGBX37MAVLC..."
+            rows="2"
+            onInput=${handleAddressInput}
+            value=${address}
+          />
+        `}
+        ${!isRef &&
+        html`
+          <p class="my-3">Insert the 25 word mnemonic of the account:</p>
+          <textarea
+            id="enterMnemonic"
+            class="textarea has-fixed-size"
+            placeholder="apples butter king monkey nuts ..."
+            rows="5"
+            onInput=${handleMnemonicInput}
+            value=${mnemonic}
+          />
+        `}
 
         <p class="mt-3 has-text-danger" style="height: 1.5em;">
           ${error !== undefined && error.length > 0 && error}
