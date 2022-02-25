@@ -90,20 +90,14 @@ const ImportAccount: FunctionalComponent = (props: any) => {
           <ul>
             <li class="${!isRef ? 'is-active' : ''}">
               <a onClick="${() => setIsRef(false)}">
-                <span class="icon is-small">
-                  <i class="fas fa-user-secret" aria-hidden="true" />
-                </span>
                 <span>Normal</span>
               </a>
             </li>
             <li class="${isRef ? 'is-active' : ''}">
               <a onClick="${() => setIsRef(true)}">
-                <span class="icon is-small">
-                  <i class="fas fa-user-alt" aria-hidden="true" />
-                </span>
                 <span>Reference</span>
                 <span
-                  style="margin-bottom: -0.25rem;"
+                  style="border: none;"
                   class="icon is-small has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-right has-tooltip-fade"
                   data-tooltip="${REFERENCE_ACCOUNT_TOOLTIP}"
                 >
@@ -116,10 +110,6 @@ const ImportAccount: FunctionalComponent = (props: any) => {
 
         ${isRef &&
         html`
-          <p class="mt-3"
-            >This type of account cannot sign transactions by itself without a private key or being
-            rekeyed.</p
-          >
           <p class="mb-3">Insert the public address of the account:</p>
           <textarea
             id="enterAddress"

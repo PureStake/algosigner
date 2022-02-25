@@ -41,7 +41,7 @@ const AccountPreview: FunctionalComponent = (props: any) => {
       <div style="display: flex; justify-content: space-between;">
         ${account.isRef &&
         html`<i
-          class="fas fa-unlink is-size-7 mx-1 mt-3 has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-left has-tooltip-fade"
+          class="fas fa-link is-size-7 mx-1 mt-3 has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-left has-tooltip-fade"
           style="line-height: 1.1; height: 15px; font-style: unset;"
           data-tooltip="${REFERENCE_ACCOUNT_TOOLTIP}"
         />`}
