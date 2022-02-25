@@ -15,3 +15,7 @@ and Indexer in JSON format:
 		"x-api-key": "xxxxxxxxx"
 	}
  }`;
+
+export const REFERENCE_ACCOUNT_TOOLTIP: string = `Reference accounts allow account tracking in AlgoSigner, but
+they do not contain signing keys. They can only sign transactions if
+they are rekeyed to another normal account also on AlgoSigner.`;

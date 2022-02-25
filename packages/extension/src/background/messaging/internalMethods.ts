@@ -43,10 +43,11 @@ export class InternalMethods {
 
       // Afterwards we can add in all the non-private keys and names into the safewallet
       for (let j = 0; j < wallet[key].length; j++) {
-        const { address, name } = wallet[key][j];
+        const { address, name, isRef } = wallet[key][j];
         safeWallet[key].push({
           address: address,
           name: name,
+          isRef: isRef,
         });
       }
     });
@@ -251,24 +252,30 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.ImportAccount](request: any, sendResponse: Function) {
-    const { mnemonic, name, ledger } = request.body.params;
+    const { mnemonic, address, isRef, name, ledger } = request.body.params;
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
+    let newAccount;
 
     try {
-      var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
-      var existingAccounts = session.wallet[ledger];
+      const existingAccounts = session.wallet[ledger];
+      let targetAddress = address;
+
+      if (!isRef) {
+        targetAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
+      }
 
       if (existingAccounts) {
         for (let i = 0; i < existingAccounts.length; i++) {
-          if (existingAccounts[i].address === recoveredAccountAddress) {
+          if (existingAccounts[i].address === targetAddress) {
             throw new Error(`Account already exists in ${ledger} wallet.`);
           }
         }
       }
 
-      var newAccount = {
-        address: recoveredAccountAddress,
-        mnemonic: mnemonic,
+      newAccount = {
+        address: targetAddress,
+        mnemonic: !isRef ? mnemonic : null,
+        isRef: isRef,
         name: name,
       };
     } catch (error) {
