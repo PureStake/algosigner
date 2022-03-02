@@ -5,7 +5,7 @@ import TxTemplate from './Common/TxTemplate';
 import ContactPreview from 'components/ContactPreview';
 
 const TxPay: FunctionalComponent = (props: any) => {
-  const { tx, account, contact, vo, estFee, msig } = props;
+  const { tx, account, contact, vo, estFee, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   const midsection = html`
@@ -61,6 +61,7 @@ const TxPay: FunctionalComponent = (props: any) => {
       msig=${msig}
       midsection=${midsection}
       overview=${overview}
+      authAddr=${authAddr}
     />
   `;
 };

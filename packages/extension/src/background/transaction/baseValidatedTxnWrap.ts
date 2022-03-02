@@ -23,6 +23,7 @@ export class BaseValidatedTxnWrap {
   assetInfo: AssetInfo;
   msigData: WalletMultisigMetadata;
   signers: Array<string>;
+  authAddr: string;
 
   constructor(
     params: any,

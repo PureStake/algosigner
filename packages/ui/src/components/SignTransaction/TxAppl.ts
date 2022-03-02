@@ -12,7 +12,7 @@ const ON_COMPLETE = [
 ];
 
 const TxAppl: FunctionalComponent = (props: any) => {
-  const { tx, account, vo, estFee, msig } = props;
+  const { tx, account, vo, estFee, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   const midsection = html`
@@ -156,6 +156,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       msig=${msig}
       midsection=${midsection}
       overview=${overview}
+      authAddr=${authAddr}
     />
   `;
 };

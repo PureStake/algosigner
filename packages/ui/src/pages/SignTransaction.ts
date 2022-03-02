@@ -153,6 +153,7 @@ const SignTransaction: FunctionalComponent = () => {
               estFee=${transactionWrap.estimatedFee}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
           ${transactionWrap.transaction.type === 'keyreg' &&
@@ -163,6 +164,7 @@ const SignTransaction: FunctionalComponent = () => {
               estFee=${transactionWrap.estimatedFee}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
           ${transactionWrap.transaction.type === 'acfg' &&
@@ -174,6 +176,7 @@ const SignTransaction: FunctionalComponent = () => {
               estFee=${transactionWrap.estimatedFee}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
           ${transactionWrap.transaction.type === 'axfer' &&
@@ -187,6 +190,7 @@ const SignTransaction: FunctionalComponent = () => {
               un=${transactionWrap.assetInfo.unitName}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
           ${transactionWrap.transaction.type === 'afrz' &&
@@ -197,6 +201,7 @@ const SignTransaction: FunctionalComponent = () => {
               estFee=${transactionWrap.estimatedFee}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
           ${transactionWrap.transaction.type === 'appl' &&
@@ -207,6 +212,7 @@ const SignTransaction: FunctionalComponent = () => {
               estFee=${transactionWrap.estimatedFee}
               account=${account}
               ledger=${ledger}
+              authAddr=${transactionWrap.authAddr}
             />
           `}
         `}

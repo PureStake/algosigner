@@ -9,7 +9,7 @@ import {
   calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
-import { ValidationStatus } from '../utils/validator';
+import { ValidationResponse, ValidationStatus } from '../utils/validator';
 import { InternalMethods } from './internalMethods';
 import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
@@ -182,6 +182,29 @@ export class Task {
     }
   }
 
+  private static getChainAuthAddress = async (transaction: any, sendResponse: Function) => {
+    // The ledger and address will be provided differently from UI and dapp
+    const ledger = transaction.ledger || getLedgerFromGenesisId(transaction.genesisID);
+    const address = transaction.address || transaction.from;
+
+    const conn = Settings.getBackendParams(ledger, API.Algod);
+    const sendPath = `/v2/accounts/${address}`;
+    const fetchParams: any = {
+      headers: {
+        ...conn.headers
+      },
+      method: 'GET',
+    };
+    let url = conn.url;
+    if (conn.port.length > 0) url += ':' + conn.port;
+    
+    await Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((account) => {
+      // Use authAddr or empty string
+      const chainAuthAddr = account['auth-addr'] || '';
+      sendResponse(chainAuthAddr);
+    });
+  }
+
   // Intermediate function for Group of Groups handling
   private static signIndividualGroup = async (request: any) => {
     const groupsToSign: Array<Array<WalletTransaction>> = request.body.params.groupsToSign;
@@ -197,7 +220,8 @@ export class Task {
         throw new TooManyTransactions();
       }
 
-      walletTransactions.forEach((walletTx, index) => {
+      let index = 0;
+      for (const walletTx of walletTransactions) {
         try {
           // Runtime type checking
           if (
@@ -248,6 +272,8 @@ export class Task {
 
           const signers = walletTransactions[index].signers;
           const msigData = walletTransactions[index].msig;
+          const authAddr = walletTransactions[index].authAddr;
+
           wrap.msigData = msigData;
           wrap.signers = signers;
           if (msigData) {
@@ -261,13 +287,40 @@ export class Task {
             if (!signers) {
               InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
             }
+            else if (authAddr && signers.length === 1 && authAddr !== signers[0]){
+              // We have an authAddr so if signers is length of 1 then they must be equal 
+              throw RequestError.UserRejected;
+            }
           }
 
-          return wrap;
+          if (authAddr) {
+            // Attach to wrap so it can be displayed
+            transactionWraps[index].authAddr = authAddr;
+
+            // Check that the authAddr is an address
+            const isValidAddress = algosdk.isValidAddress(authAddr);
+            if (!isValidAddress) {
+              throw RequestError.UnsupportedAlgod;
+            }
+
+            // If there is an auth address then we SHOULD validate it is on chain and warn if not present      
+            await Task.getChainAuthAddress(processedTx, (chainAuthAddr) => {
+              // If there was an auth address on chain then set the auth address for the transaction
+              if (authAddr !== chainAuthAddr){
+                // Rekey - Attach warning before signing
+                transactionWraps[index].validityObject['authAddr'] = new ValidationResponse({
+                  status: ValidationStatus.Warning,
+                  info: 'Value does not match the current authorized signer for this address on chain.',
+                });
+              }
+            });
+          }
         } catch (e) {
           validationErrors[index] = e;
         }
-      });
+        // Always update index
+        index++;
+      }
 
       if (
         validationErrors.length ||
@@ -1187,6 +1240,8 @@ export class Task {
             walletTransactions.forEach((w, i) => {
               const msig = w.msig;
               const signers = w.signers;
+              const authAddr = w.authAddr;
+
               // If signers are provided as an empty array, it means it's a reference transaction (not to be signed)
               if (!(signers && !signers.length)) {
                 // If multisig is provided, we search for the provided signers
@@ -1205,7 +1260,11 @@ export class Task {
                       }
                     });
                   }
-                } else {
+                } 
+                else if (authAddr) {
+                  neededAccounts.push(authAddr);
+                }
+                else {
                   neededAccounts.push(transactionsWraps[i].transaction.from);
                 }
               }
@@ -1246,6 +1305,8 @@ export class Task {
 
               transactionObjs.forEach((tx, index) => {
                 const signers = walletTransactions[index].signers;
+                const authAddr = walletTransactions[index].authAddr;
+
                 // If it's a reference transaction we return null, otherwise we try sign
                 if (signers && !signers.length) {
                   signedTxs[index] = null;
@@ -1285,7 +1346,7 @@ export class Task {
                         blob: b64Obj,
                       };
                     } else {
-                      const address = wrap.transaction.from;
+                      const address = authAddr || wrap.transaction.from;
                       if (recoveredAccounts[address]) {
                         signedBlob = tx.signTxn(recoveredAccounts[address].sk);
                         const b64Obj = byteArrayToBase64(signedBlob);
@@ -1467,7 +1528,18 @@ export class Task {
           return InternalMethods[JsonRpcMethod.AssetOptOut](request, sendResponse);
         },
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
+          // This is a UI transaction, first determine if there is an authorized signing account
+          Task.getChainAuthAddress(request.body.params, (chainAuthAddr) => {
+            // If there was an auth address on chain then set the auth address for the transaction
+            if (chainAuthAddr){
+              request.body.params.authAddr = chainAuthAddr;
+            }
+            InternalMethods[JsonRpcMethod.SignSendTransaction](request, (response) => {
+              sendResponse(response);
+            });
+          });
+
+          return true;
         },
         [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
