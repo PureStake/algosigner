@@ -686,7 +686,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AssetOptOut](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, id } = request.body.params;
+    const { ledger, address, passphrase, id, authAddr } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -696,10 +696,11 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const signAddress = authAddr || address;
 
       // Find address to send algos from
       for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === address) {
+        if (unlockedValue[ledger][i].address === signAddress) {
           account = unlockedValue[ledger][i];
           break;
         }
@@ -810,7 +811,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, txnParams } = request.body.params;
+    const { ledger, address, passphrase, txnParams, authAddr } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -820,10 +821,11 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const signAddress = authAddr || address;
 
       // Find address to send algos from
       for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === address) {
+        if (unlockedValue[ledger][i].address === signAddress) {
           account = unlockedValue[ledger][i];
           break;
         }

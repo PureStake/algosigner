@@ -3,7 +3,7 @@ import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
 
 const TxKeyreg: FunctionalComponent = (props: any) => {
-  const { tx, account, vo, estFee, msig } = props;
+  const { tx, account, vo, estFee, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   const midsection = html`<p class="has-text-centered has-text-weight-bold">Key Registration</p>`;
@@ -40,6 +40,7 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
       msig=${msig}
       midsection=${midsection}
       overview=${overview}
+      authAddr=${authAddr}
     />
   `;
 };
