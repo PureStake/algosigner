@@ -289,7 +289,7 @@ export class Task {
             }
             else if (authAddr && signers.length === 1 && authAddr !== signers[0]){
               // We have an authAddr so if signers is length of 1 then they must be equal 
-              throw RequestError.UserRejected;
+              throw RequestError.InvalidFormat;
             }
           }
 

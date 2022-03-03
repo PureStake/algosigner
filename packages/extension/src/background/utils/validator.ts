@@ -157,10 +157,10 @@ export function Validate(field: any, value: any): ValidationResponse {
       }
 
     case 'reKeyTo':
-      if (value) {
+      if (value && !algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
-          info: 'Rekey transactions are not currently accepted in AlgoSigner.',
+          info: 'Address does not adhere to a valid structure.',
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
