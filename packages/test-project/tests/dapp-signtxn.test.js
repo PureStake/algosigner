@@ -95,7 +95,7 @@ describe('dApp Connecting', () => {
   });
 });
 
-describe('Single and Global Transaction Use cases', () => {
+describe('Error Use cases', () => {
   test('UserRejected error upon signing refusal', async () => {
     const txn = prepareWalletTx(
       buildSdkTx({
@@ -192,36 +192,9 @@ describe('Single and Global Transaction Use cases', () => {
   });
 
   // // @TODO: Wallet Transaction Structure check tests
+});
 
-  test('Reject on Group ID for Single Transactions', async () => {
-    const txn = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account1.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-      fee: 1000,
-    });
-    const groupedTransactions = algosdk.assignGroupID([txn, txn]);
-    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
-
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('group is incomplete'),
-      code: 4300,
-      name: expect.stringContaining('IncompleteOrDisorderedGroup'),
-    });
-  });
-
+describe('Multisig Transaction Use cases', () => {
   test('Sign MultiSig Transaction with All Accounts', async () => {
     const multisigTxn = prepareWalletTx(
       buildSdkTx({
@@ -279,6 +252,51 @@ describe('Single and Global Transaction Use cases', () => {
 });
 
 describe('Group Transactions Use cases', () => {
+  test('Reject on incomplete Group', async () => {
+    const txn = buildSdkTx({
+      type: 'pay',
+      from: account1.address,
+      to: account1.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+    const groupedTransactions = algosdk.assignGroupID([txn, txn]);
+    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('group is incomplete'),
+      code: 4300,
+      name: expect.stringContaining('IncompleteOrDisorderedGroup'),
+    });
+  });
+
+  test('Accept Group ID for Single Transactions', async () => {
+    const txn = buildSdkTx({
+      type: 'pay',
+      from: account1.address,
+      to: account1.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+    const groupedTransactions = algosdk.assignGroupID([txn]);
+    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
+
+    const signedTransactions = await signTxn(unsignedTransactions);
+    await expect(signedTransactions[0]).not.toBeNull();
+  });
+
   test('Group Transaction with Reference Transaction && Pooled Fee', async () => {
     const tx1 = buildSdkTx({
       type: 'pay',

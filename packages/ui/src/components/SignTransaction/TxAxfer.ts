@@ -6,7 +6,7 @@ import TxTemplate from './Common/TxTemplate';
 import ContactPreview from 'components/ContactPreview';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
-  const { tx, account, contact, ledger, vo, dt, estFee, da, un, msig } = props;
+  const { tx, account, contact, ledger, vo, dt, estFee, da, un, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   let assetIndex = html`<p style="width: 70%">${tx.assetIndex}</p>`;
@@ -76,6 +76,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       msig=${msig}
       midsection=${midsection}
       overview=${overview}
+      authAddr=${authAddr}
     />
   `;
 };

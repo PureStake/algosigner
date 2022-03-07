@@ -19,20 +19,22 @@ const AssetPreview: FunctionalComponent = (props: any) => {
 
   return html`
     <div
-      class="py-2 px-4"
+      class="py-2 px-4 is-flex is-justify-content-space-between"
       data-asset-id="${asset['asset-id']}"
       data-asset-balance="${getAmount()}"
       style="border-top: 1px solid rgba(138, 159, 168, 0.2); cursor: pointer;"
       onClick=${() => setShowAsset(asset)}
     >
-      ${asset.name &&
-      asset.name.length > 0 &&
-      html`
-        ${asset.name}
-        <small class="has-text-grey-light"> ${asset['asset-id']}</small>
-      `}
-      ${(!asset.name || asset.name.length === 0) && html` ${asset['asset-id']} `}
-      <span style="float: right;">
+      <span style="max-width: 55%;">
+        ${asset.name &&
+        asset.name.length > 0 &&
+        html`
+          ${asset.name}
+          <small class="has-text-grey-light"> ${asset['asset-id']}</small>
+        `}
+        ${(!asset.name || asset.name.length === 0) && html` ${asset['asset-id']} `}
+      </span>
+      <span>
         <b>${getAmount()}</b>
         ${asset['unit-name'] &&
         asset['unit-name'].length > 0 &&
