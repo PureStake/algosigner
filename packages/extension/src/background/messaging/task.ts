@@ -1294,6 +1294,10 @@ export class Task {
                 const account = unlockedValue[ledger][i];
                 if (neededAccounts.includes(account.address)) {
                   if (!account.isHardware) {
+                     // Check for an address that we were expected but unable to sign with
+                    if(!unlockedValue[ledger][i].mnemonic) {
+                      throw RequestError.NotAuthorized;
+                    }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
                     );
