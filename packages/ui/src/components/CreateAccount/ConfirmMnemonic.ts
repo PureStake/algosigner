@@ -4,14 +4,8 @@ import { useState, useEffect } from 'preact/hooks';
 
 import HeaderView from 'components/HeaderView';
 
-function shuffle(a) {
-  var j, x, i;
-  for (i = a.length - 1; i > 0; i--) {
-    j = Math.floor(Math.random() * (i + 1));
-    x = a[i];
-    a[i] = a[j];
-    a[j] = x;
-  }
+function sort(a) {
+  a.sort((x, y) => x.localeCompare(y));
   return a;
 }
 
@@ -20,10 +14,10 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   const [referenceMnemonic, setReferenceMnemonic] = useState<string>('');
   const [wordIndexArray, setWordIndexArray] = useState<Array<number>>([]);
   const [lastWordIndex, setLastWordIndex] = useState<number>(-1);
-  const [shuffledMnemonic, setShuffledMnemonic] = useState([]);
+  const [sortedMnemonic, setSortedMnemonic] = useState([]);
 
   useEffect(() => {
-    setShuffledMnemonic(shuffle(account.mnemonic.split(' ')));
+    setSortedMnemonic(sort(account.mnemonic.split(' ')));
     setWordIndexArray(new Array(25).fill(-1));
   }, []);
 
@@ -43,7 +37,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
 
     const newMnemonic = newIndexArray
       .filter((index) => index > -1)
-      .map((wordIndex) => shuffledMnemonic[wordIndex])
+      .map((wordIndex) => sortedMnemonic[wordIndex])
       .join(' ');
 
     setReferenceMnemonic(newMnemonic);
@@ -57,10 +51,11 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   // 5x5 grid
   const grid: Array<any[]> = [];
 
-  const buttons: Array<any> = shuffledMnemonic.map(
+  const buttons: Array<any> = sortedMnemonic.map(
     (word, index) => html`
       <button
-        class="button is-small is-fullwidth mt-3 ${index === lastWordIndex
+        class="button is-small is-fullwidth ${(index + 1) % 5 === 0 ? '' : 'mr-2'} ${index ===
+        lastWordIndex
           ? 'is-light is-link'
           : ''}"
         id="${word}"
@@ -89,9 +84,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
           value=${referenceMnemonic}
           readonly
         ></textarea>
-        <div class="columns is-mobile">
-          ${grid.map((column) => html`<div class="column is-one-fifth">${column}</div>`)}
-        </div>
+        ${grid.map((row) => html`<div class="is-flex mt-3">${row}</div>`)}
       </div>
       <div style="padding: 1em;">
         <button
