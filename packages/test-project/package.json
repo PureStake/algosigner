@@ -24,6 +24,6 @@
     "dapp/signtxn": "jest --group=dapp/signtxn",
     "dapp/groups": "jest --group=dapp/groups",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && bash -c \"start chrome \"$(realpath ./coverage/lcov-report/index.html\"\")",
-    "test": "jest -i --group=-github --group=-dapp-storage --silent"
+    "test": "jest -i --group=-github --group=-dapp-storage"
   }
 }

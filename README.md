@@ -16,7 +16,7 @@ Developers working with dApps may also install directly from the release package
 ## 1.8.0 Release
 
 ### Functionality updates
-This update is focused around rekey and changes to accomidate it. Both normal accounts and new reference accounts can be used directly in the UI and used by dApps if the proper authAddr is provided in the transaction. 
+This update is focused around rekey and changes to accommodate it. Both normal accounts and new reference accounts can be used directly in the UI and used by dApps if the proper authAddr is provided in the transaction. 
 - Rekeying transactions now available
 - Transactions with rekeyed accounts now accepted 
 - Reference accounts can now be imported with public key only 
