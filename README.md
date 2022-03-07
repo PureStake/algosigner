@@ -13,37 +13,13 @@ Developers working with dApps may also install directly from the release package
 # `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` will be deprecated mid April.
 
 ## As of release 1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
-## 1.7.0 Release
+## 1.8.0 Release
 
 ### Functionality updates
-As part of maintaining the standards set by the Algorand Foundation, we've begun to deprecate some of the older signing methods provided by AlgoSigner.
-- Incomplete atomic groups signing is no longer supported.
-- v1 Signing (`AlgoSigner.sign()` && `AlgoSigner.multisign()`) will stop being supported in the next major release.
-- Preliminary error codes were added to all of the errors that AlgoSigner could provide.
-
-Other changes
-- A developer-oriented `Clear Cache` button was added to the Settings menu to help out with certain issues
-- Fixed account name sometimes not being visible during signing.
-- When signing more than one group of transactions, there's now an Indicator on which group you're currently signing.
-
-### 1.7.1 Patch
-
-- Added support for saving addresses as 'Contacts' for easier re-use
-- Added support for importing more than one address from a same ledger device
-
-### 1.7.2 Patch
-
-- Added support for Opting-out of ASAs from the UI
-- New Account Details page
-- Added Tooltip with Pending Rewards
-
-### 1.7.3 Patch
-
-- Fixed an error that prevented using Ledger devices when doing transactions from the UI
-- Fixed an issue where we were sending an incorrect error code on user refusal of transactions
-- Support for SDK v1.13.1
-- Renaming of `Add an asset` to `Opt-in to an asset`
-
+This update is focused around rekey and changes to accomidate it. Both normal accounts and new reference accounts can be used directly in the UI and used by dApps if the proper authAddr is provided in the transaction. 
+- Rekeying transactions now available
+- Transactions with rekeyed accounts now accepted 
+- Reference accounts can now be imported with public key only 
 
 ## New Users
 

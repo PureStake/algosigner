@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "AlgoSigner",
   "author": "https://developer.purestake.io",
-  "version": "1.7.3",
+  "version": "1.8.0",
   "description": "Algorand Wallet Extension | Send & Receive ALGOs | Sign dApp Transactions",
   "icons": {
     "48": "icon.png"
