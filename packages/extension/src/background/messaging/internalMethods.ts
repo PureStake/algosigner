@@ -43,10 +43,11 @@ export class InternalMethods {
 
       // Afterwards we can add in all the non-private keys and names into the safewallet
       for (let j = 0; j < wallet[key].length; j++) {
-        const { address, name } = wallet[key][j];
+        const { address, name, isRef } = wallet[key][j];
         safeWallet[key].push({
           address: address,
           name: name,
+          isRef: isRef,
         });
       }
     });
@@ -251,24 +252,30 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.ImportAccount](request: any, sendResponse: Function) {
-    const { mnemonic, name, ledger } = request.body.params;
+    const { mnemonic, address, isRef, name, ledger } = request.body.params;
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
+    let newAccount;
 
     try {
-      var recoveredAccountAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
-      var existingAccounts = session.wallet[ledger];
+      const existingAccounts = session.wallet[ledger];
+      let targetAddress = address;
+
+      if (!isRef) {
+        targetAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
+      }
 
       if (existingAccounts) {
         for (let i = 0; i < existingAccounts.length; i++) {
-          if (existingAccounts[i].address === recoveredAccountAddress) {
+          if (existingAccounts[i].address === targetAddress) {
             throw new Error(`Account already exists in ${ledger} wallet.`);
           }
         }
       }
 
-      var newAccount = {
-        address: recoveredAccountAddress,
-        mnemonic: mnemonic,
+      newAccount = {
+        address: targetAddress,
+        mnemonic: !isRef ? mnemonic : null,
+        isRef: isRef,
         name: name,
       };
     } catch (error) {
@@ -679,7 +686,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AssetOptOut](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, id } = request.body.params;
+    const { ledger, address, passphrase, id, authAddr } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -689,10 +696,11 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const signAddress = authAddr || address;
 
       // Find address to send algos from
       for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === address) {
+        if (unlockedValue[ledger][i].address === signAddress) {
           account = unlockedValue[ledger][i];
           break;
         }
@@ -803,7 +811,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, txnParams } = request.body.params;
+    const { ledger, address, passphrase, txnParams, authAddr } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -813,10 +821,11 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const signAddress = authAddr || address;
 
       // Find address to send algos from
       for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === address) {
+        if (unlockedValue[ledger][i].address === signAddress) {
           account = unlockedValue[ledger][i];
           break;
         }

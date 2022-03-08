@@ -6,7 +6,7 @@ import TxAlert from './TxAlert';
 
 const TxTemplate: FunctionalComponent = (props: any) => {
   const [tab, setTab] = useState<string>('overview');
-  const { tx, vo, account, msig, midsection, overview } = props;
+  const { tx, vo, account, msig, midsection, overview, authAddr } = props;
 
   const txText = JSON.stringify(tx, null, 2);
   const tabsStyle = 'height: 160px; overflow: auto;';
@@ -49,7 +49,15 @@ const TxTemplate: FunctionalComponent = (props: any) => {
         </ul>
       </div>
 
-      ${tab === 'overview' && html`<div style="${tabsStyle}">${overview}</div>`}
+      ${tab === 'overview' && html`<div style="${tabsStyle}">
+        ${authAddr && html` 
+          <div class="is-flex">
+            <p style="width: 30%;">Signing Address:</p>
+            <p style="width: 70%;"><span style="word-break: break-all;">${authAddr}</span></p>
+          </div>
+        `}
+        ${overview}
+      </div>`}
       ${tab === 'details' &&
       // prettier-ignore
       html`

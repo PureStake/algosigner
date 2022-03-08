@@ -232,6 +232,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             ledger=${ledger}
             msig=${wrap.msigData}
             contact=${contact}
+            authAddr=${wrap.authAddr}
           />
         `}
         ${wrap.transaction.type === 'keyreg' &&
@@ -243,6 +244,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            authAddr=${wrap.authAddr}
           />
         `}
         ${wrap.transaction.type === 'acfg' &&
@@ -255,6 +257,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            authAddr=${wrap.authAddr}
           />
         `}
         ${wrap.transaction.type === 'axfer' &&
@@ -270,6 +273,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             ledger=${ledger}
             msig=${wrap.msigData}
             contact=${contact}
+            authAddr=${wrap.authAddr}
           />
         `}
         ${wrap.transaction.type === 'afrz' &&
@@ -281,6 +285,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            authAddr=${wrap.authAddr}
           />
         `}
         ${wrap.transaction.type === 'appl' &&
@@ -292,6 +297,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             account=${account}
             ledger=${ledger}
             msig=${wrap.msigData}
+            authAddr=${wrap.authAddr}
           />
         `}
       </div>

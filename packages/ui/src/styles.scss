@@ -33,12 +33,26 @@ $control-border-width: 1px;
 $input-shadow: none;
 $input-radius: 12px;
 
+// TABS
+$tabs-toggle-link-active-background-color: $blue;
+$tabs-toggle-link-active-border-color: $blue-light;
+
 // MODAL
 $modal-close-right: 4px;
 $modal-close-top: 8px;
 
 // TOOLTIP
 $tooltip-background-opacity: 1;
+
+[data-tooltip]:not(.is-loading).has-tooltip-bottom.has-tooltip-bottom-left::before{
+  width: fit-content;
+  transform: translate(-5%, 100%);
+}
+
+[data-tooltip]:not(.is-loading).has-tooltip-bottom.has-tooltip-bottom-right::before{
+  width: fit-content;
+  transform: translate(-90%, 100%);
+}
 
 // BOX
 // $box-shadow: none;
@@ -49,10 +63,9 @@ $tooltip-background-opacity: 1;
 }
 
 .account-preview.box {
-  overflow: hidden;
   text-overflow: ellipsis;
   background: $grey-lighter;
-  height: 3.2em;
+  min-height: 3.3em;
   cursor: pointer;
 }
 
