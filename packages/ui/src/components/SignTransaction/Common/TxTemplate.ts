@@ -18,6 +18,13 @@ const TxTemplate: FunctionalComponent = (props: any) => {
         <div style="display: flex; justify-content: space-between;">
           <div>
             <b style="word-break: break-all;">
+              ${authAddr &&
+              html`
+                <i
+                  class="fas fa-link is-size-7 mr-1"
+                  style="line-height: 1.1; height: 15px; font-style: unset;"
+                />
+              `}
               ${msig &&
               html`
                 <span
@@ -49,8 +56,10 @@ const TxTemplate: FunctionalComponent = (props: any) => {
         </ul>
       </div>
 
-      ${tab === 'overview' && html`<div style="${tabsStyle}">
-        ${authAddr && html` 
+      ${tab === 'overview' &&
+      html`<div style="${tabsStyle}">
+        ${authAddr &&
+        html`
           <div class="is-flex">
             <p style="width: 30%;">Signing Address:</p>
             <p style="width: 70%;"><span style="word-break: break-all;">${authAddr}</span></p>
