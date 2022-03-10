@@ -12,7 +12,7 @@ Developers working with dApps may also install directly from the release package
 
 # `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` will be deprecated mid April.
 
-## As of release 1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
+## Since v1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
 ## 1.8.0 Release
 
 ### Functionality updates
@@ -20,6 +20,10 @@ This update is focused around rekey and changes to accommodate it. Both normal a
 - Rekeying transactions now available
 - Transactions with rekeyed accounts now accepted 
 - Reference accounts can now be imported with public key only 
+
+### Patch 1.8.1
+
+UI Improvements for rekey transactions and reference accounts.
 
 ## New Users
 
