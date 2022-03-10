@@ -51,6 +51,7 @@ export function Validate(field: any, value: any): ValidationResponse {
     case 'to':
     case 'from':
     case 'closeRemainderTo':
+    case 'reKeyTo':
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
@@ -62,6 +63,11 @@ export function Validate(field: any, value: any): ValidationResponse {
           return new ValidationResponse({
             status: ValidationStatus.Dangerous,
             info: `A 'close to' address is associated to this transaction.`,
+          });
+        } else if (field === 'reKeyTo') {
+          return new ValidationResponse({
+            status: ValidationStatus.Dangerous,
+            info: `A ‘rekey to’ address is associated to this transaction. This will grant signing control of your account to that address.`,
           });
         } else {
           return new ValidationResponse({ status: ValidationStatus.Valid });
@@ -154,16 +160,6 @@ export function Validate(field: any, value: any): ValidationResponse {
           status: ValidationStatus.Invalid,
           info: 'Value unable to be cast correctly to a numeric value.',
         });
-      }
-
-    case 'reKeyTo':
-      if (value && !algosdk.isValidAddress(value)) {
-        return new ValidationResponse({
-          status: ValidationStatus.Invalid,
-          info: 'Address does not adhere to a valid structure.',
-        });
-      } else {
-        return new ValidationResponse({ status: ValidationStatus.Valid });
       }
 
     // Genesis ID must be present and one of the approved values
