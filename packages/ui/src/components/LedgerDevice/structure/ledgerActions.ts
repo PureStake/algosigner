@@ -164,7 +164,18 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
   // If there's no dApp structure, we're coming from the UI
   if (!transaction.encodedTxn && !transaction.groupsToSign) {
-    const builtTx = new Transaction(removeEmptyFields(transaction.transaction));
+    const removedFieldsTxn = removeEmptyFields(transaction.transaction);
+
+    // Explicit conversion of amount. Ledger transactions are stringified and retrieved,
+    // which converts the amount to a string. Moving to int/bigint here. 
+    if ('amount' in removedFieldsTxn) {
+      removedFieldsTxn['amount'] = BigInt(removedFieldsTxn['amount'])
+      if (removedFieldsTxn['amount'] <= Number.MAX_SAFE_INTEGER){
+        removedFieldsTxn['amount'] = parseInt(removedFieldsTxn['amount'])
+      }
+    }
+
+    const builtTx = new Transaction(removedFieldsTxn);
     const byteTxn = algosdk.encodeUnsignedTransaction(builtTx);
 
     return { transaction: byteTxn, error: '' };
