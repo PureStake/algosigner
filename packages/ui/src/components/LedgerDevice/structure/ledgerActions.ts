@@ -175,6 +175,10 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
       }
     }
 
+    if ('note' in removedFieldsTxn){
+      removedFieldsTxn['note'] =  new Uint8Array(Buffer.from(removedFieldsTxn['note']));
+    }
+
     const builtTx = new Transaction(removedFieldsTxn);
     const byteTxn = algosdk.encodeUnsignedTransaction(builtTx);
 

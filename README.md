@@ -21,6 +21,10 @@ This update is focused around rekey and changes to accommodate it. Both normal a
 - Transactions with rekeyed accounts now accepted 
 - Reference accounts can now be imported with public key only 
 
+### Patch 1.8.3
+
+Fix for transaction notes created in the UI and signed with a Ledger device. 
+
 ### Patch 1.8.2
 
 Fix for Ledger transactions created in the UI with transfer amounts set to 0. 
