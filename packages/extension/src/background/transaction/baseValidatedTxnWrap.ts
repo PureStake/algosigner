@@ -77,14 +77,24 @@ export class BaseValidatedTxnWrap {
           // This could be done for validation purposes or improving readability on the UI
           // Done more liberally on v2 since we use the unmodified transaction afterwards
           if (
-            (prop === 'group' || prop === 'appApprovalProgram' || prop === 'appClearProgram') &&
+            // First we check for UintArrays and make them readable
+            (prop === 'group' ||
+              prop === 'appApprovalProgram' ||
+              prop === 'appClearProgram' ||
+              prop === 'assetMetadataHash' ||
+              prop === 'lease' ||
+              prop === 'selectionKey' ||
+              prop === 'stateProofKey' ||
+              prop === 'voteKey') &&
             !v1Validations
           ) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
+            // Then we check for UintArray arrays
           } else if (prop === 'appArgs' && !v1Validations) {
             this.transaction[prop] = this.transaction[prop].map((arg) =>
               Buffer.from(arg).toString('base64')
             );
+            // Then for address arrays
           } else if (prop === 'appAccounts' && !v1Validations) {
             const accArray = params[prop];
             if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {

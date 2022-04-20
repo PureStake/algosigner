@@ -1,79 +1,123 @@
-import { Validate, ValidationStatus } from './validator';
+import {
+  Validate,
+  ValidationStatus,
+  STRING_MAX_LENGTH,
+  HIGH_FEE_TRESHOLD,
+  ELEVATED_FEE_TRESHOLD,
+} from './validator';
 
-test('Validate correct to address', () => {
-  const result = Validate('to', 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ');
+// Type validations
+
+test('Validate addresses', () => {
+  let result = Validate('to', 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ');
   expect(result.status).toBe(ValidationStatus.Valid);
-});
-
-test('Validate invalid to address', () => {
-  const result = Validate('to', '12345');
+  result = Validate('to', 'GD6SKLAFG66DSAKFBD6SJL66AFND6SKAFNMSD6ALFKD6MS6AL2F6KDMSA');
   expect(result.status).toBe(ValidationStatus.Invalid);
-});
-
-test('Validate correct amount', () => {
-  const result = Validate('amount', 1);
-  expect(result.status).toBe(ValidationStatus.Valid);
-});
-
-test('Validate invalid amount', () => {
-  const result = Validate('amount', -1);
+  result = Validate('to', 12345);
   expect(result.status).toBe(ValidationStatus.Invalid);
-});
-
-test('Validate normal fee', () => {
-  const result = Validate('fee', 1000);
-  expect(result.status).toBe(ValidationStatus.Valid);
-});
-
-test('Validate elevated fee', () => {
-  const result = Validate('fee', 100000);
-  expect(result.status).toBe(ValidationStatus.Warning);
-});
-
-test('Validate very high fee', () => {
-  const result = Validate('fee', 10000000);
-  expect(result.status).toBe(ValidationStatus.Dangerous);
-});
-
-test('Validate closeRemainderTo is a valid address', () => {
-  const result = Validate('closeRemainderTo', 'AAAAAAAAAAAANOTAVALIDADDRESSAAAAAAAAAAAA');
-  expect(result.status).toBe(ValidationStatus.Invalid);
-});
-
-test('Validate closeRemainderTo is dangerous', () => {
-  const result = Validate(
+  result = Validate(
     'closeRemainderTo',
     'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ'
   );
   expect(result.status).toBe(ValidationStatus.Dangerous);
+  result = Validate('reKeyTo', 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ');
+  expect(result.status).toBe(ValidationStatus.Dangerous);
 });
 
-test('Validate correct assetIndex', () => {
-  const result = Validate('assetIndex', 1);
+test('Validate numbers', () => {
+  let result = Validate('assetIndex', 1);
   expect(result.status).toBe(ValidationStatus.Valid);
-});
-
-test('Validate invalid assetIndex', () => {
-  let result = Validate('assetIndex', 9999999999999999999999999);
+  result = Validate('assetIndex', 9999999999999999999999999);
   expect(result.status).toBe(ValidationStatus.Invalid);
   result = Validate('assetIndex', -1);
   expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetIndex', 'a');
+  expect(result.status).toBe(ValidationStatus.Invalid);
 });
 
-test('Validate correct rounds', () => {
-  const resultFirst = Validate('firstRound', 1);
-  const resultLast = Validate('lastRound', 1);
-  expect(resultFirst.status).toBe(ValidationStatus.Valid);
-  expect(resultLast.status).toBe(ValidationStatus.Valid);
+test('Validate number arrays', () => {
+  let result = Validate('appForeignAssets', [1]);
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('appForeignAssets', []);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('appForeignAssets', [9999999999999999999999999]);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('appForeignAssets', [-1]);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('appForeignAssets', ['a']);
+  expect(result.status).toBe(ValidationStatus.Invalid);
 });
 
-test('Validate invalid rounds', () => {
-  let resultFirst = Validate('firstRound', 9999999999999999999999999);
-  let resultLast = Validate('lastRound', 9999999999999999999999999);
-  expect(resultFirst.status).toBe(ValidationStatus.Invalid);
-  expect(resultLast.status).toBe(ValidationStatus.Invalid);
-  resultFirst = Validate('firstRound', -1);
-  resultLast = Validate('lastRound', -1);
-  expect(resultFirst.status).toBe(ValidationStatus.Invalid);
-  expect(resultLast.status).toBe(ValidationStatus.Invalid);
+test('Validate bigints', () => {
+  let result = Validate('amount', 1);
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('amount', '9999999999999999999999999');
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('amount', -1);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('amount', 'a');
+  expect(result.status).toBe(ValidationStatus.Invalid);
+});
+
+test('Validate strings', () => {
+  let result = Validate('assetURL', 'a');
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('assetURL', new Array(STRING_MAX_LENGTH + 1).toString());
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetURL', 1);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetURL', false);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetURL', null);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('assetURL', undefined);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+});
+
+test('Validate booleans', () => {
+  let result = Validate('freezeState', false);
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('freezeState', 'a');
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('freezeState', 1);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('freezeState', null);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('freezeState', undefined);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+});
+
+// Specific field validations
+
+test('Validate fees', () => {
+  let result = Validate('fee', 1000);
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('fee', -1);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('fee', 'a');
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('fee', false);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('fee', null);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  // High fee
+  result = Validate('fee', HIGH_FEE_TRESHOLD + 1);
+  expect(result.status).toBe(ValidationStatus.Warning);
+  // Very high fee
+  result = Validate('fee', ELEVATED_FEE_TRESHOLD + 1);
+  expect(result.status).toBe(ValidationStatus.Dangerous);
+});
+
+
+test('Validate genesisID', () => {
+  let result = Validate('genesisID', 'mainnet-v1.0');
+  expect(result.status).toBe(ValidationStatus.Valid);
+  result = Validate('genesisID', -1);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('genesisID', 'a');
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('genesisID', false);
+  expect(result.status).toBe(ValidationStatus.Invalid);
+  result = Validate('genesisID', null);
+  expect(result.status).toBe(ValidationStatus.Invalid);
 });
