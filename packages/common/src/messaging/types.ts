@@ -13,8 +13,6 @@ export enum JsonRpcMethod {
   SignAllowMultisig = 'sign-allow-multisig',
   SignAllowWalletTx = 'sign-allow-wallet-tx',
   SignDeny = 'sign-deny',
-  SignTransaction = 'sign-transaction',
-  SignMultisigTransaction = 'sign-multisig-transaction',
   SignWalletTransaction = 'sign-wallet-transaction',
   SendTransaction = 'send-transaction',
   Algod = 'algod',

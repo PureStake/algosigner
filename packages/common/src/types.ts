@@ -52,11 +52,6 @@ export type Transaction = {
   readonly to: TAccount;
 };
 
-export type MultisigTransaction = {
-  readonly msig: any;
-  readonly txn: Transaction;
-};
-
 export type WalletMultisigMetadata = {
   readonly version: number;
   readonly threshold: number;

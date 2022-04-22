@@ -1,4 +1,4 @@
 template: |
-  ## Updates
+  ## Patch X.Y.Z
 
   $CHANGES
