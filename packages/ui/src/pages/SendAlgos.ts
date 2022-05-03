@@ -3,41 +3,48 @@ import { html } from 'htm/preact';
 import { useState, useContext, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-
-import { sendMessage } from 'services/Messaging';
-import { assetFormat, numFormat } from 'services/common';
+import { Namespace } from '@algosigner/common/types';
+import { obsfucateAddress } from '@algosigner/common/utils';
 
 import { StoreContext } from 'services/StoreContext';
+import { sendMessage } from 'services/Messaging';
+import { assetFormat, numFormat } from 'services/common';
 
 import HeaderView from 'components/HeaderView';
 import Authenticate from 'components/Authenticate';
 import ContactPreview from 'components/ContactPreview';
+
 import algosdk from 'algosdk';
+
+const ALIAS_TIMER = 500;
+const MAX_LENGTH_LOOKUP = 20;
 
 const SendAlgos: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
   const { matches, ledger, address } = props;
+  const inputRef = useRef<HTMLHeadingElement>(null);
 
   const [, forceUpdate] = useState<boolean>(false);
   const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [ddActive, setDdActive] = useState<boolean>(false);
-  const [modalActive, setModalActive] = useState<boolean>(false);
   // Asset {} is Algos
   const [asset, setAsset] = useState<any>({});
-  const [to, setTo] = useState('');
-  const [contacts, setContacts] = useState<Array<any>>([]);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
-  const [addingContact, setAddingContact] = useState<boolean>(false);
-  const [newContactName, setNewContactName] = useState<string>('');
   const [amount, setAmount] = useState('');
+  const [to, setTo] = useState('');
   const [note, setNote] = useState('');
   const [txId, setTxId] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
+  const [aliases, setAliases] = useState<any>({});
+  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [addingContact, setAddingContact] = useState<boolean>(false);
+  const [newContactName, setNewContactName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const inputRef = useRef<HTMLHeadingElement>(null);
 
+  // Initial setup
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
@@ -45,25 +52,14 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         break;
       }
     }
-    sendMessage(JsonRpcMethod.GetContacts, {}, function (response) {
-      setLoading(false);
-      if ('error' in response) {
-        setError(response.error.message);
-      } else {
-        setContacts(response);
-      }
-    });
   }, []);
-
   useEffect(() => {
     if (inputRef !== null && inputRef.current !== null) {
       inputRef.current.focus();
     }
-  }, [selectedContact]);
+  }, [selectedDestination]);
 
-  let ddClass: string = 'dropdown is-right';
-  if (ddActive) ddClass += ' is-active';
-
+  // Transaction signing
   const selectAsset = (selectedAsset) => {
     setDdActive(false);
 
@@ -87,20 +83,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       });
     }
   };
-
-  const handleAmountChange = (val, ass) => {
-    const decimals = 'decimals' in ass ? ass.decimals : 6;
-    const integer = decimals >= 16 ? 1 : 16 - decimals;
-    let re;
-    if (decimals > 0) re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
-    else re = new RegExp(`\\d{1,16}`);
-
-    const finalVal = val.match(re);
-    if (finalVal) setAmount(finalVal[0]);
-    else setAmount('');
-    forceUpdate((n) => !n);
-  };
-
   const sendTx = async (pwd: string) => {
     setLoading(true);
     setAuthError('');
@@ -122,7 +104,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       address: account.address,
       txnParams: {
         from: account.address,
-        to: to || selectedContact && selectedContact.address,
+        to: to || (selectedDestination && selectedDestination.address),
         note: note,
         amount: amountToSend,
       },
@@ -153,7 +135,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       }
     });
   };
-
   const saveContact = () => {
     const params = {
       name: newContactName,
@@ -171,54 +152,74 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     });
   };
 
+  // Domains search and handling
+  const searchAliases = async (searchTerm) => {
+    console.log(`Searching for ${searchTerm}`);
+    const params = { ledger: ledger, searchTerm: searchTerm };
+    sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
+      console.log(response);
+      setLoading(false);
+      if ('error' in response) {
+        setError(response.error.message);
+      } else {
+        setAliases(response);
+      }
+    });
+  };
+  const handleTimeout = async (searchTerm) => {
+    console.log(`executing alias lookup for ${searchTerm}`);
+    clearTimeout(searchTimerID as NodeJS.Timeout);
+    setSearchTimerID(undefined);
+    await searchAliases(searchTerm);
+  };
+  const handleAddressChange = (value) => {
+    console.log(`setting term to ${value} and queueing lookup`);
+    clearTimeout(searchTimerID as NodeJS.Timeout);
+    setAliases({});
+    setTo(value);
+    if (value.length && value.length <= MAX_LENGTH_LOOKUP) {
+      setSearchTerm(value);
+      setSearchTimerID(setTimeout(() => handleTimeout(value), ALIAS_TIMER));
+    } else {
+      setSearchTerm('');
+    }
+  };
+
+  // Destination (de)selection
+  const onSelectDestination = (c) => {
+    setSelectedDestination(c);
+    setTo('');
+  };
+  const editDestination = () => {
+    setTo(searchTerm);
+    setSelectedDestination(null);
+  };
+
+  // Other UI functions and variables
   const goBack = () => {
     route(`/${matches.ledger}/${matches.address}`);
-  }
-
-  const youIndicator = html`<b class="has-text-link">YOU</b>`;
-  const onSelectContact = (c) => {
-    setSelectedContact(c);
-    setTo('');
-    setModalActive(false);
   };
-  const deselectContact = () => {
-    setTo(selectedContact.address);
-    setSelectedContact(null);
-  }
+  const handleAmountChange = (val, ass) => {
+    const decimals = 'decimals' in ass ? ass.decimals : 6;
+    const integer = decimals >= 16 ? 1 : 16 - decimals;
+    let regex;
+    if (decimals > 0) regex = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
+    else regex = new RegExp(`\\d{1,16}`);
 
-  const disabled = (!selectedContact && !algosdk.isValidAddress(to)) || +amount < 0;
+    const finalVal = val.match(regex);
+    if (finalVal) setAmount(finalVal[0]);
+    else setAmount('');
+    forceUpdate((n) => !n);
+  };
 
+  let ddClass: string = 'dropdown is-right';
+  if (ddActive) ddClass += ' is-active';
+  const youIndicator = html`<b class="has-text-link">YOU</b>`;
+  const disabled = (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0;
+
+  // Render HTML
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-      <div class="modal ${modalActive && 'is-active'}">
-        <div class="modal-background" />
-        <div class="modal-content" style="overflow: hidden;">
-          <div class="box" style="max-height: 100%;">
-            <div class="has-text-centered pb-2"><h5 class="title is-5">Contact List</h5></div>
-            <div style="height: 380px; overflow-y: auto; margin-right: -0.5rem;" class="pr-2">
-              ${!contacts.length &&
-              html`
-                <div class="has-text-centered">
-                  <span>There are no contacts saved yet.</span>
-                </div>
-              `}
-              ${contacts.map(
-                (c) =>
-                  html`<${ContactPreview}
-                    contact="${c}"
-                    style="cursor: pointer;"
-                    action="${() => onSelectContact(c)}"
-                  />`
-              )}
-            </div>
-          </div>
-          <button
-            class="modal-close is-large"
-            aria-label="close"
-            onClick=${() => setModalActive(false)}
-          />
-        </div>
-      </div>
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
         title="Send"
@@ -307,35 +308,59 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         </div>
 
         <div>
-          <i
-            class="far fa-address-book px-1"
-            style="position: relative; z-index: 3; top: 8px; left: 92%; cursor: pointer;"
-            aria-label="contacts"
-            onClick=${() => setModalActive(true)}
-          ></i>
-          ${!selectedContact &&
+          ${!selectedDestination &&
           html`
             <textarea
-              placeholder="To address"
+              placeholder="Destination can be one of: an address, an imported account, an added contact"
               class="textarea has-fixed-size mb-4 pr-6"
-              style="resize: none; margin-top: -22px;"
               id="toAddress"
               value=${to}
               ref=${inputRef}
               rows="2"
-              onInput=${(e) => setTo(e.target.value)}
+              onInput=${(e) => handleAddressChange(e.target.value)}
             />
+            ${searchTerm &&
+            html`
+              ${!Object.keys(aliases).length &&
+              html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
+              ${Object.keys(aliases).length > 0 &&
+              html`
+                <div
+                  class="alias-selector"
+                >
+                  ${Object.keys(Namespace).map((n) =>
+                    aliases[n].map(
+                      (a) =>
+                        html`
+                          <a
+                            onClick=${() => onSelectDestination(a)}
+                            class="dropdown-item is-flex px-4"
+                            style="justify-content: space-between;"
+                          >
+                            <span style="text-overflow: ellipsis; overflow: hidden;">
+                              ${a.name}
+                            </span>
+                            <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
+                              ${obsfucateAddress(a.address)}
+                            </span>
+                          </a>
+                        `
+                    )
+                  )}
+                </div>
+              `}
+            `}
           `}
-          ${selectedContact &&
+          ${selectedDestination &&
           html`
             <i
               class="far fa-edit px-1"
-              style="position: relative; z-index: 3; top: 7px; left: 80%; cursor: pointer;"
+              style="position: relative; z-index: 3; top: 7px; left: 92%; cursor: pointer;"
               aria-label="edit"
-              onClick=${() => deselectContact()}
+              onClick=${() => editDestination()}
             ></i>
             <${ContactPreview}
-              contact="${selectedContact}"
+              contact="${selectedDestination}"
               style="margin-top: -22px;"
               className="mb-4"
             />
@@ -385,8 +410,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           <div class="box">
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
-            ${!selectedContact &&
-            !contacts.find((c) => c.address === to) &&
+            ${!selectedDestination &&
+            !aliases.find((a) => a.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&

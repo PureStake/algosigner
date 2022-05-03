@@ -1235,7 +1235,6 @@ export class InternalMethods {
 
       // Search the storage for the aliases stored for the matching namespaces
       const returnedAliasedAddresses = {};
-      let shouldUpdate = false;
       for (const namespace of matchingNamespaces) {
         const aliasesMatchingInNamespace = [];
         if (aliases[ledger][namespace]) {
@@ -1254,50 +1253,12 @@ export class InternalMethods {
         console.log(namespace);
         console.log(aliasesMatchingInNamespace);
         // Fallback to an api call goes here
-        // @TODO: add caching/expiry
-        if (!aliasesMatchingInNamespace.length && AliasConfig[namespace].api?.length > 0) {
-          const apiURL = AliasConfig[namespace].api
-            .replace('${term}', searchTerm)
-            .replace('${ledger}', ledger);
-
-          fetch(apiURL)
-            .then((response) => {
-              console.log(response);
-              if (response.ok) {
-                response.json().then((json) => {
-                  const address = AliasConfig[namespace].findAddress(json);
-                  if (address) {
-                    shouldUpdate = true;
-                    const name = searchTerm + AliasConfig[namespace].suffix;
-                    aliasesMatchingInNamespace.push({
-                      name: name,
-                      address: address,
-                      namespace: namespace,
-                    });
-                  }
-                });
-              }
-            })
-            .catch((e) => console.error(e));
-        }
 
         returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
-        console.log('=========== FINAL MATCHING ALIASES ===========');
-        console.log(returnedAliasedAddresses);
       }
-
-      // Update the local storage
-      if (shouldUpdate) {
-        extensionStorage.setStorage('aliases', aliases, (isSuccessful: any) => {
-          if (isSuccessful) {
-            sendResponse(returnedAliasedAddresses);
-          } else {
-            sendResponse({ error: 'Lock failed' });
-          }
-        });
-      } else {
-        sendResponse(returnedAliasedAddresses);
-      }
+      console.log('=========== FINAL MATCHING ALIASES ===========');
+      console.log(returnedAliasedAddresses);
+      sendResponse(returnedAliasedAddresses);
     });
 
     return true;

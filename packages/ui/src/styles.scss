@@ -166,6 +166,25 @@ span[data-tooltip] {
   border-left-color: #94b1c3;
 }
 
+.alias-selector {
+  @extend .dropdown-content;
+  position: absolute;
+  top: 55%;
+  z-index: 5;
+  width: 370px;
+  border: solid $blue-dark 1px;
+  border-top-width: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+// Custom IDs
+#toAddress:not(:placeholder-shown) {
+  border-color: $blue-dark;
+}
+
 // Used during the signing tx preview 
 .truncate-text {
   text-overflow: ellipsis;
@@ -175,8 +194,8 @@ span[data-tooltip] {
   display: block;
 }
 
-// This is used for tx keys that have a list of values
 span.truncate-text:not(:first-child) {
+  // This is used for tx keys that have a list of values
   margin-top: -6px;
 }
 
