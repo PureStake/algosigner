@@ -28,3 +28,13 @@ export function removeEmptyFields(obj: { [index: string]: any }): any {
 export function isLedgerBaseSupported(ledger: string): boolean {
   return getBaseSupportedLedgers().map((l) => l.name.toLowerCase()).includes(ledger.toLowerCase());
 }
+
+/**
+ * Converts full addresses into a shorter format:
+ * AAAAAAAAAA.....AAAAAAAAAA
+ * @param address 
+ * @returns string
+ */
+export function obsfucateAddress(address: string): string {
+  return `${address.slice(0, 10)}.....${address.slice(-10)}`;
+}
