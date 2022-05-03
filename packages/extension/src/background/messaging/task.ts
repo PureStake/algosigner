@@ -1453,6 +1453,9 @@ export class Task {
         [JsonRpcMethod.DeleteContact]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.DeleteContact](request, sendResponse);
         },
+        [JsonRpcMethod.GetAliasedAddresses]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetAliasedAddresses](request, sendResponse);
+        },
       },
     };
   }

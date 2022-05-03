@@ -1,5 +1,6 @@
 import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { Namespace } from '@algosigner/common/types';
 import { Ledger, Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
 
@@ -190,5 +191,60 @@ export class Settings {
   public static checkNetwork(ledger: LedgerTemplate) {
     const networks = this.setInjectedHeaders(ledger, true);
     return networks;
+  }
+}
+
+interface ConfigTemplate {
+  suffix: string;         // Regex associated with the namespace
+  ledgers: Array<string>; // Ledgers supported, null if there's no restriction
+  api: string;            // Templated URL to call for uncached aliases
+  findAddress: Function;  // How to process the API response to get the aliased address
+  // @TODO: add caching/expiry
+}
+
+const noop = (): void => { /* no-op */ };
+
+export class AliasConfig {
+  static [Namespace.AlgoSigner_Accounts]: ConfigTemplate = {
+    suffix: '',
+    ledgers: null,
+    api: '',
+    findAddress: noop,
+  };
+
+  static [Namespace.AlgoSigner_Contacts]: ConfigTemplate = {
+    suffix: '',
+    ledgers: null,
+    api: '',
+    findAddress: noop,
+  };
+
+  static [Namespace.NFD]: ConfigTemplate = {
+    suffix: '.algo',
+    ledgers: [Ledger.MainNet, Ledger.TestNet],
+    api: '',//'https://api.${ledger}.nf.domains/nfd/${term}.algo',
+    findAddress: (o) => {
+      if (o['caAlgo'] && o['caAlgo'][0]) {
+        return o['caAlgo'][0];
+      }
+      return null;
+    },
+  };
+
+  static [Namespace.ANS]: ConfigTemplate = {
+    suffix: '.algo',
+    ledgers: [Ledger.MainNet, Ledger.TestNet],
+    api: '',
+    findAddress: noop,
+  };
+
+  public static getMatchingNamespaces(ledger: string): Array<any> {
+    const matchingNamespaces = [];
+    for (const n in Namespace) {
+      if (AliasConfig[n].ledgers === null || AliasConfig[n].ledgers.includes(ledger)) {
+        matchingNamespaces.push(n);
+      }
+    }
+    return matchingNamespaces;
   }
 }

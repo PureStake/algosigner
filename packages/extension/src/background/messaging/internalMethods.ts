@@ -5,7 +5,7 @@ import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Task } from './task';
 import { API, Cache, Ledger } from './types';
 import { Namespace } from '@algosigner/common/types';
-import { Settings } from '../config';
+import { Settings, AliasConfig } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
@@ -1213,6 +1213,93 @@ export class InternalMethods {
         }
       });
     });
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetAliasedAddresses](request: any, sendResponse: Function) {
+    const { ledger, searchTerm } = request.body.params;
+    console.log(`searching for ${searchTerm} on ${ledger}`);
+
+    // Check if the term matches any of our namespaces
+    const matchingNamespaces = AliasConfig.getMatchingNamespaces(ledger);
+    const extensionStorage = new ExtensionStorage();
+
+    console.log('=========== MATCHING NAMESPACES ===========');
+    console.log(matchingNamespaces);
+
+    extensionStorage.getStorage('aliases', (response: any) => {
+      // aliases: { ledger: { namespace: [...aliases] } }
+      const aliases = response;
+      console.log('=========== FETCH ALIASES ===========');
+      console.log(aliases);
+
+      // Search the storage for the aliases stored for the matching namespaces
+      const returnedAliasedAddresses = {};
+      let shouldUpdate = false;
+      for (const namespace of matchingNamespaces) {
+        const aliasesMatchingInNamespace = [];
+        if (aliases[ledger][namespace]) {
+          for (const alias of aliases[ledger][namespace]) {
+            if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+              aliasesMatchingInNamespace.push({
+                name: alias.name,
+                address: alias.address,
+                namespace: namespace,
+              });
+            }
+          }
+        }
+
+        console.log('=========== MATCHING IN NAMESPACE ===========');
+        console.log(namespace);
+        console.log(aliasesMatchingInNamespace);
+        // Fallback to an api call goes here
+        // @TODO: add caching/expiry
+        if (!aliasesMatchingInNamespace.length && AliasConfig[namespace].api?.length > 0) {
+          const apiURL = AliasConfig[namespace].api
+            .replace('${term}', searchTerm)
+            .replace('${ledger}', ledger);
+
+          fetch(apiURL)
+            .then((response) => {
+              console.log(response);
+              if (response.ok) {
+                response.json().then((json) => {
+                  const address = AliasConfig[namespace].findAddress(json);
+                  if (address) {
+                    shouldUpdate = true;
+                    const name = searchTerm + AliasConfig[namespace].suffix;
+                    aliasesMatchingInNamespace.push({
+                      name: name,
+                      address: address,
+                      namespace: namespace,
+                    });
+                  }
+                });
+              }
+            })
+            .catch((e) => console.error(e));
+        }
+
+        returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
+        console.log('=========== FINAL MATCHING ALIASES ===========');
+        console.log(returnedAliasedAddresses);
+      }
+
+      // Update the local storage
+      if (shouldUpdate) {
+        extensionStorage.setStorage('aliases', aliases, (isSuccessful: any) => {
+          if (isSuccessful) {
+            sendResponse(returnedAliasedAddresses);
+          } else {
+            sendResponse({ error: 'Lock failed' });
+          }
+        });
+      } else {
+        sendResponse(returnedAliasedAddresses);
+      }
+    });
+
     return true;
   }
 }
