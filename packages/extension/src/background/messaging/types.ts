@@ -3,7 +3,7 @@
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 
 // Key and value must match in this enum so we
-// can compare its existance with i.e. "Testnet" in SupportedLedger
+// can compare its existance with i.e. "TestNet" in SupportedLedger
 /* eslint-disable no-unused-vars */
 export enum Ledger {
   TestNet = 'TestNet',
@@ -14,6 +14,7 @@ export enum Backend {
   PureStake = 'PureStake',
   Algod = 'Algod',
 }
+
 export enum API {
   Algod = 'Algod',
   Indexer = 'Indexer',

@@ -65,3 +65,8 @@ export type WalletTransaction = {
   readonly msig?: WalletMultisigMetadata;
   readonly authAddr?: string;
 };
+
+export enum Namespace {
+  AlgoSigner_Contacts = 'AlgoSigner_Contacts',
+  AlgoSigner_Accounts = 'AlgoSigner_Accounts',
+}

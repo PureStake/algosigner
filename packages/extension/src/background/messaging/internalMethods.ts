@@ -4,6 +4,7 @@ import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Task } from './task';
 import { API, Cache, Ledger } from './types';
+import { Namespace } from '@algosigner/common/types';
 import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
@@ -111,10 +112,19 @@ export class InternalMethods {
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
     const extensionStorage = new ExtensionStorage();
     extensionStorage.setStorage('contacts', [], null);
+    const emptyAliases = {
+      [Namespace.AlgoSigner_Accounts]: [],
+      [Namespace.AlgoSigner_Contacts]: [],
+    };
+    extensionStorage.setStorage(
+      'aliases',
+      { [Ledger.MainNet]: emptyAliases, [Ledger.MainNet]: emptyAliases },
+      null
+    );
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
-      TestNet: [],
-      MainNet: [],
+      [Ledger.MainNet]: [],
+      [Ledger.TestNet]: [],
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
@@ -174,10 +184,45 @@ export class InternalMethods {
               }
             }
 
-            (session.wallet = wallet),
-              (session.ledger = Ledger.MainNet),
-              (session.availableLedgers = availableLedgers),
+            // Setup internal aliases
+            extensionStorage.getStorage('contacts', (storedContacts: any) => {
+              const aliases = {};
+
+              // Format contacts as aliases
+              const contactAliases = [];
+              for (const c of storedContacts) {
+                contactAliases.push({
+                  name: c.name,
+                  address: c.address,
+                  namespace: Namespace.AlgoSigner_Contacts,
+                });
+              }
+
+              for (const l in Ledger) {
+                // Format accounts as aliases
+                const ledgerAccountAliases = [];
+                for (const acc of wallet[l]) {
+                  ledgerAccountAliases.push({
+                    name: acc.name,
+                    address: acc.address,
+                    namespace: Namespace.AlgoSigner_Accounts,
+                  });
+                }
+                // Save accounts and contacts as aliases
+                aliases[l] = {
+                  [Namespace.AlgoSigner_Accounts]: ledgerAccountAliases,
+                  [Namespace.AlgoSigner_Contacts]: contactAliases,
+                };
+              }
+
+              console.log('=========== INITIAL LOAD ===========');
+              console.log(aliases);
+              extensionStorage.setStorage('aliases', aliases, null);
+              session.wallet = wallet;
+              session.ledger = Ledger.MainNet;
+              session.availableLedgers = availableLedgers;
               sendResponse(session.session);
+            });
           });
         });
       }

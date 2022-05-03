@@ -44,6 +44,7 @@ export enum JsonRpcMethod {
   GetContacts = 'get-contacts',
   SaveContact = 'save-contact',
   DeleteContact = 'delete-contact',
+  GetAliasedAddresses = 'get-aliased-addresses',
 
   // Ledger Device Methods
   LedgerSaveAccount = 'ledger-save-account',
