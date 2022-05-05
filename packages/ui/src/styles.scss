@@ -11,6 +11,7 @@ html {
 // Global font size
 $body-size: 15px;
 
+// Theme colors
 $grey-lighter: #eff4f7;
 $grey: #8a9fa8;
 
@@ -40,6 +41,9 @@ $tabs-toggle-link-active-border-color: $blue-light;
 // MODAL
 $modal-close-right: 4px;
 $modal-close-top: 8px;
+
+// DROPDOWN
+$dropdown-item-active-background-color: $blue-dark;
 
 // TOOLTIP
 $tooltip-background-opacity: 1;

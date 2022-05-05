@@ -2,6 +2,8 @@ import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
+import { Key } from 'ts-key-enum';
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Namespace } from '@algosigner/common/types';
 import { obsfucateAddress } from '@algosigner/common/utils';
@@ -23,6 +25,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
   const { matches, ledger, address } = props;
   const inputRef = useRef<HTMLHeadingElement>(null);
+  const activeAliasRef = useRef<HTMLHeadingElement>(null);
 
   const [, forceUpdate] = useState<boolean>(false);
   const [account, setAccount] = useState<any>({});
@@ -37,6 +40,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [aliases, setAliases] = useState<any>({});
+  const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [addingContact, setAddingContact] = useState<boolean>(false);
   const [newContactName, setNewContactName] = useState<string>('');
@@ -58,6 +62,15 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       inputRef.current.focus();
     }
   }, [selectedDestination]);
+  useEffect(() => {
+    if (activeAliasRef !== null && activeAliasRef.current !== null) {
+      activeAliasRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    }
+  }, [highlightedAlias, selectedDestination]);
 
   // Transaction signing
   const selectAsset = (selectedAsset) => {
@@ -176,6 +189,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     console.log(`setting term to ${value} and queueing lookup`);
     clearTimeout(searchTimerID as NodeJS.Timeout);
     setAliases({});
+    setHighlightedAlias(0);
     setTo(value);
     if (value.length && value.length <= MAX_LENGTH_LOOKUP) {
       setSearchTerm(value);
@@ -184,11 +198,39 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       setSearchTerm('');
     }
   };
+  const orderedAliases = Object.keys(aliases).flatMap((n) => aliases[n]);
+  const handleAliasNavigation = (event: Event) => {
+    const key = (event as KeyboardEvent).key as Key;
+    const customKeys = [Key.Escape, Key.ArrowDown, Key.ArrowUp, Key.Enter];
+
+    if (customKeys.includes(key)) {
+      event.preventDefault();
+      switch (key) {
+        case Key.Escape:
+          setAliases({});
+          break;
+        case Key.ArrowDown:
+          if (orderedAliases.length && highlightedAlias + 1 < orderedAliases.length) {
+            setHighlightedAlias(highlightedAlias + 1);
+          }
+          break;
+        case Key.ArrowUp:
+          if (orderedAliases.length && highlightedAlias - 1 >= 0) {
+            setHighlightedAlias(highlightedAlias - 1);
+          }
+          break;
+        case Key.Enter:
+          onSelectDestination(orderedAliases[highlightedAlias]);
+          break;
+      }
+    }
+  };
 
   // Destination (de)selection
-  const onSelectDestination = (c) => {
+  const onSelectDestination = (c: object, index?: number) => {
     setSelectedDestination(c);
     setTo('');
+    if (index) setHighlightedAlias(index);
   };
   const editDestination = () => {
     setTo(searchTerm);
@@ -318,34 +360,34 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               ref=${inputRef}
               rows="2"
               onInput=${(e) => handleAddressChange(e.target.value)}
+              onKeyDown=${(e) => handleAliasNavigation(e)}
             />
             ${searchTerm &&
             html`
               ${!Object.keys(aliases).length &&
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
-              ${Object.keys(aliases).length > 0 &&
+              ${orderedAliases.length > 0 &&
               html`
-                <div
-                  class="alias-selector"
-                >
-                  ${Object.keys(Namespace).map((n) =>
-                    aliases[n].map(
-                      (a) =>
-                        html`
-                          <a
-                            onClick=${() => onSelectDestination(a)}
-                            class="dropdown-item is-flex px-4"
-                            style="justify-content: space-between;"
-                          >
-                            <span style="text-overflow: ellipsis; overflow: hidden;">
-                              ${a.name}
-                            </span>
-                            <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
-                              ${obsfucateAddress(a.address)}
-                            </span>
-                          </a>
-                        `
-                    )
+                <div class="alias-selector">
+                  ${orderedAliases.map(
+                    (a, index) =>
+                      html`
+                        <a
+                          onClick=${() => onSelectDestination(a, index)}
+                          class="dropdown-item is-flex px-4 ${index === highlightedAlias
+                            ? 'is-active'
+                            : ''}"
+                          style="justify-content: space-between;"
+                        >
+                          ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
+                          <span style="text-overflow: ellipsis; overflow: hidden;">
+                            ${a.name}
+                          </span>
+                          <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
+                            ${obsfucateAddress(a.address)}
+                          </span>
+                        </a>
+                      `
                   )}
                 </div>
               `}
