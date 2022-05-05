@@ -174,7 +174,7 @@ span[data-tooltip] {
   @extend .dropdown-content;
   position: absolute;
   top: 55%;
-  z-index: 5;
+  z-index: 3;
   width: 370px;
   border: solid $blue-dark 1px;
   border-top-width: 0;

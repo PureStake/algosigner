@@ -56,6 +56,47 @@ export class InternalMethods {
     return safeWallet;
   }
 
+  // Load internal aliases (accounts and contacts)
+  private static reloadAliases(): void {
+    const extensionStorage = new ExtensionStorage();
+
+    extensionStorage.getStorage('contacts', (storedContacts: any) => {
+      const aliases = {};
+      const wallet = session.wallet;
+
+      // Format contacts as aliases
+      const contactAliases = [];
+      for (const c of storedContacts) {
+        contactAliases.push({
+          name: c.name,
+          address: c.address,
+          namespace: Namespace.AlgoSigner_Contacts,
+        });
+      }
+
+      for (const l in Ledger) {
+        // Format accounts as aliases
+        const ledgerAccountAliases = [];
+        for (const acc of wallet[l]) {
+          ledgerAccountAliases.push({
+            name: acc.name,
+            address: acc.address,
+            namespace: Namespace.AlgoSigner_Accounts,
+          });
+        }
+        // Save accounts and contacts as aliases
+        aliases[l] = {
+          [Namespace.AlgoSigner_Accounts]: ledgerAccountAliases,
+          [Namespace.AlgoSigner_Contacts]: contactAliases,
+        };
+      }
+
+      console.log('=========== UPDATING ALIASES ===========');
+      console.log(aliases);
+      extensionStorage.setStorage('aliases', aliases, null);
+    });
+  }
+
   // Checks if an address is a valid user account for a given ledger.
   public static checkValidAccount(genesisID: string, address: string): void {
     const ledger: string = getLedgerFromGenesisId(genesisID);
@@ -183,46 +224,17 @@ export class InternalMethods {
                 }
               }
             }
+            
+            // Setup session
+            session.wallet = wallet;
+            session.ledger = Ledger.MainNet;
+            session.availableLedgers = availableLedgers;
 
-            // Setup internal aliases
-            extensionStorage.getStorage('contacts', (storedContacts: any) => {
-              const aliases = {};
+            // Load internal aliases
+            console.log('=========== INITIAL LOAD ===========');
+            this.reloadAliases();
 
-              // Format contacts as aliases
-              const contactAliases = [];
-              for (const c of storedContacts) {
-                contactAliases.push({
-                  name: c.name,
-                  address: c.address,
-                  namespace: Namespace.AlgoSigner_Contacts,
-                });
-              }
-
-              for (const l in Ledger) {
-                // Format accounts as aliases
-                const ledgerAccountAliases = [];
-                for (const acc of wallet[l]) {
-                  ledgerAccountAliases.push({
-                    name: acc.name,
-                    address: acc.address,
-                    namespace: Namespace.AlgoSigner_Accounts,
-                  });
-                }
-                // Save accounts and contacts as aliases
-                aliases[l] = {
-                  [Namespace.AlgoSigner_Accounts]: ledgerAccountAliases,
-                  [Namespace.AlgoSigner_Contacts]: contactAliases,
-                };
-              }
-
-              console.log('=========== INITIAL LOAD ===========');
-              console.log(aliases);
-              extensionStorage.setStorage('aliases', aliases, null);
-              session.wallet = wallet;
-              session.ledger = Ledger.MainNet;
-              session.availableLedgers = availableLedgers;
-              sendResponse(session.session);
-            });
+            sendResponse(session.session);
           });
         });
       }
@@ -258,6 +270,7 @@ export class InternalMethods {
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -286,6 +299,7 @@ export class InternalMethods {
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -341,6 +355,7 @@ export class InternalMethods {
           if (isSuccessful) {
             this.loadAccountAssetsDetails(newAccount.address, ledger);
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -1185,6 +1200,7 @@ export class InternalMethods {
       extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
         if (isSuccessful) {
           sendResponse(contacts);
+          this.reloadAliases();
         } else {
           sendResponse({ error: 'Lock failed' });
         }
@@ -1208,6 +1224,7 @@ export class InternalMethods {
       extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
         if (isSuccessful) {
           sendResponse(contacts);
+          this.reloadAliases();
         } else {
           sendResponse({ error: 'Lock failed' });
         }
