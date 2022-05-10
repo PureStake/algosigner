@@ -1,6 +1,7 @@
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
+import { Ledger } from '@algosigner/common/types';
 import { InternalMethods } from '../messaging/internalMethods';
-import { Cache, Ledger } from '../messaging/types';
+import { Cache } from '../messaging/types';
 import { initializeCache } from './helper';
 
 const TIMEOUT = 500;

@@ -1,5 +1,5 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Ledger } from './types';
+import { Ledger } from '@algosigner/common/types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
 import algosdk from 'algosdk';

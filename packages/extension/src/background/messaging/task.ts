@@ -2,7 +2,8 @@ import algosdk from 'algosdk';
 
 import { RequestError, WalletTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { API, Ledger } from './types';
+import { Ledger } from '@algosigner/common/types';
+import { API } from './types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
@@ -17,9 +18,9 @@ import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { PendingTransaction } from '../../errors/transactionSign';
-import { InvalidTransactionStructure, InvalidFields } from '../../errors/validation';
 import {
   InvalidStructure,
+  InvalidFields,
   InvalidMsigStructure,
   NoDifferentLedgers,
   MultipleTxsRequireGroup,

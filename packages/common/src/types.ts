@@ -52,6 +52,11 @@ export type Transaction = {
   readonly to: TAccount;
 };
 
+export enum Ledger {
+  TestNet = 'TestNet',
+  MainNet = 'MainNet',
+}
+
 export type WalletMultisigMetadata = {
   readonly version: number;
   readonly threshold: number;
