@@ -6,7 +6,6 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 
 import ContactPreview from 'components/ContactPreview';
-import goalseekerIcon from 'assets/goalseeker.svg';
 import algosdk from 'algosdk';
 
 const ContactList: FunctionalComponent = () => {
@@ -152,6 +151,13 @@ const ContactList: FunctionalComponent = () => {
                 value=${newAddress}
                 onInput=${(e) => setNewAddress(e.target.value)}
               />
+              ${newName.includes('.') &&
+              html`
+                <p class="has-text-justified mb-4">
+                  Note: Please refrain from using namespace aliases as Contacts won't be validated
+                  against the namespace provider.
+                </p>
+              `}
               <button
                 class="button is-link is-fullwidth ${loading ? 'is-loading' : ''}"
                 id="authButton"
