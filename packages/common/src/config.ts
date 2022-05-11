@@ -1,4 +1,4 @@
-import { Ledger, Namespace } from './types';
+import { Namespace } from './types';
 
 interface ConfigTemplate {
   name: string;                   // Formatted name, used for titles
@@ -30,7 +30,10 @@ export class AliasConfig {
   public static getMatchingNamespaces(ledger: string): Array<any> {
     const matchingNamespaces: Array<string> = [];
     for (const n in Namespace) {
-      if (AliasConfig[n].ledgers === null || AliasConfig[n].ledgers.includes(ledger)) {
+      if (
+        AliasConfig[n] &&
+        (AliasConfig[n].ledgers === null || AliasConfig[n].ledgers.includes(ledger))
+      ) {
         matchingNamespaces.push(n);
       }
     }

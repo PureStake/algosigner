@@ -378,7 +378,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                           ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
                           <div
                             class="is-flex has-tooltip-arrow has-tooltip-right has-tooltip-fade"
-                            data-tooltip="${AliasConfig[a.namespace].name}"
+                            data-tooltip="${AliasConfig[a.namespace]?.name}"
                           >
                             <span class="is-flex is-align-items-center pr-1">
                               <img
