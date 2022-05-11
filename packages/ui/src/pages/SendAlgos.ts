@@ -167,10 +167,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
   // Domains search and handling
   const searchAliases = async (searchTerm) => {
-    console.log(`Searching for ${searchTerm}`);
     const params = { ledger: ledger, searchTerm: searchTerm };
     sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
-      console.log(response);
       setLoading(false);
       if ('error' in response) {
         setError(response.error.message);
@@ -180,13 +178,11 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     });
   };
   const handleTimeout = async (searchTerm) => {
-    console.log(`executing alias lookup for ${searchTerm}`);
     clearTimeout(searchTimerID as NodeJS.Timeout);
     setSearchTimerID(undefined);
     await searchAliases(searchTerm);
   };
   const handleAddressChange = (value) => {
-    console.log(`setting term to ${value} and queueing lookup`);
     clearTimeout(searchTimerID as NodeJS.Timeout);
     setAliases({});
     setHighlightedAlias(0);

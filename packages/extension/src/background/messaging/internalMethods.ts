@@ -92,8 +92,6 @@ export class InternalMethods {
         };
       }
 
-      console.log('=========== UPDATING ALIASES ===========');
-      console.log(aliases);
       extensionStorage.setStorage('aliases', aliases, null);
     });
   }
@@ -232,7 +230,6 @@ export class InternalMethods {
             session.availableLedgers = availableLedgers;
 
             // Load internal aliases
-            console.log('=========== INITIAL LOAD ===========');
             this.reloadAliases();
 
             sendResponse(session.session);
@@ -1236,20 +1233,14 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.GetAliasedAddresses](request: any, sendResponse: Function) {
     const { ledger, searchTerm } = request.body.params;
-    console.log(`searching for ${searchTerm} on ${ledger}`);
 
     // Check if the term matches any of our namespaces
     const matchingNamespaces = AliasConfig.getMatchingNamespaces(ledger);
     const extensionStorage = new ExtensionStorage();
 
-    console.log('=========== MATCHING NAMESPACES ===========');
-    console.log(matchingNamespaces);
-
     extensionStorage.getStorage('aliases', (response: any) => {
       // aliases: { ledger: { namespace: [...aliases] } }
       const aliases = response;
-      console.log('=========== FETCH ALIASES ===========');
-      console.log(aliases);
 
       // Search the storage for the aliases stored for the matching namespaces
       const returnedAliasedAddresses = {};
@@ -1267,15 +1258,10 @@ export class InternalMethods {
           }
         }
 
-        console.log('=========== MATCHING IN NAMESPACE ===========');
-        console.log(namespace);
-        console.log(aliasesMatchingInNamespace);
         // Fallback to an api call goes here
 
         returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
       }
-      console.log('=========== FINAL MATCHING ALIASES ===========');
-      console.log(returnedAliasedAddresses);
       sendResponse(returnedAliasedAddresses);
     });
 
