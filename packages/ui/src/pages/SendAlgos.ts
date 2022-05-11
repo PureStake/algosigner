@@ -5,12 +5,12 @@ import { route } from 'preact-router';
 import { Key } from 'ts-key-enum';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Namespace } from '@algosigner/common/types';
+import { AliasConfig } from '@algosigner/common/config';
 import { obsfucateAddress } from '@algosigner/common/utils';
 
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
-import { assetFormat, numFormat } from 'services/common';
+import { assetFormat, numFormat, getNamespaceIcon } from 'services/common';
 
 import HeaderView from 'components/HeaderView';
 import Authenticate from 'components/Authenticate';
@@ -208,6 +208,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       switch (key) {
         case Key.Escape:
           setAliases({});
+          setSearchTerm('');
           break;
         case Key.ArrowDown:
           if (orderedAliases.length && highlightedAlias + 1 < orderedAliases.length) {
@@ -258,6 +259,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   if (ddActive) ddClass += ' is-active';
   const youIndicator = html`<b class="has-text-link">YOU</b>`;
   const disabled = (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0;
+  const isActive = (index: number) => (index === highlightedAlias ? 'is-active' : '');
 
   // Render HTML
   return html`
@@ -374,15 +376,25 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                       html`
                         <a
                           onClick=${() => onSelectDestination(a, index)}
-                          class="dropdown-item is-flex px-4 ${index === highlightedAlias
-                            ? 'is-active'
-                            : ''}"
+                          class="dropdown-item is-flex px-4 ${isActive(index)}"
                           style="justify-content: space-between;"
                         >
                           ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
-                          <span style="text-overflow: ellipsis; overflow: hidden;">
-                            ${a.name}
-                          </span>
+                          <div
+                            class="is-flex has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+                            data-tooltip="${AliasConfig[a.namespace].name}"
+                          >
+                            <span class="is-flex is-align-items-center pr-1">
+                              <img
+                                src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
+                                height="16"
+                                width="16"
+                              />
+                            </span>
+                            <span style="text-overflow: ellipsis; overflow: hidden;">
+                              ${a.name}
+                            </span>
+                          </div>
                           <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
                             ${obsfucateAddress(a.address)}
                           </span>
