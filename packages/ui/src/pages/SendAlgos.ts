@@ -40,6 +40,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [aliases, setAliases] = useState<any>({});
+  const [interalAliases, setInternalAliases] = useState<any>({});
   const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [addingContact, setAddingContact] = useState<boolean>(false);
@@ -56,6 +57,17 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         break;
       }
     }
+    // We search for the internal aliases to later determine wether the
+    // destination address is worth offering to be saved as a contact
+    const params = { ledger: ledger, searchTerm: '' };
+    sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
+      setLoading(false);
+      if ('error' in response) {
+        setError(response.error.message);
+      } else {
+        setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
+      }
+    });
   }, []);
   useEffect(() => {
     if (inputRef !== null && inputRef.current !== null) {
@@ -217,7 +229,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           }
           break;
         case Key.Enter:
-          onSelectDestination(orderedAliases[highlightedAlias]);
+          if (orderedAliases.length) {
+            onSelectDestination(orderedAliases[highlightedAlias]);
+          }
           break;
       }
     }
@@ -461,7 +475,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
             ${!selectedDestination &&
-            !aliases.find((a) => a.address === to) &&
+            !interalAliases.find((a) => a.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&
