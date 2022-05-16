@@ -33,6 +33,17 @@ async function openAccountDetails(account) {
   await extensionPage.click('#showDetails');
 }
 
+async function openSettingsMenu() {
+  await extensionPage.waitForSelector('#openSettings');
+  await extensionPage.click('#openSettings');
+}
+
+async function closeSettingsMenu() {
+  await extensionPage.waitForTimeout(500);
+  await extensionPage.waitForSelector('#closeSettings');
+  await extensionPage.click('#closeSettings');
+}
+
 async function goBack() {
   await extensionPage.click('#goBack');
   await extensionPage.waitForTimeout(250);
@@ -165,6 +176,8 @@ module.exports = {
   openExtension,
   selectAccount,
   openAccountDetails,
+  openSettingsMenu,
+  closeSettingsMenu,
   goBack,
   closeModal,
   inputPassword,

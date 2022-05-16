@@ -6,7 +6,7 @@ import { Key } from 'ts-key-enum';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { AliasConfig } from '@algosigner/common/config';
-import { obsfucateAddress } from '@algosigner/common/utils';
+import { obfuscateAddress } from '@algosigner/common/utils';
 
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
@@ -367,7 +367,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <textarea
               placeholder="Destination can be one of: an address, an imported account, an added contact"
               class="textarea has-fixed-size mb-4 pr-6"
-              id="toAddress"
+              id="destinationAddress"
               value=${to}
               ref=${inputRef}
               rows="2"
@@ -406,7 +406,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                             </span>
                           </div>
                           <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
-                            ${obsfucateAddress(a.address)}
+                            ${obfuscateAddress(a.address)}
                           </span>
                         </a>
                       `
@@ -427,6 +427,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               contact="${selectedDestination}"
               style="margin-top: -22px;"
               className="mb-4"
+              id="selectedDestination"
             />
           `}
         </div>

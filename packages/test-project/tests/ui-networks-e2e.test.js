@@ -5,14 +5,12 @@
  */
 
 const { accounts } = require('./common/constants');
-const { openExtension, inputPassword } = require('./common/helpers');
+const { openExtension, inputPassword, openSettingsMenu } = require('./common/helpers');
 const { CreateWallet, ImportAccount } = require('./common/tests');
 
 const openNetworkMenu = async () => {
   await extensionPage.waitForTimeout(1000);
-  await extensionPage.waitForSelector('#options-menu');
-  await extensionPage.click('#options-menu');
-  await extensionPage.click('#options-menu');
+  await openSettingsMenu();
   await extensionPage.waitForSelector('#showNetworkConfiguration');
   await extensionPage.click('#showNetworkConfiguration');
   await extensionPage.waitForSelector('#selectMainNet');

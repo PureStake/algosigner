@@ -200,6 +200,7 @@ const ContactList: FunctionalComponent = () => {
     >
       <b class="has-text-centered mb-3 is-size-5">Contact List</b>
       <i
+        id="newContact"
         class="fas fa-user-plus px-1"
         style="position: absolute; top: 50px; left: 90%; cursor: pointer;"
         aria-label="new contact"
