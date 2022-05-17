@@ -14,6 +14,7 @@ module.exports = {
       address: 'MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE',
     },
     multisig: {
+      name: 'Joined Multisig',
       address: 'DZ7POUYOOYW4PEKD3LZE7ZZTBT5JGIYZ3M7VECEPZ2HLHE7RGTGJIORBCI',
       subaccounts: [
         {

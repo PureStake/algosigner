@@ -1,6 +1,7 @@
 import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
-import { Ledger, Backend, API } from './messaging/types';
+import { Ledger } from '@algosigner/common/types';
+import { Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
 
 export class Settings {
