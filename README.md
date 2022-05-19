@@ -10,32 +10,15 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-# `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` will be deprecated mid April.
+# `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been officially deprecated.
 
-## Since v1.7.0, AlgoSigner no longer supports incomplete atomic groups signing.
-## 1.8.0 Release
+## 1.9.0 Release
 
-### Functionality updates
-This update is focused around rekey and changes to accommodate it. Both normal accounts and new reference accounts can be used directly in the UI and used by dApps if the proper authAddr is provided in the transaction. 
-- Rekeying transactions now available
-- Transactions with rekeyed accounts now accepted 
-- Reference accounts can now be imported with public key only 
+### Main updates
+This update adds supports for easier transfers with the new autocomplete feature. Start typing an account or contact name on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
+- Autocomplete support for UI-made transfers
+- `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
 
-### Patch 1.8.4
-
-Dependency updates.
-
-### Patch 1.8.3
-
-Fix for transaction notes created in the UI and signed with a Ledger device. 
-
-### Patch 1.8.2
-
-Fix for Ledger transactions created in the UI with transfer amounts set to 0. 
-
-### Patch 1.8.1
-
-UI Improvements for rekey transactions and reference accounts.
 
 ## New Users
 

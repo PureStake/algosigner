@@ -19,7 +19,7 @@ jobs:
           PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           path-to-signatures: 'signatures/cla.v0.json'
-          path-to-document: 'https://github.com/PureStake/algosigner-cla/blob/main/CLA.md' # e.g. a CLA or a DCO document
+          path-to-document: 'https://github.com/PureStake/algosigner-cla/blob/main/CLA.md#algosigner-individual-contributor-license-agreement' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'main'
           allowlist: janmarcano,fxgamundi,purestaketdb,PureBrent,mmaurello,ekenigs
