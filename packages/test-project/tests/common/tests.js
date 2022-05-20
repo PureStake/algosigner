@@ -61,8 +61,10 @@ function ImportAccount(account) {
 
 function VerifyAccount(account) {
   test(`Verify Account Info (${account.name})`, async () => {
+    const addressSelector = '#accountAddress';
     await openAccountDetails(account);
-    await expect(extensionPage.$eval('#accountAddress', (e) => e.innerText)).resolves.toBe(
+    await extensionPage.waitForSelector(addressSelector);
+    await expect(extensionPage.$eval(addressSelector, (e) => e.innerText)).resolves.toBe(
       account.address
     );
     await goBack();
@@ -183,7 +185,7 @@ function ConnectAlgoSigner() {
     await expect(
       dappPage.evaluate(async () => {
         const connectPromise = AlgoSigner.connect();
-        await window['rejectDapp']();
+        await window.rejectDapp();
         return Promise.resolve(connectPromise)
           .then((data) => {
             return data;

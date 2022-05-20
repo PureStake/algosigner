@@ -20,9 +20,7 @@ import Account from 'pages/Account';
 import AccountDetails from 'pages/AccountDetails';
 import SendAlgos from 'pages/SendAlgos';
 import AddAsset from 'pages/AddAsset';
-import SignTransaction from 'pages/SignTransaction';
 import SignWalletTransaction from 'pages/SignWalletTransaction';
-import SignMultisigTransaction from 'pages/SignMultisigTransaction';
 import LinkHardwareAccount from 'pages/LinkHardwareAccount';
 import LedgerHardwareConnector from 'components/LedgerDevice/LedgerHardwareConnector';
 import LedgerHardwareSign from 'components/LedgerDevice/LedgerHardwareSign';
@@ -46,11 +44,9 @@ const App = () => {
   
   return html`
       <${StoreProvider}>
-        <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">
+        <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
-            <${SignTransaction} path="/sign-transaction" />
             <${SignWalletTransaction} path="/sign-v2-transaction" />
-            <${SignMultisigTransaction} path="/sign-multisig-transaction" />
             <${Authorize} path="/authorize" />
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />

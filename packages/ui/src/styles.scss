@@ -2,15 +2,20 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+// Main window
+$extension-height: 550px;
+$extension-width: 400px;
+
 html {
-  height: 550px;
-  width: 400px;
+  height: $extension-height;
+  width: $extension-width;
   overflow: hidden !important;
 }
 
 // Global font size
 $body-size: 15px;
 
+// Theme colors
 $grey-lighter: #eff4f7;
 $grey: #8a9fa8;
 
@@ -41,6 +46,9 @@ $tabs-toggle-link-active-border-color: $blue-light;
 $modal-close-right: 4px;
 $modal-close-top: 8px;
 
+// DROPDOWN
+$dropdown-item-active-background-color: $blue-dark;
+
 // TOOLTIP
 $tooltip-background-opacity: 1;
 
@@ -60,6 +68,7 @@ $tooltip-background-opacity: 1;
 .main-view {
   display: flex;
   flex: 1;
+  flex-basis: 100vh;
 }
 
 .account-preview.box {
@@ -166,6 +175,26 @@ span[data-tooltip] {
   border-left-color: #94b1c3;
 }
 
+.alias-selector {
+  @extend .dropdown-content;
+  position: absolute;
+  top: 55%;
+  z-index: 3;
+  width: 370px;
+  border: solid $blue-dark 1px;
+  border-top-width: 0;
+  border-radius: 12px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+// Custom IDs
+#destinationAddress:not(:placeholder-shown) {
+  border-color: $blue-dark;
+}
+
 // Used during the signing tx preview 
 .truncate-text {
   text-overflow: ellipsis;
@@ -175,13 +204,17 @@ span[data-tooltip] {
   display: block;
 }
 
-// This is used for tx keys that have a list of values
 span.truncate-text:not(:first-child) {
+  // This is used for tx keys that have a list of values
   margin-top: -6px;
 }
 
 #approveTx:disabled {
   color: $red;
+}
+
+#txAlerts p {
+  font-size: 0.8rem;
 }
 
 #warning-tx-list {

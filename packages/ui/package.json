@@ -1,6 +1,6 @@
 {
   "name": "algosigner-ui",
-  "version": "1.8.4",
+  "version": "1.9.0",
   "author": "https://developer.purestake.io",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
@@ -16,7 +16,7 @@
     "@fortawesome/fontawesome-free": "^5.15.0",
     "@ledgerhq/hw-app-algorand": "^5.51.1",
     "@ledgerhq/hw-transport-webhid": "^5.46.0",
-    "algosdk": "1.15.0",
+    "algosdk": "1.16.0",
     "buffer": "^6.0.3",
     "history": "^5.0.0",
     "htm": "^3.0.4",
@@ -25,6 +25,7 @@
     "preact": "10.5.13",
     "preact-router": "^3.2.1",
     "qrcode-generator": "^1.4.4",
+    "ts-key-enum": "^3.0.11",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {

@@ -2,7 +2,8 @@ import algosdk from 'algosdk';
 
 import { RequestError, WalletTransaction } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { API, Ledger } from './types';
+import { Ledger } from '@algosigner/common/types';
+import { API } from './types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
@@ -17,9 +18,9 @@ import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { PendingTransaction } from '../../errors/transactionSign';
-import { InvalidTransactionStructure, InvalidFields } from '../../errors/validation';
 import {
   InvalidStructure,
+  InvalidFields,
   InvalidMsigStructure,
   NoDifferentLedgers,
   MultipleTxsRequireGroup,
@@ -35,8 +36,8 @@ import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
-// 34 additional for the title bar
-const titleBarHeight = 34;
+// Additional space for the title bar
+const titleBarHeight = 28;
 
 const authPopupProperties = {
   type: 'popup',
@@ -48,8 +49,8 @@ const authPopupProperties = {
 const signPopupProperties = {
   type: 'popup',
   focused: true,
-  width: 400 + 12,
-  height: 630 + titleBarHeight,
+  width: 400,
+  height: 660 + titleBarHeight,
 };
 
 export class Task {
@@ -492,226 +493,6 @@ export class Task {
                 }
               }
             );
-          }
-        },
-        // sign-transaction
-        [JsonRpcMethod.SignTransaction]: (d: any, resolve: Function, reject: Function) => {
-          let transactionWrap: BaseValidatedTxnWrap = undefined;
-          let validationError = undefined;
-          try {
-            const txn = d.body.params;
-            transactionWrap = getValidatedTxnWrap(txn, txn['type']);
-            InternalMethods.checkValidAccount(
-              transactionWrap.transaction.genesisID,
-              transactionWrap.transaction.from
-            );
-          } catch (e) {
-            logging.log(`Validation failed. ${e.message}`);
-            validationError = e;
-          }
-          if (
-            !transactionWrap &&
-            validationError &&
-            validationError instanceof InvalidTransactionStructure
-          ) {
-            // We don't have a transaction wrap, but we have a validation error.
-            d.error = validationError;
-            reject(d);
-            return;
-          } else if (!transactionWrap || validationError) {
-            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
-            logging.log(
-              'A transaction has failed because of an inability to build the specified transaction type.'
-            );
-
-            if (validationError && validationError.message) {
-              d.error = validationError;
-            } else {
-              d.error = {
-                message:
-                  'Validation failed for transaction. Please verify the properties are valid.',
-              };
-            }
-            reject(d);
-          } else if (
-            transactionWrap.validityObject &&
-            Object.values(transactionWrap.validityObject).some(
-              (value) => value['status'] === ValidationStatus.Invalid
-            )
-          ) {
-            // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-            // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            const invalidKeys = [];
-            Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
-              if (value['status'] === ValidationStatus.Invalid) {
-                invalidKeys.push(`${key}`);
-              }
-            });
-            d.error = {
-              message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(
-                ','
-              )}].`,
-            };
-            reject(d);
-          } else {
-            // Get Ledger params
-            const conn = Settings.getBackendParams(
-              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
-              API.Algod
-            );
-            const sendPath = '/v2/transactions/params';
-            const fetchParams: any = {
-              headers: {
-                ...conn.headers,
-              },
-              method: 'GET',
-            };
-
-            let url = conn.url;
-            if (conn.port.length > 0) url += ':' + conn.port;
-
-            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then(async (params) => {
-              calculateEstimatedFee(transactionWrap, params);
-              await Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap);
-              d.body.params = transactionWrap;
-
-              extensionBrowser.windows.create(
-                {
-                  url: extensionBrowser.runtime.getURL('index.html#/sign-transaction'),
-                  ...signPopupProperties,
-                },
-                function (w) {
-                  if (w) {
-                    Task.requests[d.originTabID] = {
-                      window_id: w.id,
-                      message: d,
-                    };
-                    // Send message with tx info
-                    setTimeout(function () {
-                      extensionBrowser.runtime.sendMessage(d);
-                    }, 500);
-                  }
-                }
-              );
-            });
-          }
-        },
-        // sign-multisig-transaction
-        [JsonRpcMethod.SignMultisigTransaction]: (d: any, resolve: Function, reject: Function) => {
-          // TODO: Possible support for blob transfer on previously signed transactions
-
-          let transactionWrap: BaseValidatedTxnWrap = undefined;
-          let validationError = undefined;
-          try {
-            transactionWrap = getValidatedTxnWrap(d.body.params.txn, d.body.params.txn['type']);
-          } catch (e) {
-            logging.log(`Validation failed. ${e}`);
-            validationError = e;
-          }
-          if (
-            !transactionWrap &&
-            validationError &&
-            validationError instanceof InvalidTransactionStructure
-          ) {
-            // We don't have a transaction wrap, but we have a validation error.
-            d.error = validationError;
-            reject(d);
-            return;
-          } else if (!transactionWrap) {
-            // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
-            logging.log(
-              'A transaction has failed because of an inability to build the specified transaction type.'
-            );
-
-            if (validationError && validationError.message) {
-              d.error = validationError;
-            } else {
-              d.error = {
-                message:
-                  'Validation failed for transaction. Please verify the properties are valid.',
-              };
-            }
-            reject(d);
-          } else if (
-            transactionWrap.validityObject &&
-            Object.values(transactionWrap.validityObject).some(
-              (value) => value['status'] === ValidationStatus.Invalid
-            )
-          ) {
-            // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-            // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-            const invalidKeys = [];
-            Object.entries(transactionWrap.validityObject).forEach(([key, value]) => {
-              if (value['status'] === ValidationStatus.Invalid) {
-                invalidKeys.push(`${key}`);
-              }
-            });
-            d.error = {
-              message: `Validation failed for transaction because of invalid properties [${invalidKeys.join(
-                ','
-              )}].`,
-            };
-            reject(d);
-          } else {
-            // Get Ledger params
-            const conn = Settings.getBackendParams(
-              getLedgerFromGenesisId(transactionWrap.transaction.genesisID),
-              API.Algod
-            );
-            const sendPath = '/v2/transactions/params';
-            const fetchParams: any = {
-              headers: {
-                ...conn.headers,
-              },
-              method: 'GET',
-            };
-
-            let url = conn.url;
-            if (conn.port.length > 0) url += ':' + conn.port;
-
-            Task.fetchAPI(`${url}${sendPath}`, fetchParams).then(async (params) => {
-              calculateEstimatedFee(transactionWrap, params);
-              await Task.modifyTransactionWrapWithAssetCoreInfo(transactionWrap);
-
-              d.body.params.validityObject = transactionWrap.validityObject;
-              d.body.params.txn = transactionWrap.transaction;
-              d.body.params.estimatedFee = transactionWrap.estimatedFee;
-
-              const msig_txn = { msig: d.body.params.msig, txn: d.body.params.txn };
-              const session = InternalMethods.getHelperSession();
-              const ledger = getLedgerFromGenesisId(transactionWrap.transaction.genesisID);
-              const accounts = session.wallet[ledger];
-              const multisigAccounts = getSigningAccounts(accounts, msig_txn);
-
-              if (multisigAccounts.error) {
-                d.error = multisigAccounts.error.message;
-                reject(d);
-              } else {
-                if (multisigAccounts.accounts && multisigAccounts.accounts.length > 0) {
-                  d.body.params.account = multisigAccounts.accounts[0]['address'];
-                  d.body.params.name = multisigAccounts.accounts[0]['name'];
-                }
-
-                extensionBrowser.windows.create(
-                  {
-                    url: extensionBrowser.runtime.getURL('index.html#/sign-multisig-transaction'),
-                    ...signPopupProperties,
-                  },
-                  function (w) {
-                    if (w) {
-                      Task.requests[d.originTabID] = {
-                        window_id: w.id,
-                        message: d,
-                      };
-                      // Send message with tx info
-                      setTimeout(function () {
-                        extensionBrowser.runtime.sendMessage(d);
-                      }, 500);
-                    }
-                  }
-                );
-              }
-            });
           }
         },
         // handle-wallet-transactions
@@ -1672,6 +1453,9 @@ export class Task {
         },
         [JsonRpcMethod.DeleteContact]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.DeleteContact](request, sendResponse);
+        },
+        [JsonRpcMethod.GetAliasedAddresses]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetAliasedAddresses](request, sendResponse);
         },
       },
     };

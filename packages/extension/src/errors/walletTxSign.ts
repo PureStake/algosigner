@@ -11,6 +11,18 @@ export class InvalidStructure extends RequestError {
   }
 }
 
+export class InvalidFields extends RequestError {
+  constructor(data?: any) {
+    super(
+      'Validation failed for transaction due to invalid properties.',
+      4300,
+      'InvalidFields',
+      data
+    );
+    Error.captureStackTrace(this, InvalidFields);
+  }
+}
+
 export class InvalidMsigStructure extends RequestError {
   constructor() {
     super(

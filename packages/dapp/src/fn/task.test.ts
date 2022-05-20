@@ -26,9 +26,9 @@ describe('task tests', () => {
     };
     const error = RequestError.None;
     const task = new Task();
-    task.sign(transaction, error);
+    task.send(transaction, error);
     expect(MessageBuilder.promise).toHaveBeenLastCalledWith(
-      JsonRpcMethod.SignTransaction,
+      JsonRpcMethod.SendTransaction,
       transaction,
       error
     );

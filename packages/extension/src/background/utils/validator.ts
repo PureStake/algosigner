@@ -2,7 +2,9 @@ import algosdk from 'algosdk';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
 import { Settings } from '../config';
 
-const STRING_MAX_LENGTH = 1000;
+export const STRING_MAX_LENGTH = 1000;
+export const HIGH_FEE_TRESHOLD = 1000;
+export const ELEVATED_FEE_TRESHOLD = 1000000;
 
 ///
 // Validation Status
@@ -42,16 +44,27 @@ export class ValidationResponse {
   }
 }
 
-///
-// Return field if valid based on type.
-///
+/**
+ * Return field if valid based on type
+ * Some fields already validated on the wrapper are:
+ * appApprovalProgram, appClearProgram, appArgs, appAccounts, assetMetadataHash, group, note
+ */
 export function Validate(field: any, value: any): ValidationResponse {
   switch (field) {
-    // Validate the addresses are accurate
-    case 'to':
-    case 'from':
+    /**
+     * General field validations by type
+     */
+    // Safety checks for addresses
+    case 'assetClawback':
+    case 'assetFreeze':
+    case 'assetManager':
+    case 'assetReserve':
+    case 'assetRevocationTarget':
     case 'closeRemainderTo':
+    case 'freezeAccount':
+    case 'from':
     case 'reKeyTo':
+    case 'to':
       if (!algosdk.isValidAddress(value)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
@@ -74,28 +87,45 @@ export function Validate(field: any, value: any): ValidationResponse {
         }
       }
     // Safety checks for numbers
+    case 'appGlobalByteSlices':
+    case 'appGlobalInts':
+    case 'appIndex':
+    case 'appLocalByteSlices':
+    case 'appLocalInts':
+    case 'appOnComplete':
+    case 'assetDecimals':
+    case 'assetIndex':
+    case 'extraPages':
     case 'firstRound':
     case 'lastRound':
-    case 'assetIndex':
-    case 'assetDecimals':
-    case 'appOnComplete':
-    case 'appIndex':
     case 'voteFirst':
-    case 'voteLast':
     case 'voteKeyDilution':
-    case 'appGlobalInts':
-    case 'appGlobalByteSlices':
-    case 'appLocalInts':
-    case 'appLocalByteSlices':
-    case 'extraPages':
+    case 'voteLast':
       if (value && (!Number.isSafeInteger(value) || parseInt(value) < 0)) {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
-          info: 'Value unable to be cast correctly to a numeric value.',
+          info: 'Value unable to be cast correctly to a positive numeric value.',
         });
       } else {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       }
+    // Safety checks for number arrays
+    case 'appForeignApps':
+    case 'appForeignAssets':
+      if (value && (!Array.isArray(value) || !value.length)) {
+        return new ValidationResponse({
+          status: ValidationStatus.Invalid,
+          info: 'Value needs to be a positive number array.',
+        });
+      } else {
+        if (value.some((fa) => !Number.isSafeInteger(fa) || parseInt(fa) < 0)) {
+          return new ValidationResponse({
+            status: ValidationStatus.Invalid,
+            info: 'Some value was unable to be cast correctly to a positive numeric value.',
+          });
+        }
+      }
+      return new ValidationResponse({ status: ValidationStatus.Valid });
     // Safety checks for BigInts
     case 'amount':
     case 'assetTotal':
@@ -116,23 +146,45 @@ export function Validate(field: any, value: any): ValidationResponse {
         });
       }
     // Safety checks for strings
+    case 'assetName':
+    case 'assetURL':
+    case 'assetUnitName':
+    case 'group':
     case 'note':
     case 'name':
     case 'tag':
-    case 'group':
-      if (
-        value &&
-        (typeof value === 'string' || value instanceof String) &&
-        value.length < STRING_MAX_LENGTH
-      ) {
+      if (typeof value === 'string' || value instanceof String) {
+        if (value.length < STRING_MAX_LENGTH) {
+          return new ValidationResponse({ status: ValidationStatus.Valid });
+        } else {
+          return new ValidationResponse({
+            status: ValidationStatus.Invalid,
+            info: 'Value exceeds permitted string length.',
+          });
+        }
+      } else {
+        return new ValidationResponse({
+          status: ValidationStatus.Invalid,
+          info: 'Value needs to be a string.',
+        });
+      }
+    // Safety checks for booleans
+    case 'assetDefaultFrozen':
+    case 'flatFee':
+    case 'freezeState':
+    case 'nonParticipation':
+      if (typeof value === 'boolean') {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {
         return new ValidationResponse({
           status: ValidationStatus.Invalid,
-          info: 'Value exceeds permitted string length.',
+          info: 'Value needs to be a boolean.',
         });
       }
 
+    /**
+     * Specific field validations
+     */
     // Warn on fee amounts above minimum, send dangerous response on those above 1 Algo.
     case 'fee':
       try {
@@ -141,12 +193,12 @@ export function Validate(field: any, value: any): ValidationResponse {
             status: ValidationStatus.Invalid,
             info: 'Value unable to be cast correctly to a numeric value.',
           });
-        } else if (parseInt(value) > 1000000) {
+        } else if (parseInt(value) > ELEVATED_FEE_TRESHOLD) {
           return new ValidationResponse({
             status: ValidationStatus.Dangerous,
             info: 'The associated fee is very high compared to the minimum value.',
           });
-        } else if (parseInt(value) > 1000) {
+        } else if (parseInt(value) > HIGH_FEE_TRESHOLD) {
           return new ValidationResponse({
             status: ValidationStatus.Warning,
             info: 'The fee is higher than the minimum value.',
@@ -177,6 +229,7 @@ export function Validate(field: any, value: any): ValidationResponse {
       }
 
     // Genesis hash must be present and one of the approved values
+    // @TODO: verify or move to UintArrays?
     case 'genesisHash':
       if (value) {
         return new ValidationResponse({ status: ValidationStatus.Valid });

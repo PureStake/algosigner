@@ -2,42 +2,54 @@ import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect, useRef } from 'preact/hooks';
 import { route } from 'preact-router';
-import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { Key } from 'ts-key-enum';
 
-import { sendMessage } from 'services/Messaging';
-import { assetFormat, numFormat } from 'services/common';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { AliasConfig } from '@algosigner/common/config';
+import { obfuscateAddress } from '@algosigner/common/utils';
 
 import { StoreContext } from 'services/StoreContext';
+import { sendMessage } from 'services/Messaging';
+import { assetFormat, numFormat, getNamespaceIcon } from 'services/common';
 
 import HeaderView from 'components/HeaderView';
 import Authenticate from 'components/Authenticate';
 import ContactPreview from 'components/ContactPreview';
+
 import algosdk from 'algosdk';
+
+const ALIAS_TIMER = 500;
+const MAX_LENGTH_LOOKUP = 20;
 
 const SendAlgos: FunctionalComponent = (props: any) => {
   const store: any = useContext(StoreContext);
   const { matches, ledger, address } = props;
+  const inputRef = useRef<HTMLHeadingElement>(null);
+  const activeAliasRef = useRef<HTMLHeadingElement>(null);
 
   const [, forceUpdate] = useState<boolean>(false);
   const [account, setAccount] = useState<any>({});
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [ddActive, setDdActive] = useState<boolean>(false);
-  const [modalActive, setModalActive] = useState<boolean>(false);
   // Asset {} is Algos
   const [asset, setAsset] = useState<any>({});
-  const [to, setTo] = useState('');
-  const [contacts, setContacts] = useState<Array<any>>([]);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
-  const [addingContact, setAddingContact] = useState<boolean>(false);
-  const [newContactName, setNewContactName] = useState<string>('');
   const [amount, setAmount] = useState('');
+  const [to, setTo] = useState('');
   const [note, setNote] = useState('');
   const [txId, setTxId] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
+  const [aliases, setAliases] = useState<any>({});
+  const [interalAliases, setInternalAliases] = useState<any>({});
+  const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
+  const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [addingContact, setAddingContact] = useState<boolean>(false);
+  const [newContactName, setNewContactName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const inputRef = useRef<HTMLHeadingElement>(null);
 
+  // Initial setup
   useEffect(() => {
     for (let i = store[ledger].length - 1; i >= 0; i--) {
       if (store[ledger][i].address === address) {
@@ -45,25 +57,34 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         break;
       }
     }
-    sendMessage(JsonRpcMethod.GetContacts, {}, function (response) {
+    // We search for the internal aliases to later determine wether the
+    // destination address is worth offering to be saved as a contact
+    const params = { ledger: ledger, searchTerm: '' };
+    sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
       setLoading(false);
       if ('error' in response) {
         setError(response.error.message);
       } else {
-        setContacts(response);
+        setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
       }
     });
   }, []);
-
   useEffect(() => {
     if (inputRef !== null && inputRef.current !== null) {
       inputRef.current.focus();
     }
-  }, [selectedContact]);
+  }, [selectedDestination]);
+  useEffect(() => {
+    if (activeAliasRef !== null && activeAliasRef.current !== null) {
+      activeAliasRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    }
+  }, [highlightedAlias, selectedDestination]);
 
-  let ddClass: string = 'dropdown is-right';
-  if (ddActive) ddClass += ' is-active';
-
+  // Transaction signing
   const selectAsset = (selectedAsset) => {
     setDdActive(false);
 
@@ -87,20 +108,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       });
     }
   };
-
-  const handleAmountChange = (val, ass) => {
-    const decimals = 'decimals' in ass ? ass.decimals : 6;
-    const integer = decimals >= 16 ? 1 : 16 - decimals;
-    let re;
-    if (decimals > 0) re = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
-    else re = new RegExp(`\\d{1,16}`);
-
-    const finalVal = val.match(re);
-    if (finalVal) setAmount(finalVal[0]);
-    else setAmount('');
-    forceUpdate((n) => !n);
-  };
-
   const sendTx = async (pwd: string) => {
     setLoading(true);
     setAuthError('');
@@ -122,7 +129,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       address: account.address,
       txnParams: {
         from: account.address,
-        to: to || selectedContact && selectedContact.address,
+        to: to || (selectedDestination && selectedDestination.address),
         note: note,
         amount: amountToSend,
       },
@@ -153,7 +160,6 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       }
     });
   };
-
   const saveContact = () => {
     const params = {
       name: newContactName,
@@ -171,54 +177,103 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     });
   };
 
+  // Domains search and handling
+  const searchAliases = async (searchTerm) => {
+    const params = { ledger: ledger, searchTerm: searchTerm };
+    sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
+      setLoading(false);
+      if ('error' in response) {
+        setError(response.error.message);
+      } else {
+        setAliases(response);
+      }
+    });
+  };
+  const handleTimeout = async (searchTerm) => {
+    clearTimeout(searchTimerID as NodeJS.Timeout);
+    setSearchTimerID(undefined);
+    await searchAliases(searchTerm);
+  };
+  const handleAddressChange = (value) => {
+    clearTimeout(searchTimerID as NodeJS.Timeout);
+    setAliases({});
+    setHighlightedAlias(0);
+    setTo(value);
+    if (value.length && value.length <= MAX_LENGTH_LOOKUP) {
+      setSearchTerm(value);
+      setSearchTimerID(setTimeout(() => handleTimeout(value), ALIAS_TIMER));
+    } else {
+      setSearchTerm('');
+    }
+  };
+  const orderedAliases = Object.keys(aliases).flatMap((n) => aliases[n]);
+  const handleAliasNavigation = (event: Event) => {
+    const key = (event as KeyboardEvent).key as Key;
+    const customKeys = [Key.Escape, Key.ArrowDown, Key.ArrowUp, Key.Enter];
+
+    if (customKeys.includes(key)) {
+      event.preventDefault();
+      switch (key) {
+        case Key.Escape:
+          setAliases({});
+          setSearchTerm('');
+          break;
+        case Key.ArrowDown:
+          if (orderedAliases.length && highlightedAlias + 1 < orderedAliases.length) {
+            setHighlightedAlias(highlightedAlias + 1);
+          }
+          break;
+        case Key.ArrowUp:
+          if (orderedAliases.length && highlightedAlias - 1 >= 0) {
+            setHighlightedAlias(highlightedAlias - 1);
+          }
+          break;
+        case Key.Enter:
+          if (orderedAliases.length) {
+            onSelectDestination(orderedAliases[highlightedAlias]);
+          }
+          break;
+      }
+    }
+  };
+
+  // Destination (de)selection
+  const onSelectDestination = (c: object, index?: number) => {
+    setSelectedDestination(c);
+    setTo('');
+    if (index) setHighlightedAlias(index);
+  };
+  const editDestination = () => {
+    setTo(searchTerm);
+    setSelectedDestination(null);
+  };
+
+  // Other UI functions and variables
   const goBack = () => {
     route(`/${matches.ledger}/${matches.address}`);
-  }
-
-  const youIndicator = html`<b class="has-text-link">YOU</b>`;
-  const onSelectContact = (c) => {
-    setSelectedContact(c);
-    setTo('');
-    setModalActive(false);
   };
-  const deselectContact = () => {
-    setTo(selectedContact.address);
-    setSelectedContact(null);
-  }
+  const handleAmountChange = (val, ass) => {
+    const decimals = 'decimals' in ass ? ass.decimals : 6;
+    const integer = decimals >= 16 ? 1 : 16 - decimals;
+    let regex;
+    if (decimals > 0) regex = new RegExp(`\\d{1,${integer}}(\\.\\d{0,${decimals}})?`);
+    else regex = new RegExp(`\\d{1,16}`);
 
-  const disabled = (!selectedContact && !algosdk.isValidAddress(to)) || +amount < 0;
+    const finalVal = val.match(regex);
+    if (finalVal) setAmount(finalVal[0]);
+    else setAmount('');
+    forceUpdate((n) => !n);
+  };
 
+  let ddClass: string = 'dropdown is-right';
+  if (ddActive) ddClass += ' is-active';
+  const youIndicator = html`<b class="has-text-link">YOU</b>`;
+  const disabled = (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0;
+  const isActive = (index: number) => (index === highlightedAlias ? 'is-active' : '');
+
+  // Render HTML
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-      <div class="modal ${modalActive && 'is-active'}">
-        <div class="modal-background" />
-        <div class="modal-content" style="overflow: hidden;">
-          <div class="box" style="max-height: 100%;">
-            <div class="has-text-centered pb-2"><h5 class="title is-5">Contact List</h5></div>
-            <div style="height: 380px; overflow-y: auto; margin-right: -0.5rem;" class="pr-2">
-              ${!contacts.length &&
-              html`
-                <div class="has-text-centered">
-                  <span>There are no contacts saved yet.</span>
-                </div>
-              `}
-              ${contacts.map(
-                (c) =>
-                  html`<${ContactPreview}
-                    contact="${c}"
-                    style="cursor: pointer;"
-                    action="${() => onSelectContact(c)}"
-                  />`
-              )}
-            </div>
-          </div>
-          <button
-            class="modal-close is-large"
-            aria-label="close"
-            onClick=${() => setModalActive(false)}
-          />
-        </div>
-      </div>
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
         title="Send"
@@ -307,37 +362,72 @@ const SendAlgos: FunctionalComponent = (props: any) => {
         </div>
 
         <div>
-          <i
-            class="far fa-address-book px-1"
-            style="position: relative; z-index: 3; top: 8px; left: 92%; cursor: pointer;"
-            aria-label="contacts"
-            onClick=${() => setModalActive(true)}
-          ></i>
-          ${!selectedContact &&
+          ${!selectedDestination &&
           html`
             <textarea
-              placeholder="To address"
+              placeholder="Destination can be one of: an address, an imported account, an added contact"
               class="textarea has-fixed-size mb-4 pr-6"
-              style="resize: none; margin-top: -22px;"
-              id="toAddress"
+              id="destinationAddress"
               value=${to}
               ref=${inputRef}
               rows="2"
-              onInput=${(e) => setTo(e.target.value)}
+              onInput=${(e) => handleAddressChange(e.target.value)}
+              onKeyDown=${(e) => handleAliasNavigation(e)}
             />
+            ${searchTerm &&
+            html`
+              ${!Object.keys(aliases).length &&
+              html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
+              ${orderedAliases.length > 0 &&
+              html`
+                <div class="alias-selector">
+                  ${orderedAliases.map(
+                    (a, index) =>
+                      html`
+                        <a
+                          onClick=${() => onSelectDestination(a, index)}
+                          class="dropdown-item is-flex px-4 ${isActive(index)}"
+                          style="justify-content: space-between;"
+                        >
+                          ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
+                          <div
+                            class="is-flex has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+                            data-tooltip="${AliasConfig[a.namespace]?.name}"
+                          >
+                            <span class="is-flex is-align-items-center pr-1">
+                              <img
+                                src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
+                                height="16"
+                                width="16"
+                              />
+                            </span>
+                            <span style="text-overflow: ellipsis; overflow: hidden;">
+                              ${a.name}
+                            </span>
+                          </div>
+                          <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
+                            ${obfuscateAddress(a.address)}
+                          </span>
+                        </a>
+                      `
+                  )}
+                </div>
+              `}
+            `}
           `}
-          ${selectedContact &&
+          ${selectedDestination &&
           html`
             <i
               class="far fa-edit px-1"
-              style="position: relative; z-index: 3; top: 7px; left: 80%; cursor: pointer;"
+              style="position: relative; z-index: 3; top: 7px; left: 92%; cursor: pointer;"
               aria-label="edit"
-              onClick=${() => deselectContact()}
+              onClick=${() => editDestination()}
             ></i>
             <${ContactPreview}
-              contact="${selectedContact}"
+              contact="${selectedDestination}"
               style="margin-top: -22px;"
               className="mb-4"
+              id="selectedDestination"
             />
           `}
         </div>
@@ -385,8 +475,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           <div class="box">
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
-            ${!selectedContact &&
-            !contacts.find((c) => c.address === to) &&
+            ${!selectedDestination &&
+            !interalAliases.find((a) => a.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&

@@ -221,7 +221,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
     const to = wrap.transaction.to;
     const contact = to ? contacts.find((c) => c.address === to) : null;
     return html`
-      <div class="mb-5" style="overflow:visible; height: 360px; flex-basis: 70%;">
+      <div style="overflow:visible; height: 360px; flex-basis: 75%;">
         ${wrap.transaction.type === 'pay' &&
         html`
           <${TxPay}
@@ -307,9 +307,9 @@ const SignWalletTransaction: FunctionalComponent = () => {
   return html`
     <div
       class="main-view is-flex-direction-column is-justify-content-space-between"
-      style="min-height: 630px;"
+      style="min-height: 660px;"
     >
-      <div class="px-4 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
+      <div class="px-5 mt-2" style="flex: 0; border-bottom: 1px solid #EFF4F7">
         <img src=${logotype} width="130" />
         ${totalGroups > 1 &&
         html`
@@ -319,10 +319,10 @@ const SignWalletTransaction: FunctionalComponent = () => {
       ${request.body &&
       html`
         <section class="hero">
-          <div class="hero-body py-3">
+          <div class="hero-body is-flex is-align-items-center py-2">
             ${request.favIconUrl &&
-            html` <img src=${request.favIconUrl} width="32" style="float:left" /> `}
-            <h1 class="title is-size-5 ml-6">
+            html`<img class="mr-2" src=${request.favIconUrl} width="32" style="float:left" />`}
+            <h1 class="title is-size-5">
               <span>${request.originTitle} wants to sign transactions for </span>
               <span style="color:${ledger.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
                 ${ledger}

@@ -5,7 +5,14 @@
  */
 
 const { accounts, wallet } = require('./common/constants');
-const { openExtension, selectAccount, closeModal, goBack } = require('./common/helpers');
+const {
+  openExtension,
+  selectAccount,
+  openSettingsMenu,
+  closeSettingsMenu,
+  closeModal,
+  goBack,
+} = require('./common/helpers');
 const { CreateWallet, ImportAccount, DeleteAccount } = require('./common/tests');
 
 describe('Wallet Setup', () => {
@@ -59,13 +66,36 @@ describe('UI Transactions Tests', () => {
     return;
   };
 
-  test('Send Algos Transaction', async () => {
+  const verifyDestination = async (account) => {
+    const obfuscateAddress = (address) => `${address.slice(0, 10)}.....${address.slice(-10)}`;
+    const nameSelector = '#selectedDestination .title';
+    const addressSelector = '#selectedDestination .subtitle';
+    await extensionPage.waitForSelector(nameSelector);
+    await extensionPage.waitForSelector(addressSelector);
+    await expect(extensionPage.$eval(nameSelector, (e) => e.innerText)).resolves.toBe(account.name);
+    await expect(extensionPage.$eval(addressSelector, (e) => e.innerText)).resolves.toBe(
+      obfuscateAddress(account.address)
+    );
+  };
+
+  test('Add Multisig 1 as a Contact', async () => {
+    await openSettingsMenu();
+    await extensionPage.click('#showContactList');
+    await extensionPage.click('#newContact');
+    await extensionPage.type('#contactName', accounts.multisig.subaccounts[0].name);
+    await extensionPage.type('#contactAddress', accounts.multisig.subaccounts[0].address);
+    await extensionPage.click('#authButton');
+    await closeSettingsMenu();
+  });
+
+  test('Send Algos Transaction / Regular address', async () => {
     await selectAccount(accounts.ui);
 
     await extensionPage.click('#sendTransfer');
     await extensionPage.waitForTimeout(100);
     await extensionPage.type('#transferAmount', amount.toString());
-    await extensionPage.type('#toAddress', accounts.ui.address);
+    // First we test with a normal address and save it as a contact
+    await extensionPage.type('#destinationAddress', accounts.multisig.address);
     await extensionPage.type('#note', 'AutoTest Send Algo');
     await extensionPage.click('#submitTransfer');
     await extensionPage.waitForSelector('#enterPassword');
@@ -76,7 +106,13 @@ describe('UI Transactions Tests', () => {
     // setup tx details for next test
     txId = await extensionPage.$eval('#txId', (e) => e.innerText);
     txTitle = 'Payment';
-    await returnToAccount();
+    // Save destination as Account
+    await extensionPage.waitForSelector('#saveNewContact');
+    await extensionPage.click('#saveNewContact');
+    await extensionPage.waitForSelector('#newContactName');
+    await extensionPage.type('#newContactName', accounts.multisig.name);
+    await extensionPage.waitForSelector('#confirmNewContact');
+    await extensionPage.click('#confirmNewContact');
   });
 
   test('Verify transaction', verifyTransaction);
@@ -103,7 +139,7 @@ describe('UI Transactions Tests', () => {
     await goBack();
   });
 
-  test('Send Asset Transaction', async () => {
+  test('Send Asset Transaction / Account alias', async () => {
     await selectAccount(accounts.ui);
 
     await extensionPage.click('#sendTransfer');
@@ -123,7 +159,13 @@ describe('UI Transactions Tests', () => {
     expect(actualAmount).toMatch('0.000000');
     // Test actual transfer
     await extensionPage.type('#transferAmount', `0.00000${amount}`);
-    await extensionPage.type('#toAddress', accounts.ui.address);
+    // Select an Imported Account from aliases
+    await extensionPage.type('#destinationAddress', 't');
+    await extensionPage.waitForSelector('.alias-selector');
+    await extensionPage.keyboard.press('ArrowDown');
+    await extensionPage.keyboard.press('ArrowDown');
+    await extensionPage.keyboard.press('Enter');
+    await verifyDestination(accounts.ui);
     await extensionPage.type('#note', 'AutoTest Send E2E Asset');
     await extensionPage.click('#submitTransfer');
     await extensionPage.waitForSelector('#enterPassword');
@@ -138,11 +180,16 @@ describe('UI Transactions Tests', () => {
 
   test('Verify transaction', verifyTransaction);
 
-  test('Transaction Errors: OverSpend', async () => {
+  test('Transaction Errors: OverSpend / Contact alias', async () => {
     await extensionPage.click('#sendTransfer');
     await extensionPage.waitForSelector('#transferAmount');
     await extensionPage.type('#transferAmount', '900000');
-    await extensionPage.type('#toAddress', accounts.ui.address);
+    // Select a Contact from aliases
+    await extensionPage.type('#destinationAddress', 't');
+    await extensionPage.waitForSelector('.alias-selector');
+    await extensionPage.keyboard.press('ArrowDown');
+    await extensionPage.keyboard.press('Enter');
+    await verifyDestination(accounts.multisig);
     await extensionPage.type('#note', 'AutoTest Overspend Algo');
     await extensionPage.click('#submitTransfer');
     await extensionPage.waitForSelector('#enterPassword');

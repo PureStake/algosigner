@@ -2,9 +2,11 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
+import { Ledger, Namespace } from '@algosigner/common/types';
+import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
-import { API, Cache, Ledger } from './types';
-import { Settings } from '../config';
+import { API, Cache } from './types';
+import { Settings,  } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
@@ -53,6 +55,45 @@ export class InternalMethods {
     });
 
     return safeWallet;
+  }
+
+  // Load internal aliases (accounts and contacts)
+  private static reloadAliases(): void {
+    const extensionStorage = new ExtensionStorage();
+
+    extensionStorage.getStorage('contacts', (storedContacts: any) => {
+      const aliases = {};
+      const wallet = session.wallet;
+
+      // Format contacts as aliases
+      const contactAliases = [];
+      for (const c of storedContacts) {
+        contactAliases.push({
+          name: c.name,
+          address: c.address,
+          namespace: Namespace.AlgoSigner_Contacts,
+        });
+      }
+
+      for (const l in Ledger) {
+        // Format accounts as aliases
+        const ledgerAccountAliases = [];
+        for (const acc of wallet[l]) {
+          ledgerAccountAliases.push({
+            name: acc.name,
+            address: acc.address,
+            namespace: Namespace.AlgoSigner_Accounts,
+          });
+        }
+        // Save accounts and contacts as aliases
+        aliases[l] = {
+          [Namespace.AlgoSigner_Accounts]: ledgerAccountAliases,
+          [Namespace.AlgoSigner_Contacts]: contactAliases,
+        };
+      }
+
+      extensionStorage.setStorage('aliases', aliases, null);
+    });
   }
 
   // Checks if an address is a valid user account for a given ledger.
@@ -111,10 +152,19 @@ export class InternalMethods {
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
     const extensionStorage = new ExtensionStorage();
     extensionStorage.setStorage('contacts', [], null);
+    const emptyAliases = {
+      [Namespace.AlgoSigner_Accounts]: [],
+      [Namespace.AlgoSigner_Contacts]: [],
+    };
+    extensionStorage.setStorage(
+      'aliases',
+      { [Ledger.MainNet]: emptyAliases, [Ledger.MainNet]: emptyAliases },
+      null
+    );
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
-      TestNet: [],
-      MainNet: [],
+      [Ledger.MainNet]: [],
+      [Ledger.TestNet]: [],
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
@@ -173,11 +223,16 @@ export class InternalMethods {
                 }
               }
             }
+            
+            // Setup session
+            session.wallet = wallet;
+            session.ledger = Ledger.MainNet;
+            session.availableLedgers = availableLedgers;
 
-            (session.wallet = wallet),
-              (session.ledger = Ledger.MainNet),
-              (session.availableLedgers = availableLedgers),
-              sendResponse(session.session);
+            // Load internal aliases
+            this.reloadAliases();
+
+            sendResponse(session.session);
           });
         });
       }
@@ -213,6 +268,7 @@ export class InternalMethods {
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -241,6 +297,7 @@ export class InternalMethods {
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -296,6 +353,7 @@ export class InternalMethods {
           if (isSuccessful) {
             this.loadAccountAssetsDetails(newAccount.address, ledger);
             session.wallet = this.safeWallet(unlockedValue);
+            this.reloadAliases();
             sendResponse(session.wallet);
           } else {
             sendResponse({ error: 'Lock failed' });
@@ -1140,6 +1198,7 @@ export class InternalMethods {
       extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
         if (isSuccessful) {
           sendResponse(contacts);
+          this.reloadAliases();
         } else {
           sendResponse({ error: 'Lock failed' });
         }
@@ -1163,11 +1222,49 @@ export class InternalMethods {
       extensionStorage.setStorage('contacts', contacts, (isSuccessful: any) => {
         if (isSuccessful) {
           sendResponse(contacts);
+          this.reloadAliases();
         } else {
           sendResponse({ error: 'Lock failed' });
         }
       });
     });
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetAliasedAddresses](request: any, sendResponse: Function) {
+    const { ledger, searchTerm } = request.body.params;
+
+    // Check if the term matches any of our namespaces
+    const matchingNamespaces = AliasConfig.getMatchingNamespaces(ledger);
+    const extensionStorage = new ExtensionStorage();
+
+    extensionStorage.getStorage('aliases', (response: any) => {
+      // aliases: { ledger: { namespace: [...aliases] } }
+      const aliases = response;
+
+      // Search the storage for the aliases stored for the matching namespaces
+      const returnedAliasedAddresses = {};
+      for (const namespace of matchingNamespaces) {
+        const aliasesMatchingInNamespace = [];
+        if (aliases[ledger][namespace]) {
+          for (const alias of aliases[ledger][namespace]) {
+            if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+              aliasesMatchingInNamespace.push({
+                name: alias.name,
+                address: alias.address,
+                namespace: namespace,
+              });
+            }
+          }
+        }
+
+        // Fallback to an api call goes here
+
+        returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
+      }
+      sendResponse(returnedAliasedAddresses);
+    });
+
     return true;
   }
 }
