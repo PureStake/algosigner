@@ -36,7 +36,7 @@ import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
-// 30 additional for the title bar
+// Additional space for the title bar
 const titleBarHeight = 28;
 
 const authPopupProperties = {
