@@ -44,7 +44,7 @@ const App = () => {
   
   return html`
       <${StoreProvider}>
-        <div style="width: 400px; height: 550px; display: flex; flex-direction: column;">
+        <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column;">
           <${Router} history=${createHashHistory()}>
             <${SignWalletTransaction} path="/sign-v2-transaction" />
             <${Authorize} path="/authorize" />
