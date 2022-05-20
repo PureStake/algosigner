@@ -2,9 +2,13 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
+// Main window
+$extension-height: 550px;
+$extension-width: 400px;
+
 html {
-  height: 550px;
-  width: 400px;
+  height: $extension-height;
+  width: $extension-width;
   overflow: hidden !important;
 }
 
@@ -64,6 +68,7 @@ $tooltip-background-opacity: 1;
 .main-view {
   display: flex;
   flex: 1;
+  flex-basis: 100vh;
 }
 
 .account-preview.box {
@@ -206,6 +211,10 @@ span.truncate-text:not(:first-child) {
 
 #approveTx:disabled {
   color: $red;
+}
+
+#txAlerts p {
+  font-size: 0.8rem;
 }
 
 #warning-tx-list {

@@ -42,7 +42,7 @@ exports[`Login should match snapshot 1`] = `
     </section>
   </div>
   <div
-    className="mx-5 mb-3"
+    className="mx-5 mb-4"
   >
     <button
       className="button is-link is-fullwidth is-loading"
