@@ -2,7 +2,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
-// Main window
+// Main extension window
 $extension-height: 550px;
 $extension-width: 400px;
 
@@ -10,6 +10,7 @@ html {
   height: $extension-height;
   width: $extension-width;
   overflow: hidden !important;
+  background: #222 !important;
 }
 
 // Global font size
