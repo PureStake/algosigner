@@ -88,7 +88,7 @@ const Login: FunctionalComponent = (props: any) => {
         </section>
       </div>
 
-      <div class="mx-5 mb-3">
+      <div class="mx-5 mb-4">
         <button
           id="login"
           class="button is-link is-fullwidth ${loading ? 'is-loading' : ''}"

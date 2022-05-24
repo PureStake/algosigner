@@ -1,8 +1,9 @@
 import algosdk from 'algosdk';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { Ledger } from '@algosigner/common/types';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';
-import { API, Cache, Ledger } from '../messaging/types';
+import { API, Cache } from '../messaging/types';
 
 export function getAlgod(ledger: string) {
   const params = Settings.getBackendParams(ledger, API.Algod);

@@ -52,10 +52,10 @@ export type Transaction = {
   readonly to: TAccount;
 };
 
-export type MultisigTransaction = {
-  readonly msig: any;
-  readonly txn: Transaction;
-};
+export enum Ledger {
+  TestNet = 'TestNet',
+  MainNet = 'MainNet',
+}
 
 export type WalletMultisigMetadata = {
   readonly version: number;
@@ -70,3 +70,8 @@ export type WalletTransaction = {
   readonly msig?: WalletMultisigMetadata;
   readonly authAddr?: string;
 };
+
+export enum Namespace {
+  AlgoSigner_Contacts = 'AlgoSigner_Contacts',
+  AlgoSigner_Accounts = 'AlgoSigner_Accounts',
+}

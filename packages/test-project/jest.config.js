@@ -3,7 +3,7 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
-  testEnvironment: './puppeteer.environment.js',
+  testEnvironment: './puppeteer.environment.ts',
   verbose: true,
   runner: 'groups',
   // Ignoring the test directory for coverage

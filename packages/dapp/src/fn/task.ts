@@ -5,7 +5,6 @@ import { MessageBuilder } from '../messaging/builder';
 import {
   Transaction,
   RequestError,
-  MultisigTransaction,
   WalletTransaction,
 } from '@algosigner/common/types';
 import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
@@ -20,17 +19,6 @@ export class Task extends Runtime implements ITask {
 
   accounts(params: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.Accounts, params as JsonPayload, error);
-  }
-
-  sign(params: Transaction, error: RequestError = RequestError.None): Promise<JsonPayload> {
-    return MessageBuilder.promise(JsonRpcMethod.SignTransaction, params, error);
-  }
-
-  signMultisig(
-    params: MultisigTransaction,
-    error: RequestError = RequestError.None
-  ): Promise<JsonPayload> {
-    return MessageBuilder.promise(JsonRpcMethod.SignMultisigTransaction, params, error);
   }
 
   send(params: Transaction, error: RequestError = RequestError.None): Promise<JsonPayload> {

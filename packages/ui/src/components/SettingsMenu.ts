@@ -59,7 +59,7 @@ const SettingsMenu: FunctionalComponent = () => {
   };
 
   return html`
-    <div id="options-menu" class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
+    <div id="openSettings" class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
       <span class="icon">
         <i class="fas fa-cog" aria-hidden="true" />
       </span>
@@ -69,7 +69,7 @@ const SettingsMenu: FunctionalComponent = () => {
       <${HeaderComponent}>
         <${Logo} style="flex: 1 1 100%; display: flex;" />
         <span class="pr-4">Settings</span>
-        <div class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
+        <div id="closeSettings" class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
           <span class="icon">
             <i class="fas fa-times" aria-hidden="true" />
           </span>
