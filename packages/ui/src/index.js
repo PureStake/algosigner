@@ -41,10 +41,10 @@ const App = () => {
   BigInt.prototype.toJSON = function () {
     return this.toString();
   };
-  
+
   return html`
       <${StoreProvider}>
-        <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column;">
+        <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column; max-width: 500px; background: white;">
           <${Router} history=${createHashHistory()}>
             <${SignWalletTransaction} path="/sign-v2-transaction" />
             <${Authorize} path="/authorize" />
