@@ -10,13 +10,9 @@ DApp users can trust AlgoSigner to:
 - Authorize transactions without giving dApps direct access to their keys
 - Sign and approve transactions when using dApps
 
-## v2 Signing
+## Signing transactions with AlgoSigner
 
-With the release of v2 signing, developers coding to the standard will be able to use the same code with any Algorand Wallet.
+You can start by looking at examples of how to sign transactions with AlgoSigner in the [example dapp](https://purestake.github.io/algosigner-dapp-example/index.html).
 
-- Examples of signing with v2 are available in the [dapp examples repo](https://purestake.github.io/algosigner-dapp-example/index.html).
-- An interactive transition guide that demonstrates the differences between v1 and v2 signing is available as a link from the dapp examples repo or directly access the [transition guide](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
+Also available to read is our [dApp integration guide](dApp-integration.md).
 
-### Developing a dApp
-
-- Read [v2 dApp Integration Guide](dApp-integration.md)
