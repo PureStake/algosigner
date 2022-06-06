@@ -3,6 +3,8 @@ import algosigner from 'assets/logo.svg';
 import algosignerInverted from 'assets/logo-inverted.svg';
 import contacts from 'assets/contacts.svg';
 import contactsInverted from 'assets/contacts-inverted.svg';
+import nfd from 'assets/nfd.png';
+import ans from 'assets/ans.svg';
 
 /**
  * Format a given number to US local, with needed fraction digits
@@ -12,7 +14,7 @@ import contactsInverted from 'assets/contacts-inverted.svg';
  *
  * @return {string|null} Formated number or null if invalid.
  */
-export function numFormat(val: number, dec: number) {
+export function numFormat(val: number, dec: number): string | null {
   if (!isNaN(val)) {
     return val.toLocaleString('en-US', { maximumFractionDigits: dec });
   } else {
@@ -28,7 +30,7 @@ export function numFormat(val: number, dec: number) {
  *
  * @return {string|null} Formated number or null if invalid.
  */
-export function assetFormat(val: number, dec: number) {
+export function assetFormat(val: number, dec: number): string | null {
   const decimals = dec || 0;
   const amount = val / Math.pow(10, decimals);
   return numFormat(amount, decimals);
@@ -38,6 +40,8 @@ export function getNamespaceIcon(namespace: Namespace, active: boolean) {
   const icons = {
     [Namespace.AlgoSigner_Contacts]: [contacts, contactsInverted],
     [Namespace.AlgoSigner_Accounts]: [algosigner, algosignerInverted],
+    [Namespace.NFD]: [nfd, nfd],
+    [Namespace.ANS]: [ans, ans],
   };
   return icons[namespace][active ? 1 : 0];
 }

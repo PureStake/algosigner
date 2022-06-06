@@ -365,7 +365,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           ${!selectedDestination &&
           html`
             <textarea
-              placeholder="Destination can be one of: an address, an imported account, an added contact"
+              placeholder="Enter either an address, an imported account, an added contact or a namespace alias"
               class="textarea has-fixed-size mb-4 pr-6"
               id="destinationAddress"
               value=${to}
@@ -391,16 +391,15 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                         >
                           ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
                           <div
-                            class="is-flex has-tooltip-arrow has-tooltip-right has-tooltip-fade"
-                            data-tooltip="${AliasConfig[a.namespace]?.name}"
+                            class="is-flex is-align-items-center has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+                            data-tooltip="${`${AliasConfig[a.namespace]?.name}:\n${a.name}`}"
                           >
-                            <span class="is-flex is-align-items-center pr-1">
-                              <img
-                                src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
-                                height="16"
-                                width="16"
-                              />
-                            </span>
+                            <img
+                              src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
+                              height="16"
+                              width="16"
+                              class="mr-1"
+                            />
                             <span style="text-overflow: ellipsis; overflow: hidden;">
                               ${a.name}
                             </span>

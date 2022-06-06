@@ -2,11 +2,11 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Ledger, Namespace } from '@algosigner/common/types';
+import { Alias, Ledger, Namespace } from '@algosigner/common/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
 import { API, Cache } from './types';
-import { Settings,  } from '../config';
+import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
@@ -223,7 +223,7 @@ export class InternalMethods {
                 }
               }
             }
-            
+
             // Setup session
             session.wallet = wallet;
             session.ledger = Ledger.MainNet;
@@ -1238,14 +1238,15 @@ export class InternalMethods {
     const matchingNamespaces = AliasConfig.getMatchingNamespaces(ledger);
     const extensionStorage = new ExtensionStorage();
 
-    extensionStorage.getStorage('aliases', (response: any) => {
+    extensionStorage.getStorage('aliases', async (response: any) => {
       // aliases: { ledger: { namespace: [...aliases] } }
       const aliases = response;
 
       // Search the storage for the aliases stored for the matching namespaces
-      const returnedAliasedAddresses = {};
+      const returnedAliasedAddresses: Record<string, Array<Alias>> = {};
+      const apiFetches = [];
       for (const namespace of matchingNamespaces) {
-        const aliasesMatchingInNamespace = [];
+        const aliasesMatchingInNamespace: Array<Alias> = [];
         if (aliases[ledger][namespace]) {
           for (const alias of aliases[ledger][namespace]) {
             if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -1258,10 +1259,45 @@ export class InternalMethods {
           }
         }
 
-        // Fallback to an api call goes here
+        if (
+          searchTerm &&
+          AliasConfig[namespace].apiTimeout > 0 &&
+          AliasConfig[namespace].ledgers &&
+          AliasConfig[namespace].ledgers[ledger]?.length > 0
+        ) {
+          // If we find namespaces with APIs in the selected ledger, we prepare an API fetch
+          const apiURL = AliasConfig[namespace].ledgers[ledger].replace('${term}', searchTerm);
+          const apiTimeout = AliasConfig[namespace].apiTimeout;
 
-        returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
+          // We set a max timeout for each call
+          const controller = new AbortController();
+          const timerId = setTimeout(() => controller.abort(), apiTimeout);
+          const handleResponse = async (response) => {
+            if (response.ok) {
+              await response.json().then((json) => {
+                const aliasesFromAPI = AliasConfig[namespace].findAliasedAddresses(json);
+                if (aliasesFromAPI && aliasesFromAPI.length) {
+                  const aliasesInMemory: Array<Alias> = aliasesMatchingInNamespace;
+
+                  // We add any new aliases to end of the namespace list
+                  aliasesInMemory.push(...aliasesFromAPI);
+
+                  // We add the updated aliases from the API to the response
+                  returnedAliasedAddresses[namespace] = aliasesInMemory;
+                }
+              });
+            }
+            clearTimeout(timerId);
+          };
+          // We save the fetch request to later execute all in parallel
+          const apiCall = fetch(apiURL, { signal: controller.signal }).then(handleResponse);
+          apiFetches.push(apiCall);
+        } else {
+          returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
+        }
       }
+
+      await Promise.all(apiFetches);
       sendResponse(returnedAliasedAddresses);
     });
 

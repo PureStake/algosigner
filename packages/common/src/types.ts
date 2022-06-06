@@ -71,7 +71,15 @@ export type WalletTransaction = {
   readonly authAddr?: string;
 };
 
+export type Alias = {
+  readonly name: string;
+  readonly address: string;
+  readonly namespace: string;
+};
+
 export enum Namespace {
   AlgoSigner_Contacts = 'AlgoSigner_Contacts',
   AlgoSigner_Accounts = 'AlgoSigner_Accounts',
+  NFD = 'NFD',
+  ANS = 'ANS',
 }
