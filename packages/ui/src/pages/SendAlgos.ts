@@ -380,36 +380,38 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
               ${orderedAliases.length > 0 &&
               html`
-                <div class="alias-selector">
-                  ${orderedAliases.map(
-                    (a, index) =>
-                      html`
-                        <a
-                          onClick=${() => onSelectDestination(a, index)}
-                          class="dropdown-item is-flex px-4 ${isActive(index)}"
-                          style="justify-content: space-between;"
-                        >
-                          ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
-                          <div
-                            class="is-flex is-align-items-center has-tooltip-arrow has-tooltip-right has-tooltip-fade"
-                            data-tooltip="${`${AliasConfig[a.namespace]?.name}:\n${a.name}`}"
+                <div class="alias-selector-container">
+                  <div class="alias-selector-content">
+                    ${orderedAliases.map(
+                      (a, index) =>
+                        html`
+                          <a
+                            onClick=${() => onSelectDestination(a, index)}
+                            class="dropdown-item is-flex px-4 ${isActive(index)}"
+                            style="justify-content: space-between;"
                           >
-                            <img
-                              src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
-                              height="16"
-                              width="16"
-                              class="mr-1"
-                            />
-                            <span style="text-overflow: ellipsis; overflow: hidden;">
-                              ${a.name}
+                            ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
+                            <div
+                              class="is-flex is-align-items-center has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+                              data-tooltip="${`${AliasConfig[a.namespace]?.name}:\n${a.name}`}"
+                            >
+                              <img
+                                src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
+                                height="16"
+                                width="16"
+                                class="mr-1"
+                              />
+                              <span style="text-overflow: ellipsis; overflow: hidden;">
+                                ${a.name}
+                              </span>
+                            </div>
+                            <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
+                              ${obfuscateAddress(a.address)}
                             </span>
-                          </div>
-                          <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
-                            ${obfuscateAddress(a.address)}
-                          </span>
-                        </a>
-                      `
-                  )}
+                          </a>
+                        `
+                    )}
+                  </div>
                 </div>
               `}
             `}

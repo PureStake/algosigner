@@ -1,5 +1,7 @@
 import { Namespace, Ledger, Alias } from './types';
 
+const MAX_ALIASES_PER_NAMESPACE = 6;
+
 interface ConfigTemplate {
   name: string;                   // Formatted name, used for titles
   ledgers: any;                   // Object holding supported Ledgers as keys, templated API URL as value
@@ -30,8 +32,12 @@ export class AliasConfig {
   static [Namespace.NFD]: ConfigTemplate = {
     name: 'NFDomains',
     ledgers: {
-      [Ledger.TestNet]: 'https://api.testnet.nf.domains/nfd?prefix=${term}&requireAddresses=true',
-      [Ledger.MainNet]: 'https://api.nf.domains/nfd?prefix=${term}&requireAddresses=true',
+      [Ledger.TestNet]:
+        'https://api.testnet.nf.domains/nfd?prefix=${term}&requireAddresses=true' +
+        `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
+      [Ledger.MainNet]:
+        'https://api.nf.domains/nfd?prefix=${term}&requireAddresses=true' +
+        `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
     },
     findAliasedAddresses: (response): Array<Alias> =>
       response.map((o) => ({
@@ -45,8 +51,12 @@ export class AliasConfig {
   static [Namespace.ANS]: ConfigTemplate = {
     name: 'Algorand Namespace Service',
     ledgers: {
-      [Ledger.TestNet]: 'https://testnet.api.algonameservice.com/names?pattern=${term}',
-      [Ledger.MainNet]: 'https://api.algonameservice.com/names?pattern=${term}',
+      [Ledger.TestNet]:
+        'https://testnet.api.algonameservice.com/names?pattern=${term}' +
+        `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
+      [Ledger.MainNet]:
+        'https://api.algonameservice.com/names?pattern=${term}' +
+        `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
     },
     findAliasedAddresses: (response): Array<Alias> =>
       response
