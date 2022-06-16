@@ -83,3 +83,9 @@ export enum Namespace {
   NFD = 'NFD',
   ANS = 'ANS',
 }
+
+export type NamespaceConfig = {
+  name: string,
+  namespace: Namespace,
+  toggle: boolean,
+}

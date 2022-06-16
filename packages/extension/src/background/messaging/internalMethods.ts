@@ -2,7 +2,7 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Ledger, Namespace } from '@algosigner/common/types';
+import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
 import { API, Cache } from './types';
@@ -229,8 +229,27 @@ export class InternalMethods {
             session.ledger = Ledger.MainNet;
             session.availableLedgers = availableLedgers;
 
-            // Load internal aliases
+            // Load internal aliases && namespace configurations
             this.reloadAliases();
+            extensionStorage.getStorage('namespaces', (response: any) => {
+              const namespaceConfigs: Array<NamespaceConfig> = [];
+
+              const externalNamespaces: Array<string> = AliasConfig.getExternalNamespaces();
+              for (const n of externalNamespaces) {
+                const foundConfig = response.find((config) => config.namespace === n);
+                if (!foundConfig) {
+                  namespaceConfigs.push({
+                    name: AliasConfig[n].name,
+                    namespace: n as Namespace,
+                    toggle: true,
+                  });
+                } else {
+                  namespaceConfigs.push(foundConfig);
+                }
+              }
+
+              extensionStorage.setStorage('namespaces', namespaceConfigs, null);
+            });
 
             sendResponse(session.session);
           });
@@ -1235,72 +1254,113 @@ export class InternalMethods {
     const { ledger, searchTerm } = request.body.params;
 
     // Check if the term matches any of our namespaces
-    const matchingNamespaces = AliasConfig.getMatchingNamespaces(ledger);
+    const matchingNamespaces: Array<string> = AliasConfig.getMatchingNamespaces(ledger);
     const extensionStorage = new ExtensionStorage();
 
-    extensionStorage.getStorage('aliases', async (response: any) => {
+    extensionStorage.getStorage('aliases', async (aliases: any) => {
       // aliases: { ledger: { namespace: [...aliases] } }
-      const aliases = response;
+      await extensionStorage.getStorage(
+        'namespaces',
+        async (storedConfigs: Array<NamespaceConfig>) => {
+          const availableExternalNamespaces: Array<string> = [];
+          storedConfigs
+            .filter((config) => config.toggle)
+            .map((config) => availableExternalNamespaces.push(config.namespace));
 
-      // Search the storage for the aliases stored for the matching namespaces
-      const returnedAliasedAddresses: Record<string, Array<Alias>> = {};
-      const apiFetches = [];
-      for (const namespace of matchingNamespaces) {
-        const aliasesMatchingInNamespace: Array<Alias> = [];
-        if (aliases[ledger][namespace]) {
-          for (const alias of aliases[ledger][namespace]) {
-            if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-              aliasesMatchingInNamespace.push({
-                name: alias.name,
-                address: alias.address,
-                namespace: namespace,
-              });
+          // Search the storage for the aliases stored for the matching namespaces
+          const returnedAliasedAddresses: Record<string, Array<Alias>> = {};
+          const apiFetches = [];
+          for (const namespace of matchingNamespaces) {
+            const aliasesMatchingInNamespace: Array<Alias> = [];
+            if (aliases[ledger][namespace]) {
+              for (const alias of aliases[ledger][namespace]) {
+                if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                  aliasesMatchingInNamespace.push({
+                    name: alias.name,
+                    address: alias.address,
+                    namespace: namespace,
+                  });
+                }
+              }
+            }
+
+            if (
+              searchTerm &&
+              availableExternalNamespaces.includes(namespace) &&
+              AliasConfig[namespace].ledgers &&
+              AliasConfig[namespace].ledgers[ledger]?.length > 0
+            ) {
+              // If we find enabled external namespaces, we prepare an API fetch
+              const apiURL = AliasConfig[namespace].ledgers[ledger].replace('${term}', searchTerm);
+              const apiTimeout = AliasConfig[namespace].apiTimeout;
+
+              // We set a max timeout for each call
+              const controller = new AbortController();
+              const timerId = setTimeout(() => controller.abort(), apiTimeout);
+              const handleResponse = async (response) => {
+                if (response.ok) {
+                  await response.json().then((json) => {
+                    const aliasesFromAPI = AliasConfig[namespace].findAliasedAddresses(json);
+                    if (aliasesFromAPI && aliasesFromAPI.length) {
+                      const aliasesInMemory: Array<Alias> = aliasesMatchingInNamespace;
+
+                      // We add any new aliases to end of the namespace list
+                      aliasesInMemory.push(...aliasesFromAPI);
+
+                      // We add the updated aliases from the API to the response
+                      returnedAliasedAddresses[namespace] = aliasesInMemory;
+                    }
+                  });
+                }
+                clearTimeout(timerId);
+              };
+              // We save the fetch request to later execute all in parallel
+              const apiCall = fetch(apiURL, { signal: controller.signal }).then(handleResponse);
+              apiFetches.push(apiCall);
+            } else {
+              returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
             }
           }
+
+          await Promise.all(apiFetches);
+          sendResponse(returnedAliasedAddresses);
         }
-
-        if (
-          searchTerm &&
-          AliasConfig[namespace].apiTimeout > 0 &&
-          AliasConfig[namespace].ledgers &&
-          AliasConfig[namespace].ledgers[ledger]?.length > 0
-        ) {
-          // If we find namespaces with APIs in the selected ledger, we prepare an API fetch
-          const apiURL = AliasConfig[namespace].ledgers[ledger].replace('${term}', searchTerm);
-          const apiTimeout = AliasConfig[namespace].apiTimeout;
-
-          // We set a max timeout for each call
-          const controller = new AbortController();
-          const timerId = setTimeout(() => controller.abort(), apiTimeout);
-          const handleResponse = async (response) => {
-            if (response.ok) {
-              await response.json().then((json) => {
-                const aliasesFromAPI = AliasConfig[namespace].findAliasedAddresses(json);
-                if (aliasesFromAPI && aliasesFromAPI.length) {
-                  const aliasesInMemory: Array<Alias> = aliasesMatchingInNamespace;
-
-                  // We add any new aliases to end of the namespace list
-                  aliasesInMemory.push(...aliasesFromAPI);
-
-                  // We add the updated aliases from the API to the response
-                  returnedAliasedAddresses[namespace] = aliasesInMemory;
-                }
-              });
-            }
-            clearTimeout(timerId);
-          };
-          // We save the fetch request to later execute all in parallel
-          const apiCall = fetch(apiURL, { signal: controller.signal }).then(handleResponse);
-          apiFetches.push(apiCall);
-        } else {
-          returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
-        }
-      }
-
-      await Promise.all(apiFetches);
-      sendResponse(returnedAliasedAddresses);
+      );
     });
 
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetNamespaceConfigs](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('namespaces', (response: any) => {
+      const namespaceConfigs: Array<NamespaceConfig> = response;
+      sendResponse(namespaceConfigs);
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.ToggleNamespaceConfig](request: any, sendResponse: Function) {
+    const { namespace } = request.body.params;
+
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.getStorage('namespaces', (response: any) => {
+      const namespaceConfigs: Array<NamespaceConfig> = response;
+
+      const previousIndex = namespaceConfigs.findIndex((config) => config.namespace === namespace);
+      namespaceConfigs[previousIndex] = {
+        ...namespaceConfigs[previousIndex],
+        toggle: !namespaceConfigs[previousIndex].toggle,
+      };
+
+      extensionStorage.setStorage('namespaces', namespaceConfigs, (isSuccessful: any) => {
+        if (isSuccessful) {
+          sendResponse(namespaceConfigs);
+        } else {
+          sendResponse({ error: 'Lock failed' });
+        }
+      });
+    });
     return true;
   }
 }

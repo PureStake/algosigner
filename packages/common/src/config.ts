@@ -81,4 +81,14 @@ export class AliasConfig {
     }
     return matchingNamespaces;
   }
+
+  public static getExternalNamespaces(): Array<string> {
+    const externalNamespaces: Array<string> = [];
+    for (const n in Namespace) {
+      if (AliasConfig[n] && AliasConfig[n].apiTimeout > 0) {
+        externalNamespaces.push(n);
+      }
+    }
+    return externalNamespaces;
+  }
 }

@@ -11,6 +11,7 @@ import DeleteWallet from 'components/DeleteWallet';
 import Logo from './Logo';
 import { sendMessage } from 'services/Messaging';
 import LedgerNetworksConfiguration from './LedgerNetworksConfiguration';
+import NamespaceConfig from './NamespaceConfig';
 
 const SettingsMenu: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
@@ -51,6 +52,8 @@ const SettingsMenu: FunctionalComponent = () => {
             flip();
           }}
         />`;
+      case 'namespacesConfiguration':
+        return html`<${NamespaceConfig} />`;
       case 'delete':
         return html`<${DeleteWallet} />`;
       default:
@@ -92,6 +95,13 @@ const SettingsMenu: FunctionalComponent = () => {
               onClick=${() => setCurrentMenu('networkConfiguration')}
             >
               Network Configuration
+            </a>
+            <a
+              class="menu-item"
+              id="showNamespacesConfiguration"
+              onClick=${() => setCurrentMenu('namespacesConfiguration')}
+            >
+              Namespaces Configuration
             </a>
             <a class="menu-item" id="showWalletDetails" onClick=${() => setCurrentMenu('delete')}
               >Delete wallet</a
