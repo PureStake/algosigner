@@ -825,9 +825,11 @@ export class Task {
                   holdResponse = true;
 
                   // Create an encoded transaction for the ledger sign
-                  const encodedTxn =  Buffer.from(algosdk.encodeUnsignedTransaction(builtTx)).toString('base64');
+                  const encodedTxn = Buffer.from(
+                    algosdk.encodeUnsignedTransaction(builtTx)
+                  ).toString('base64');
                   message.body.params.encodedTxn = encodedTxn;
-                  
+
                   InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
                     // We only have to worry about possible errors here
                     if ('error' in response) {
@@ -1041,11 +1043,9 @@ export class Task {
                       }
                     });
                   }
-                } 
-                else if (authAddr) {
+                } else if (authAddr) {
                   neededAccounts.push(authAddr);
-                }
-                else {
+                } else {
                   neededAccounts.push(transactionsWraps[i].transaction.from);
                 }
               }
@@ -1075,8 +1075,8 @@ export class Task {
                 const account = unlockedValue[ledger][i];
                 if (neededAccounts.includes(account.address)) {
                   if (!account.isHardware) {
-                     // Check for an address that we were expected but unable to sign with
-                    if(!unlockedValue[ledger][i].mnemonic) {
+                    // Check for an address that we were expected but unable to sign with
+                    if (!unlockedValue[ledger][i].mnemonic) {
                       throw RequestError.NotAuthorized;
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
@@ -1147,11 +1147,11 @@ export class Task {
                         }
 
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
-                        // This will be where the transaction presented to the user in the first Ledger popup. 
+                        // This will be where the transaction presented to the user in the first Ledger popup.
                         // This can probably be removed in favor of mapping to the current transaction
                         message.body.params.transaction = wrap;
 
-                        // Set the ledgerGroup in the message to the current group 
+                        // Set the ledgerGroup in the message to the current group
                         // Since the signing will move into the next signs we need to know what group we were supposed to sign
                         message.body.params.ledgerGroup = parseInt(currentGroup);
 
@@ -1316,7 +1316,7 @@ export class Task {
           // This is a UI transaction, first determine if there is an authorized signing account
           Task.getChainAuthAddress(request.body.params, (chainAuthAddr) => {
             // If there was an auth address on chain then set the auth address for the transaction
-            if (chainAuthAddr){
+            if (chainAuthAddr) {
               request.body.params.authAddr = chainAuthAddr;
             }
             InternalMethods[JsonRpcMethod.SignSendTransaction](request, (response) => {
@@ -1333,34 +1333,47 @@ export class Task {
           return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
         },
         [JsonRpcMethod.CheckNetwork]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {           
-            const algodClient =  new algosdk.Algodv2(networks.algod.apiKey, networks.algod.url, networks.algod.port);  
-            const indexerClient = new algosdk.Indexer(networks.indexer.apiKey, networks.indexer.url, networks.indexer.port);
+          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {
+            const algodClient = new algosdk.Algodv2(
+              networks.algod.apiKey,
+              networks.algod.url,
+              networks.algod.port
+            );
+            const indexerClient = new algosdk.Indexer(
+              networks.indexer.apiKey,
+              networks.indexer.url,
+              networks.indexer.port
+            );
 
             const responseAlgod = {};
             const responseIndexer = {};
 
-            (async () => { 
-              await algodClient.status().do()
-              .then((response) => {
-                  responseAlgod['message'] = response['message'] || response;
-              })
-              .catch((error) => {
-                  responseAlgod['error'] = error.message || error;
-              });
-            })().then(() =>{
-              (async () => { 
-                await indexerClient.searchForTransactions().limit(1).do()
+            (async () => {
+              await algodClient
+                .status()
+                .do()
                 .then((response) => {
-                    responseAlgod['message'] = response['message'] || response;
+                  responseAlgod['message'] = response['message'] || response;
                 })
                 .catch((error) => {
-                    responseAlgod['error'] = error.message || error;
+                  responseAlgod['error'] = error.message || error;
                 });
-              })().then(() =>{
+            })().then(() => {
+              (async () => {
+                await indexerClient
+                  .searchForTransactions()
+                  .limit(1)
+                  .do()
+                  .then((response) => {
+                    responseAlgod['message'] = response['message'] || response;
+                  })
+                  .catch((error) => {
+                    responseAlgod['error'] = error.message || error;
+                  });
+              })().then(() => {
                 sendResponse({ algod: responseAlgod, indexer: responseIndexer });
-              })
-            }) 
+              });
+            });
           });
           return true;
         },
@@ -1376,7 +1389,7 @@ export class Task {
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
             // V2 transactions can just pass back
-            if(internalResponse.transactionsOrGroups) {
+            if (internalResponse.transactionsOrGroups) {
               sendResponse(internalResponse);
             }
             // V1 transactions may need to have an estimated fee
@@ -1456,6 +1469,12 @@ export class Task {
         },
         [JsonRpcMethod.GetAliasedAddresses]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetAliasedAddresses](request, sendResponse);
+        },
+        [JsonRpcMethod.GetNamespaceConfigs]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetNamespaceConfigs](request, sendResponse);
+        },
+        [JsonRpcMethod.ToggleNamespaceConfig]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.ToggleNamespaceConfig](request, sendResponse);
         },
       },
     };

@@ -134,6 +134,14 @@ span[data-tooltip] {
   cursor: help !important;
 }
 
+.box.small {
+  padding: 0.75rem;
+
+  &:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+}
+
 // Custom classes
 .header {
   flex: 0;
@@ -182,7 +190,7 @@ span[data-tooltip] {
   border-left-color: #94b1c3;
 }
 
-.alias-selector {
+.alias-selector-container {
   @extend .dropdown-content;
   position: absolute;
   top: 55%;
@@ -193,6 +201,10 @@ span[data-tooltip] {
   border-radius: 12px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  overflow: hidden;
+}
+
+.alias-selector-content {
   max-height: 180px;
   overflow-y: auto;
 }
