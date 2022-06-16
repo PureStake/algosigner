@@ -7,6 +7,7 @@ import { Key } from 'ts-key-enum';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { obfuscateAddress } from '@algosigner/common/utils';
+import { ALIAS_COLLISION_TOOLTIP } from '@algosigner/common/strings';
 
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
@@ -69,11 +70,13 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       }
     });
   }, []);
+  // Automatically focus textbox on load
   useEffect(() => {
     if (inputRef !== null && inputRef.current !== null) {
       inputRef.current.focus();
     }
   }, [selectedDestination]);
+  // Scroll keyboard cursor into view
   useEffect(() => {
     if (activeAliasRef !== null && activeAliasRef.current !== null) {
       activeAliasRef.current.scrollIntoView({
@@ -206,7 +209,21 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       setSearchTerm('');
     }
   };
+  // Flattened aliases in order to iterate over them
   const orderedAliases = Object.keys(aliases).flatMap((n) => aliases[n]);
+  // We check for duplicate aliases and mark them
+  const namesUsed = orderedAliases.flatMap((a) => a.name);
+  const namesWithCollisions = orderedAliases
+    .filter((a, index) => namesUsed.indexOf(a.name) != index)
+    .flatMap((a) => a.name);
+  if (namesWithCollisions.length) {
+    orderedAliases.forEach((a) => {
+      if (namesWithCollisions.includes(a.name)) {
+        a.collides = true;
+      }
+    });
+  }
+  // Use keyboard to navigate over the flattened aliases
   const handleAliasNavigation = (event: Event) => {
     const key = (event as KeyboardEvent).key as Key;
     const customKeys = [Key.Escape, Key.ArrowDown, Key.ArrowUp, Key.Enter];
@@ -380,8 +397,17 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
               ${orderedAliases.length > 0 &&
               html`
-                <div class="alias-selector-container">
-                  <div class="alias-selector-content">
+                ${namesWithCollisions.length &&
+                html`
+                  <i
+                    class="fas fa-exclamation-triangle px-1 has-text-link has-tooltip-arrow has-tooltip-left has-tooltip-fade"
+                    data-tooltip="${ALIAS_COLLISION_TOOLTIP}"
+                    style="position: absolute; z-index: 3; top: 48%; left: 88%; cursor: pointer; font-style: unset;"
+                    aria-label="warning about name collisions"
+                  ></i>
+                `}
+                <div class="alias-selector-container py-0">
+                  <div class="alias-selector-content py-2">
                     ${orderedAliases.map(
                       (a, index) =>
                         html`
@@ -401,6 +427,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
                                 width="16"
                                 class="mr-1"
                               />
+                              ${a.collides &&
+                              html`<i class="fas fa-exclamation-triangle mr-1 has-text-link"></i>`}
                               <span style="text-overflow: ellipsis; overflow: hidden;">
                                 ${a.name}
                               </span>

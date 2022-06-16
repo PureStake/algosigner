@@ -74,7 +74,8 @@ export type WalletTransaction = {
 export type Alias = {
   readonly name: string;
   readonly address: string;
-  readonly namespace: string;
+  readonly namespace: Namespace;
+  collides: boolean;
 };
 
 export enum Namespace {
@@ -85,7 +86,7 @@ export enum Namespace {
 }
 
 export type NamespaceConfig = {
-  name: string,
-  namespace: Namespace,
-  toggle: boolean,
-}
+  name: string;
+  namespace: Namespace;
+  toggle: boolean;
+};

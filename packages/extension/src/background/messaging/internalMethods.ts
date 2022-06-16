@@ -1254,7 +1254,7 @@ export class InternalMethods {
     const { ledger, searchTerm } = request.body.params;
 
     // Check if the term matches any of our namespaces
-    const matchingNamespaces: Array<string> = AliasConfig.getMatchingNamespaces(ledger);
+    const matchingNamespaces: Array<Namespace> = AliasConfig.getMatchingNamespaces(ledger);
     const extensionStorage = new ExtensionStorage();
 
     extensionStorage.getStorage('aliases', async (aliases: any) => {
@@ -1279,6 +1279,7 @@ export class InternalMethods {
                     name: alias.name,
                     address: alias.address,
                     namespace: namespace,
+                    collides: false,
                   });
                 }
               }

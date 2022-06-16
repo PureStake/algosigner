@@ -2,12 +2,12 @@ import { Namespace, Ledger, Alias } from './types';
 
 const MAX_ALIASES_PER_NAMESPACE = 6;
 
+// prettier-ignore
 interface ConfigTemplate {
   name: string;                   // Formatted name, used for titles
   ledgers: any;                   // Object holding supported Ledgers as keys, templated API URL as value
   findAliasedAddresses: Function; // How to process the API response to get the aliased addresses array
   apiTimeout: number;             // Amount in ms to wait for the API to respond
-  // @TODO: add caching/expiry
 }
 
 const noop = (): void => {
@@ -69,14 +69,14 @@ export class AliasConfig {
     apiTimeout: 2000,
   };
 
-  public static getMatchingNamespaces(ledger: string): Array<string> {
-    const matchingNamespaces: Array<string> = [];
+  public static getMatchingNamespaces(ledger: string): Array<Namespace> {
+    const matchingNamespaces: Array<Namespace> = [];
     for (const n in Namespace) {
       if (
         AliasConfig[n] &&
         (AliasConfig[n].ledgers === null || Object.keys(AliasConfig[n].ledgers).includes(ledger))
       ) {
-        matchingNamespaces.push(n);
+        matchingNamespaces.push(n as Namespace);
       }
     }
     return matchingNamespaces;
