@@ -14,11 +14,14 @@ Developers working with dApps may also install directly from the release package
 
 An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
 
-## 1.9.0 Release
+## 1.9.1 Release
 
 ### Main updates
-This update adds supports for easier transfers with the new autocomplete feature. Start typing an account or contact name on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
-- Autocomplete support for UI-made transfers
+This update adds supports for easier transfers with the new autocomplete feature. Start typing an account, contact name or name service alias on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
+
+- Autocomplete feature for UI-made transfers, supporting:
+  - Accounts and Contact names
+  - External name services (NFDomains and Algorand Namespace Service)
 - `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
 
 ## New Users
@@ -37,7 +40,8 @@ For teams looking to integrate AlgoSigner into a project:
 
 ## AlgoSigner development
 
-For developers interested in working with AlgoSigner, an [Extension Guide](docs/extension-developers.md) is available. A contribution guide is in development.
+For developers interested in working with AlgoSigner, an [Extension Development Guide](docs/extension-developers.md) is available.
+Pull requests we accept need to be narrow in scope and all contributors need to sign (once) our [CLA](https://github.com/PureStake/algosigner-cla/blob/main/CLA.md) after submitting one in order for it to be considered.
 
 ## License
 
