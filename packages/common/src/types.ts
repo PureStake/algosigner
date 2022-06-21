@@ -6,11 +6,15 @@ export class RequestError {
   data?: any;
 
   static None = new RequestError('', 0);
+  static Undefined = new RequestError(
+    '[RequestError.Undefined] An undefined error occurred.',
+    4000
+  );
   static UserRejected = new RequestError(
     '[RequestError.UserRejected] The extension user does not authorize the request.',
     4001
   );
-  static NotAuthorized = new RequestError(
+  static NotAuthorizedByUser = new RequestError(
     '[RequestError.NotAuthorized] The extension user does not authorize the request.',
     4100
   );
@@ -22,13 +26,13 @@ export class RequestError {
     '[RequestError.UnsupportedLedger] The provided ledger is not supported.',
     4200
   );
+  static NotAuthorizedOnChain = new RequestError(
+    'The user does not possess the required private key to sign with this address.',
+    4200
+  );
   static InvalidFormat = new RequestError(
     '[RequestError.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
     4300
-  );
-  static Undefined = new RequestError(
-    '[RequestError.Undefined] An undefined error occurred.',
-    4000
   );
 
   protected constructor(message: string, code: number, name?: string, data?: any) {

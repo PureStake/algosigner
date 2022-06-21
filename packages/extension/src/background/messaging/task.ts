@@ -61,6 +61,53 @@ export class Task {
     return Task.authorized_pool.indexOf(origin) > -1;
   }
 
+  public static build(request: any) {
+    const body = request.body;
+    const method = body.method;
+
+    // Check if there's a previous request from the same origin
+    if (request.originTabID in Task.requests)
+      return new Promise((resolve, reject) => {
+        request.error = PendingTransaction;
+        reject(request);
+      });
+    else Task.requests[request.originTabID] = request;
+
+    return new Promise((resolve, reject) => {
+      Task.methods().public[method](request, resolve, reject);
+    }).finally(() => {
+      delete Task.requests[request.originTabID];
+    });
+  }
+
+  public static clearPool() {
+    Task.authorized_pool = [];
+  }
+
+  public static getChainAuthAddress = async (transaction: any): Promise<string> => {
+    // The ledger and address will be provided differently from UI and dapp
+    const ledger = transaction.ledger || getLedgerFromGenesisId(transaction.genesisID);
+    const address = transaction.address || transaction.from;
+
+    const conn = Settings.getBackendParams(ledger, API.Algod);
+    const sendPath = `/v2/accounts/${address}`;
+    const fetchParams: any = {
+      headers: {
+        ...conn.headers,
+      },
+      method: 'GET',
+    };
+    let url = conn.url;
+    if (conn.port.length > 0) url += ':' + conn.port;
+
+    let chainAuthAddr;
+    await Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((account) => {
+      // Use authAddr or empty string
+      chainAuthAddr = account['auth-addr'] || '';
+    });
+    return chainAuthAddr;
+  };
+
   private static fetchAPI(url, params) {
     return new Promise((resolve, reject) => {
       fetch(url, params)
@@ -84,29 +131,6 @@ export class Task {
           reject(res);
         });
     });
-  }
-
-  public static build(request: any) {
-    const body = request.body;
-    const method = body.method;
-
-    // Check if there's a previous request from the same origin
-    if (request.originTabID in Task.requests)
-      return new Promise((resolve, reject) => {
-        request.error = PendingTransaction;
-        reject(request);
-      });
-    else Task.requests[request.originTabID] = request;
-
-    return new Promise((resolve, reject) => {
-      Task.methods().public[method](request, resolve, reject);
-    }).finally(() => {
-      delete Task.requests[request.originTabID];
-    });
-  }
-
-  public static clearPool() {
-    Task.authorized_pool = [];
   }
 
   private static async modifyTransactionWrapWithAssetCoreInfo(
@@ -181,29 +205,6 @@ export class Task {
           logging.log(e.message);
         });
     }
-  }
-
-  private static getChainAuthAddress = async (transaction: any, sendResponse: Function) => {
-    // The ledger and address will be provided differently from UI and dapp
-    const ledger = transaction.ledger || getLedgerFromGenesisId(transaction.genesisID);
-    const address = transaction.address || transaction.from;
-
-    const conn = Settings.getBackendParams(ledger, API.Algod);
-    const sendPath = `/v2/accounts/${address}`;
-    const fetchParams: any = {
-      headers: {
-        ...conn.headers
-      },
-      method: 'GET',
-    };
-    let url = conn.url;
-    if (conn.port.length > 0) url += ':' + conn.port;
-    
-    await Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((account) => {
-      // Use authAddr or empty string
-      const chainAuthAddr = account['auth-addr'] || '';
-      sendResponse(chainAuthAddr);
-    });
   }
 
   // Intermediate function for Group of Groups handling
@@ -287,9 +288,8 @@ export class Task {
           } else {
             if (!signers) {
               InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
-            }
-            else if (authAddr && signers.length === 1 && authAddr !== signers[0]){
-              // We have an authAddr so if signers is length of 1 then they must be equal 
+            } else if (authAddr && signers.length === 1 && authAddr !== signers[0]) {
+              // We have an authAddr so if signers is length of 1 then they must be equal
               throw RequestError.InvalidFormat;
             }
           }
@@ -304,17 +304,16 @@ export class Task {
               throw RequestError.UnsupportedAlgod;
             }
 
-            // If there is an auth address then we SHOULD validate it is on chain and warn if not present      
-            await Task.getChainAuthAddress(processedTx, (chainAuthAddr) => {
-              // If there was an auth address on chain then set the auth address for the transaction
-              if (authAddr !== chainAuthAddr){
-                // Rekey - Attach warning before signing
-                transactionWraps[index].validityObject['authAddr'] = new ValidationResponse({
-                  status: ValidationStatus.Warning,
-                  info: 'Value does not match the current authorized signer for this address on chain.',
-                });
-              }
-            });
+            // If there is an auth address then we SHOULD validate it is on chain and warn if not present
+            const chainAuthAddr = await Task.getChainAuthAddress(processedTx);
+            // If there was an auth address on chain then set the auth address for the transaction
+            if (authAddr !== chainAuthAddr) {
+              // Rekey - Attach warning before signing
+              transactionWraps[index].validityObject['authAddr'] = new ValidationResponse({
+                status: ValidationStatus.Warning,
+                info: 'Value does not match the current authorized signer for this address on chain.',
+              });
+            }
           }
         } catch (e) {
           validationErrors[index] = e;
@@ -1077,7 +1076,7 @@ export class Task {
                   if (!account.isHardware) {
                     // Check for an address that we were expected but unable to sign with
                     if (!unlockedValue[ledger][i].mnemonic) {
-                      throw RequestError.NotAuthorized;
+                      throw RequestError.NotAuthorizedByUser;
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
@@ -1313,18 +1312,7 @@ export class Task {
           return InternalMethods[JsonRpcMethod.AssetOptOut](request, sendResponse);
         },
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
-          // This is a UI transaction, first determine if there is an authorized signing account
-          Task.getChainAuthAddress(request.body.params, (chainAuthAddr) => {
-            // If there was an auth address on chain then set the auth address for the transaction
-            if (chainAuthAddr) {
-              request.body.params.authAddr = chainAuthAddr;
-            }
-            InternalMethods[JsonRpcMethod.SignSendTransaction](request, (response) => {
-              sendResponse(response);
-            });
-          });
-
-          return true;
+          return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
         },
         [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
