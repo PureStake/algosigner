@@ -41,7 +41,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [aliases, setAliases] = useState<any>({});
-  const [interalAliases, setInternalAliases] = useState<any>({});
+  const [internalAliases, setInternalAliases] = useState<any>([]);
   const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [addingContact, setAddingContact] = useState<boolean>(false);
@@ -383,7 +383,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           html`
             <textarea
               placeholder="Enter either an address, an imported account, an added contact or a namespace alias"
-              class="textarea has-fixed-size mb-4 pr-6"
+              class="textarea has-fixed-size mb-4"
               id="destinationAddress"
               value=${to}
               ref=${inputRef}
@@ -505,7 +505,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
             ${!selectedDestination &&
-            !interalAliases.find((a) => a.address === to) &&
+            !internalAliases.find((a) => a.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&

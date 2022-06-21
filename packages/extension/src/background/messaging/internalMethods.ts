@@ -151,6 +151,8 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
     const extensionStorage = new ExtensionStorage();
+
+    // Setup initial values for user-stored info
     extensionStorage.setStorage('contacts', [], null);
     const emptyAliases = {
       [Namespace.AlgoSigner_Accounts]: [],
@@ -161,6 +163,17 @@ export class InternalMethods {
       { [Ledger.MainNet]: emptyAliases, [Ledger.MainNet]: emptyAliases },
       null
     );
+    const namespaceConfigs: Array<NamespaceConfig> = [];
+    const externalNamespaces: Array<string> = AliasConfig.getExternalNamespaces();
+    for (const n of externalNamespaces) {
+      namespaceConfigs.push({
+        name: AliasConfig[n].name,
+        namespace: n as Namespace,
+        toggle: true,
+      });
+    }
+    extensionStorage.setStorage('namespaces', namespaceConfigs, null);
+
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
       [Ledger.MainNet]: [],
@@ -1292,7 +1305,7 @@ export class InternalMethods {
             }
 
             if (
-              searchTerm &&
+              searchTerm.length &&
               availableExternalNamespaces.includes(namespace) &&
               AliasConfig[namespace].ledgers &&
               AliasConfig[namespace].ledgers[ledger]?.length > 0
