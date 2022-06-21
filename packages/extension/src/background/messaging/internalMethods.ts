@@ -2,7 +2,7 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
+import { Alias, Ledger, Namespace, NamespaceConfig, RequestError } from '@algosigner/common/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
 import { API, Cache } from './types';
@@ -151,6 +151,8 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.CreateWallet](request: any, sendResponse: Function) {
     const extensionStorage = new ExtensionStorage();
+
+    // Setup initial values for user-stored info
     extensionStorage.setStorage('contacts', [], null);
     const emptyAliases = {
       [Namespace.AlgoSigner_Accounts]: [],
@@ -161,6 +163,17 @@ export class InternalMethods {
       { [Ledger.MainNet]: emptyAliases, [Ledger.MainNet]: emptyAliases },
       null
     );
+    const namespaceConfigs: Array<NamespaceConfig> = [];
+    const externalNamespaces: Array<string> = AliasConfig.getExternalNamespaces();
+    for (const n of externalNamespaces) {
+      namespaceConfigs.push({
+        name: AliasConfig[n].name,
+        namespace: n as Namespace,
+        toggle: true,
+      });
+    }
+    extensionStorage.setStorage('namespaces', namespaceConfigs, null);
+
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
       [Ledger.MainNet]: [],
@@ -763,7 +776,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AssetOptOut](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, id, authAddr } = request.body.params;
+    const { ledger, address, passphrase, id } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -773,6 +786,7 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const authAddr = await Task.getChainAuthAddress(request.body.params);
       const signAddress = authAddr || address;
 
       // Find address to send algos from
@@ -829,6 +843,8 @@ export class InternalMethods {
             .map((vo) => vo['info']);
         sendResponse({ error: e });
         return;
+      } else if (!account.mnemonic) {
+        sendResponse({ error: RequestError.NotAuthorizedOnChain.message });
       } else {
         // We have a transaction which does not contain invalid fields,
         // but may still contain fields that are dangerous
@@ -888,7 +904,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, txnParams, authAddr } = request.body.params;
+    const { ledger, address, passphrase, txnParams } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
     const algod = this.getAlgod(ledger);
 
@@ -898,6 +914,7 @@ export class InternalMethods {
         return false;
       }
       let account;
+      const authAddr = await Task.getChainAuthAddress(request.body.params);
       const signAddress = authAddr || address;
 
       // Find address to send algos from
@@ -980,6 +997,8 @@ export class InternalMethods {
 
           // Return to close connection
           return true;
+        } else if (!account.mnemonic) {
+          sendResponse({ error: RequestError.NotAuthorizedOnChain.message });
         } else {
           // We can use a modified popup to allow the normal flow, but require extra scrutiny.
           const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
@@ -1286,7 +1305,7 @@ export class InternalMethods {
             }
 
             if (
-              searchTerm &&
+              searchTerm.length &&
               availableExternalNamespaces.includes(namespace) &&
               AliasConfig[namespace].ledgers &&
               AliasConfig[namespace].ledgers[ledger]?.length > 0
