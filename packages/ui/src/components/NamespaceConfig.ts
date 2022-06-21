@@ -47,35 +47,38 @@ const NamespacesConfiguration: FunctionalComponent = () => {
         registered to the alias owner. These namespaces can be turned off, doing so will stop
         showing aliases from said namespace when selecting a receiver for a transaction.
       </p>
-      ${loading &&
-      !namespaceConfigs.length &&
-      html`
-        <div style="padding: 10px 0;">
-          <span class="loader" style="position: relative; left: calc(50% - 0.5em);"></span>
-        </div>
-      `}
-      ${namespaceConfigs.map(
-        (config: NamespaceConfig) =>
-          html`<div class="box small is-flex">
-            <span class="is-align-items-center is-flex">
-              <img
-                src="${getNamespaceIcon(config.namespace, false)}"
-                height="16"
-                width="16"
-                class="mr-1"
-              />
-            </span>
-            <span class="is-flex-grow-1">${config.name}</span>
-            <span
-              onClick="${() => toggleNamespaceConfig(config)}"
-              class="is-align-items-center is-flex"
-            >
-              ${loading &&
-              html`<span class="loader" style="position: relative; left: calc(50% - 0.5em);" />`}
-              ${!loading && html`<img src="${config.toggle ? toggleOn : toggleOff}" width="25" />`}
-            </span>
-          </div>`
-      )}
+      <div id="namespaceList">
+        ${loading &&
+        !namespaceConfigs.length &&
+        html`
+          <div style="padding: 10px 0;">
+            <span class="loader" style="position: relative; left: calc(50% - 0.5em);"></span>
+          </div>
+        `}
+        ${namespaceConfigs.map(
+          (config: NamespaceConfig) =>
+            html`<div class="box small is-flex">
+              <span class="is-align-items-center is-flex">
+                <img
+                  src="${getNamespaceIcon(config.namespace, false)}"
+                  height="16"
+                  width="16"
+                  class="mr-1"
+                />
+              </span>
+              <span class="is-flex-grow-1">${config.name}</span>
+              <a
+                onClick="${() => toggleNamespaceConfig(config)}"
+                class="is-align-items-center is-flex"
+              >
+                ${loading &&
+                html`<span class="loader" style="position: relative; left: calc(50% - 0.5em);" />`}
+                ${!loading &&
+                html`<img src="${config.toggle ? toggleOn : toggleOff}" width="25" />`}
+              </a>
+            </div>`
+        )}
+      </div>
     </div>
   `;
 };

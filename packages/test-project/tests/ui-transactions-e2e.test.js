@@ -139,6 +139,19 @@ describe('UI Transactions Tests', () => {
     await goBack();
   });
 
+  test('Turn off external namespaces', async () => {
+    await openSettingsMenu();
+    await extensionPage.click('#showNamespacesConfiguration');
+    await extensionPage.waitForTimeout(250);
+    const namespaceToggles = await extensionPage.$$('#namespaceList .box a');
+    console.log(namespaceToggles);
+    for (const toggle of namespaceToggles) {
+      await extensionPage.waitForTimeout(250);
+      await toggle.click();
+    }
+    await closeSettingsMenu();
+  });
+
   test('Send Asset Transaction / Account alias', async () => {
     await selectAccount(accounts.ui);
 
@@ -161,7 +174,7 @@ describe('UI Transactions Tests', () => {
     await extensionPage.type('#transferAmount', `0.00000${amount}`);
     // Select an Imported Account from aliases
     await extensionPage.type('#destinationAddress', 't');
-    await extensionPage.waitForSelector('.alias-selector');
+    await extensionPage.waitForSelector('.alias-selector-container');
     await extensionPage.keyboard.press('ArrowDown');
     await extensionPage.keyboard.press('ArrowDown');
     await extensionPage.keyboard.press('Enter');
@@ -186,7 +199,7 @@ describe('UI Transactions Tests', () => {
     await extensionPage.type('#transferAmount', '900000');
     // Select a Contact from aliases
     await extensionPage.type('#destinationAddress', 't');
-    await extensionPage.waitForSelector('.alias-selector');
+    await extensionPage.waitForSelector('.alias-selector-container');
     await extensionPage.keyboard.press('ArrowDown');
     await extensionPage.keyboard.press('Enter');
     await verifyDestination(accounts.multisig);
