@@ -10,21 +10,20 @@ There are multiple packages in the project that combine to build the overall ext
 
 *https://github.com/PureStake*
 
-- algosigner-> // Base project folder
-  - dist-> // Folder containing the combined distribution components, used to install the extension, created on build
-  - packages-> // Folder for scripts components that support the extension
-    - common-> // Contains core elements used in other packages
-      - crypto-> // Wrapper for encrypting and decrypting account information
-      - dapp-> // AlgoSigner library that gets injected in dApps
-      - extension-> // Extension definition and core files
+- algosigner -> // Base project folder
+  - dist -> // Folder containing the combined distribution components, used to install the extension, created on build
+  - packages -> // Folder for scripts components that support the extension
+    - common -> // Contains core elements used in other packages
+    - crypto -> // Wrapper for encrypting and decrypting account information
+    - dapp -> // AlgoSigner library that gets injected in dApps
+    - extension -> // Extension definition and core files
     - storage -> // Handles saving and loading of account information
     - test-project -> // Test wrapper for the package files
-      - ui-> // Front end application for interaction within the extension interface
+    - ui -> // Front end application for interaction within the extension interface
   - manifest.json // Extension definition file
-  - package.json // Algosigner package, required packages, and scripts to build the project
+  - package.json // AlgoSigner package, required packages, and scripts to build the project
   - readme.md // Project overview
   - docs -> // Guides and how-to's
-    - dApp-integration.md // Guide to integrating dApps with AlgoSigner
   - media -> // Supporting images for this repository
   - LICENSE.txt // License for this repository
 

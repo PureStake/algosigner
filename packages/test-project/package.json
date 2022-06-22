@@ -1,11 +1,11 @@
 {
   "name": "algorand-test-project",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
   "description": "Repository for tests",
   "devDependencies": {
-    "algosdk": "1.16.0",
+    "algosdk": "1.17.0",
     "jest": "^28.1.0",
     "jest-runner-groups": "^2.2.0",
     "puppeteer": "^13.7.0",
