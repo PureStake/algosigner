@@ -19,3 +19,7 @@ and Indexer in JSON format:
 export const REFERENCE_ACCOUNT_TOOLTIP: string = `Reference accounts allow account tracking in AlgoSigner, but
 they do not contain signing keys. They can only sign transactions if
 they are rekeyed to another normal account also on AlgoSigner.`;
+
+export const ALIAS_COLLISION_TOOLTIP: string = `Some of the aliases shown share the same name,
+make sure to verify which Namespace you're using
+by hovering on the alias before making a selection.`;

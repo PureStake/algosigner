@@ -4,8 +4,6 @@
 
 AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, discover account addresses it holds, query the Network (make calls to AlgoD v2 or the Indexer) and request AlgoSigner to request for the user to sign a transaction initiated by the application. **All methods of the injected library return a Promise that needs to be handled by the dApp.**
 
-This guide covers the new v2 Transactions Signing method, docs for the legacy v1 signing are [here](legacy-dApp-integration.md)
-
 ## Methods
 
 - [AlgoSigner.connect()](#algosignerconnect)

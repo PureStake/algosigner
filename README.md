@@ -10,48 +10,38 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-# `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been officially deprecated.
+## `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been officially deprecated.
 
-## 1.9.0 Release
+An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
+
+## 1.9.1 Release
 
 ### Main updates
-This update adds supports for easier transfers with the new autocomplete feature. Start typing an account or contact name on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
-- Autocomplete support for UI-made transfers
-- `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
+This update adds supports for easier transfers with the new autocomplete feature. Start typing an account, contact name or name service alias on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
 
+- Autocomplete feature for UI-made transfers, supporting:
+  - Accounts and Contact names
+  - External name services (NFDomains and Algorand Namespace Service)
+- `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
 
 ## New Users
 
 - Watch [Getting Started with AlgoSigner](https://youtu.be/tG-xzG8r770)
-- [Ledger Readme](docs/ledger.md)
-
-## Adding Custom Networks
-
-AlgoSigner users may add their own networks to the extension, for example BetaNet or the sandbox private network - [Instructions](docs/add-network.md)
+- [Using a Ledger device](docs/ledger.md)
+- [Adding Custom Networks](docs/add-network.md) (such as BetaNet or a private network)
+- [Troubleshooting Connection issues](docs/connection-issues.md)
 
 ## dApp Developers
 
 For teams looking to integrate AlgoSigner into a project:
 
-Developing with v2 Transaction Signing
+- [dApp Development guide](docs/dApp-guide.md)
+- [AlgoSigner dApp Integration Guide](docs/dApp-integration.md)
 
-- [dApp development guide](docs/dApp-guide.md)
-- [v2 AlgoSigner methods](docs/dApp-integration.md)
+## AlgoSigner development
 
-Legacy v1 Transaction Signing is going to be deprecated soon and is available only for reference purposes.
-Please use v2 when developing new apps and migrate existing apps that are still using v1 to v2 as soon as possible.
-
-- [v1 Guide](docs/legacy-signing.md)
-- [v1 AlgoSigner methods](docs/legacy-dApp-integration.md)
-
-## Roadmap
-
-- UI improvements
-- Contribution guidelines
-
-### AlgoSigner development
-
-For developers interested in working with AlgoSigner [Extension Guide](docs/extension-developers.md). A contribution guide is in development.
+For developers interested in working with AlgoSigner, an [Extension Development Guide](docs/extension-developers.md) is available.
+Pull requests we accept need to be narrow in scope and all contributors need to sign (once) our [CLA](https://github.com/PureStake/algosigner-cla/blob/main/CLA.md) after submitting one in order for it to be considered.
 
 ## License
 

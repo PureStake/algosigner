@@ -7,6 +7,7 @@ import { Key } from 'ts-key-enum';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { obfuscateAddress } from '@algosigner/common/utils';
+import { ALIAS_COLLISION_TOOLTIP } from '@algosigner/common/strings';
 
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
@@ -40,7 +41,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchTimerID, setSearchTimerID] = useState<NodeJS.Timeout | undefined>(undefined);
   const [aliases, setAliases] = useState<any>({});
-  const [interalAliases, setInternalAliases] = useState<any>({});
+  const [internalAliases, setInternalAliases] = useState<any>([]);
   const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
   const [addingContact, setAddingContact] = useState<boolean>(false);
@@ -62,18 +63,22 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const params = { ledger: ledger, searchTerm: '' };
     sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
       setLoading(false);
-      if ('error' in response) {
-        setError(response.error.message);
-      } else {
-        setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
+      if (response) {
+        if ('error' in response) {
+          setError(response.error.message);
+        } else {
+          setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
+        }
       }
     });
   }, []);
+  // Automatically focus textbox on load
   useEffect(() => {
     if (inputRef !== null && inputRef.current !== null) {
       inputRef.current.focus();
     }
   }, [selectedDestination]);
+  // Scroll keyboard cursor into view
   useEffect(() => {
     if (activeAliasRef !== null && activeAliasRef.current !== null) {
       activeAliasRef.current.scrollIntoView({
@@ -206,7 +211,21 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       setSearchTerm('');
     }
   };
+  // Flattened aliases in order to iterate over them
   const orderedAliases = Object.keys(aliases).flatMap((n) => aliases[n]);
+  // We check for duplicate aliases and mark them
+  const namesUsed = orderedAliases.flatMap((a) => a.name);
+  const namesWithCollisions = orderedAliases
+    .filter((a, index) => namesUsed.indexOf(a.name) != index)
+    .flatMap((a) => a.name);
+  if (namesWithCollisions.length) {
+    orderedAliases.forEach((a) => {
+      if (namesWithCollisions.includes(a.name)) {
+        a.collides = true;
+      }
+    });
+  }
+  // Use keyboard to navigate over the flattened aliases
   const handleAliasNavigation = (event: Event) => {
     const key = (event as KeyboardEvent).key as Key;
     const customKeys = [Key.Escape, Key.ArrowDown, Key.ArrowUp, Key.Enter];
@@ -365,8 +384,8 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           ${!selectedDestination &&
           html`
             <textarea
-              placeholder="Destination can be one of: an address, an imported account, an added contact"
-              class="textarea has-fixed-size mb-4 pr-6"
+              placeholder="Enter either an address, an imported account, an added contact or a namespace alias"
+              class="textarea has-fixed-size mb-4"
               id="destinationAddress"
               value=${to}
               ref=${inputRef}
@@ -380,37 +399,49 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
               ${orderedAliases.length > 0 &&
               html`
-                <div class="alias-selector">
-                  ${orderedAliases.map(
-                    (a, index) =>
-                      html`
-                        <a
-                          onClick=${() => onSelectDestination(a, index)}
-                          class="dropdown-item is-flex px-4 ${isActive(index)}"
-                          style="justify-content: space-between;"
-                        >
-                          ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
-                          <div
-                            class="is-flex has-tooltip-arrow has-tooltip-right has-tooltip-fade"
-                            data-tooltip="${AliasConfig[a.namespace]?.name}"
+                ${namesWithCollisions.length &&
+                html`
+                  <i
+                    class="fas fa-exclamation-triangle px-1 has-text-link has-tooltip-arrow has-tooltip-left has-tooltip-fade"
+                    data-tooltip="${ALIAS_COLLISION_TOOLTIP}"
+                    style="position: absolute; z-index: 3; top: 48%; left: 88%; cursor: pointer; font-style: unset;"
+                    aria-label="warning about name collisions"
+                  ></i>
+                `}
+                <div class="alias-selector-container py-0">
+                  <div class="alias-selector-content py-2">
+                    ${orderedAliases.map(
+                      (a, index) =>
+                        html`
+                          <a
+                            onClick=${() => onSelectDestination(a, index)}
+                            class="dropdown-item is-flex px-4 ${isActive(index)}"
+                            style="justify-content: space-between;"
                           >
-                            <span class="is-flex is-align-items-center pr-1">
+                            ${index === highlightedAlias && html`<span ref=${activeAliasRef} />`}
+                            <div
+                              class="is-flex is-align-items-center has-tooltip-arrow has-tooltip-right has-tooltip-fade"
+                              data-tooltip="${`${AliasConfig[a.namespace]?.name}:\n${a.name}`}"
+                            >
                               <img
                                 src=${getNamespaceIcon(a.namespace, index === highlightedAlias)}
                                 height="16"
                                 width="16"
+                                class="mr-1"
                               />
+                              ${a.collides &&
+                              html`<i class="fas fa-exclamation-triangle mr-1 has-text-link"></i>`}
+                              <span style="text-overflow: ellipsis; overflow: hidden;">
+                                ${a.name}
+                              </span>
+                            </div>
+                            <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
+                              ${obfuscateAddress(a.address)}
                             </span>
-                            <span style="text-overflow: ellipsis; overflow: hidden;">
-                              ${a.name}
-                            </span>
-                          </div>
-                          <span class="ml-2 has-text-grey has-text-right is-flex-grow-1">
-                            ${obfuscateAddress(a.address)}
-                          </span>
-                        </a>
-                      `
-                  )}
+                          </a>
+                        `
+                    )}
+                  </div>
                 </div>
               `}
             `}
@@ -476,7 +507,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
             <p>Transaction sent with ID:</p>
             <p id="txId" class="mb-4" style="word-break: break-all;">${txId}</p>
             ${!selectedDestination &&
-            !interalAliases.find((a) => a.address === to) &&
+            !internalAliases.find((a) => a.address === to) &&
             html`
               <p>This address is not on your contact list, would you like to save it?</p>
               ${addingContact &&
