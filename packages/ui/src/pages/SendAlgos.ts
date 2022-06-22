@@ -63,10 +63,12 @@ const SendAlgos: FunctionalComponent = (props: any) => {
     const params = { ledger: ledger, searchTerm: '' };
     sendMessage(JsonRpcMethod.GetAliasedAddresses, params, (response) => {
       setLoading(false);
-      if ('error' in response) {
-        setError(response.error.message);
-      } else {
-        setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
+      if (response) {
+        if ('error' in response) {
+          setError(response.error.message);
+        } else {
+          setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
+        }
       }
     });
   }, []);
