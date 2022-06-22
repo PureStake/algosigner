@@ -249,7 +249,8 @@ export class InternalMethods {
 
               const externalNamespaces: Array<string> = AliasConfig.getExternalNamespaces();
               for (const n of externalNamespaces) {
-                const foundConfig = response.find((config) => config.namespace === n);
+                const existingConfigs = response || [];
+                const foundConfig = existingConfigs.find((config) => config.namespace === n);
                 if (!foundConfig) {
                   namespaceConfigs.push({
                     name: AliasConfig[n].name,
