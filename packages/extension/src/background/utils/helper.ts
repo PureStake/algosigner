@@ -17,7 +17,7 @@ export function getIndexer(ledger: string) {
 
 // Helper function to initialize Cache
 export function initializeCache(
-  c: Cache | undefined,
+  c: Cache | undefined = undefined,
   ledger: Ledger | undefined = undefined
 ): Cache {
   let cache: Cache;
