@@ -273,6 +273,21 @@ export class InternalMethods {
     return true;
   }
 
+  public static [JsonRpcMethod.Logout](request: any, sendResponse: Function) {
+    InternalMethods.clearSession();
+    Task.clearPool();
+    sendResponse(true);
+    return true;
+  }
+
+  public static [JsonRpcMethod.ClearCache](request: any, sendResponse: Function) {
+    const extensionStorage = new ExtensionStorage();
+    extensionStorage.setStorage('cache', initializeCache(), (isSuccessful) =>
+      sendResponse(isSuccessful)
+    );
+    return true;
+  }
+
   public static [JsonRpcMethod.CreateAccount](request: any, sendResponse: Function) {
     var keys = algosdk.generateAccount();
     var mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
@@ -583,20 +598,19 @@ export class InternalMethods {
 
           // Check for asset details saved in storage, if needed
           if ('assets' in res && res.assets.length > 0) {
-            const missingAssets = [];
+            const assetDetails = [];
             for (var i = res.assets.length - 1; i >= 0; i--) {
               const assetId = res.assets[i]['asset-id'];
               if (assetId in cache.assets[ledger]) {
                 res.assets[i] = {
-                  ...res.assets[i],
                   ...cache.assets[ledger][assetId],
+                  ...res.assets[i],
                 };
-              } else {
-                missingAssets.push(assetId);
               }
+              assetDetails.push(assetId);
             }
 
-            if (missingAssets.length > 0) AssetsDetailsHelper.add(missingAssets, ledger);
+            if (assetDetails.length > 0) AssetsDetailsHelper.add(assetDetails, ledger);
 
             res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
           }
