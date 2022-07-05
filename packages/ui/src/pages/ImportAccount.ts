@@ -170,7 +170,14 @@ const ImportAccount: FunctionalComponent = (props: any) => {
         `}
         ${!isRef &&
         html`
-        <p class="my-3">Insert the 25 word mnemonic of the account:</p>
+        <p class="my-3">
+          <div>
+            Insert the 25 word mnemonic of the account
+          </div>
+          <div>
+            (Entire mnemonic may be pasted into a single field):
+          </div>
+        </p>
         <div id="mnemonicBlock" style="display: flex; flex-wrap: wrap; text-align: right; padding-right: 30px;">
           <div style="display: block; width: 33%;">
             <label for="mnemonicWord0" style="margin-right: 5px;">1:</label>           
