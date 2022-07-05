@@ -350,7 +350,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
         </div>
         `}
        
-        <p class="mt-3 has-text-danger" style="height: 1.5em;">
+        <p class="pt-2 has-text-danger">
           ${error !== undefined && error.length > 0 && error}
         </p>
       </div>
