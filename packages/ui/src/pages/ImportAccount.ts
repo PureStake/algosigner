@@ -65,24 +65,26 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     });
   };
 
-  const handleMnemonicInput = (e) => {
-    const localMnemonicArray = [...mnemonicArray];
-    const inputText = e.target.value.toString().trim();
+  const handleMnemonicPaste = (e) => {
+    // We get the pasted text and then split it into words
+    const clipboardData = e.clipboardData;
+    const inputText = clipboardData.getData('text');
+    e.preventDefault();
     const inputArray = inputText.split(/[\s\t\r\n,]+/);
+    const localMnemonicArray = [...mnemonicArray];
 
     if (inputArray.length === 1) {
       // If it is a single word then update that word placement in the array
-      localMnemonicArray[e.target.id.toString().replace('mnemonicWord', '')] = inputText;
+      localMnemonicArray[+e.target.id.toString().replace('mnemonicWord', '')] = inputText;
     } else if (inputArray.length === NUMBER_OF_WORDS) {
       // If it is multiple words then verify there are 25 and split
-      setMnemonicArray(EMPTY_MNEMONIC);
       for (let i = 0; i < NUMBER_OF_WORDS; i++) {
-        localMnemonicArray[i.toString()] = inputArray[i].trim();
+        localMnemonicArray[i] = inputArray[i].trim();
       }
 
       // For the case the user is typing the full mnemonic
       // after the split the last element will be empty
-      // so we must focust that element now to continue typing
+      // so we must focus that element now to continue typing
       const element = document.getElementById('mnemonicWord24');
       if (element) {
         element.focus();
@@ -92,9 +94,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
       console.log('[WARNING] - Mnemonic words must be a single word or the entire 25 mnemonic.');
       localMnemonicArray[e.target.id.toString().replace('mnemonicWord', '')] = inputText;
     }
-    setTimeout(() => {
-      setMnemonicArray(localMnemonicArray);
-    }, 1);
+    setMnemonicArray(localMnemonicArray);
   };
 
   const handleAddressInput = (e) => {
@@ -177,11 +177,11 @@ const ImportAccount: FunctionalComponent = (props: any) => {
             ${[...mnemonicArray].map(
               (_, index) => html`
                 <div class="word-block">
-                  <label for="${`mnemonicWord${index}`}">${index}:</label>
+                  <label for="${`mnemonicWord${index}`}">${index + 1}:</label>
                   <input
                     id="${`mnemonicWord${index}`}"
                     type="password"
-                    onInput=${handleMnemonicInput}
+                    onPaste=${handleMnemonicPaste}
                     value=${mnemonicArray[index]}
                   />
                   <span
@@ -198,9 +198,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
       </div>
       ${error &&
       error.length > 0 &&
-      html`
-        <p class="pt-2 has-text-danger has-text-centered">${error}</p>
-      `}
+      html`<p class="pt-2 has-text-danger has-text-centered">${error}</p>`}
       <div class="p-4">
         <button
           class="button is-primary is-fullwidth"
