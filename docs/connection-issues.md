@@ -8,13 +8,11 @@ Find and press any disconnect button present on the dApp.
 
 <img src="./connection_images/disconnect.png" width="300" />
 <br />
-<br />
 
 Open the config menu and log out of AlgoSigner.
 
 <img src="./connection_images/open-config.png" height="400" />
 <img src="./connection_images/logout.png" height="400" />
-<br />
 <br />
 
 Reload the tab/window where the dApp is open and attempt to connect again.
@@ -22,9 +20,7 @@ Reload the tab/window where the dApp is open and attempt to connect again.
 <img src="./connection_images/reload.png" height="80" />
 <img src="./connection_images/connect.png" height="80" />
 
-<br />
 <hr />
-<br />
 
 ## Additional steps
 
