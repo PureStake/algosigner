@@ -35,9 +35,11 @@ const SettingsMenu: FunctionalComponent = () => {
   };
 
   const clearCache = () => {
-    store.clearCache(() => {
-      route('/wallet');
-      flip();
+    sendMessage(JsonRpcMethod.ClearCache, {}, function () {
+      store.clearCache(() => {
+        route('/wallet');
+        flip();
+      });
     });
   };
 

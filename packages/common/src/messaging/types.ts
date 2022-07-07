@@ -29,6 +29,7 @@ export enum JsonRpcMethod {
   GetSession = 'get-session',
   Login = 'login',
   Logout = 'logout',
+  ClearCache = 'clear-cache',
   AccountDetails = 'account-details',
   Transactions = 'transactions',
   AssetDetails = 'asset-details',
