@@ -31,6 +31,11 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     (isRef && !algosdk.isValidAddress(address));
 
   const importAccount = (pwd: string) => {
+    // Trim mnemonic words
+    for (let i = 0; i < mnemonicArray.length; i++) {
+      mnemonicArray[i] = mnemonicArray[i].trim();     
+    }
+
     const params = {
       passphrase: pwd,
       mnemonic: mnemonicArray.join(' '),
@@ -65,7 +70,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
 
   const handleMnemonicInput = (e) => {
     const localMnemonicArray = mnemonicArray;
-    const inputText = e.target.value.toString().trim();
+    const inputText = e.target.value.toString();
     const inputArray = inputText.split(/[\s\t\r\n,]+/);
     
     // If it is a single word then update that word placement in the array
@@ -75,7 +80,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     // If it is multiple words then verify there are 25 and split
     else if (inputArray.length === wordsNumber) {
         for(let i = 0; i < wordsNumber; i++) {
-          localMnemonicArray[i.toString()] = inputArray[i].trim();
+          localMnemonicArray[i.toString()] = inputArray[i];
         }
 
         // For the case the user is typing the full mnemonic 
