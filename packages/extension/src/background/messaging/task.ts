@@ -1275,11 +1275,11 @@ export class Task {
         [JsonRpcMethod.Login]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.Login](request, sendResponse);
         },
-        /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.Logout]: (request: any, sendResponse: Function) => {
-          InternalMethods.clearSession();
-          Task.clearPool();
-          sendResponse(true);
+          return InternalMethods[JsonRpcMethod.Logout](request, sendResponse);
+        },
+        [JsonRpcMethod.ClearCache]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.ClearCache](request, sendResponse);
         },
         [JsonRpcMethod.GetSession]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);

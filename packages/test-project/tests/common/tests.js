@@ -50,7 +50,12 @@ function ImportAccount(account) {
     await extensionPage.click('#importAccount');
     await extensionPage.waitForSelector('#accountName');
     await extensionPage.type('#accountName', account.name);
-    await extensionPage.type('#enterMnemonic', account.mnemonic);
+    const accountMnemonic = account.mnemonic.split(' ');
+    for (let i = 0; i < accountMnemonic.length; i++) {
+      const mnemonicWordId = '#mnemonicWord' + i;
+      await extensionPage.type(mnemonicWordId, accountMnemonic[i]);
+    }
+    await extensionPage.waitForTimeout(200);
     await extensionPage.click('#nextStep');
     await inputPassword();
     await extensionPage.waitForTimeout(2000);
