@@ -49,7 +49,7 @@ export class AliasConfig {
   };
 
   static [Namespace.ANS]: ConfigTemplate = {
-    name: 'Algorand Namespace Service',
+    name: 'Algorand Name Service',
     ledgers: {
       [Ledger.TestNet]:
         'https://testnet.api.algonameservice.com/names?pattern=${term}' +
