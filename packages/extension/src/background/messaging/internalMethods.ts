@@ -64,10 +64,11 @@ export class InternalMethods {
     extensionStorage.getStorage('contacts', (storedContacts: any) => {
       const aliases = {};
       const wallet = session.wallet;
+      const contacts = storedContacts || [];
 
       // Format contacts as aliases
       const contactAliases = [];
-      for (const c of storedContacts) {
+      for (const c of contacts) {
         contactAliases.push({
           name: c.name,
           address: c.address,
