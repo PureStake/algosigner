@@ -373,7 +373,10 @@ export class InternalMethods {
       if (existingAccounts) {
         for (let i = 0; i < existingAccounts.length; i++) {
           if (existingAccounts[i].address === targetAddress) {
-            throw new Error(`Account already exists in ${ledger} wallet.`);
+            throw new Error(`An account with this address already exists in your ${ledger} wallet.`);
+          }
+          if (existingAccounts[i].name === name) {
+            throw new Error(`An account named '${name}' already exists in your ${ledger} wallet.`);
           }
         }
       }
