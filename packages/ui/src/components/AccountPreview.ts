@@ -41,18 +41,27 @@ const AccountPreview: FunctionalComponent = (props: any) => {
       <div style="display: flex; justify-content: space-between;">
         ${account.isRef &&
         html`<i
-          class="fas fa-link is-size-7 mx-1 mt-3 has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-left has-tooltip-fade"
-          style="line-height: 1.1; height: 15px; font-style: unset;"
+          class="fas fa-link is-size-7 has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-left has-tooltip-fade"
+          style="width: 1.5rem; display: flex; justify-content: center; align-items: center;"
           data-tooltip="${REFERENCE_ACCOUNT_TOOLTIP}"
         />`}
         <div style="width: 65%; overflow-wrap: break-word; line-height: 1.1;">
           <b>${account.name}</b>
         </div>
         <div class="is-size-7 has-text-right is-flex-grow-1">
-          ${results && results.assets && html` <b>${results.assets.length}</b> ASAs<br /> `}
-          ${results && html` <b>${numFormat(results.amount / 1e6, 6)}</b> Algos `}
+          ${results && results.assets && html`<b>${results.assets.length}</b> ASAs<br />`}
+          ${results && html`<b>${numFormat(results.amount / 1e6, 6)}</b> Algos`}
           ${results === null && error && html`<span>${error}</span>`}
-          ${results === null && !error && html`<span class="loader is-pulled-right"></span>`}
+          ${results === null &&
+          !error &&
+          html`
+            <div
+              class="is-size-6 is-flex is-justify-content-flex-end"
+              style="min-height: 2.25em; align-items: center;"
+            >
+              <span class="loader"></span>
+            </div>
+          `}
         </div>
       </div>
     </div>
