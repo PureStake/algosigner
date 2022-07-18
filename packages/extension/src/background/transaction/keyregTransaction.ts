@@ -31,7 +31,7 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
 ///
 export class KeyregTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Key Registration';
-  constructor(params: IKeyRegistrationTx, v1Validations: boolean) {
-    super(params, KeyRegistrationTx, v1Validations);
+  constructor(params: IKeyRegistrationTx) {
+    super(params, KeyRegistrationTx);
   }
 }

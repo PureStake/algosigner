@@ -268,7 +268,7 @@ export class Task {
           rawTxArray[index] = rawTx;
           const processedTx = rawTx._getDictForDisplay();
           processedTxArray[index] = processedTx;
-          const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
+          const wrap = getValidatedTxnWrap(processedTx, processedTx['type']);
           transactionWraps[index] = wrap;
           const genesisID = wrap.transaction.genesisID;
 

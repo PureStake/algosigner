@@ -30,8 +30,8 @@ class AssetAcceptTx implements IAssetAcceptTx {
 ///
 export class AssetAcceptTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Asset Opt-In';
-  constructor(params: IAssetAcceptTx, v1Validations: boolean) {
-    super(params, AssetAcceptTx, v1Validations);
+  constructor(params: IAssetAcceptTx) {
+    super(params, AssetAcceptTx);
     // Additional check to verify that amount is 0 and address from and to are the same
     if (this.transaction && this.transaction['amount'] && this.transaction['amount'] != 0) {
       throw new InvalidTransactionStructure(`Creation of AssetAcceptTx has an invalid amount.`);

@@ -31,8 +31,8 @@ class AssetCloseTx implements IAssetCloseTx {
 ///
 export class AssetCloseTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Asset Opt-Out';
-  constructor(params: IAssetCloseTx, v1Validations: boolean) {
-    super(params, AssetCloseTx, v1Validations);
+  constructor(params: IAssetCloseTx) {
+    super(params, AssetCloseTx);
     // Additional check to verify that address from and to are the same
     if (this.transaction && this.transaction['to'] !== this.transaction['from']) {
       throw new InvalidTransactionStructure(

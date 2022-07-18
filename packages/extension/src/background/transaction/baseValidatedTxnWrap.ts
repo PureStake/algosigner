@@ -1,6 +1,6 @@
 import algosdk from 'algosdk';
 import { WalletMultisigMetadata } from '@algosigner/common/types';
-import { Validate, ValidationResponse, ValidationStatus } from '../utils/validator';
+import { Validate, ValidationResponse } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
 import { InvalidTransactionStructure } from '../../errors/validation';
 
@@ -10,7 +10,6 @@ type AssetInfo = {
 };
 
 const BIGINT_FIELDS = ['amount', 'assetTotal'];
-const V1_WARNING = `This signing method is going to be deprecated in favor of the more secure 'AlgoSigner.signTxn()' method.`;
 
 //
 // Base validated transaction wrap
@@ -25,12 +24,7 @@ export class BaseValidatedTxnWrap {
   signers: Array<string>;
   authAddr: string;
 
-  constructor(
-    params: any,
-    txnType: any,
-    v1Validations: boolean = true,
-    requiredParamsSet: Array<string> = undefined
-  ) {
+  constructor(params: any, txnType: any, requiredParamsSet: Array<string> = undefined) {
     this.transaction = new txnType();
     const missingFields = [];
     const extraFields = [];
@@ -78,24 +72,23 @@ export class BaseValidatedTxnWrap {
           // Done more liberally on v2 since we use the unmodified transaction afterwards
           if (
             // First we check for UintArrays and make them readable
-            (prop === 'group' ||
-              prop === 'appApprovalProgram' ||
-              prop === 'appClearProgram' ||
-              prop === 'assetMetadataHash' ||
-              prop === 'lease' ||
-              prop === 'selectionKey' ||
-              prop === 'stateProofKey' ||
-              prop === 'voteKey') &&
-            !v1Validations
+            prop === 'group' ||
+            prop === 'appApprovalProgram' ||
+            prop === 'appClearProgram' ||
+            prop === 'assetMetadataHash' ||
+            prop === 'lease' ||
+            prop === 'selectionKey' ||
+            prop === 'stateProofKey' ||
+            prop === 'voteKey'
           ) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
             // Then we check for UintArray arrays
-          } else if (prop === 'appArgs' && !v1Validations) {
+          } else if (prop === 'appArgs') {
             this.transaction[prop] = this.transaction[prop].map((arg) =>
               Buffer.from(arg).toString('base64')
             );
             // Then for address arrays
-          } else if (prop === 'appAccounts' && !v1Validations) {
+          } else if (prop === 'appAccounts') {
             const accArray = params[prop];
             if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
               this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
@@ -118,29 +111,6 @@ export class BaseValidatedTxnWrap {
       throw new InvalidTransactionStructure(
         `Creation of ${txnType.name} has extra or invalid fields: ${extraFields.toString()}.`
       );
-    }
-
-    if (v1Validations) {
-      // We mark all v1 transactions as soon to be deprecated
-      this.validityObject['Deprecated'] = new ValidationResponse({
-        status: ValidationStatus.Dangerous,
-        info: V1_WARNING,
-      });
-
-      // We mark atomic transactions as an invalid field for v1
-      if (params['group']) {
-        this.validityObject['group'] = new ValidationResponse({
-          status: ValidationStatus.Invalid,
-        });
-      }
-
-      // If we don't have a flatFee or it is falsy and we have a non-zero fee, create a warning.
-      if (!params['flatFee'] && params['fee'] && params['fee'] > 0) {
-        this.validityObject['flatFee'] = new ValidationResponse({
-          status: ValidationStatus.Warning,
-          info: 'The fee is subject to change without flatFee enabled.',
-        });
-      }
     }
   }
 }
