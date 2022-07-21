@@ -163,7 +163,7 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 ///
 function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
   // If there's no dApp structure, we're coming from the UI
-  if (!transaction.encodedTxn && !transaction.groupsToSign) {
+  if (!transaction.groupsToSign) {
     const removedFieldsTxn = removeEmptyFields(transaction.transaction);
 
     // Explicit conversion of amount. Ledger transactions are stringified and retrieved,
@@ -185,18 +185,6 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     return { transaction: byteTxn, error: '' };
   }
 
-  // If coming from a v1 sign we will have an encodedTxn object
-  if (transaction.encodedTxn) {
-    const byteTxn = new Uint8Array(
-      Buffer.from(transaction.encodedTxn, 'base64')
-        .toString('binary')
-        .split('')
-        .map((x) => x.charCodeAt(0))
-    );
-
-    return { transaction: byteTxn, error: '' };
-  }
-
   // Using ledgerGroup if provided since the user may sign multiple more by the time we sign.
   // Defaulting to current after, but making sure we don't go above the current length.
   const { groupsToSign, currentGroup, ledgerGroup } = transaction;
@@ -214,7 +202,6 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     return byteWalletTxn;
   });
 
-  // If we didn't have a v1 txn then verify we have some transactionObjs
   if (transactionObjs.length === 0) {
     return {
       transaction: undefined,
@@ -224,9 +211,9 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
 
   // Currently we only allow a single transaction going into Ledger.
   // TODO: To work with groups in the future this should grab the first acceptable one, not the first one overall.
-  const encodedTxn = transactionObjs[0];
+  const txToSign = transactionObjs[0];
 
-  return { transaction: encodedTxn, error: '' };
+  return { transaction: txToSign, error: '' };
 }
 
 const getAddress = async (): Promise<LedgerActionResponse> => {
@@ -284,7 +271,7 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
     return lar;
   }
 
-  // Sign method accesps a message that is "hex" format, need to convert
+  // Sign method accepts a message that is "hex" format, need to convert
   // and remove any empty fields before the conversion
   const txnResponse = cleanseBuildEncodeUnsignedTransaction(txn);
   const decodedTxn = algosdk.decodeUnsignedTransaction(txnResponse.transaction);

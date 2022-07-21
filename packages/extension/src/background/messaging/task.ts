@@ -7,7 +7,6 @@ import { API } from './types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
-  calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationResponse, ValidationStatus } from '../utils/validator';
@@ -32,7 +31,6 @@ import {
   SigningError,
 } from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
-import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
@@ -1234,48 +1232,7 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerLinkAddress](request, sendResponse);
         },
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
-            // V2 transactions can just pass back
-            if (internalResponse.transactionsOrGroups) {
-              sendResponse(internalResponse);
-            }
-            // V1 transactions may need to have an estimated fee
-            else {
-              let txWrap = internalResponse;
-              if (txWrap.transaction && txWrap.transaction.transaction) {
-                txWrap = txWrap.transaction;
-              }
-
-              // Send response or grab params to calculate an estimated fee if there isn't one
-              if (txWrap.estimatedFee) {
-                sendResponse(txWrap);
-              } else {
-                const conn = Settings.getBackendParams(
-                  getLedgerFromGenesisId(txWrap.transaction.genesisID),
-                  API.Algod
-                );
-                const sendPath = '/v2/transactions/params';
-                const fetchParams: any = {
-                  headers: {
-                    ...conn.headers,
-                  },
-                  method: 'GET',
-                };
-
-                let url = conn.url;
-                if (conn.port.length > 0) url += ':' + conn.port;
-                Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
-                  if (txWrap.transaction.fee === params['min-fee']) {
-                    // This object was built on front end and fee should be 0 to prevent higher fees.
-                    txWrap.transaction.fee = 0;
-                  }
-                  calculateEstimatedFee(txWrap, params);
-                  sendResponse(txWrap);
-                });
-              }
-            }
-          });
-          return true;
+          return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {

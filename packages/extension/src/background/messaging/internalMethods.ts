@@ -535,9 +535,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerGetSessionTxn](request: any, sendResponse: Function) {
-    if (session.txnWrap && 'body' in session.txnWrap) {
-      // The transaction may contain source and JSONRPC info, the body.params will be the transaction validation object
-      sendResponse(session.txnWrap.body.params);
+    if (session.txnWrap) {
+      // The transaction contains source and JSONRPC info, the body.params will be the transaction validation object
+      sendResponse(session.txnWrap);
     } else {
       sendResponse({ error: 'Transaction not found in session.' });
     }
@@ -648,7 +648,7 @@ export class InternalMethods {
     // Explicitly using txnWrap on session instead of auth message for two reasons:
     // 1) So it lives inside background sandbox containment.
     // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
-    session.txnWrap = request;
+    session.txnWrap = request.body.params;
 
     // Transaction wrap will contain response message if from dApp and structure will be different
     const ledger = getLedgerFromGenesisId(request.body.params.transaction.genesisID);
