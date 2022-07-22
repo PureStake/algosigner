@@ -1,6 +1,6 @@
+import { RequestError } from '@algosigner/common/errors';
 import { IAssetCloseTx } from '@algosigner/common/interfaces/axfer_close';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import { InvalidTransactionStructure } from '../../errors/validation';
 
 ///
 // Base implementation of the transactions type interface, for use in the export wrapper class below.
@@ -35,7 +35,7 @@ export class AssetCloseTransaction extends BaseValidatedTxnWrap {
     super(params, AssetCloseTx);
     // Additional check to verify that address from and to are the same
     if (this.transaction && this.transaction['to'] !== this.transaction['from']) {
-      throw new InvalidTransactionStructure(
+      throw RequestError.InvalidTransactionStructure(
         `Creation of AssetCloseTx has non identical to and from fields.`
       );
     }

@@ -2,7 +2,7 @@ import { MessageApi } from './api';
 import { Task } from './task';
 import encryptionWrap from '../encryptionWrap';
 import { isFromExtension } from '@algosigner/common/utils';
-import { RequestError } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod, MessageSource } from '@algosigner/common/messaging/types';
 import logging from '@algosigner/common/logging';
 

@@ -2,7 +2,8 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Ledger, Namespace, NamespaceConfig, RequestError } from '@algosigner/common/types';
+import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
 import { API, Cache } from './types';
@@ -20,7 +21,6 @@ import {
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
-import { NoAccountMatch } from '../../errors/transactionSign';
 import { extensionBrowser } from '@algosigner/common/chrome';
 
 const session = new Session();
@@ -208,7 +208,7 @@ export class InternalMethods {
         break;
       }
     }
-    if (!found) throw new NoAccountMatch(address, ledger);
+    if (!found) throw RequestError.NoAccountMatch(address, ledger);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {

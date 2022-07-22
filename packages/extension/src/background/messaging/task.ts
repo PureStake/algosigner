@@ -1,6 +1,7 @@
 import algosdk from 'algosdk';
 
-import { RequestError, WalletTransaction } from '@algosigner/common/types';
+import { WalletTransaction } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from '@algosigner/common/types';
 import { API } from './types';
@@ -16,20 +17,6 @@ import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
-import { PendingTransaction } from '../../errors/transactionSign';
-import {
-  InvalidStructure,
-  InvalidFields,
-  InvalidMsigStructure,
-  NoDifferentLedgers,
-  MultipleTxsRequireGroup,
-  NonMatchingGroup,
-  IncompleteOrDisorderedGroup,
-  InvalidSigners,
-  TooManyTransactions,
-  LedgerMultipleTransactions,
-  SigningError,
-} from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
@@ -66,7 +53,7 @@ export class Task {
     // Check if there's a previous request from the same origin
     if (request.originTabID in Task.requests)
       return new Promise((resolve, reject) => {
-        request.error = PendingTransaction;
+        request.error = RequestError.PendingTransaction;
         reject(request);
       });
     else Task.requests[request.originTabID] = request;
@@ -216,8 +203,8 @@ export class Task {
     const validationErrors: Array<RequestError> = [];
     try {
       // We check if we're above the maximum supported group size
-      if (walletTransactions.length > TooManyTransactions.MAX_GROUP_SIZE) {
-        throw new TooManyTransactions();
+      if (walletTransactions.length > RequestError.MAX_GROUP_SIZE) {
+        throw RequestError.TooManyTransactions;
       }
 
       let index = 0;
@@ -238,7 +225,7 @@ export class Task {
             (walletTx.msig && typeof walletTx.msig !== 'object')
           ) {
             logging.log('Invalid Wallet Transaction Structure');
-            throw new InvalidStructure();
+            throw RequestError.InvalidStructure;
           } else if (
             // prettier-ignore
             walletTx.msig && (
@@ -252,7 +239,7 @@ export class Task {
             )
           ) {
             logging.log('Invalid Wallet Transaction Multisig Structure');
-            throw new InvalidMsigStructure();
+            throw RequestError.InvalidMsigStructure;
           }
 
           /**
@@ -333,7 +320,7 @@ export class Task {
           data = data + `Validation failed for transaction ${index} due to: ${error.message}.`;
           code = error.code && error.code < code ? error.code : code;
         });
-        throw new SigningError(code, data);
+        throw RequestError.SigningError(code, data);
       } else if (
         transactionWraps.some(
           (tx) =>
@@ -365,7 +352,7 @@ export class Task {
             ].join(', ')}]. `;
         });
 
-        throw new InvalidFields(data);
+        throw RequestError.InvalidFields(data);
       } else {
         // Group validations
         const groupId = transactionWraps[0].transaction.group;
@@ -376,15 +363,15 @@ export class Task {
               (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
-            throw new NoDifferentLedgers();
+            throw RequestError.NoDifferentLedgers;
           }
 
           if (!groupId) {
-            throw new MultipleTxsRequireGroup();
+            throw RequestError.MultipleTxsRequireGroup;
           }
 
           if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-            throw new NonMatchingGroup();
+            throw RequestError.NonMatchingGroup;
           }
         } else {
           const wrap = transactionWraps[0];
@@ -392,7 +379,7 @@ export class Task {
             (!wrap.msigData && wrap.signers) ||
             (wrap.msigData && wrap.signers && !wrap.signers.length)
           ) {
-            throw new InvalidSigners();
+            throw RequestError.InvalidSigners;
           }
         }
 
@@ -406,7 +393,7 @@ export class Task {
           );
           const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
           if (groupId !== recalculatedGroupID) {
-            throw new IncompleteOrDisorderedGroup();
+            throw RequestError.IncompleteOrDisorderedGroup;
           }
         }
 
@@ -999,7 +986,7 @@ export class Task {
                       } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
                         if (!singleGroup || transactionObjs.length > 1) {
-                          throw new LedgerMultipleTransactions();
+                          throw RequestError.LedgerMultipleTransactions;
                         }
 
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
@@ -1048,7 +1035,7 @@ export class Task {
                 if (!singleGroup) {
                   data = `On group ${currentGroup}: [${data}].`;
                 }
-                message.error = new SigningError(4000, data);
+                message.error = RequestError.SigningError(4000, data);
                 logging.log(data);
               } else {
                 signedGroups[currentGroup] = signedTxs;

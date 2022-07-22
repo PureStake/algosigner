@@ -21,7 +21,7 @@ import { AssetClawbackTransaction } from './axferClawbackTransaction';
 import { KeyregTransaction } from './keyregTransaction';
 import { ApplTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
-import { RequestError } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';

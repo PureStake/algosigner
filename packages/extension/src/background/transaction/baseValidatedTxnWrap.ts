@@ -1,8 +1,8 @@
 import algosdk from 'algosdk';
 import { WalletMultisigMetadata } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { Validate, ValidationResponse } from '../utils/validator';
 import { logging } from '@algosigner/common/logging';
-import { InvalidTransactionStructure } from '../../errors/validation';
 
 type AssetInfo = {
   unitName: string;
@@ -53,7 +53,7 @@ export class BaseValidatedTxnWrap {
 
     // Throwing error here so that missing fields can be combined.
     if (missingFields.length > 0) {
-      throw new InvalidTransactionStructure(
+      throw RequestError.InvalidTransactionStructure(
         `Creation of ${
           txnType.name
         } has missing or invalid required properties: ${missingFields.toString()}.`
@@ -108,7 +108,7 @@ export class BaseValidatedTxnWrap {
 
     // Throwing error here so that extra fields can be combined.
     if (extraFields.length > 0) {
-      throw new InvalidTransactionStructure(
+      throw RequestError.InvalidTransactionStructure(
         `Creation of ${txnType.name} has extra or invalid fields: ${extraFields.toString()}.`
       );
     }

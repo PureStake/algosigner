@@ -1,7 +1,8 @@
 import { extensionBrowser } from './chrome';
 import { logging } from './logging';
 import { isFromExtension } from './utils';
-import { RequestError, Transaction, TAccount, Note, Amount } from './types';
+import { Transaction, TAccount, Note, Amount } from './types';
+import { RequestError } from './errors';
 
 test('Test chrome reference', () => {
   //@ts-ignore
@@ -15,13 +16,6 @@ test('Logging test', () => {
 test('Test extension parts', () => {
   extensionBrowser.runtime.id = '12345';
   expect(isFromExtension('chrome-extension://12345')).toBe(true);
-});
-
-test('Type - RequestErrors undefined test', () => {
-  expect(RequestError.Undefined).toMatchObject({
-    message: '[RequestError.Undefined] An undefined error occurred.',
-    code: 4000,
-  });
 });
 
 test('Type - Transaction', () => {
@@ -38,4 +32,28 @@ test('Type - Note', () => {
 
 test('Type - Amount', () => {
   expect(12345 as Amount).toBe(12345);
+});
+
+test('RequestError - Structure', () => {
+  const address = 'MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE';
+  const ledger = 'MainNet';
+  const testError = RequestError.NoAccountMatch(address, ledger);
+
+  expect(testError).toMatchObject({
+    message: `No matching account found on AlgoSigner for address: "${address}" on network ${ledger}.`,
+    code: 4100,
+  });
+
+  expect(RequestError.SigningError(4000, [testError])).toMatchObject({
+    message: 'There was a problem signing the transaction(s).',
+    code: 4000,
+    data: [testError],
+  });
+});
+
+test('RequestError - Throwing', () => {
+  function throwError() {
+    throw RequestError.Undefined;
+  }
+  expect(() => throwError()).toThrow(RequestError.Undefined);
 });
