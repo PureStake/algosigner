@@ -97,7 +97,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
     setMnemonicArray(localMnemonicArray);
   };
 
-  const handleWordInput = (e) => {
+  const handleWordJumps = (e) => {
     const key = (e as KeyboardEvent).key;
     const separators = [' ', ',', '.'];
 
@@ -111,6 +111,12 @@ const ImportAccount: FunctionalComponent = (props: any) => {
         }
       }
     }
+  };
+
+  const handleWordInput = (e, index) => {
+    const localMnemonicArray = [...mnemonicArray];
+    localMnemonicArray[index] = e.target.value;
+    setMnemonicArray(localMnemonicArray);
   };
 
   const handleAddressInput = (e) => {
@@ -198,7 +204,8 @@ const ImportAccount: FunctionalComponent = (props: any) => {
                     id="${`mnemonicWord${index}`}"
                     type="password"
                     onPaste=${handleMnemonicPaste}
-                    onKeyDown=${handleWordInput}
+                    onKeyDown=${handleWordJumps}
+                    onInput=${(e) => handleWordInput(e, index)}
                     value=${mnemonicArray[index]}
                   />
                   <span
