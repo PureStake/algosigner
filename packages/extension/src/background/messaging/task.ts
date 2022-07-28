@@ -1152,9 +1152,6 @@ export class Task {
         [JsonRpcMethod.AssetsVerifiedList]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.AssetsVerifiedList](request, sendResponse);
         },
-        [JsonRpcMethod.AssetOptOut]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.AssetOptOut](request, sendResponse);
-        },
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
         },
