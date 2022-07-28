@@ -1241,7 +1241,9 @@ export class InternalMethods {
                 clearTimeout(timerId);
               };
               // We save the fetch request to later execute all in parallel
-              const apiCall = fetch(apiURL, { signal: controller.signal }).then(handleResponse);
+              const apiCall = fetch(apiURL, { signal: controller.signal })
+                .then(handleResponse)
+                .catch(() => []);
               apiFetches.push(apiCall);
             } else {
               returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;
