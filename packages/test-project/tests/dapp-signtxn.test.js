@@ -154,7 +154,7 @@ describe('Error Use cases', () => {
     ).resolves.toMatchObject({
       message: expect.stringContaining('There was a problem signing the transaction(s).'),
       code: 4100,
-      name: expect.stringContaining('SigningError'),
+      name: expect.stringContaining('AlgoSignerRequestError'),
       data: expect.stringContaining(accounts.ui.address),
     });
   });
@@ -187,7 +187,7 @@ describe('Error Use cases', () => {
     ).resolves.toMatchObject({
       message: expect.stringContaining('Signers array should only'),
       code: 4300,
-      name: expect.stringContaining('InvalidSigners'),
+      name: expect.stringContaining('AlgoSignerRequestError'),
     });
   });
 
@@ -277,7 +277,7 @@ describe('Group Transactions Use cases', () => {
     ).resolves.toMatchObject({
       message: expect.stringContaining('group is incomplete'),
       code: 4300,
-      name: expect.stringContaining('IncompleteOrDisorderedGroup'),
+      name: expect.stringContaining('AlgoSignerRequestError'),
     });
   });
 
@@ -362,7 +362,7 @@ describe('Group Transactions Use cases', () => {
     ).resolves.toMatchObject({
       message: expect.stringContaining('16 transactions at a time'),
       code: 4201,
-      name: expect.stringContaining('TooManyTransactions'),
+      name: expect.stringContaining('AlgoSignerRequestError'),
     });
   });
 

@@ -2,7 +2,8 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Ledger, Namespace, NamespaceConfig, RequestError } from '@algosigner/common/types';
+import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
 import { API, Cache } from './types';
@@ -20,7 +21,6 @@ import {
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
-import { NoAccountMatch } from '../../errors/transactionSign';
 import { extensionBrowser } from '@algosigner/common/chrome';
 
 const session = new Session();
@@ -107,7 +107,7 @@ export class InternalMethods {
         break;
       }
     }
-    if (!found) throw new NoAccountMatch(address, ledger);
+    if (!found) throw RequestError.NoAccountMatch(address, ledger);
   }
 
   private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
@@ -373,7 +373,9 @@ export class InternalMethods {
       if (existingAccounts) {
         for (let i = 0; i < existingAccounts.length; i++) {
           if (existingAccounts[i].address === targetAddress) {
-            throw new Error(`An account with this address already exists in your ${ledger} wallet.`);
+            throw new Error(
+              `An account with this address already exists in your ${ledger} wallet.`
+            );
           }
           if (existingAccounts[i].name === name) {
             throw new Error(`An account named '${name}' already exists in your ${ledger} wallet.`);
@@ -432,9 +434,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerGetSessionTxn](request: any, sendResponse: Function) {
-    if (session.txnWrap && 'body' in session.txnWrap) {
-      // The transaction may contain source and JSONRPC info, the body.params will be the transaction validation object
-      sendResponse(session.txnWrap.body.params);
+    if (session.txnWrap) {
+      // The transaction contains source and JSONRPC info, the body.params will be the transaction validation object
+      sendResponse(session.txnWrap);
     } else {
       sendResponse({ error: 'Transaction not found in session.' });
     }
@@ -513,11 +515,18 @@ export class InternalMethods {
               sendResponse({ txId: resp.txId });
             })
             .catch((e: any) => {
-              if (e.message.includes('overspend'))
+              if (e.message.includes('overspend')) {
                 sendResponse({
                   error: "Overspending. Your account doesn't have sufficient funds.",
                 });
-              else sendResponse({ error: e.message });
+              } else if (e.message.includes('below min')) {
+                sendResponse({
+                  error:
+                    'Overspending. This transaction would bring your account below the minimum balance limit.',
+                });
+              } else {
+                sendResponse({ error: e.message });
+              }
             });
         } else {
           sendResponse({ error: 'Session transaction does not match the signed transaction.' });
@@ -538,7 +547,7 @@ export class InternalMethods {
     // Explicitly using txnWrap on session instead of auth message for two reasons:
     // 1) So it lives inside background sandbox containment.
     // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
-    session.txnWrap = request;
+    session.txnWrap = request.body.params;
 
     // Transaction wrap will contain response message if from dApp and structure will be different
     const ledger = getLedgerFromGenesisId(request.body.params.transaction.genesisID);
@@ -794,134 +803,6 @@ export class InternalMethods {
     return true;
   }
 
-  public static [JsonRpcMethod.AssetOptOut](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, id } = request.body.params;
-    this._encryptionWrap = new encryptionWrap(passphrase);
-    const algod = this.getAlgod(ledger);
-
-    this._encryptionWrap.unlock(async (unlockedValue: any) => {
-      if ('error' in unlockedValue) {
-        sendResponse(unlockedValue);
-        return false;
-      }
-      let account;
-      const authAddr = await Task.getChainAuthAddress(request.body.params);
-      const signAddress = authAddr || address;
-
-      // Find address to send algos from
-      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === signAddress) {
-          account = unlockedValue[ledger][i];
-          break;
-        }
-      }
-
-      const params = await algod.getTransactionParams().do();
-      const txn = {
-        type: 'axfer',
-        from: address,
-        to: address,
-        closeRemainderTo: address,
-        assetIndex: id,
-        fee: params.fee,
-        firstRound: params.firstRound,
-        lastRound: params.lastRound,
-        genesisID: params.genesisID,
-        genesisHash: params.genesisHash,
-      };
-
-      let transactionWrap: BaseValidatedTxnWrap = undefined;
-      try {
-        transactionWrap = getValidatedTxnWrap(txn, txn['type']);
-      } catch (e) {
-        logging.log(`Validation failed. ${e}`);
-        sendResponse({ error: `Validation failed. ${e}` });
-        return;
-      }
-      if (!transactionWrap) {
-        // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
-        logging.log(
-          'A transaction has failed because of an inability to build the specified transaction type.'
-        );
-        sendResponse({
-          error:
-            'A transaction has failed because of an inability to build the specified transaction type.',
-        });
-        return;
-      } else if (
-        transactionWrap.validityObject &&
-        Object.values(transactionWrap.validityObject).some(
-          (value) => value['status'] === ValidationStatus.Invalid
-        )
-      ) {
-        // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-        const e =
-          'One or more fields are not valid. Please check and try again.\n' +
-          Object.values(transactionWrap.validityObject)
-            .filter((value) => value['status'] === ValidationStatus.Invalid)
-            .map((vo) => vo['info']);
-        sendResponse({ error: e });
-        return;
-      } else if (!account.mnemonic) {
-        sendResponse({ error: RequestError.NotAuthorizedOnChain.message });
-      } else {
-        // We have a transaction which does not contain invalid fields,
-        // but may still contain fields that are dangerous
-        // or ones we've flagged as needing to be reviewed.
-        // Perform a change based on if this is a ledger device account
-        if (account.isHardware) {
-          // TODO: Temporary workaround by adding min-fee for estimate calculations since it's not in the sdk get params.
-          params['min-fee'] = 1000;
-          calculateEstimatedFee(transactionWrap, params);
-
-          // Pass the transaction wrap we can pass to the
-          // central sign ledger function for consistency
-          this[JsonRpcMethod.LedgerSignTransaction](
-            { source: 'ui', body: { params: transactionWrap } },
-            (response) => {
-              // We only have to worry about possible errors here so we can ignore the created tab
-              if ('error' in response) {
-                sendResponse(response);
-              } else {
-                // Respond with a 0 tx id so that the page knows not to try and show it.
-                sendResponse({ txId: 0 });
-              }
-            }
-          );
-
-          // Return to close connection
-          return true;
-        } else {
-          // We can use a modified popup to allow the normal flow, but require extra scrutiny.
-          const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-          let signedTxn;
-          try {
-            const builtTx = buildTransaction(txn);
-            signedTxn = {
-              txID: builtTx.txID().toString(),
-              blob: builtTx.signTxn(recoveredAccount.sk),
-            };
-          } catch (e) {
-            sendResponse({ error: e.message });
-            return false;
-          }
-
-          algod
-            .sendRawTransaction(signedTxn.blob)
-            .do()
-            .then((resp: any) => {
-              sendResponse({ txId: resp.txId });
-            })
-            .catch((e: any) => {
-              sendResponse({ error: e.message });
-            });
-        }
-      }
-    });
-
-    return true;
-  }
-
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
     const { ledger, address, passphrase, txnParams } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
@@ -931,17 +812,6 @@ export class InternalMethods {
       if ('error' in unlockedValue) {
         sendResponse(unlockedValue);
         return false;
-      }
-      let account;
-      const authAddr = await Task.getChainAuthAddress(request.body.params);
-      const signAddress = authAddr || address;
-
-      // Find address to send algos from
-      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === signAddress) {
-          account = unlockedValue[ledger][i];
-          break;
-        }
       }
 
       const params = await algod.getTransactionParams().do();
@@ -954,16 +824,27 @@ export class InternalMethods {
         genesisID: params.genesisID,
         genesisHash: params.genesisHash,
       };
-
       if ('note' in txn) txn.note = new Uint8Array(Buffer.from(txn.note));
+
+      let account;
+      const authAddr = await Task.getChainAuthAddress({ address, ledger });
+      const signAddress = authAddr || address;
+
+      // Find address to send algos from
+      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
+        if (unlockedValue[ledger][i].address === signAddress) {
+          account = unlockedValue[ledger][i];
+          break;
+        }
+      }
 
       let transactionWrap: BaseValidatedTxnWrap = undefined;
       try {
         transactionWrap = getValidatedTxnWrap(txn, txn['type']);
       } catch (e) {
-        logging.log(`Validation failed. ${e}`);
-        sendResponse({ error: `Validation failed. ${e}` });
-        return;
+        logging.log(`Validation failed. ${e.message}`);
+        sendResponse({ error: `Validation failed. ${e.message}` });
+        return false;
       }
       if (!transactionWrap) {
         // We don't have a transaction wrap. We have an unknow error or extra fields, reject the transaction.
@@ -974,7 +855,7 @@ export class InternalMethods {
           error:
             'A transaction has failed because of an inability to build the specified transaction type.',
         });
-        return;
+        return false;
       } else if (
         transactionWrap.validityObject &&
         Object.values(transactionWrap.validityObject).some(
@@ -988,7 +869,7 @@ export class InternalMethods {
             .filter((value) => value['status'] === ValidationStatus.Invalid)
             .map((vo) => vo['info']);
         sendResponse({ error: e });
-        return;
+        return false;
       } else {
         // We have a transaction which does not contain invalid fields,
         // but may still contain fields that are dangerous
@@ -1033,23 +914,29 @@ export class InternalMethods {
             return false;
           }
 
-          algod
+          this.getAlgod(ledger)
             .sendRawTransaction(signedTxn.blob)
             .do()
             .then((resp: any) => {
               sendResponse({ txId: resp.txId });
             })
             .catch((e: any) => {
-              if (e.message.includes('overspend'))
+              if (e.message.includes('overspend')) {
                 sendResponse({
                   error: "Overspending. Your account doesn't have sufficient funds.",
                 });
-              else sendResponse({ error: e.message });
+              } else if (e.message.includes('below min')) {
+                sendResponse({
+                  error:
+                    'Overspending. This transaction would bring your account below the minimum balance limit.',
+                });
+              } else {
+                sendResponse({ error: e.message });
+              }
             });
         }
       }
     });
-
     return true;
   }
 
@@ -1354,7 +1241,9 @@ export class InternalMethods {
                 clearTimeout(timerId);
               };
               // We save the fetch request to later execute all in parallel
-              const apiCall = fetch(apiURL, { signal: controller.signal }).then(handleResponse);
+              const apiCall = fetch(apiURL, { signal: controller.signal })
+                .then(handleResponse)
+                .catch(() => []);
               apiFetches.push(apiCall);
             } else {
               returnedAliasedAddresses[namespace] = aliasesMatchingInNamespace;

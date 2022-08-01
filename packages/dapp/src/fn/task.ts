@@ -2,11 +2,8 @@ import { ITask } from './interfaces';
 
 import { MessageBuilder } from '../messaging/builder';
 
-import {
-  Transaction,
-  RequestError,
-  WalletTransaction,
-} from '@algosigner/common/types';
+import { Transaction, WalletTransaction } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
 import { Runtime } from '@algosigner/common/runtime/runtime';
 
@@ -53,12 +50,11 @@ export class Task extends Runtime implements ITask {
       if (
         txOrGroup === null ||
         txOrGroup === undefined ||
-        (!Array.isArray(txOrGroup) && typeof txOrGroup === 'object' &&
-          (!txOrGroup.txn || (txOrGroup.txn && !txOrGroup.txn.length))
-        ) ||
-        (Array.isArray(txOrGroup) && 
-          (!txOrGroup.length || (txOrGroup.length && !txOrGroup.every((tx) => tx !== null)))
-        )
+        (!Array.isArray(txOrGroup) &&
+          typeof txOrGroup === 'object' &&
+          (!txOrGroup.txn || (txOrGroup.txn && !txOrGroup.txn.length))) ||
+        (Array.isArray(txOrGroup) &&
+          (!txOrGroup.length || (txOrGroup.length && !txOrGroup.every((tx) => tx !== null))))
       )
         throw formatError;
     });

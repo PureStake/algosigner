@@ -1,4 +1,4 @@
-import { RequestError } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod, JsonPayload } from '@algosigner/common/messaging/types';
 
 import { JsonRpc } from '@algosigner/common/messaging/jsonrpc';
