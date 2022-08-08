@@ -1,6 +1,6 @@
 import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { logging } from '@algosigner/common/logging';
+import { logging, LogLevel } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
@@ -1288,6 +1288,27 @@ export class InternalMethods {
           sendResponse({ error: 'Lock failed' });
         }
       });
+    });
+    return true;
+  }
+
+  public static [JsonRpcMethod.GetGovernanceAddresses](request: any, sendResponse: Function) {
+    const governanceAccounts: Array<string> = [];
+    fetch('https://governance.algorand.foundation/api/periods/').then(async (fetchResponse) => {
+      if (fetchResponse.ok) {
+        const governanceResponse = await fetchResponse.json();
+        if ('results' in governanceResponse) {
+          try {
+            governanceResponse['results'].forEach((p) => governanceAccounts.push(p['sign_up_address']));
+          } catch (e) {
+            logging.log("Governance accounts couldn't be fetched. Error: "+e.message, LogLevel.Debug);
+          }
+        }
+      }
+  
+      if (governanceAccounts.length) {
+        sendResponse({accounts: governanceAccounts});
+      }
     });
     return true;
   }

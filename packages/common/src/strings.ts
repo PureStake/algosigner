@@ -23,3 +23,6 @@ they are rekeyed to another normal account also on AlgoSigner.`;
 export const ALIAS_COLLISION_TOOLTIP: string = `Some of the aliases shown share the same name,
 make sure to verify which Namespace you're using
 by hovering on the alias before making a selection.`;
+
+export const GOVERNANCE_WARNING: string =
+  'This is a Governance Address. You are not required to send funds in order to participate in Governance. Please see ';

@@ -1264,6 +1264,9 @@ export class Task {
         [JsonRpcMethod.ToggleNamespaceConfig]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ToggleNamespaceConfig](request, sendResponse);
         },
+        [JsonRpcMethod.GetGovernanceAddresses]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetGovernanceAddresses](request, sendResponse);
+        },
       },
     };
   }
