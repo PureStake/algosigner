@@ -202,6 +202,7 @@ const ContactsPage: FunctionalComponent = () => {
       style="overflow-wrap: break-word; flex-direction: column; max-height: 520px;"
     >
       <${Link}
+        id="goBack"
         class="has-text-centered has-text-grey-dark"
         style="cursor: pointer; min-width: 24px; position: absolute; top: 3.5em; left: 1em;"
         href=${'/wallet'}
