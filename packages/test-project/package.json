@@ -5,7 +5,7 @@
   "license": "MIT",
   "description": "Repository for tests",
   "devDependencies": {
-    "algosdk": "1.17.0",
+    "algosdk": "1.19.0",
     "jest": "^28.1.0",
     "jest-runner-groups": "^2.2.0",
     "puppeteer": "^13.7.0",
