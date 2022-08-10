@@ -63,7 +63,6 @@ describe('UI Transactions Tests', () => {
     await extensionPage.waitForTimeout(1000);
     await extensionPage.click('#backToAccount');
     await extensionPage.waitForTimeout(1000);
-    return;
   };
 
   const verifyDestination = async (account) => {
@@ -79,13 +78,12 @@ describe('UI Transactions Tests', () => {
   };
 
   test('Add Multisig 1 as a Contact', async () => {
-    await openSettingsMenu();
-    await extensionPage.click('#showContactList');
+    await extensionPage.click('#contactsList');
     await extensionPage.click('#newContact');
     await extensionPage.type('#contactName', accounts.multisig.subaccounts[0].name);
     await extensionPage.type('#contactAddress', accounts.multisig.subaccounts[0].address);
     await extensionPage.click('#authButton');
-    await closeSettingsMenu();
+    await goBack();
   });
 
   test('Send Algos Transaction / Regular address', async () => {

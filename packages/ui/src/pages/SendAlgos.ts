@@ -416,7 +416,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
               ${orderedAliases.length > 0 &&
               html`
-                ${namesWithCollisions.length &&
+                ${namesWithCollisions.length !== 0 &&
                 html`
                   <i
                     class="fas fa-exclamation-triangle px-1 has-text-link has-tooltip-arrow has-tooltip-left has-tooltip-fade"

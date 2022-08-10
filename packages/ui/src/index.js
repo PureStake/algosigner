@@ -16,6 +16,7 @@ import Login from 'pages/Login';
 import CreateAccount from 'pages/CreateAccount';
 import ImportAccount from 'pages/ImportAccount';
 import Wallet from 'pages/Wallet';
+import ContactsPage from 'pages/ContactsPage';
 import Account from 'pages/Account';
 import AccountDetails from 'pages/AccountDetails';
 import SendAlgos from 'pages/SendAlgos';
@@ -56,6 +57,7 @@ const App = () => {
               <div style="overflow: auto; flex: 1; display: flex; flex-direction: column;">
                 <${Router}>
                   <${Wallet} path="/wallet" />
+                  <${ContactsPage} path="/contacts-page" />
                   <${CreateAccount} path="/:ledger/create-account" />
                   <${ImportAccount} path="/:ledger/import-account" />
                   <${Account} path="/:ledger/:address" />
