@@ -14,7 +14,7 @@ Developers working with dApps may also install directly from the release package
 
 An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
 
-## 1.9.2 Release
+## 1.9.3 Release
 
 ### Main updates
 This update adds supports for easier transfers with the new autocomplete feature. Start typing an account, contact name or name service alias on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
@@ -26,6 +26,7 @@ This update adds supports for easier transfers with the new autocomplete feature
 
 ### Other updates
 - Improved Account Importing and Cache Clearing
+- Get to your Contacts more easily with dedicated access
 
 ## New Users
 
