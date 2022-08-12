@@ -25,4 +25,4 @@ make sure to verify which Namespace you're using
 by hovering on the alias before making a selection.`;
 
 export const GOVERNANCE_WARNING: string =
-  'This is a Governance Address. You are not required to send funds in order to participate in Governance. Please see ';
+  'This is a Governance Address. You should not send funds in order to participate in Governance. Please see ';
