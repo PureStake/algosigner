@@ -6,7 +6,6 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { StoreContext } from 'services/StoreContext';
 
 import HeaderComponent from './HeaderComponent';
-import ContactList from 'components/ContactList';
 import DeleteWallet from 'components/DeleteWallet';
 import Logo from './Logo';
 import { sendMessage } from 'services/Messaging';
@@ -45,8 +44,6 @@ const SettingsMenu: FunctionalComponent = () => {
 
   const getSubmenu = () => {
     switch (currentMenu) {
-      case 'contactList':
-        return html`<${ContactList} />`;
       case 'networkConfiguration':
         return html`<${LedgerNetworksConfiguration}
           closeFunction=${() => {
@@ -64,7 +61,13 @@ const SettingsMenu: FunctionalComponent = () => {
   };
 
   return html`
-    <div id="openSettings" class="has-text-centered" style="cursor: pointer; min-width: 24px;" onClick=${flip}>
+    <div
+      id="openSettings"
+      class="has-tooltip-arrow has-tooltip-bottom has-tooltip-bottom-right has-tooltip-fade has-text-centered"
+      data-tooltip="Settings Menu"
+      style="cursor: pointer; min-width: 24px;"
+      onClick=${flip}
+    >
       <span class="icon">
         <i class="fas fa-cog" aria-hidden="true" />
       </span>
@@ -84,13 +87,6 @@ const SettingsMenu: FunctionalComponent = () => {
         ${
           currentMenu === 'settings' &&
           html`
-            <a
-              class="menu-item"
-              id="showContactList"
-              onClick=${() => setCurrentMenu('contactList')}
-            >
-              Contact List
-            </a>
             <a
               class="menu-item"
               id="showNetworkConfiguration"

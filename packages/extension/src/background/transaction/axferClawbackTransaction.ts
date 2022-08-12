@@ -31,7 +31,7 @@ class AssetClawbackTx implements IAssetClawbackTx {
 ///
 export class AssetClawbackTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Asset Clawback';
-  constructor(params: IAssetClawbackTx, v1Validations: boolean) {
-    super(params, AssetClawbackTx, v1Validations);
+  constructor(params: IAssetClawbackTx) {
+    super(params, AssetClawbackTx);
   }
 }

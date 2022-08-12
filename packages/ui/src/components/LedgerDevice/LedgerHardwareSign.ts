@@ -27,46 +27,44 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   const [sessionTxnObj, setSessionTxnObj] = useState<any>({});
 
   useEffect(() => {
-    if (txn.transaction === undefined && error === '') {
-      try {
-        sendMessage(JsonRpcMethod.LedgerGetSessionTxn, {}, function (response) {
-          if (response.error) {
-            setError(response.error);
+    try {
+      sendMessage(JsonRpcMethod.LedgerGetSessionTxn, {}, function (response) {
+        if (response.error) {
+          setError(response.error);
+        } else {
+          // Get the single transaction to sign and put it in the same format
+          let primaryTx;
+          if (response.transactionWraps && response.transactionWraps.length > 0) {
+            primaryTx = response.transactionWraps[0];
           } else {
-            // Get the single transaction to sign and put it in the same format
-            let primaryTx;
-            if (response.transactionWraps && response.transactionWraps.length > 0) {
-              primaryTx = response.transactionWraps[0];
-            } else {
-              primaryTx = {
-                transaction: response.transaction,
-                estimatedFee: response.estimatedFee,
-                txDerivedTypeText: response.txDerivedTypeText,
-              };
-            }
-
-            getBaseSupportedLedgers().forEach((l) => {
-              if (primaryTx.transaction?.genesisID === l['genesisId']) {
-                setLedger(l['name']);
-
-                // Update the ledger dropdown to the signing one
-                sendMessage(JsonRpcMethod.ChangeLedger, { ledger: l['name'] }, function () {
-                  store.setLedger(l['name']);
-                });
-              }
-            });
-
-            // Update account value to the signer
-            setAccount(primaryTx.transaction?.from);
-
-            setSessionTxnObj(response);
-            setTxn(primaryTx);
+            primaryTx = {
+              transaction: response.transaction,
+              estimatedFee: response.estimatedFee,
+              txDerivedTypeText: response.txDerivedTypeText,
+            };
           }
-        });
-      } catch (ex) {
-        setError('Error retrieving transaction from AlgoSigner.');
-        logging.log(`${JSON.stringify(ex)}`, 2);
-      }
+
+          getBaseSupportedLedgers().forEach((l) => {
+            if (primaryTx.transaction?.genesisID === l['genesisId']) {
+              setLedger(l['name']);
+
+              // Update the ledger dropdown to the signing one
+              sendMessage(JsonRpcMethod.ChangeLedger, { ledger: l['name'] }, function () {
+                store.setLedger(l['name']);
+              });
+            }
+          });
+
+          // Update account value to the signer
+          setAccount(primaryTx.transaction?.from);
+
+          setSessionTxnObj(response);
+          setTxn(primaryTx);
+        }
+      });
+    } catch (ex) {
+      setError('Error retrieving transaction from AlgoSigner.');
+      logging.log(`${JSON.stringify(ex)}`, 2);
     }
   }, []);
 
@@ -114,9 +112,9 @@ const LedgerHardwareSign: FunctionalComponent = () => {
         ${isComplete &&
         html`
           <div class="box">
-            <p id="txResponseHeader" style="font-weight: bold"> ${txResponseHeader} </p>
-            <p id="txResponseDetail" style="word-break: break-all;"> ${txResponseDetail} </p>
-            <p class="my-3"> You may now close this site and relaunch AlgoSigner.</p>
+            <p id="txResponseHeader" style="font-weight: bold">${txResponseHeader}</p>
+            <p id="txResponseDetail" style="word-break: break-all;">${txResponseDetail}</p>
+            <p class="my-3">You may now close this site and relaunch AlgoSigner.</p>
           </div>
         `}
         ${isComplete === false &&

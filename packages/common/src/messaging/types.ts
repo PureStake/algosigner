@@ -10,7 +10,6 @@ export enum JsonRpcMethod {
   AuthorizationAllow = 'authorization-allow',
   AuthorizationDeny = 'authorization-deny',
   SignAllow = 'sign-allow',
-  SignAllowMultisig = 'sign-allow-multisig',
   SignAllowWalletTx = 'sign-allow-wallet-tx',
   SignDeny = 'sign-deny',
   SignWalletTransaction = 'sign-wallet-transaction',
@@ -35,7 +34,6 @@ export enum JsonRpcMethod {
   AssetDetails = 'asset-details',
   AssetsAPIList = 'assets-api-list',
   AssetsVerifiedList = 'assets-verified-list',
-  AssetOptOut = 'asset-opt-out',
   SignSendTransaction = 'sign-send-transaction',
   ChangeLedger = 'change-ledger',
   SaveNetwork = 'save-network',
@@ -48,6 +46,7 @@ export enum JsonRpcMethod {
   GetAliasedAddresses = 'get-aliased-addresses',
   GetNamespaceConfigs = 'get-namespace-configs',
   ToggleNamespaceConfig = 'toggle-namespace-config',
+  GetGovernanceAddresses = 'get-governance-addresses',
 
   // Ledger Device Methods
   LedgerSaveAccount = 'ledger-save-account',

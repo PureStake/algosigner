@@ -30,7 +30,7 @@ class AssetTransferTx implements IAssetTransferTx {
 ///
 export class AssetTransferTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Asset Transfer';
-  constructor(params: IAssetTransferTx, v1Validations: boolean) {
-    super(params, AssetTransferTx, v1Validations);
+  constructor(params: IAssetTransferTx) {
+    super(params, AssetTransferTx);
   }
 }

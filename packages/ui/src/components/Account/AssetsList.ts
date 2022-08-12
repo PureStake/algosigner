@@ -60,9 +60,16 @@ const AssetsList: FunctionalComponent = (props: any) => {
       ledger: ledger,
       passphrase: pwd,
       address: address,
-      id: showAsset['asset-id'],
+      txnParams: {
+        type: 'axfer',
+        assetIndex: showAsset['asset-id'],
+        amount: 0,
+        from: address,
+        to: address,
+        closeRemainderTo: address,
+      },
     };
-    sendMessage(JsonRpcMethod.AssetOptOut, params, function (response) {
+    sendMessage(JsonRpcMethod.SignSendTransaction, params, function (response) {
       setLoading(false);
       if ('error' in response) {
         switch (response.error) {

@@ -1,6 +1,6 @@
 {
   "name": "algosigner-extension",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "author": "https://developer.purestake.io",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "webpack-cli": "^4.9.0"
   },
   "dependencies": {
-    "algosdk": "1.17.0",
+    "algosdk": "1.19.0",
     "buffer": "^6.0.3"
   },
   "scripts": {

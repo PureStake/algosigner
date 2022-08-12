@@ -27,7 +27,7 @@ class AssetDestroyTx implements IAssetDestroyTx {
 ///
 export class AssetDestroyTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Destroy Asset';
-  constructor(params: IAssetDestroyTx, v1Validations: boolean) {
-    super(params, AssetDestroyTx, v1Validations);
+  constructor(params: IAssetDestroyTx) {
+    super(params, AssetDestroyTx);
   }
 }

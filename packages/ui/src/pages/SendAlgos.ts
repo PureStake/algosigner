@@ -7,7 +7,7 @@ import { Key } from 'ts-key-enum';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { AliasConfig } from '@algosigner/common/config';
 import { obfuscateAddress } from '@algosigner/common/utils';
-import { ALIAS_COLLISION_TOOLTIP } from '@algosigner/common/strings';
+import { ALIAS_COLLISION_TOOLTIP, GOVERNANCE_WARNING } from '@algosigner/common/strings';
 
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
@@ -44,6 +44,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   const [internalAliases, setInternalAliases] = useState<any>([]);
   const [highlightedAlias, setHighlightedAlias] = useState<number>(0);
   const [selectedDestination, setSelectedDestination] = useState<any>(null);
+  const [governanceAddresses, setGovernanceAddresses] = useState<Array<string>>([]);
   const [addingContact, setAddingContact] = useState<boolean>(false);
   const [newContactName, setNewContactName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -70,6 +71,16 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           setInternalAliases(Object.keys(response).flatMap((n) => response[n]));
         }
       }
+      // Fetch governance accounts
+      sendMessage(JsonRpcMethod.GetGovernanceAddresses, {}, (response) => {
+        if (response) {
+          if ('error' in response) {
+            setError(response.error.message);
+          } else {
+            setGovernanceAddresses(response['accounts']);
+          }
+        }
+      });
     });
   }, []);
   // Automatically focus textbox on load
@@ -287,7 +298,13 @@ const SendAlgos: FunctionalComponent = (props: any) => {
   let ddClass: string = 'dropdown is-right';
   if (ddActive) ddClass += ' is-active';
   const youIndicator = html`<b class="has-text-link">YOU</b>`;
-  const disabled = (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0;
+  const isGovernance =
+    (to && governanceAddresses.includes(to)) ||
+    (selectedDestination &&
+      selectedDestination.address &&
+      governanceAddresses.includes(selectedDestination.address));
+  const disabled =
+    (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0 || isGovernance;
   const isActive = (index: number) => (index === highlightedAlias ? 'is-active' : '');
 
   // Render HTML
@@ -399,7 +416,7 @@ const SendAlgos: FunctionalComponent = (props: any) => {
               html`<span style="position: absolute; left: 90%; bottom: 43%;" class="loader" />`}
               ${orderedAliases.length > 0 &&
               html`
-                ${namesWithCollisions.length &&
+                ${namesWithCollisions.length !== 0 &&
                 html`
                   <i
                     class="fas fa-exclamation-triangle px-1 has-text-link has-tooltip-arrow has-tooltip-left has-tooltip-fade"
@@ -472,6 +489,13 @@ const SendAlgos: FunctionalComponent = (props: any) => {
           onInput=${(e) => setNote(e.target.value)}
         />
       </div>
+      ${isGovernance &&
+      html`<span class="px-4 has-text-centered has-text-danger is-size-7">
+        ${GOVERNANCE_WARNING}
+        <a class="is-underlined" href="https://governance.algorand.foundation/" target="_blank">
+          official site</a
+        >.
+      </span>`}
       <div class="px-4 py-4">
         <button
           id="submitTransfer"
