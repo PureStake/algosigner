@@ -1,6 +1,6 @@
+import { RequestError } from '@algosigner/common/errors';
 import { IAssetAcceptTx } from '@algosigner/common/interfaces/axfer_accept';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
-import { InvalidTransactionStructure } from '../../errors/validation';
 
 ///
 // Base implementation of the transactions type interface, for use in the export wrapper class below.
@@ -30,14 +30,14 @@ class AssetAcceptTx implements IAssetAcceptTx {
 ///
 export class AssetAcceptTransaction extends BaseValidatedTxnWrap {
   txDerivedTypeText: string = 'Asset Opt-In';
-  constructor(params: IAssetAcceptTx, v1Validations: boolean) {
-    super(params, AssetAcceptTx, v1Validations);
+  constructor(params: IAssetAcceptTx) {
+    super(params, AssetAcceptTx);
     // Additional check to verify that amount is 0 and address from and to are the same
     if (this.transaction && this.transaction['amount'] && this.transaction['amount'] != 0) {
-      throw new InvalidTransactionStructure(`Creation of AssetAcceptTx has an invalid amount.`);
+      throw RequestError.InvalidTransactionStructure(`Creation of AssetAcceptTx has an invalid amount.`);
     }
     if (this.transaction && this.transaction['to'] !== this.transaction['from']) {
-      throw new InvalidTransactionStructure(
+      throw RequestError.InvalidTransactionStructure(
         `Creation of AssetAcceptTx has non identical to and from fields.`
       );
     }

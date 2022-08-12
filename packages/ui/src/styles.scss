@@ -209,11 +209,6 @@ span[data-tooltip] {
   overflow-y: auto;
 }
 
-// Custom IDs
-#destinationAddress:not(:placeholder-shown) {
-  border-color: $blue-dark;
-}
-
 // Used during the signing tx preview 
 .truncate-text {
   text-overflow: ellipsis;
@@ -227,6 +222,40 @@ span.truncate-text:not(:first-child) {
   // This is used for tx keys that have a list of values
   margin-top: -6px;
 }
+
+// Custom IDs
+#destinationAddress:not(:placeholder-shown) {
+  border-color: $blue-dark;
+}
+
+#mnemonicBlock {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  text-align: right;
+
+  & .word-block {
+    display: flex;
+    justify-content: space-between;
+    width: 32%;
+    padding-bottom: 3px;
+
+    label {
+      display: flex;
+      justify-content: flex-end;
+      width: 22px;
+    }
+
+    input {
+      width: 55%;
+    }
+  }
+
+  & .mnemonic-visibility {
+    width: 20px;
+  }
+}
+
 
 #approveTx:disabled {
   color: $red;

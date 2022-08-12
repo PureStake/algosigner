@@ -24,7 +24,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       </p>
       <p>
         <strong>Amount: </strong>
-        <span>${tx['asset-transfer-transaction']['amount']}</span>
+        <span>${tx['asset-transfer-transaction']['amount'] || 0}</span>
       </p>
       <p>
         <strong>Block: </strong>

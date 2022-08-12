@@ -1,13 +1,13 @@
 import algosdk from 'algosdk';
 
-import { RequestError, WalletTransaction } from '@algosigner/common/types';
+import { WalletTransaction } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from '@algosigner/common/types';
 import { API } from './types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
-  calculateEstimatedFee,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationResponse, ValidationStatus } from '../utils/validator';
@@ -17,22 +17,7 @@ import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
-import { PendingTransaction } from '../../errors/transactionSign';
-import {
-  InvalidStructure,
-  InvalidFields,
-  InvalidMsigStructure,
-  NoDifferentLedgers,
-  MultipleTxsRequireGroup,
-  NonMatchingGroup,
-  IncompleteOrDisorderedGroup,
-  InvalidSigners,
-  TooManyTransactions,
-  LedgerMultipleTransactions,
-  SigningError,
-} from '../../errors/walletTxSign';
 import { buildTransaction } from '../utils/transactionBuilder';
-import { getSigningAccounts } from '../utils/multisig';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 
@@ -68,7 +53,7 @@ export class Task {
     // Check if there's a previous request from the same origin
     if (request.originTabID in Task.requests)
       return new Promise((resolve, reject) => {
-        request.error = PendingTransaction;
+        request.error = RequestError.PendingTransaction;
         reject(request);
       });
     else Task.requests[request.originTabID] = request;
@@ -218,8 +203,8 @@ export class Task {
     const validationErrors: Array<RequestError> = [];
     try {
       // We check if we're above the maximum supported group size
-      if (walletTransactions.length > TooManyTransactions.MAX_GROUP_SIZE) {
-        throw new TooManyTransactions();
+      if (walletTransactions.length > RequestError.MAX_GROUP_SIZE) {
+        throw RequestError.TooManyTransactions;
       }
 
       let index = 0;
@@ -240,7 +225,7 @@ export class Task {
             (walletTx.msig && typeof walletTx.msig !== 'object')
           ) {
             logging.log('Invalid Wallet Transaction Structure');
-            throw new InvalidStructure();
+            throw RequestError.InvalidStructure;
           } else if (
             // prettier-ignore
             walletTx.msig && (
@@ -254,7 +239,7 @@ export class Task {
             )
           ) {
             logging.log('Invalid Wallet Transaction Multisig Structure');
-            throw new InvalidMsigStructure();
+            throw RequestError.InvalidMsigStructure;
           }
 
           /**
@@ -268,7 +253,7 @@ export class Task {
           rawTxArray[index] = rawTx;
           const processedTx = rawTx._getDictForDisplay();
           processedTxArray[index] = processedTx;
-          const wrap = getValidatedTxnWrap(processedTx, processedTx['type'], false);
+          const wrap = getValidatedTxnWrap(processedTx, processedTx['type']);
           transactionWraps[index] = wrap;
           const genesisID = wrap.transaction.genesisID;
 
@@ -335,7 +320,7 @@ export class Task {
           data = data + `Validation failed for transaction ${index} due to: ${error.message}.`;
           code = error.code && error.code < code ? error.code : code;
         });
-        throw new SigningError(code, data);
+        throw RequestError.SigningError(code, data);
       } else if (
         transactionWraps.some(
           (tx) =>
@@ -367,7 +352,7 @@ export class Task {
             ].join(', ')}]. `;
         });
 
-        throw new InvalidFields(data);
+        throw RequestError.InvalidFields(data);
       } else {
         // Group validations
         const groupId = transactionWraps[0].transaction.group;
@@ -378,15 +363,15 @@ export class Task {
               (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
             )
           ) {
-            throw new NoDifferentLedgers();
+            throw RequestError.NoDifferentLedgers;
           }
 
           if (!groupId) {
-            throw new MultipleTxsRequireGroup();
+            throw RequestError.MultipleTxsRequireGroup;
           }
 
           if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-            throw new NonMatchingGroup();
+            throw RequestError.NonMatchingGroup;
           }
         } else {
           const wrap = transactionWraps[0];
@@ -394,7 +379,7 @@ export class Task {
             (!wrap.msigData && wrap.signers) ||
             (wrap.msigData && wrap.signers && !wrap.signers.length)
           ) {
-            throw new InvalidSigners();
+            throw RequestError.InvalidSigners;
           }
         }
 
@@ -408,7 +393,7 @@ export class Task {
           );
           const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
           if (groupId !== recalculatedGroupID) {
-            throw new IncompleteOrDisorderedGroup();
+            throw RequestError.IncompleteOrDisorderedGroup;
           }
         }
 
@@ -857,147 +842,6 @@ export class Task {
           }
           return true;
         },
-        // sign-allow-multisig
-        [JsonRpcMethod.SignAllowMultisig]: (request: any, sendResponse: Function) => {
-          const { passphrase, responseOriginTabID } = request.body.params;
-          const auth = Task.requests[responseOriginTabID];
-          const message = auth.message;
-
-          // Map the full multisig transaction here
-          const msig_txn = { msig: message.body.params.msig, txn: message.body.params.txn };
-
-          try {
-            // Use MainNet if specified - default to TestNet
-            const ledger = getLedgerFromGenesisId(msig_txn.txn.genesisID);
-
-            // Create an encryption wrap to get the needed signing account information
-            const context = new encryptionWrap(passphrase);
-            context.unlock(async (unlockedValue: any) => {
-              if ('error' in unlockedValue) {
-                sendResponse(unlockedValue);
-                return false;
-              }
-
-              extensionBrowser.windows.remove(auth.window_id);
-
-              // Verify this is a multisig sign occurs in the getSigningAccounts
-              // This get may receive a .error in return if an appropriate account is not found
-              let account;
-              const multisigAccounts = getSigningAccounts(unlockedValue[ledger], msig_txn);
-              if (multisigAccounts.error) {
-                message.error = multisigAccounts.error.message;
-              } else {
-                // TODO: Currently we are grabbing the first non-signed account. This may change.
-                account = multisigAccounts.accounts[0];
-              }
-
-              if (account) {
-                // We can now use the found account match to get the sign key
-                const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-
-                removeEmptyFields(msig_txn.txn);
-
-                // Modify base64 encoded fields
-                if ('note' in msig_txn.txn && msig_txn.txn.note !== undefined) {
-                  msig_txn.txn.note = new Uint8Array(Buffer.from(msig_txn.txn.note));
-                }
-                // Application transactions only
-                if (msig_txn.txn && msig_txn.txn.type == 'appl') {
-                  if ('appApprovalProgram' in msig_txn.txn) {
-                    try {
-                      msig_txn.txn.appApprovalProgram = Uint8Array.from(
-                        Buffer.from(msig_txn.txn.appApprovalProgram, 'base64')
-                      );
-                    } catch {
-                      message.error =
-                        'Error trying to parse appApprovalProgram into a Uint8Array value.';
-                    }
-                  }
-                  if ('appClearProgram' in msig_txn.txn) {
-                    try {
-                      msig_txn.txn.appClearProgram = Uint8Array.from(
-                        Buffer.from(msig_txn.txn.appClearProgram, 'base64')
-                      );
-                    } catch {
-                      message.error =
-                        'Error trying to parse appClearProgram into a Uint8Array value.';
-                    }
-                  }
-                  if ('appArgs' in msig_txn.txn) {
-                    try {
-                      const tempArgs = [];
-                      msig_txn.txn.appArgs.forEach((element) => {
-                        tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
-                      });
-                      msig_txn.txn.appArgs = tempArgs;
-                    } catch {
-                      message.error = 'Error trying to parse appArgs into Uint8Array values.';
-                    }
-                  }
-                }
-
-                try {
-                  // This step transitions a raw object into a transaction style object
-                  const builtTx = buildTransaction(msig_txn.txn);
-
-                  // Building preimg - This allows the pks to be passed, but still use the default multisig sign with addrs
-                  const version = msig_txn.msig.v || msig_txn.msig.version;
-                  const threshold = msig_txn.msig.thr || msig_txn.msig.threshold;
-                  const addrs =
-                    msig_txn.msig.addrs ||
-                    msig_txn.msig.subsig.map((subsig) => {
-                      return subsig.pk;
-                    });
-                  const preimg = {
-                    version: version,
-                    threshold: threshold,
-                    addrs: addrs,
-                  };
-
-                  let signedTxn;
-                  const appendEnabled = false; // TODO: This disables append functionality until blob objects are allowed and validated.
-                  // Check for existing signatures. Append if there are any.
-                  if (appendEnabled && msig_txn.msig.subsig.some((subsig) => subsig.s)) {
-                    // TODO: This should use a sent multisig blob if provided. This is a future enhancement as validation doesn't allow it currently.
-                    // It is subject to change and is built as scaffolding for future functionality.
-                    const encodedBlob = message.body.params.txn;
-                    const decodedBlob = Buffer.from(encodedBlob, 'base64');
-                    signedTxn = algosdk.appendSignMultisigTransaction(
-                      decodedBlob,
-                      preimg,
-                      recoveredAccount.sk
-                    );
-                  } else {
-                    // If this is the first signature then do a normal sign
-                    signedTxn = algosdk.signMultisigTransaction(
-                      builtTx,
-                      preimg,
-                      recoveredAccount.sk
-                    );
-                  }
-
-                  // Converting the blob to an encoded string for transfer back to dApp
-                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
-
-                  message.response = {
-                    txID: signedTxn.txID,
-                    blob: b64Obj,
-                  };
-                } catch (e) {
-                  message.error = e.message;
-                }
-              }
-              // Clean class saved request
-              delete Task.requests[responseOriginTabID];
-              MessageApi.send(message);
-            });
-          } catch {
-            // On error we should remove the task
-            delete Task.requests[responseOriginTabID];
-            return false;
-          }
-          return true;
-        },
         // sign-allow-wallet-tx
         [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID } = request.body.params;
@@ -1142,7 +986,7 @@ export class Task {
                       } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
                         if (!singleGroup || transactionObjs.length > 1) {
-                          throw new LedgerMultipleTransactions();
+                          throw RequestError.LedgerMultipleTransactions;
                         }
 
                         // Now that we know it is a single group adjust the transaction property to be the current wrap
@@ -1191,7 +1035,7 @@ export class Task {
                 if (!singleGroup) {
                   data = `On group ${currentGroup}: [${data}].`;
                 }
-                message.error = new SigningError(4000, data);
+                message.error = RequestError.SigningError(4000, data);
                 logging.log(data);
               } else {
                 signedGroups[currentGroup] = signedTxs;
@@ -1308,9 +1152,6 @@ export class Task {
         [JsonRpcMethod.AssetsVerifiedList]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.AssetsVerifiedList](request, sendResponse);
         },
-        [JsonRpcMethod.AssetOptOut]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.AssetOptOut](request, sendResponse);
-        },
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
         },
@@ -1375,48 +1216,7 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerLinkAddress](request, sendResponse);
         },
         [JsonRpcMethod.LedgerGetSessionTxn]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, (internalResponse) => {
-            // V2 transactions can just pass back
-            if (internalResponse.transactionsOrGroups) {
-              sendResponse(internalResponse);
-            }
-            // V1 transactions may need to have an estimated fee
-            else {
-              let txWrap = internalResponse;
-              if (txWrap.transaction && txWrap.transaction.transaction) {
-                txWrap = txWrap.transaction;
-              }
-
-              // Send response or grab params to calculate an estimated fee if there isn't one
-              if (txWrap.estimatedFee) {
-                sendResponse(txWrap);
-              } else {
-                const conn = Settings.getBackendParams(
-                  getLedgerFromGenesisId(txWrap.transaction.genesisID),
-                  API.Algod
-                );
-                const sendPath = '/v2/transactions/params';
-                const fetchParams: any = {
-                  headers: {
-                    ...conn.headers,
-                  },
-                  method: 'GET',
-                };
-
-                let url = conn.url;
-                if (conn.port.length > 0) url += ':' + conn.port;
-                Task.fetchAPI(`${url}${sendPath}`, fetchParams).then((params) => {
-                  if (txWrap.transaction.fee === params['min-fee']) {
-                    // This object was built on front end and fee should be 0 to prevent higher fees.
-                    txWrap.transaction.fee = 0;
-                  }
-                  calculateEstimatedFee(txWrap, params);
-                  sendResponse(txWrap);
-                });
-              }
-            }
-          });
-          return true;
+          return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {
@@ -1463,6 +1263,9 @@ export class Task {
         },
         [JsonRpcMethod.ToggleNamespaceConfig]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.ToggleNamespaceConfig](request, sendResponse);
+        },
+        [JsonRpcMethod.GetGovernanceAddresses]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetGovernanceAddresses](request, sendResponse);
         },
       },
     };

@@ -1,6 +1,6 @@
 import { Task } from './task';
 import { MessageBuilder } from '../messaging/builder';
-import { RequestError } from '@algosigner/common/types';
+import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 
 jest.mock('../messaging/builder');
