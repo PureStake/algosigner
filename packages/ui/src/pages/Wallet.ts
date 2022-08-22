@@ -3,6 +3,7 @@ import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { Link } from 'preact-router';
+import { extensionBrowser } from '@algosigner/common/chrome';
 
 import { StoreContext } from 'services/StoreContext';
 import AccountPreview from 'components/AccountPreview';
@@ -19,6 +20,15 @@ const Wallet: FunctionalComponent = () => {
 
   return useObserver(() => {
     const { ledger } = store;
+    const onCreateAccount = () => {
+      extensionBrowser.tabs.create(
+        {
+          active: true,
+          url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/create-account`),
+        }
+      );
+    };
+
     return html`
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div class="px-4 py-4" style="flex: 1; overflow: auto; max-height: 430px;">
@@ -61,9 +71,9 @@ const Wallet: FunctionalComponent = () => {
         <div class="modal-content">
           <div class="box">
             <div>
-              <${Link} class="button is-fullwidth" id="createAccount" href=${`/${ledger}/create-account`}>
+              <div class="button is-fullwidth" id="createAccount" onClick=${onCreateAccount}>
                 Create new account
-              </${Link}>
+              </div>
             </div>
             <div>
               <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${ledger}/import-account`}>

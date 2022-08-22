@@ -1,15 +1,14 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
-import { route } from 'preact-router';
-
-import HeaderView from 'components/HeaderView';
 
 const SetAccountName: FunctionalComponent = (props: any) => {
   const { name, setName, ledger, nextStep } = props;
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-      <${HeaderView} action="${() => route('/wallet')}" title="Create ${ledger} Account" />
+      <div class="px-4 py-3 has-text-weight-bold is-size-5">
+        <p style="overflow: hidden; text-overflow: ellipsis;">Create ${ledger} Account</p>
+      </div>
       <div class="px-3" style="flex: 1;">
         <input
           id="setAccountName"
