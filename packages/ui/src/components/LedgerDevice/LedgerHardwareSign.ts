@@ -108,7 +108,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
       class="main-view"
       style="flex-direction: column; justify-content: space-between; overflow: hidden;"
     >
-      <div class="px-3 py-3 has-text-weight-bold is-size-5">
+      <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;">Sign Using Ledger Device</p>
       </div>
       <div class="top-view" style="flex: 1; overflow-y: auto; overflow-x: hidden;">

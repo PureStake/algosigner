@@ -48,7 +48,7 @@ const AccountKeys: FunctionalComponent = (props: any) => {
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action=${prevStep} title="Save your keys!" />
-      <div class="px-3" style="flex: 1;">
+      <div class="px-4" style="flex: 1;">
         <div class="mb-4 px-4 py-2" style="background: #EFF4F7; border-radius: 5px;">
           <div>
             <b>Public Account address</b>

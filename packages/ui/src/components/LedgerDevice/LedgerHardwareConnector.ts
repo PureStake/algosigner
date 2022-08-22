@@ -106,21 +106,21 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
 
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-      <div class="px-3 py-3 has-text-weight-bold is-size-5">
+      <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;"
           >Adding Hardware Account for ${ledger}</p
         >
       </div>
       ${isComplete &&
       html`
-        <div class="px-3" style="flex: 1;">
+        <div class="px-4" style="flex: 1;">
           <p> New account ${name} added for ${ledger}. </p>
           <p class="my-3"> You may now close this site and relaunch AlgoSigner.</p>
         </div>
       `}
       ${!isComplete &&
       html`
-        <div class="px-3" style="flex: 1;">
+        <div class="px-4" style="flex: 1;">
           <p>
             Insert and unlock the hardware device, verify the Algorand application is open during
             this process.

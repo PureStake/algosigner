@@ -19,7 +19,7 @@ const LinkHardwareAccount: FunctionalComponent = (props: any) => {
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action="${() => route('/wallet')}" title="Link ${ledger} account" />
-      <div class="px-3" style="flex: 1;">
+      <div class="px-4" style="flex: 1;">
         <p class="my-3">
           The extension will close and a new tab will be created to connect the Ledger device.
         </p>
