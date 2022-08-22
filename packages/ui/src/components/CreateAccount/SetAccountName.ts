@@ -9,7 +9,7 @@ const SetAccountName: FunctionalComponent = (props: any) => {
       <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;">Create ${ledger} Account</p>
       </div>
-      <div class="px-3" style="flex: 1;">
+      <div class="px-4" style="flex: 1;">
         <input
           id="setAccountName"
           class="input mb-4"
