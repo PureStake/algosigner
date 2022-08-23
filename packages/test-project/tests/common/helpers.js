@@ -63,6 +63,15 @@ async function inputPassword() {
   await extensionPage.waitForFunction(() => !document.querySelector('#authButton'));
 }
 
+async function getOpenedTab() {
+  await dappPage.waitForTimeout(1500);
+  const pages = await browser.pages();
+  const tab = pages[pages.length - 1];
+
+  tab.on('console', (msg) => console.log('OPENED TAB LOG:', msg.text()));
+  return tab;
+}
+
 // Dapp Helpers
 async function getPopup() {
   await dappPage.waitForTimeout(1500);
@@ -181,6 +190,7 @@ module.exports = {
   goBack,
   closeModal,
   inputPassword,
+  getOpenedTab,
   getPopup,
   getLedgerSuggestedParams,
   sendTransaction,

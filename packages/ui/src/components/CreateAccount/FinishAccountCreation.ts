@@ -10,7 +10,7 @@ const FinishAccountCreation: FunctionalComponent = (props: any) => {
         <p class="" style="overflow: hidden; text-overflow: ellipsis;">Created Account</p>
       </div>
       <div class="px-4" style="flex: 1;">
-        <p>New account '${name}' added for ${ledger}.</p>
+        <p data-account-name="${name}">New account '${name}' added for ${ledger}.</p>
         <p class="my-3">You may now close this site and reopen AlgoSigner.</p>
       </div>
     </div>
