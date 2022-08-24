@@ -1,11 +1,14 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useContext, useState } from 'preact/hooks';
-import { sendMessage } from 'services/Messaging';
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import Authenticate from 'components/Authenticate';
-import { ledgerActions } from './structure/ledgerActions';
+import ReducedHeader from 'components/ReducedHeader';
+
+import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
+import { ledgerActions } from './structure/ledgerActions';
 
 const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   const { ledger } = props;
@@ -105,6 +108,7 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   };
 
   return html`
+    <${ReducedHeader} />
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;"
