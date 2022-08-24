@@ -1,17 +1,17 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useEffect, useContext } from 'preact/hooks';
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-
-import { sendMessage } from 'services/Messaging';
-
-import { StoreContext } from 'services/StoreContext';
-
 import SetAccountName from 'components/CreateAccount/SetAccountName';
 import AccountKeys from 'components/CreateAccount/AccountKeys';
 import ConfirmMnemonic from 'components/CreateAccount/ConfirmMnemonic';
 import FinishAccountCreation from 'components/CreateAccount/FinishAccountCreation';
+
+import { sendMessage } from 'services/Messaging';
+import { StoreContext } from 'services/StoreContext';
 import Authenticate from 'components/Authenticate';
+import ReducedHeader from 'components/ReducedHeader';
 
 interface Account {
   address: string;
@@ -91,6 +91,7 @@ const CreateAccount: FunctionalComponent = (props: any) => {
   };
 
   return html`
+    <${ReducedHeader} />
     ${step === 0 &&
     html`
       <${SetAccountName}
