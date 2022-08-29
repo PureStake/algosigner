@@ -41,17 +41,19 @@ const AddAsset: FunctionalComponent = (props: any) => {
     setLoading(true);
     const params = {
       ledger: ledger,
-      filter: filter,
+      filter: filter?.trim(),
       nextToken: nextToken,
     };
     sendMessage(JsonRpcMethod.AssetsAPIList, params, function (response) {
-      // If there is a nextToken set, it means that we are loading additional
-      // results.
-      if (nextToken && nextToken.length > 0)
-        setResults(results.concat(response.assets));
-      else setResults(response.assets);
-
-      setNextToken(response['next-token']);
+      // If there is a nextToken set, it means we're loading additional results
+      if (!('error' in response)) {
+        if (nextToken && nextToken.length > 0) {
+          setResults(results.concat(response.assets));
+        } else {
+          setResults(response.assets);
+        }
+        setNextToken(response['next-token']);
+      }
       setLoading(false);
     });
   };
@@ -66,8 +68,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
               return (
                 elem['asset_id'] === +value ||
                 (elem.name && elem.name.toLowerCase().includes(value)) ||
-                (elem['unit_name'] &&
-                  elem['unit_name'].toLowerCase().includes(value))
+                (elem['unit_name'] && elem['unit_name'].toLowerCase().includes(value))
               );
             })
           );
@@ -109,10 +110,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
   }, []);
 
   return html`
-    <div
-      class="main-view"
-      style="flex-direction: column; justify-content: space-between;"
-    >
+    <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView}
         action="${() => route(`/${matches.ledger}/${matches.address}`)}"
         title="Opt-in to an asset"
@@ -130,10 +128,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
 
       <div class="tabs is-centered mb-2">
         <ul>
-          <li
-            class=${tab === 0 ? 'is-active' : ''}
-            onClick=${() => changeTab(0)}
-          >
+          <li class=${tab === 0 ? 'is-active' : ''} onClick=${() => changeTab(0)}>
             <a>
               Verified
               <span class="icon mr-0">
@@ -141,10 +136,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
               </span>
             </a>
           </li>
-          <li
-            class=${tab === 1 ? 'is-active' : ''}
-            onClick=${() => changeTab(1)}
-          >
+          <li class=${tab === 1 ? 'is-active' : ''} onClick=${() => changeTab(1)}>
             <a>All</a>
           </li>
         </ul>
@@ -172,11 +164,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
                 <br />
                 ${asset['unit_name'] &&
                 asset['unit_name'].length > 0 &&
-                html`
-                  <span class="has-text-grey-light">
-                    ${asset['unit_name']}</span
-                  >
-                `}
+                html` <span class="has-text-grey-light"> ${asset['unit_name']}</span> `}
               </div>
 
               <b>${asset['asset_id']}</b>
@@ -208,10 +196,7 @@ const AddAsset: FunctionalComponent = (props: any) => {
     ${selectedAsset &&
     html`
       <div class="modal is-active">
-        <div
-          class="modal-background"
-          onClick=${() => setSelectedAsset(null)}
-        ></div>
+        <div class="modal-background" onClick=${() => setSelectedAsset(null)}></div>
         <div class="modal-content">
           <${AddAssetConfirm}
             asset=${selectedAsset}
