@@ -2,35 +2,40 @@ export default class Session {
   private _wallet: any;
   private _ledger: any;
   private _availableLedgers: any;
-  private _txnWrap: any;
+  private _txnRequest: any;
 
-  public set wallet(v: any) {
-    this._wallet = v;
+  public set wallet(w: any) {
+    this._wallet = w;
   }
 
   public get wallet(): any {
     return this._wallet;
   }
 
-  public set ledger(v: any) {
-    this._ledger = v;
+  public set ledger(l: any) {
+    this._ledger = l;
   }
 
   public get ledger(): any {
     return this._ledger;
   }
 
-  public set txnWrap(w: any) {
-    this._txnWrap = w;
+  public set txnRequest(r: any) {
+    this._txnRequest = r;
   }
 
-  public get txnWrap(): any {
-    const w = this._txnWrap;
-    return w;
+  public get txnRequest(): any {
+    const r = this._txnRequest;
+    return r;
   }
 
-  public set availableLedgers(v: any) {
-    this._availableLedgers = v;
+  public get txnObject(): any {
+    const r = this._txnRequest;
+    return r?.body?.params;
+  }
+
+  public set availableLedgers(al: any) {
+    this._availableLedgers = al;
   }
 
   public get availableLedgers(): any {
@@ -46,7 +51,7 @@ export default class Session {
       wallet: this._wallet,
       ledger: this._ledger,
       availableLedgers: this._availableLedgers || [],
-      txnWrap: this._txnWrap,
+      txnRequest: this._txnRequest,
     };
   }
 
@@ -54,6 +59,6 @@ export default class Session {
     this._wallet = undefined;
     this._ledger = undefined;
     this._availableLedgers = undefined;
-    this._txnWrap = undefined;
+    this._txnRequest = undefined;
   }
 }
