@@ -85,17 +85,20 @@ const LedgerHardwareSign: FunctionalComponent = () => {
         }
 
         if (response && 'txId' in response) {
-          setTxResponseHeader('Transaction sent:');
+          setTxResponseHeader('Transaction sent with ID:');
           setTxResponseDetail(response['txId']);
           setIsComplete(true);
-        } else {
+        } else if (response) {
           console.log(`response: ${JSON.stringify(response)}`);
           setTxResponseHeader('Transaction signed. Result sent to origin tab.');
           setTxResponseDetail(JSON.stringify(response));
           setIsComplete(true);
+        } else {
+          console.log('response not found');
+          setError('There was a problem signing the transaction, please try again.');
         }
 
-        setLoading(true);
+        setLoading(false);
       });
     });
   };
@@ -111,9 +114,11 @@ const LedgerHardwareSign: FunctionalComponent = () => {
       <div class="top-view" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
         ${isComplete &&
         html`
-          <div class="box">
+          <div class="mt-2 px-4">
             <p id="txResponseHeader" style="font-weight: bold">${txResponseHeader}</p>
-            <p id="txResponseDetail" style="word-break: break-all;">${txResponseDetail}</p>
+            <pre style="white-space: break-spaces;" class="mt-2">
+              <code id="txResponseDetail" style="word-break: break-all;">${txResponseDetail}</code>
+            </pre>
             <p class="my-3">You may now close this site and relaunch AlgoSigner.</p>
           </div>
         `}
