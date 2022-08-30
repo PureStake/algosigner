@@ -434,9 +434,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerGetSessionTxn](request: any, sendResponse: Function) {
-    if (session.txnWrap) {
-      // The transaction contains source and JSONRPC info, the body.params will be the transaction validation object
-      sendResponse(session.txnWrap);
+    if (session.txnRequest && 'body' in session.txnRequest) {
+      // The session object gets the transaction validation object from the original request
+      sendResponse(session.txnObject);
     } else {
       sendResponse({ error: 'Transaction not found in session.' });
     }
@@ -444,17 +444,18 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
-    if (session.txnWrap && 'body' in session.txnWrap) {
-      const txnBuf = Buffer.from(request.body.params.txn, 'base64');
+    if (session.txnRequest && session.txnObject && request.body?.params?.txn) {
+      const signedTxn = request.body.params.txn;
+      const txnBuf = Buffer.from(signedTxn, 'base64');
       const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
       const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
 
       // Get the session transaction
-      const sessTxn = session.txnWrap.body.params.transaction;
+      const sessTxn = session.txnObject.transaction;
 
       // Set the fee to the estimate we showed on the screen for validation if there is one.
-      if (session.txnWrap.body.params.estimatedFee) {
-        sessTxn['fee'] = session.txnWrap.body.params.estimatedFee;
+      if (session.txnObject.estimatedFee) {
+        sessTxn['fee'] = session.txnObject.estimatedFee;
       }
       const sessTxnEntries = Object.entries(sessTxn).sort();
 
@@ -485,26 +486,18 @@ export class InternalMethods {
         signedTxnEntries['closeRemainderTo'] === sessTxnEntries['closeRemainderTo']
       ) {
         //Check the txnWrap for a dApp response and return the transaction
-        if (session.txnWrap.source === 'dapp') {
-          const message = session.txnWrap;
-
-          // If v2 then it needs to return an array
-          if (session.txnWrap?.body?.params?.transactionsOrGroups) {
-            message.response = [
-              {
-                blob: request.body.params.txn,
-              },
-            ];
-          } else {
-            message.response = {
-              blob: request.body.params.txn,
-            };
-          }
+        if (session.txnRequest.source === 'dapp') {
+          const message = session.txnRequest;
+          message.response = [
+            {
+              blob: signedTxn,
+            },
+          ];
 
           sendResponse({ message: message });
         }
         // If this is a ui transaction then we need to also submit
-        else if (session.txnWrap.source === 'ui') {
+        else if (session.txnRequest.source === 'ui') {
           const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
 
           const algod = this.getAlgod(ledger);
@@ -533,7 +526,7 @@ export class InternalMethods {
         }
 
         // Clear the cached transaction
-        session.txnWrap.body.params.transaction = undefined;
+        session.txnRequest.body.params.transaction = undefined;
       } else {
         sendResponse({ error: 'Transaction not found in session, unable to validate for send.' });
       }
@@ -544,10 +537,10 @@ export class InternalMethods {
   // Protected because this should only be called from within the ui or dapp sign methods
   protected static [JsonRpcMethod.LedgerSignTransaction](request: any, sendResponse: Function) {
     // Access store here here to save the transaction wrap to cache before the site picks it up.
-    // Explicitly using txnWrap on session instead of auth message for two reasons:
+    // Explicitly saving txnRequest on session instead of auth message for two reasons:
     // 1) So it lives inside background sandbox containment.
     // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
-    session.txnWrap = request.body.params;
+    session.txnRequest = request;
 
     // Transaction wrap will contain response message if from dApp and structure will be different
     const ledger = getLedgerFromGenesisId(request.body.params.transaction.genesisID);
