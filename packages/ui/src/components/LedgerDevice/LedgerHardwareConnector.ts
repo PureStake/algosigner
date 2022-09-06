@@ -118,7 +118,7 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
       ${isComplete &&
       html`
         <div class="px-4" style="flex: 1;">
-          <p> New account ${name} added for ${ledger}. </p>
+          <p data-account-name="${name}">New account ${name} added for ${ledger}.</p>
           <p class="my-3"> You may now close this site and relaunch AlgoSigner.</p>
         </div>
       `}
@@ -139,7 +139,14 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
               >
                 ${accounts.map(
                   (acct) =>
-                    html`<option value="${acct['ledgerIndex']}">${acct['publicAddress']}</option>`
+                    html`
+                      <option
+                        value="${acct['ledgerIndex']}"
+                        data-public-address="${acct['publicAddress']}"
+                      >
+                        ${acct['publicAddress']}
+                      </option>
+                    `
                 )}}
               </select>
             </div>
