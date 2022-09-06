@@ -8,12 +8,17 @@ const { accounts, wallet } = require('./common/constants');
 const {
   openExtension,
   selectAccount,
+  verifyUITransaction,
   openSettingsMenu,
   closeSettingsMenu,
   closeModal,
   goBack,
 } = require('./common/helpers');
-const { CreateWallet, ImportAccount, DeleteAccount } = require('./common/tests');
+const {
+  CreateWallet,
+  ImportAccount,
+  DeleteAccount,
+} = require('./common/tests');
 
 describe('Wallet Setup', () => {
   beforeAll(async () => {
@@ -38,26 +43,6 @@ describe('UI Transactions Tests', () => {
   afterAll(async () => {
     extensionPage.close();
   });
-
-  const verifyTransaction = async () => {
-    const txSelector = `[data-transaction-id="${txId}"]`;
-    await extensionPage.waitForSelector(txSelector);
-    await extensionPage.click(txSelector);
-    await expect(extensionPage.$eval('#txTitle', (e) => e.innerText)).resolves.toBe(txTitle);
-    await expect(
-      extensionPage.$eval(
-        '.modal.is-active [data-transaction-id]',
-        (e) => e.dataset['transactionId']
-      )
-    ).resolves.toBe(txId);
-    await expect(
-      extensionPage.$eval(
-        '.modal.is-active [data-transaction-sender]',
-        (e) => e.dataset['transactionSender']
-      )
-    ).resolves.toBe(accounts.ui.address);
-    await closeModal();
-  };
 
   const returnToAccount = async () => {
     await extensionPage.waitForTimeout(1000);
@@ -113,7 +98,7 @@ describe('UI Transactions Tests', () => {
     await extensionPage.click('#confirmNewContact');
   });
 
-  test('Verify transaction', verifyTransaction);
+  test('Verify transaction', () => verifyUITransaction(txId, txTitle, accounts.ui.address));
 
   test('Check Asset details', async () => {
     const assetSelector = '[data-asset-id]';
@@ -189,7 +174,7 @@ describe('UI Transactions Tests', () => {
     await returnToAccount();
   });
 
-  test('Verify transaction', verifyTransaction);
+  test('Verify transaction', () => verifyUITransaction(txId, txTitle, accounts.ui.address));
 
   test('Transaction Errors: OverSpend / Contact alias', async () => {
     await extensionPage.click('#sendTransfer');
