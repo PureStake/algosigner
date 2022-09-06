@@ -56,16 +56,13 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-
-  ImportAccount(account);
-});
-
-describe('dApp Setup', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
   });
+
+  ImportAccount(account);
 });
 
 describe('Group of Groups Use cases', () => {

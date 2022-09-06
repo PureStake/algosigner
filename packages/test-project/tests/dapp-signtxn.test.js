@@ -73,17 +73,14 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-
-  ImportAccount(account1);
-  ImportAccount(account2);
-});
-
-describe('dApp Connecting', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
   });
+
+  ImportAccount(account1);
+  ImportAccount(account2);
 });
 
 describe('Error Use cases', () => {
