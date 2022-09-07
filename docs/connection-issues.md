@@ -4,9 +4,11 @@ If you're having issues accessing a dApp using AlgoSigner, you can try the follo
 
 ## Connection Troubleshooting
 
-Find and press any disconnect button present on the dApp.
+Find and press any 'Disconnect' button present on the dApp.
 
 <img src="./connection_images/disconnect.png" width="300" />
+<br />
+<img src="./connection_images/disconnect2.png" width="300" />
 <br />
 
 Open the config menu and log out of AlgoSigner.
