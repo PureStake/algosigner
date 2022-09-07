@@ -304,7 +304,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
       selectedDestination.address &&
       governanceAddresses.includes(selectedDestination.address));
   const disabled =
-    (!selectedDestination && !algosdk.isValidAddress(to)) || +amount < 0 || isGovernance;
+    (!selectedDestination && !algosdk.isValidAddress(to)) ||
+    +amount < 0 ||
+    (isGovernance && +amount !== 0);
   const isActive = (index: number) => (index === highlightedAlias ? 'is-active' : '');
 
   // Render HTML
