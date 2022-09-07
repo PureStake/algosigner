@@ -22,7 +22,7 @@ const {
   ConnectAlgoSigner,
 } = require('./common/tests');
 
-jest.setTimeout(15000);
+jest.setTimeout(18000);
 jest.retryTimes(0, { logErrorsBeforeRetry: true });
 const testAssetIndex = 13169404;
 const linkedLedgerAccount = {
@@ -88,7 +88,7 @@ describe('Link Ledger Account', () => {
   });
 
   test('Link An Account, Step 4 - Close tab and reload extension', async () => {
-    await openedTab.waitForTimeout(2000);
+    await openedTab.waitForTimeout(5000);
     await openedTab.close();
     await openExtension(); // Reloads extension
   });
