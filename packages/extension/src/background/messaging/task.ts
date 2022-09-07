@@ -317,10 +317,10 @@ export class Task {
         let code = 4300;
 
         validationErrors.forEach((error, index) => {
-          data = data + `Validation failed for transaction ${index} due to: ${error.message}.`;
+          data = data + `Validation failed for transaction ${index} due to: ${error.message}. `;
           code = error.code && error.code < code ? error.code : code;
         });
-        throw RequestError.SigningError(code, data);
+        throw RequestError.SigningError(code, data.trim());
       } else if (
         transactionWraps.some(
           (tx) =>
@@ -1027,13 +1027,13 @@ export class Task {
                 let data = '';
                 if (transactionObjs.length > 1) {
                   signErrors.forEach((error, index) => {
-                    data += `On transaction ${index}, the error was: ${error}.`;
+                    data += `On transaction ${index}, the error was: ${error}. `;
                   });
                 } else {
                   data += signErrors[0];
                 }
                 if (!singleGroup) {
-                  data = `On group ${currentGroup}: [${data}].`;
+                  data = `On group ${currentGroup}: [${data.trim()}]. `;
                 }
                 message.error = RequestError.SigningError(4000, data);
                 logging.log(data);
