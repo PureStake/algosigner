@@ -52,20 +52,20 @@ const App = () => {
             <${Welcome} path="/" />
             <${SetPassword} path="/set-password" />
             <${Login} path="/login/:redirect?" />
+            <${CreateAccount} path="/:ledger/create-account" />
+            <${LedgerHardwareConnector} path="/:ledger/ledger-hardware-connector" />
+            <${LedgerHardwareSign} path="/:ledger/ledger-hardware-sign" />
             <${Root} path="/:*?">
               <${MainHeader} />
               <div style="overflow: auto; flex: 1; display: flex; flex-direction: column;">
                 <${Router}>
                   <${Wallet} path="/wallet" />
                   <${ContactsPage} path="/contacts-page" />
-                  <${CreateAccount} path="/:ledger/create-account" />
                   <${ImportAccount} path="/:ledger/import-account" />
                   <${Account} path="/:ledger/:address" />
                   <${AccountDetails} path="/:ledger/:address/details" />
                   <${AddAsset} path="/:ledger/:address/add-asset" />
                   <${SendAlgos} path="/:ledger/:address/send" />
-                  <${LedgerHardwareConnector} path="/:ledger/ledger-hardware-connector" />
-                  <${LedgerHardwareSign} path="/:ledger/ledger-hardware-sign" />
                   <${LinkHardwareAccount} path="/:ledger/link-hardware-account" />
                 </${Router}>
               </div>

@@ -1,11 +1,14 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useContext, useState } from 'preact/hooks';
-import { sendMessage } from 'services/Messaging';
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import Authenticate from 'components/Authenticate';
-import { ledgerActions } from './structure/ledgerActions';
+import ReducedHeader from 'components/ReducedHeader';
+
+import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
+import { ledgerActions } from './structure/ledgerActions';
 
 const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   const { ledger } = props;
@@ -105,22 +108,23 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   };
 
   return html`
+    <${ReducedHeader} />
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
-      <div class="px-3 py-3 has-text-weight-bold is-size-5">
+      <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;"
           >Adding Hardware Account for ${ledger}</p
         >
       </div>
       ${isComplete &&
       html`
-        <div class="px-3" style="flex: 1;">
-          <p> New account ${name} added for ${ledger}. </p>
+        <div class="px-4" style="flex: 1;">
+          <p data-account-name="${name}">New account ${name} added for ${ledger}.</p>
           <p class="my-3"> You may now close this site and relaunch AlgoSigner.</p>
         </div>
       `}
       ${!isComplete &&
       html`
-        <div class="px-3" style="flex: 1;">
+        <div class="px-4" style="flex: 1;">
           <p>
             Insert and unlock the hardware device, verify the Algorand application is open during
             this process.
@@ -135,7 +139,14 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
               >
                 ${accounts.map(
                   (acct) =>
-                    html`<option value="${acct['ledgerIndex']}">${acct['publicAddress']}</option>`
+                    html`
+                      <option
+                        value="${acct['ledgerIndex']}"
+                        data-public-address="${acct['publicAddress']}"
+                      >
+                        ${acct['publicAddress']}
+                      </option>
+                    `
                 )}}
               </select>
             </div>

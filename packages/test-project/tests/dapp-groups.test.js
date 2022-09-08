@@ -9,23 +9,14 @@ const { accounts } = require('./common/constants');
 const {
   openExtension,
   getLedgerSuggestedParams,
-  byteArrayToBase64,
+  buildSdkTx,
+  prepareWalletTx,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
 const account = accounts.ui;
 
 let ledgerParams;
-
-const buildSdkTx = (tx) => {
-  return new algosdk.Transaction(tx);
-};
-
-const prepareWalletTx = (tx) => {
-  return {
-    txn: byteArrayToBase64(tx.toByte()),
-  };
-};
 
 async function signTxnGroups(transactionsToSign) {
   await dappPage.waitForTimeout(2000);
@@ -65,16 +56,13 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-
-  ImportAccount(account);
-});
-
-describe('dApp Setup', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
   });
+
+  ImportAccount(account);
 });
 
 describe('Group of Groups Use cases', () => {

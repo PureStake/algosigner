@@ -84,7 +84,7 @@ const AssetDetails: FunctionalComponent = (props: any) => {
           >
             See details in GoalSeeker
           </a>
-          ${!(asset.amount > 0) && html`<a onClick=${optOutFn}>Opt-out of this asset</a>`}
+          ${!(asset.amount > 0) && html`<a id="assetOptOut" onClick=${optOutFn}>Opt-out of this asset</a>`}
         </div>
       `}
     </div>

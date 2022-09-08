@@ -33,6 +33,23 @@ async function openAccountDetails(account) {
   await extensionPage.click('#showDetails');
 }
 
+async function verifyUITransaction(id, title, address) {
+  const txSelector = `[data-transaction-id="${id}"]`;
+  await extensionPage.waitForSelector(txSelector);
+  await extensionPage.click(txSelector);
+  await expect(extensionPage.$eval('#txTitle', (e) => e.innerText)).resolves.toBe(title);
+  await expect(
+    extensionPage.$eval('.modal.is-active [data-transaction-id]', (e) => e.dataset['transactionId'])
+  ).resolves.toBe(id);
+  await expect(
+    extensionPage.$eval(
+      '.modal.is-active [data-transaction-sender]',
+      (e) => e.dataset['transactionSender']
+    )
+  ).resolves.toBe(address);
+  await closeModal();
+}
+
 async function openSettingsMenu() {
   await extensionPage.waitForSelector('#openSettings');
   await extensionPage.click('#openSettings');
@@ -61,6 +78,15 @@ async function inputPassword() {
   await extensionPage.type('#enterPassword', wallet.password);
   await extensionPage.click('#authButton');
   await extensionPage.waitForFunction(() => !document.querySelector('#authButton'));
+}
+
+async function getOpenedTab() {
+  await dappPage.waitForTimeout(1500);
+  const pages = await browser.pages();
+  const tab = pages[pages.length - 1];
+
+  tab.on('console', (msg) => console.log('OPENED TAB LOG:', msg.text()));
+  return tab;
 }
 
 // Dapp Helpers
@@ -155,6 +181,16 @@ function decodeAddress(address) {
   return algosdk.decodeAddress(address);
 }
 
+function buildSdkTx(tx) {
+  return new algosdk.Transaction(tx);
+}
+
+function prepareWalletTx(tx) {
+  return {
+    txn: byteArrayToBase64(tx.toByte()),
+  };
+}
+
 function mergeMultisigTransactions(signedTransactionsArray) {
   const convertedArray = signedTransactionsArray.map((s) => base64ToByteArray(s.blob));
   const mergedTx = algosdk.mergeMultisigTransactions(convertedArray);
@@ -176,11 +212,13 @@ module.exports = {
   openExtension,
   selectAccount,
   openAccountDetails,
+  verifyUITransaction,
   openSettingsMenu,
   closeSettingsMenu,
   goBack,
   closeModal,
   inputPassword,
+  getOpenedTab,
   getPopup,
   getLedgerSuggestedParams,
   sendTransaction,
@@ -190,6 +228,8 @@ module.exports = {
   decodeBase64Blob,
   encodeAddress,
   decodeAddress,
+  buildSdkTx,
+  prepareWalletTx,
   mergeMultisigTransactions,
   appendSignToMultisigTransaction,
 };

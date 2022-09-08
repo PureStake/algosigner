@@ -1,18 +1,21 @@
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
-import { sendMessage } from 'services/Messaging';
+
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { ledgerActions } from './structure/ledgerActions';
 import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { logging } from '@algosigner/common/logging';
 import TxAcfg from 'components/SignTransaction/TxAcfg';
 import TxPay from 'components/SignTransaction/TxPay';
 import TxKeyreg from 'components/SignTransaction/TxKeyreg';
 import TxAxfer from 'components/SignTransaction/TxAxfer';
 import TxAfrz from 'components/SignTransaction/TxAfrz';
 import TxAppl from 'components/SignTransaction/TxAppl';
-import { logging } from '@algosigner/common/logging';
+import ReducedHeader from 'components/ReducedHeader';
+
+import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
+import { ledgerActions } from './structure/ledgerActions';
 
 const LedgerHardwareSign: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
@@ -104,11 +107,12 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   };
 
   return html`
+    <${ReducedHeader} />
     <div
       class="main-view"
       style="flex-direction: column; justify-content: space-between; overflow: hidden;"
     >
-      <div class="px-3 py-3 has-text-weight-bold is-size-5">
+      <div class="px-4 py-3 has-text-weight-bold is-size-5">
         <p style="overflow: hidden; text-overflow: ellipsis;">Sign Using Ledger Device</p>
       </div>
       <div class="top-view" style="flex: 1; overflow-y: auto; overflow-x: hidden;">

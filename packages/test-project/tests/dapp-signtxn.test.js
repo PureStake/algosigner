@@ -10,8 +10,9 @@ const {
   openExtension,
   getPopup,
   getLedgerSuggestedParams,
-  byteArrayToBase64,
   decodeBase64Blob,
+  buildSdkTx,
+  prepareWalletTx,
 } = require('./common/helpers');
 const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
 
@@ -21,16 +22,6 @@ const account2 = msigAccount.subaccounts[1];
 
 let ledgerParams;
 let unsignedTransactions = [];
-
-const buildSdkTx = (tx) => {
-  return new algosdk.Transaction(tx);
-};
-
-const prepareWalletTx = (tx) => {
-  return {
-    txn: byteArrayToBase64(tx.toByte()),
-  };
-};
 
 async function signTxn(transactionsToSign, testFunction) {
   const timestampedName = `popupTest-${new Date().getTime().toString()}`;
@@ -82,17 +73,14 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-
-  ImportAccount(account1);
-  ImportAccount(account2);
-});
-
-describe('dApp Connecting', () => {
   ConnectAlgoSigner();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
   });
+
+  ImportAccount(account1);
+  ImportAccount(account2);
 });
 
 describe('Error Use cases', () => {
@@ -239,7 +227,7 @@ describe('Multisig Transaction Use cases', () => {
     unsignedTransactions[0].signers = [account1.address];
     const signedTransactions = await signTxn(unsignedTransactions);
 
-    // Verify correctsignature is added
+    // Verify correct signature is added
     const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
