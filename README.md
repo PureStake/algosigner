@@ -14,7 +14,7 @@ Developers working with dApps may also install directly from the release package
 
 An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
 
-## 1.9.4 Release
+## 1.9.5 Release
 
 ### Main updates
 This update adds supports for easier transfers with the new autocomplete feature. Start typing an account, contact name or name service alias on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
@@ -23,6 +23,7 @@ This update adds supports for easier transfers with the new autocomplete feature
   - Accounts and Contact names
   - External name services (NFDomains and Algorand Namespace Service)
 - `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
+- New Account creation now occurs in the browser, improving ease of use when saving the mnemonic
 
 ### Other updates
 - Improved Account Importing and Cache Clearing

@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { openAccountDetails, goBack, closeModal, inputPassword, getPopup } = require('./helpers');
+const { openAccountDetails, goBack, inputPassword, getPopup, closeModal } = require('./helpers');
 
 // Common Tests
 function WelcomePage() {

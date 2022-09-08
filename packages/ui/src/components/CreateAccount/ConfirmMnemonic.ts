@@ -75,7 +75,7 @@ const ConfirmMnemonic: FunctionalComponent = (props: any) => {
   return html`
     <div class="main-view" style="flex-direction: column; justify-content: space-between;">
       <${HeaderView} action=${prevStep} title="Confirm your mnemonic" />
-      <div class="px-3" style="flex: 1;">
+      <div class="px-4" style="flex: 1;">
         <p class="mb-4">Use the buttons below to confirm the mnemonic</p>
         <textarea
           id="enterMnemonic"
