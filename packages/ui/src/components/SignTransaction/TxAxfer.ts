@@ -63,7 +63,7 @@ const TxAxfer: FunctionalComponent = (props: any) => {
       </div>
       <div class="is-flex">
         <p style="width: 30%;"><b>Amount:</b></p>
-        <p style="width: 70%;">${da || tx.amount} ${un}</p>
+        <p style="width: 70%;">${da || tx.amount || 0} ${un}</p>
       </div>
     </div>
   `;
