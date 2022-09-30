@@ -459,22 +459,36 @@ AlgoSigner.send({
 - Custom networks beta support is now in AlgoSigner. [Setup Guide](add-network.md)
 - AlgoSigner.accounts(ledger) has changed such that calls now accept names that have been added to the user's custom network list as valid ledger names.
   - A non-matching ledger name will result in a error:
-    - [RequestError.UnsupportedLedger] The provided ledger is not supported.
+    - The provided ledger is not supported (Code: 4200).
   - An empty request will result with an error:
     - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisId":"thetanet-v1.0"}].
 - Transaction requests will require a valid matching "genesisId", even for custom networks.
 
-## Rejection Messages
+## Signature Rejection Messages
 
-The dApp may return the following errors in case of users rejecting requests, or errors in the request:
+AlgoSigner may return some of the following error codes when requesting signatures:
+
+| Error Code | Description | Additional notes |
+| ----------- | ----------- | --------------- |
+| 4000 | An unknown error occured. | N/A |
+| 4001 | The user rejected the signature request. | N/A |
+| 4100 | The requested operation and/or account has not been authorized by the user. | This is usually due to the connection between the dApp and the wallet becoming stale and the user [needing to reconnect](connection-issues.md). Otherwise, it may signal that you are trying to sign with private keys not found on AlgoSigner. | 
+| 4200 | The wallet does not support the requested operation. | N/A |
+| 4201 | The wallet does not support signing that many transactions at a time. | The max number of transactions per group is 16. For Ledger devices, they can't sign more than one transaction at the same time. |
+| 4202 | The wallet was not initialized properly beforehand. | Users need to have imported or created an account on AlgoSigner before connecting to dApps |
+| 4300 | The input provided is invalid. | AlgoSigner rejected some of the transactions due to invalid fields. |
+
+Additional information, if available, would be provided in the `data` field of the error object.
+
+Returned errors have the following object structure:
 
 ```
-    UserRejected = '[RequestError.UserRejected] The extension user does not authorize the request.',
-    NotAuthorized = '[RequestError.NotAuthorized] The extension user does not authorize the request.',
-    UnsupportedAlgod = '[RequestError.UnsupportedAlgod] The provided method is not supported.',
-    UnsupportedLedger = '[RequestError.UnsupportedLedger] The provided ledger is not supported.',
-    InvalidFormat = '[RequestError.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
-    Undefined = '[RequestError.Undefined] An undefined error occurred.',
+{
+  message: string;
+  code: number;
+  name: string;
+  data?: any;
+}
 ```
 
 Errors may be passed back to the dApp from the Algorand JS SDK if a transaction is valid, but has some other issue - for example, insufficient funds in the sending account.
