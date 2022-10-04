@@ -97,8 +97,8 @@ export class InternalMethods {
     });
   }
 
-  // Checks if an address is a valid user account for a given ledger.
-  public static checkValidAccount(genesisID: string, address: string): void {
+  // Checks if an account for the given address exists on AlgoSigner for a given ledger.
+  public static checkAccountIsImported(genesisID: string, address: string): void {
     const ledger: string = getLedgerFromGenesisId(genesisID);
     let found = false;
     for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
@@ -891,7 +891,7 @@ export class InternalMethods {
           // Return to close connection
           return true;
         } else if (!account.mnemonic) {
-          sendResponse({ error: RequestError.NotAuthorizedOnChain.message });
+          sendResponse({ error: RequestError.NoMnemonicAvailable(account.address).message });
         } else {
           // We can use a modified popup to allow the normal flow, but require extra scrutiny.
           const recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);

@@ -4,12 +4,12 @@
  * @group dapp/signtxn
  */
 
-const algosdk = require('algosdk');
 const { accounts } = require('./common/constants');
 const {
   openExtension,
   getPopup,
   getLedgerSuggestedParams,
+  signDappTxns,
   decodeBase64Blob,
   buildSdkTx,
   prepareWalletTx,
@@ -21,51 +21,8 @@ const account1 = msigAccount.subaccounts[0];
 const account2 = msigAccount.subaccounts[1];
 
 let ledgerParams;
-let unsignedTransactions = [];
-
-async function signTxn(transactionsToSign, testFunction) {
-  const timestampedName = `popupTest-${new Date().getTime().toString()}`;
-  if (testFunction) {
-    await dappPage.exposeFunction(timestampedName, async () => {
-      try {
-        await testFunction();
-      } catch (e) {
-        console.log(e);
-      }
-    });
-  }
-
-  await dappPage.waitForTimeout(2000);
-  const signedTransactions = await dappPage.evaluate(
-    async (transactionsToSign, testFunction, testTimestamp) => {
-      const signPromise = AlgoSigner.signTxn(transactionsToSign)
-        .then((data) => {
-          return data;
-        })
-        .catch((error) => {
-          return error;
-        });
-
-      if (testFunction) {
-        await window[testTimestamp]();
-      }
-
-      await window['authorizeSignTxn']();
-      return await Promise.resolve(signPromise);
-    },
-    transactionsToSign,
-    !!testFunction,
-    timestampedName
-  );
-  for (let i = 0; i < signedTransactions.length; i++) {
-    const signedTx = signedTransactions[i];
-    if (signedTx) {
-      await expect(signedTx).toHaveProperty('txID');
-      await expect(signedTx).toHaveProperty('blob');
-    }
-  }
-  return signedTransactions;
-}
+let unsignedTransactions;
+let msigTxn;
 
 describe('Wallet Setup', () => {
   beforeAll(async () => {
@@ -77,14 +34,31 @@ describe('Wallet Setup', () => {
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
+    const baseTxn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: msigAccount.address,
+        to: msigAccount.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    const msigMetadata = {
+      version: 1,
+      threshold: 2,
+      addrs: msigAccount.subaccounts.map((acc) => acc.address),
+    };
+    msigTxn = { ...baseTxn, msig: msigMetadata };
   });
 
   ImportAccount(account1);
   ImportAccount(account2);
 });
 
-describe('Error Use cases', () => {
-  test('UserRejected error upon signing refusal', async () => {
+describe('Txn Signing Validation errors', () => {
+  // General validations
+  test('Error on User signing refusal', async () => {
     const txn = prepareWalletTx(
       buildSdkTx({
         type: 'pay',
@@ -110,18 +84,18 @@ describe('Error Use cases', () => {
           });
       }, unsignedTransactions)
     ).resolves.toMatchObject({
-      message: expect.stringContaining('[RequestError.UserRejected]'),
+      message: expect.stringContaining('The extension user does not'),
       code: 4001,
     });
   });
 
-  test('Error on Missing account', async () => {
-    const invalidAccount = accounts.ui;
+  test('Error on Sender not imported to AlgoSigner', async () => {
+    const invalidAccount = accounts.ui.address;
     const txn = prepareWalletTx(
       buildSdkTx({
         type: 'pay',
-        from: invalidAccount.address,
-        to: invalidAccount.address,
+        from: invalidAccount,
+        to: invalidAccount,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
         fee: 1000,
@@ -143,17 +117,17 @@ describe('Error Use cases', () => {
       message: expect.stringContaining('There was a problem signing the transaction(s).'),
       code: 4100,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining(accounts.ui.address),
+      data: expect.stringContaining(invalidAccount),
     });
   });
 
+  // Signers validations
   test('Error on Empty signers for Single transactions', async () => {
-    const invalidAccount = accounts.ui;
     const txn = prepareWalletTx(
       buildSdkTx({
         type: 'pay',
-        from: invalidAccount.address,
-        to: invalidAccount.address,
+        from: account1.address,
+        to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
         ...ledgerParams,
         fee: 1000,
@@ -173,9 +147,166 @@ describe('Error Use cases', () => {
           });
       }, unsignedTransactions)
     ).resolves.toMatchObject({
-      message: expect.stringContaining('Signers array should only'),
+      message: expect.stringContaining('There are no transactions to sign'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
+    });
+  });
+
+  test('Error on Single signer not matching the sender', async () => {
+    const txn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: account1.address,
+        to: account1.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    txn.signers = [account2.address];
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+      data: expect.stringContaining("When a single-address 'signers'"),
+    });
+  });
+
+  test('Error on Single signer not matching authAddr', async () => {
+    const txn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: account1.address,
+        to: account1.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    txn.signers = [account1.address];
+    txn.authAddr = account2.address;
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+      data: expect.stringContaining("When a single-address 'signers'"),
+    });
+  });
+
+  test('Error on Invalid signer address', async () => {
+    const fakeAccount = 'THISSIGNERDOESNTEXIST';
+    const txn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: account1.address,
+        to: account1.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    txn.signers = [fakeAccount];
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+      data: expect.stringContaining(`Signers array contains the invalid address "${fakeAccount}"`),
+    });
+  });
+
+  // AuthAddr validations
+  test('Error on Invalid authAddr', async () => {
+    const fakeAccount = 'THISAUTHADDRDOESNTEXIST';
+    const txn = prepareWalletTx(
+      buildSdkTx({
+        type: 'pay',
+        from: account1.address,
+        to: account1.address,
+        amount: Math.ceil(Math.random() * 1000),
+        ...ledgerParams,
+        fee: 1000,
+      })
+    );
+    txn.authAddr = fakeAccount;
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+      data: expect.stringContaining(`'authAddr' contains the invalid address "${fakeAccount}"`),
+    });
+  });
+
+  // Msig validations
+  test('Error on Msig Signer not imported to AlgoSigner', async () => {
+    const invalidAccount = msigAccount.subaccounts[2].address;
+    const txn = { ...msigTxn };
+    txn.signers = [account1.address, invalidAccount];
+    unsignedTransactions = [txn];
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+      data: expect.stringContaining(invalidAccount),
     });
   });
 
@@ -184,24 +315,8 @@ describe('Error Use cases', () => {
 
 describe('Multisig Transaction Use cases', () => {
   test('Sign MultiSig Transaction with All Accounts', async () => {
-    const multisigTxn = prepareWalletTx(
-      buildSdkTx({
-        type: 'pay',
-        from: msigAccount.address,
-        to: msigAccount.address,
-        amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
-        fee: 1000,
-      })
-    );
-    multisigTxn.msig = {
-      version: 1,
-      threshold: 2,
-      addrs: msigAccount.subaccounts.map((acc) => acc.address),
-    };
-
-    unsignedTransactions = [multisigTxn];
-    const signedTransactions = await signTxn(unsignedTransactions, async () => {
+    unsignedTransactions = [msigTxn];
+    const signedTransactions = await signDappTxns(unsignedTransactions, async () => {
       const popup = await getPopup();
       const tooltipText = await popup.evaluate(() => {
         return getComputedStyle(
@@ -225,7 +340,7 @@ describe('Multisig Transaction Use cases', () => {
 
   test('Sign MultiSig Transaction with Specific Signer', async () => {
     unsignedTransactions[0].signers = [account1.address];
-    const signedTransactions = await signTxn(unsignedTransactions);
+    const signedTransactions = await signDappTxns(unsignedTransactions);
 
     // Verify correct signature is added
     const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
@@ -237,122 +352,4 @@ describe('Multisig Transaction Use cases', () => {
     expect(decodedTransaction.msig.subsig[1]).not.toHaveProperty('s');
     expect(decodedTransaction.msig.subsig[2]).not.toHaveProperty('s');
   });
-});
-
-describe('Group Transactions Use cases', () => {
-  test('Reject on incomplete Group', async () => {
-    const txn = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account1.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-      fee: 1000,
-    });
-    const groupedTransactions = algosdk.assignGroupID([txn, txn]);
-    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
-
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('group is incomplete'),
-      code: 4300,
-      name: expect.stringContaining('AlgoSignerRequestError'),
-    });
-  });
-
-  test('Accept Group ID for Single Transactions', async () => {
-    const txn = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account1.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-      fee: 1000,
-    });
-    const groupedTransactions = algosdk.assignGroupID([txn]);
-    unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
-
-    const signedTransactions = await signTxn(unsignedTransactions);
-    await expect(signedTransactions[0]).not.toBeNull();
-  });
-
-  test('Group Transaction with Reference Transaction && Pooled Fee', async () => {
-    const tx1 = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account2.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-      fee: 1000,
-    });
-    const tx2 = buildSdkTx({
-      type: 'pay',
-      from: account2.address,
-      to: account1.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-    });
-    const tx3 = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account2.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-    });
-
-    unsignedTransactions = await algosdk.assignGroupID([tx1, tx2, tx3]);
-    unsignedTransactions = unsignedTransactions.map((txn) => prepareWalletTx(txn));
-    unsignedTransactions[2].signers = [];
-
-    const signedTransactions = await signTxn(unsignedTransactions);
-    await expect(signedTransactions[2]).toBeNull();
-    await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
-  });
-
-  test('Max # of Transactions on Group', async () => {
-    const tx = buildSdkTx({
-      type: 'pay',
-      from: account1.address,
-      to: account2.address,
-      amount: Math.ceil(Math.random() * 1000),
-      ...ledgerParams,
-      fee: 1000,
-    });
-
-    const txArray = [];
-    for (let i = 0; i < 16; i++) {
-      txArray.push(tx);
-    }
-    
-    unsignedTransactions = await algosdk.assignGroupID(txArray);
-    unsignedTransactions[16] = unsignedTransactions[0];
-    unsignedTransactions = unsignedTransactions.map((txn) => prepareWalletTx(txn));
-
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('16 transactions at a time'),
-      code: 4201,
-      name: expect.stringContaining('AlgoSignerRequestError'),
-    });
-  });
-
-  // @TODO: Add errors for mismatches, incomplete groups, etc
 });

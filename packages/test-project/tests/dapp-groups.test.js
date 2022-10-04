@@ -9,6 +9,7 @@ const { accounts } = require('./common/constants');
 const {
   openExtension,
   getLedgerSuggestedParams,
+  signDappTxns,
   buildSdkTx,
   prepareWalletTx,
 } = require('./common/helpers');
@@ -17,8 +18,9 @@ const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tes
 const account = accounts.ui;
 
 let ledgerParams;
+let tx1, tx2, tx3, tx4;
 
-async function signTxnGroups(transactionsToSign) {
+async function signDappTxnGroups(transactionsToSign) {
   await dappPage.waitForTimeout(2000);
   const signedGroups = await dappPage.evaluate(
     async (transactionsToSign) => {
@@ -65,9 +67,125 @@ describe('Wallet Setup', () => {
   ImportAccount(account);
 });
 
-describe('Group of Groups Use cases', () => {
-  let tx1, tx2, tx3, tx4;
+describe('Group Transactions Use cases', () => {
+  test('Reject on incomplete Group', async () => {
+    tx1 = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+    const groupedTransactions = algosdk.assignGroupID([tx1, tx1]);
+    const unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
 
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('group is incomplete'),
+      code: 4300,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+    });
+  });
+
+  test('Accept Group ID for Single Transactions', async () => {
+    tx1 = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+    const groupedTransactions = algosdk.assignGroupID([tx1]);
+    const unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
+
+    const signedTransactions = await signDappTxns(unsignedTransactions);
+    await expect(signedTransactions[0]).not.toBeNull();
+  });
+
+  test('Group Transaction with Reference Transaction && Pooled Fee', async () => {
+    tx1 = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+    tx2 = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+    });
+    tx3 = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+    });
+
+    const groupedTransactions = await algosdk.assignGroupID([tx1, tx2, tx3]);
+    const unsignedTransactions = groupedTransactions.map((txn) => prepareWalletTx(txn));
+    unsignedTransactions[2].signers = [];
+
+    const signedTransactions = await signDappTxns(unsignedTransactions);
+    await expect(signedTransactions[2]).toBeNull();
+    await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
+  });
+
+  test('Max # of Transactions on Group', async () => {
+    const tx = buildSdkTx({
+      type: 'pay',
+      from: account.address,
+      to: account.address,
+      amount: Math.ceil(Math.random() * 1000),
+      ...ledgerParams,
+      fee: 1000,
+    });
+
+    const txArray = [];
+    for (let i = 0; i < 16; i++) {
+      txArray.push(tx);
+    }
+    
+    const groupedTransactions = await algosdk.assignGroupID(txArray);
+    groupedTransactions[16] = groupedTransactions[0];
+    const unsignedTransactions = groupedTransactions.map((txn) => prepareWalletTx(txn));
+
+    await expect(
+      dappPage.evaluate((transactions) => {
+        return Promise.resolve(AlgoSigner.signTxn(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, unsignedTransactions)
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('16 transactions at a time'),
+      code: 4201,
+      name: expect.stringContaining('AlgoSignerRequestError'),
+    });
+  });
+
+  // @TODO: Add errors for mismatches, incomplete groups, etc
+});
+
+describe('Group of Groups Use cases', () => {
   test('Group of Grouped Transactions', async () => {
     tx1 = buildSdkTx({
       type: 'pay',
@@ -105,7 +223,7 @@ describe('Group of Groups Use cases', () => {
     group1[1].signers = [];
     const group2 = await algosdk.assignGroupID([tx3, tx4]).map((txn) => prepareWalletTx(txn));
 
-    const signedTransactions = await signTxnGroups([group1, group2]);
+    const signedTransactions = await signDappTxnGroups([group1, group2]);
     await expect(signedTransactions).toHaveLength(2);
     await expect(signedTransactions[0][1]).toBeNull();
   });

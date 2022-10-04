@@ -169,7 +169,7 @@ function ConnectAlgoSigner() {
     await dappPage.exposeFunction('authorizeSignTxnGroups', authorizeSignTxnGroups);
   });
 
-  test('NotAuthorized error before connecting', async () => {
+  test('SiteNotAuthorizedByUser error before connecting', async () => {
     await expect(
       dappPage.evaluate(() => {
         return Promise.resolve(AlgoSigner.accounts())
@@ -181,7 +181,7 @@ function ConnectAlgoSigner() {
           });
       })
     ).resolves.toMatchObject({
-      message: expect.stringContaining('[RequestError.NotAuthorized]'),
+      message: expect.stringContaining('The extension user has not'),
       code: 4100,
     });
   });
@@ -200,7 +200,7 @@ function ConnectAlgoSigner() {
           });
       })
     ).resolves.toMatchObject({
-      message: expect.stringContaining('[RequestError.UserRejected]'),
+      message: expect.stringContaining('The extension user does not'),
       code: 4001,
     });
   });
