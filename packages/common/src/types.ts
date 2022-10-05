@@ -26,6 +26,7 @@ export type WalletMultisigMetadata = {
 export type WalletTransaction = {
   readonly txn: string;
   readonly signers?: Array<string>;
+  readonly stxn?: string;
   readonly message?: string;
   readonly msig?: WalletMultisigMetadata;
   readonly authAddr?: string;
