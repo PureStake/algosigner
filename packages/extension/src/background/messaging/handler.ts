@@ -41,7 +41,7 @@ export class OnMessageHandler extends RequestValidation {
     try {
       request.origin = new URL(sender.url).origin;
     } catch (e) {
-      request.error = RequestError.NotAuthorizedByUser;
+      request.error = RequestError.SiteNotAuthorizedByUser;
       MessageApi.send(request);
       return;
     }
@@ -79,7 +79,7 @@ export class OnMessageHandler extends RequestValidation {
       new encryptionWrap('').checkStorage((exist: boolean) => {
         // Reject message if there's no wallet
         if (!exist) {
-          request.error = RequestError.NotAuthorizedByUser;
+          request.error = RequestError.AlgoSignerNotInitialized;
           MessageApi.send(request);
         } else {
           if (OnMessageHandler.isAuthorization(method) && OnMessageHandler.isPublic(method)) {
@@ -98,7 +98,7 @@ export class OnMessageHandler extends RequestValidation {
                 });
             } else {
               // Origin is not authorized
-              request.error = RequestError.NotAuthorizedByUser;
+              request.error = RequestError.SiteNotAuthorizedByUser;
               MessageApi.send(request);
             }
           }

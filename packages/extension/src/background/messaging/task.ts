@@ -1,4 +1,4 @@
-import algosdk from 'algosdk';
+import algosdk, { MultisigMetadata, Transaction } from 'algosdk';
 
 import { WalletTransaction } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
@@ -197,7 +197,7 @@ export class Task {
     const groupsToSign: Array<Array<WalletTransaction>> = request.body.params.groupsToSign;
     const currentGroup: number = request.body.params.currentGroup;
     const walletTransactions: Array<WalletTransaction> = groupsToSign[currentGroup];
-    const rawTxArray: Array<any> = [];
+    const rawTxArray: Array<Transaction> = [];
     const processedTxArray: Array<any> = [];
     const transactionWraps: Array<BaseValidatedTxnWrap> = [];
     const validationErrors: Array<RequestError> = [];
@@ -214,11 +214,12 @@ export class Task {
           if (
             // prettier-ignore
             (walletTx.authAddr != null && typeof walletTx.authAddr !== 'string') ||
+            (walletTx.stxn != null && typeof walletTx.stxn !== 'string') ||
             (walletTx.message != null && typeof walletTx.message !== 'string') ||
             (!walletTx.txn || typeof walletTx.txn !== 'string') ||
-            (walletTx.signers != null && 
+            (walletTx.signers != null &&
               (
-                !Array.isArray(walletTx.signers) || 
+                !Array.isArray(walletTx.signers) ||
                 (Array.isArray(walletTx.signers) && (walletTx.signers as Array<any>).some((s)=>typeof s !== 'string'))
               )
             ) ||
@@ -232,8 +233,8 @@ export class Task {
               (!walletTx.msig.threshold || typeof walletTx.msig.threshold !== 'number') ||
               (!walletTx.msig.version || typeof walletTx.msig.version !== 'number') ||
               (
-                !walletTx.msig.addrs || 
-                !Array.isArray(walletTx.msig.addrs) || 
+                !walletTx.msig.addrs ||
+                !Array.isArray(walletTx.msig.addrs) ||
                 (Array.isArray(walletTx.msig.addrs) && (walletTx.msig.addrs as Array<any>).some((s)=>typeof s !== 'string'))
               )
             )
@@ -249,7 +250,9 @@ export class Task {
            * 2) Use the '_getDictForDisplay' to change the format of the fields that are different from ours
            * 3) Remove empty fields to get rid of conversion issues like empty note byte arrays
            */
-          const rawTx = algosdk.decodeUnsignedTransaction(base64ToByteArray(walletTx.txn));
+          const rawTx: Transaction = algosdk.decodeUnsignedTransaction(
+            base64ToByteArray(walletTx.txn)
+          );
           rawTxArray[index] = rawTx;
           const processedTx = rawTx._getDictForDisplay();
           processedTxArray[index] = processedTx;
@@ -257,37 +260,117 @@ export class Task {
           transactionWraps[index] = wrap;
           const genesisID = wrap.transaction.genesisID;
 
-          const signers = walletTransactions[index].signers;
-          const msigData = walletTransactions[index].msig;
-          const authAddr = walletTransactions[index].authAddr;
+          const signers: Array<string> = walletTransactions[index].signers;
+          const signedTxn: string = walletTransactions[index].stxn;
+          const msigData: MultisigMetadata = walletTransactions[index].msig;
+          const authAddr: string = walletTransactions[index].authAddr;
 
-          wrap.msigData = msigData;
+          let msigAddress: string;
           wrap.signers = signers;
+
+          // We validate the authAddress if available
+          if (authAddr && !algosdk.isValidAddress(authAddr)) {
+            throw RequestError.InvalidAuthAddress(authAddr);
+          }
+
+          // If we have msigData, we validate the addresses and fetch the resulting msig address
           if (msigData) {
-            if (signers && signers.length) {
-              signers.forEach((address) => {
-                InternalMethods.checkValidAccount(genesisID, address);
+            try {
+              wrap.msigData = msigData;
+              msigAddress = algosdk.multisigAddress(msigData);
+              if (authAddr && authAddr !== msigAddress) {
+                throw RequestError.MsigAuthAddrMismatch;
+              }
+              msigData.addrs.forEach((addr) => {
+                if (!algosdk.isValidAddress(addr)) {
+                  throw RequestError.InvalidMsigAddress(addr);
+                }
               });
+            } catch (e) {
+              throw RequestError.InvalidMsigValues(e.message);
             }
-            wrap.msigData = msigData;
+          }
+
+          // We check if signers were specificied for this txn
+          if (signers) {
+            if (signers.length) {
+              // We have some specific signers, so we must validate them
+              // First we check if there's a stxn provided
+              if (signedTxn) {
+                throw RequestError.SignedTxnWithSigners;
+              }
+              // Then, we check all signers are valid accounts existing in AlgoSigner
+              signers.forEach((address) => {
+                if (!algosdk.isValidAddress(address)) {
+                  throw RequestError.InvalidSignerAddress(address);
+                }
+              });
+
+              // We validate signers depending on the amount of them
+              if (signers.length > 1) {
+                // We have more than 1 signer, they're for 'msig' use
+                if (!msigData) {
+                  // If no msig info was found, we reject
+                  throw RequestError.NoMsigMultipleSigners;
+                }
+              } else {
+                // We have exactly 1 signer. If there's no 'msig', additional validations
+                if (!msigData) {
+                  // If we have an authAddr the signer must match it
+                  if (authAddr && authAddr !== signers[0]) {
+                    throw RequestError.NoMsigSingleSigner;
+                  }
+                  // Otherwise, it should at least match the sender
+                  if (!authAddr && signers[0] !== processedTx.from) {
+                    throw RequestError.NoMsigSingleSigner;
+                  }
+                }
+              }
+              if (msigData) {
+                // Msig was provided alongside signers, we validate joint use cases
+                // Signers must be a subset of the multisig addresses
+                if (!signers.every((s) => msigData.addrs.includes(s))) {
+                  throw RequestError.MsigSignersMismatch;
+                }
+                // We make sure we have the available accounts for signing
+                signers.forEach((address) => {
+                  try {
+                    InternalMethods.checkAccountIsImported(genesisID, address);
+                  } catch (e) {
+                    throw RequestError.CantMatchMsigSigners(e.message);
+                  }
+                });
+              }
+            } else {
+              // Empty signer was provided, we check for a 'stxn'
+              if (signedTxn) {
+                // We check if the provided stxn matches the txn received
+                const unsignedTxnBytes = rawTx.toByte();
+                let signedTxnBytes;
+                try {
+                  signedTxnBytes = algosdk
+                    .decodeSignedTransaction(base64ToByteArray(signedTxn))
+                    .txn.toByte();
+                } catch (e) {
+                  // We reject if we can't convert from b64 to a valid txn
+                  throw RequestError.InvalidSignedTxn;
+                }
+                if (!signedTxnBytes.every((value, index) => unsignedTxnBytes[index] === value)) {
+                  // We reject if the transactions don't match
+                  throw RequestError.NonMatchingSignedTxn;
+                }
+              }
+            }
           } else {
-            if (!signers) {
-              InternalMethods.checkValidAccount(genesisID, wrap.transaction.from);
-            } else if (authAddr && signers.length === 1 && authAddr !== signers[0]) {
-              // We have an authAddr so if signers is length of 1 then they must be equal
-              throw RequestError.InvalidFormat;
+            // There's no signers field, we validate the sender if there's no msig
+            if (!msigData) {
+              InternalMethods.checkAccountIsImported(genesisID, wrap.transaction.from);
             }
           }
 
           if (authAddr) {
             // Attach to wrap so it can be displayed
             transactionWraps[index].authAddr = authAddr;
-
-            // Check that the authAddr is an address
-            const isValidAddress = algosdk.isValidAddress(authAddr);
-            if (!isValidAddress) {
-              throw RequestError.UnsupportedAlgod;
-            }
 
             // If there is an auth address then we SHOULD validate it is on chain and warn if not present
             const chainAuthAddr = await Task.getChainAuthAddress(processedTx);
@@ -316,9 +399,12 @@ export class Task {
         let data = '';
         let code = 4300;
 
+        // We format the validation errors for better readability and clarity
         validationErrors.forEach((error, index) => {
+          // Concatenate the errors in a single formatted message
           data = data + `Validation failed for transaction ${index} due to: ${error.message}. `;
-          code = error.code && error.code < code ? error.code : code;
+          // Take the lowest error code as they're _more_ generic the higher they go
+          code = error.code < code ? error.code : code;
         });
         throw RequestError.SigningError(code, data.trim());
       } else if (
@@ -354,7 +440,9 @@ export class Task {
 
         throw RequestError.InvalidFields(data);
       } else {
-        // Group validations
+        /** 
+         * Group validations
+         */
         const groupId = transactionWraps[0].transaction.group;
 
         if (transactionWraps.length > 1) {
@@ -373,14 +461,6 @@ export class Task {
           if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
             throw RequestError.NonMatchingGroup;
           }
-        } else {
-          const wrap = transactionWraps[0];
-          if (
-            (!wrap.msigData && wrap.signers) ||
-            (wrap.msigData && wrap.signers && !wrap.signers.length)
-          ) {
-            throw RequestError.InvalidSigners;
-          }
         }
 
         if (groupId) {
@@ -395,6 +475,11 @@ export class Task {
           if (groupId !== recalculatedGroupID) {
             throw RequestError.IncompleteOrDisorderedGroup;
           }
+        }
+
+        // If we only receive reference transactions, we reject
+        if (!transactionWraps.some((wrap) => !wrap.signers || (wrap.signers && wrap.signers.length))) {
+          throw RequestError.NoTxsToSign;
         }
 
         for (let i = 0; i < transactionWraps.length; i++) {
@@ -920,7 +1005,7 @@ export class Task {
                   if (!account.isHardware) {
                     // Check for an address that we were expected but unable to sign with
                     if (!unlockedValue[ledger][i].mnemonic) {
-                      throw RequestError.NotAuthorizedByUser;
+                      throw RequestError.NoMnemonicAvailable(account.address);
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
@@ -931,18 +1016,30 @@ export class Task {
                 }
               }
 
-              transactionObjs.forEach((tx, index) => {
-                const signers = walletTransactions[index].signers;
+              transactionObjs.forEach((txn: Transaction, index) => {
+                const signers: Array<string> = walletTransactions[index].signers;
+                const signedTxn = walletTransactions[index].stxn;
                 const authAddr = walletTransactions[index].authAddr;
+                const msigData: MultisigMetadata = walletTransactions[index].msig;
+                const txID = txn.txID().toString();
+                const wrap = transactionsWraps[index];
 
-                // If it's a reference transaction we return null, otherwise we try sign
+                // Check if it's a reference transaction
                 if (signers && !signers.length) {
-                  signedTxs[index] = null;
+                  // It's a reference transaction, return the 'stxn'
+                  if (signedTxn) {
+                    // We return the provided stxn since it's a reference transaction
+                    signedTxs[index] = {
+                      txID: txID,
+                      blob: signedTxn,
+                    };
+                  } else {
+                    // No signed transaction was provided, we return null
+                    signedTxs[index] = null;
+                  }
                 } else {
+                  // It's NOT a reference transaction, we sign normally
                   try {
-                    const txID = tx.txID().toString();
-                    const wrap = transactionsWraps[index];
-                    const msigData = wrap.msigData;
                     let signedBlob;
 
                     if (msigData) {
@@ -955,7 +1052,7 @@ export class Task {
                         if (recoveredAccounts[address]) {
                           partiallySignedBlobs.push(
                             algosdk.signMultisigTransaction(
-                              tx,
+                              txn,
                               msigData,
                               recoveredAccounts[address].sk
                             ).blob
@@ -976,7 +1073,7 @@ export class Task {
                     } else {
                       const address = authAddr || wrap.transaction.from;
                       if (recoveredAccounts[address]) {
-                        signedBlob = tx.signTxn(recoveredAccounts[address].sk);
+                        signedBlob = txn.signTxn(recoveredAccounts[address].sk);
                         const b64Obj = byteArrayToBase64(signedBlob);
 
                         signedTxs[index] = {

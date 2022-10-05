@@ -40,7 +40,7 @@ test('RequestError - Structure', () => {
   const testError = RequestError.NoAccountMatch(address, ledger);
 
   expect(testError).toMatchObject({
-    message: `No matching account found on AlgoSigner for address: "${address}" on network ${ledger}.`,
+    message: `No matching account found on AlgoSigner for address "${address}" on network ${ledger}.`,
     code: 4100,
   });
 
