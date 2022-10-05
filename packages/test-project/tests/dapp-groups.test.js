@@ -68,6 +68,8 @@ describe('Wallet Setup', () => {
 });
 
 describe('Group Transactions Use cases', () => {
+  let signedTxn;
+
   test('Reject on incomplete Group', async () => {
     tx1 = buildSdkTx({
       type: 'pay',
@@ -144,6 +146,20 @@ describe('Group Transactions Use cases', () => {
     const signedTransactions = await signDappTxns(unsignedTransactions);
     await expect(signedTransactions[2]).toBeNull();
     await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
+
+    // For next test
+    signedTxn = signedTransactions[1];
+  });
+
+  test('Provide "stxn" for Reference Transaction', async () => {
+    const unsignedTransactions = [tx1, tx2, tx3].map((txn) => prepareWalletTx(txn));
+    unsignedTransactions[1].signers = [];
+    unsignedTransactions[1].stxn = signedTxn.blob;
+
+    const signedTransactions = await signDappTxns(unsignedTransactions);
+    await expect(signedTransactions[1]).toStrictEqual(signedTxn);
+    await expect(signedTransactions[2]).not.toBeNull();
+    await expect(signedTransactions.filter((i) => i)).toHaveLength(3);
   });
 
   test('Max # of Transactions on Group', async () => {
