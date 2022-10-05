@@ -161,6 +161,7 @@ Transactions objects need to be presented with the following structure:
 {
   txn: Base64-encoded string of a transaction binary,
   signers?: [optional] array of addresses to sign with (defaults to the sender),
+  stxn?: [optional] Base64-encoded string of a signed transaction binary
   multisig?: [optional] extra metadata needed for multisig transactions,
 };
 ```
@@ -219,6 +220,7 @@ let signedTxs = await AlgoSigner.signTxn([
   },
 ]);
 ```
+
 Alternatively, you can provide multiple arrays of transactions at once. Same rules regarding the contents of the groups apply.
 
 **Request**
@@ -237,6 +239,7 @@ AlgoSigner.signTxn([
   ],
 ]);
 ```
+
 **Response**
 
 ```json
@@ -266,7 +269,7 @@ let binarySignedTx = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
 await client.sendRawTransaction(binarySignedTx).do();
 ```
 
-#### Atomic Transactions
+### Atomic Transactions
 
 For Atomic transactions, provide an array of transaction objects with the same group ID, _provided in the same order as when the group was assigned_.
 
@@ -309,11 +312,25 @@ let binarySignedTxs = signedTxs.map((tx) => AlgoSigner.encoding.base64ToMsgpack(
 await client.sendRawTransaction(binarySignedTxs).do();
 ```
 
-In case not all group transactions belong to accounts on AlgoSigner, you can set the `signers` field of the transaction object as an empty array to specify that it's only being sent to AlgoSigner for reference and group validation, not for signing.
+#### Reference Atomic transactions
 
-_AlgoSigner.signTxn()_ will return _null_ in it's response array for the positions were reference transactions were sent.
+In case not all group transactions belong to accounts on AlgoSigner, you can set the `signers` field of the transaction object as an empty array to specify that it's only being sent to AlgoSigner for reference and group validation, not for signing. Reference transactions should look like this:
 
-In these cases, you'd have to sign the missing transaction by your own means before it can be sent (by using the SDK, for instance).
+```js
+{
+  txn: 'B64_TXN',
+  signers: [],
+  // This tells AlgoSigner that this transaction is not meant to be signed
+}
+```
+
+`AlgoSigner.signTxn()` will return `null` in the position(s) where reference transactions were provided. In these instances, you'd have to sign the missing transaction(s) by your own means before they can be sent. This is useful for transactions that require external signing, like `lsig` transactions.
+
+#### Providing Signed reference transaction(s)
+
+You can provide a signed reference transaction to AlgoSigner via the `stxn` field of the transaction object for it to be validated and returned as part of the group. For the transaction(s) where `stxn` was provided, `AlgoSigner.signTxn()` will return the `stxn` string in the same position of the response array as the corresponding reference transaction(s) instead of `null`.
+
+**Example**
 
 ```js
 let tx1 = new algosdk.Transaction({
@@ -338,17 +355,61 @@ let signedTxs = await AlgoSigner.signTxn([
     txn: base64Txs[0],
   },
   {
-    // This tells AlgoSigner that this transaction is not meant to be signed
+    txn: base64Txs[1],
+    signers: [],
+    stxn: 'MANUALLY_SIGNED_SECOND_TXN_B64',
+  },
+]);
+```
+
+**Response**
+
+```js
+[
+  {
+    txID: '...',
+    blob: 'ALGOSIGNER_SIGNED_B64',
+  },
+  {
+    txID: '...',
+    blob: 'MANUALLY_SIGNED_SECOND_TXN_B64',
+  },
+];
+```
+
+#### Signing reference transactions manually
+
+In case you can't or don't want to provide the `stxn`, the provided transaction should look like this:
+
+**Example**
+
+```js
+let signedTxs = await AlgoSigner.signTxn([
+  {
+    txn: base64Txs[0],
+  },
+  {
     txn: base64Txs[1],
     signers: [],
   },
 ]);
 ```
 
-Signing the remaining transaction with the SDK would look like this:
+**Response**
 
 ```js
-// The AlgoSigner.signTxn() response would look like '[{ txID, blob }, null]'
+[
+  {
+    txID: '...',
+    blob: 'ALGOSIGNER_SIGNED_B64',
+  },
+  null,
+];
+```
+
+Afterwards, you can sign and send the remaining transaction(s) with the SDK:
+
+```js
 // Convert first transaction to binary from the response
 let signedTx1Binary = AlgoSigner.encoding.base64ToMsgpack(signedTxs[0].blob);
 // Sign leftover transaction with the SDK
@@ -358,7 +419,7 @@ let signedTx2Binary = tx2.signTxn(externalAccount.sk);
 await client.sendRawTransaction([signedTx1Binary, signedTx2Binary]).do();
 ```
 
-Alternatively, if you're using the [AlgoSigner.send()](#algosignersend-ledger-mainnettestnet-txblob-) to send the transaction, you have to merge the binaries before converting to a base64 encoded string.
+Alternatively, if you're using the [AlgoSigner.send()](#algosignersend-ledger-mainnettestnet-txblob-) to send the transaction(s), you have to merge the binaries before converting to a single base64 encoded string.
 
 ```js
 // Merge transaction binaries into a single Uint8Array
@@ -469,7 +530,7 @@ AlgoSigner.send({
 AlgoSigner may return some of the following error codes when requesting signatures:
 
 | Error Code | Description | Additional notes |
-| ----------- | ----------- | --------------- |
+| ---------- | ----------- | ---------------- |
 | 4000 | An unknown error occured. | N/A |
 | 4001 | The user rejected the signature request. | N/A |
 | 4100 | The requested operation and/or account has not been authorized by the user. | This is usually due to the connection between the dApp and the wallet becoming stale and the user [needing to reconnect](connection-issues.md). Otherwise, it may signal that you are trying to sign with private keys not found on AlgoSigner. | 
