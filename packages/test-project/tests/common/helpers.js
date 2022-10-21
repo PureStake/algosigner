@@ -77,7 +77,8 @@ async function inputPassword() {
   await extensionPage.waitForSelector('#enterPassword');
   await extensionPage.type('#enterPassword', wallet.password);
   await extensionPage.click('#authButton');
-  await extensionPage.waitForFunction(() => !document.querySelector('#authButton'));
+  await extensionPage.waitForFunction(() => document.querySelector('#authButton') === null);
+  await expect(extensionPage.select('#authButton')).rejects.toThrow();
 }
 
 async function getOpenedTab() {

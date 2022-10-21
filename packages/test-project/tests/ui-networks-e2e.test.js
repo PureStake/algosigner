@@ -40,7 +40,7 @@ describe('Create and Test Custom Networks', () => {
   const otherNet = 'OtherNet';
   const otherNetSelector = `button#select${otherNet}`;
 
-  test('Add Custom TestNet and test it', async () => {
+  test('Add Custom TestNet proxy and test it', async () => {
     // Create network
     await openNetworkMenu();
     await extensionPage.click('#createNetwork');
@@ -74,12 +74,12 @@ describe('Create and Test Custom Networks', () => {
     // // Save Network
     await extensionPage.waitForTimeout(1000);
     await extensionPage.click('#saveNetwork:not(disabled)');
-    await extensionPage.waitForTimeout(2000);
+    await extensionPage.waitForTimeout(4000);
   });
 
   ImportAccount(accounts.ui);
 
-  test('Test Modifying Network', async () => {
+  test('Test Modifying Custom Network', async () => {
     await openNetworkMenu();
 
     // Change Network name
@@ -93,7 +93,7 @@ describe('Create and Test Custom Networks', () => {
     await inputPassword();
   });
 
-  test('Test Deleting Networks', async () => {
+  test('Test Deleting Custom Network', async () => {
     await openNetworkMenu();
 
     // Delete OtherNet
