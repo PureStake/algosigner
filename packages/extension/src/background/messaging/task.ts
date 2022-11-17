@@ -1318,30 +1318,22 @@ export class Task {
                 }
               } else {
                 // No more groups to sign, build final user-facing response
-                let response;
-
-                const finishRequest = (msg) => {
-                  // Clean class saved request
-                  delete Task.requests[responseOriginTabID];
-
-                  // Hardware signing will defer the response
-                  if (!holdResponse) {
-                    MessageApi.send(msg);
-                    return;
-                  }
-                };
                 if (opts && opts[OptsKeys.sendTxns]) {
                   message.body.params.stxns = message.body.params.signedGroups;
-                  message.body.params.ledger = ledger;
-                  Task.methods().public[JsonRpcMethod.PostTransactions](message, finishRequest);
                 } else {
-                  if (signedGroups.length === 1) {
-                    response = signedGroups[0];
+                  message.response = signedGroups.length === 1 ? signedGroups[0] : signedGroups;
+                }
+                // Clean class saved request
+                delete Task.requests[responseOriginTabID];
+                
+                // Hardware signing will defer the response
+                if (!holdResponse) {
+                  if (opts && opts[OptsKeys.sendTxns]) {
+                    Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
                   } else {
-                    response = signedGroups;
+                    MessageApi.send(message);
+                    return;
                   }
-                  message.response = response;
-                  finishRequest(message);
                 }
               }
             });
@@ -1479,21 +1471,38 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {
+          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (internalResponse) {
             logging.log(
-              `Task method - LedgerSendTxnResponse - Returning: ${JSON.stringify(response)}`,
+              `Task method - LedgerSendTxnResponse - Received: ${JSON.stringify(internalResponse)}`,
               2
             );
 
             // Message indicates that this response will go to the DApp
-            if ('message' in response) {
-              // Send the response back to the origniating page
-              MessageApi.send(response.message);
-              // Also pass back the blob response to the caller
-              sendResponse(response.message.response);
-            } else {
-              // Send repsonse to the calling function
+            if ('message' in internalResponse) {
+              const message = internalResponse.message;
+              const opts = message.body.params.opts;
+              const response = message.response;
+
+              if (opts && opts[OptsKeys.ARC01Return]) {
+                response.forEach(
+                  (maybeTxn: any, index: number) =>
+                    (response[index] = maybeTxn !== null ? maybeTxn.blob : null)
+                );
+              }
+              // We pass back the blob response to the UI
               sendResponse(response);
+
+              if (opts && opts[OptsKeys.sendTxns]) {
+                message.body.params.stxns = response;
+                Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+              } else {
+                // Send the response back to the originating page
+                MessageApi.send(message);
+                return;
+              }
+            } else {
+              // Send response to the calling function
+              sendResponse(internalResponse);
             }
           });
           return true;

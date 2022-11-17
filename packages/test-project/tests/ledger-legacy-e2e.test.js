@@ -1,7 +1,7 @@
 /**
  * Basic e2e tests for ensuring functionality of Ledger devices
  *
- * @group ledger
+ * @group ledger/legacy
  */
 
 const { wallet } = require('./common/constants');
@@ -15,6 +15,7 @@ const {
   buildSdkTx,
   prepareWalletTx,
   sendTransaction,
+  
 } = require('./common/helpers');
 const {
   CreateWallet,
@@ -22,7 +23,7 @@ const {
   ConnectWithAlgoSignerObject,
 } = require('./common/tests');
 
-jest.setTimeout(18000);
+jest.setTimeout(20000);
 jest.retryTimes(0, { logErrorsBeforeRetry: true });
 const testAssetIndex = 13169404;
 const linkedLedgerAccount = {
