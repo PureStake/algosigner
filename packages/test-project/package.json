@@ -19,8 +19,10 @@
     "ui/networks": "jest --group=ui/networks",
     "ui/transactions": "jest --group=ui/transactions",
     "dapp": "jest --group=dapp",
-    "dapp/signtxn": "jest --group=dapp/signtxn",
+    "dapp/legacy/signtxn": "jest --group=dapp/legacy/signtxn",
     "dapp/groups": "jest --group=dapp/groups",
+    "dapp/arcs": "jest --group=dapp/arcs",
+    "dapp/arcs/signtxns": "jest --group=dapp/arcs/signtxns",
     "ledger": "jest --group=ledger",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && bash -c \"start chrome \"$(realpath ./coverage/lcov-report/index.html\"\")",
     "test": "jest -i --group=-github --group=-ledger"

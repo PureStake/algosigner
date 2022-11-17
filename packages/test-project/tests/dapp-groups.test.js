@@ -13,7 +13,7 @@ const {
   buildSdkTx,
   prepareWalletTx,
 } = require('./common/helpers');
-const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
+const { CreateWallet, ConnectWithAlgoSignerObject, ImportAccount } = require('./common/tests');
 
 const account = accounts.ui;
 
@@ -58,7 +58,7 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectAlgoSigner();
+  ConnectWithAlgoSignerObject();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();

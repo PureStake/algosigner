@@ -19,7 +19,7 @@ const {
 const {
   CreateWallet,
   VerifyAccount,
-  ConnectAlgoSigner,
+  ConnectWithAlgoSignerObject,
 } = require('./common/tests');
 
 jest.setTimeout(18000);
@@ -51,7 +51,7 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectAlgoSigner();
+  ConnectWithAlgoSignerObject();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();

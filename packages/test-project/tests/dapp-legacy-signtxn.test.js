@@ -1,7 +1,7 @@
 /**
  * dapp e2e tests for the AlgoSigner V2 Signing functionality
  *
- * @group dapp/signtxn
+ * @group dapp/legacy/signtxn
  */
 
 const { accounts } = require('./common/constants');
@@ -14,7 +14,7 @@ const {
   buildSdkTx,
   prepareWalletTx,
 } = require('./common/helpers');
-const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
+const { CreateWallet, ConnectWithAlgoSignerObject, ImportAccount } = require('./common/tests');
 
 const msigAccount = accounts.multisig;
 const account1 = msigAccount.subaccounts[0];
@@ -30,7 +30,7 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectAlgoSigner();
+  ConnectWithAlgoSignerObject();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
