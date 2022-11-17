@@ -14,6 +14,7 @@ export enum JsonRpcMethod {
   SignDeny = 'sign-deny',
   SignWalletTransaction = 'sign-wallet-transaction',
   SendTransaction = 'send-transaction',
+  PostTransactions = 'post-txns',
   Algod = 'algod',
   Indexer = 'indexer',
   Accounts = 'accounts',
