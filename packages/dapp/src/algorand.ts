@@ -20,10 +20,10 @@ class Wrapper {
   };
 
   public enable: Function = this.task.connect;
-  // public signAndPostTxns: Function = this.task.signAndPostTxns;
+  public signAndPostTxns: Function = this.task.signAndPostTxns;
   // public getAlgodv2Client: Function = this.task.algod;
   // public getIndexerClient: Function = this.task.indexer;
-  // public signTxns: Function = this.task.signTxns;
+  public signTxns: Function = this.task.signTxns;
   public postTxns: Function = this.task.postTxns;
 
   public static getInstance(): Wrapper {

@@ -55,8 +55,7 @@ export class RequestError {
   );
   static PostValidationFailed = (reason: any): RequestError =>
     new RequestError(
-      // @TODO: reword second sentence
-      "There was a problem validating the transaction(s). The reasons are provided inside the 'data' property.",
+      "There was a problem validating the transaction(s). The reasons are provided in the 'data' property.",
       4300,
       reason
     );

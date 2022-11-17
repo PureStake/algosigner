@@ -9,7 +9,7 @@ const { accounts } = require('./common/constants');
 const {
   openExtension,
   getLedgerSuggestedParams,
-  signDappTxns,
+  signDappTxnsWAlgoSigner,
   buildSdkTx,
   prepareWalletTx,
 } = require('./common/helpers');
@@ -111,7 +111,7 @@ describe('Group Transactions Use cases', () => {
     const groupedTransactions = algosdk.assignGroupID([tx1]);
     const unsignedTransactions = [prepareWalletTx(groupedTransactions[0])];
 
-    const signedTransactions = await signDappTxns(unsignedTransactions);
+    const signedTransactions = await signDappTxnsWAlgoSigner(unsignedTransactions);
     await expect(signedTransactions[0]).not.toBeNull();
   });
 
@@ -143,7 +143,7 @@ describe('Group Transactions Use cases', () => {
     const unsignedTransactions = groupedTransactions.map((txn) => prepareWalletTx(txn));
     unsignedTransactions[2].signers = [];
 
-    const signedTransactions = await signDappTxns(unsignedTransactions);
+    const signedTransactions = await signDappTxnsWAlgoSigner(unsignedTransactions);
     await expect(signedTransactions[2]).toBeNull();
     await expect(signedTransactions.filter((i) => i)).toHaveLength(2);
 
@@ -156,7 +156,7 @@ describe('Group Transactions Use cases', () => {
     unsignedTransactions[1].signers = [];
     unsignedTransactions[1].stxn = signedTxn.blob;
 
-    const signedTransactions = await signDappTxns(unsignedTransactions);
+    const signedTransactions = await signDappTxnsWAlgoSigner(unsignedTransactions);
     await expect(signedTransactions[1]).toStrictEqual(signedTxn);
     await expect(signedTransactions[2]).not.toBeNull();
     await expect(signedTransactions.filter((i) => i)).toHaveLength(3);

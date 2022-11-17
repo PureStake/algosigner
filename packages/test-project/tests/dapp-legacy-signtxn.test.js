@@ -9,7 +9,7 @@ const {
   openExtension,
   getPopup,
   getLedgerSuggestedParams,
-  signDappTxns,
+  signDappTxnsWAlgoSigner,
   decodeBase64Blob,
   buildSdkTx,
   prepareWalletTx,
@@ -316,7 +316,7 @@ describe('Txn Signing Validation errors', () => {
 describe('Multisig Transaction Use cases', () => {
   test('Sign MultiSig Transaction with All Accounts', async () => {
     unsignedTransactions = [msigTxn];
-    const signedTransactions = await signDappTxns(unsignedTransactions, async () => {
+    const signedTransactions = await signDappTxnsWAlgoSigner(unsignedTransactions, async () => {
       const popup = await getPopup();
       const tooltipText = await popup.evaluate(() => {
         return getComputedStyle(
@@ -340,7 +340,7 @@ describe('Multisig Transaction Use cases', () => {
 
   test('Sign MultiSig Transaction with Specific Signer', async () => {
     unsignedTransactions[0].signers = [account1.address];
-    const signedTransactions = await signDappTxns(unsignedTransactions);
+    const signedTransactions = await signDappTxnsWAlgoSigner(unsignedTransactions);
 
     // Verify correct signature is added
     const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
