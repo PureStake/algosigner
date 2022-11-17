@@ -64,4 +64,12 @@ export class Task extends Runtime implements ITask {
     };
     return MessageBuilder.promise(JsonRpcMethod.SignWalletTransaction, params, error);
   }
+
+  /**
+   * @param stxns array or nested array of grouped signed transaction
+   * @returns array or nested array of confirmed transactions sent to the network
+   */
+  postTxns(stxns: string[] | string[][], error: RequestError = RequestError.None): Promise<JsonPayload> {
+    return MessageBuilder.promise(JsonRpcMethod.PostTransactions, { stxns }, error);
+  }
 }
