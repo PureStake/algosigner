@@ -355,7 +355,7 @@ export class Task {
                   // We reject if we can't convert from b64 to a valid txn
                   throw RequestError.InvalidSignedTxn;
                 }
-                if (!signedTxnBytes.every((value, index) => unsignedTxnBytes[index] === value)) {
+                if (!areBuffersEqual(signedTxnBytes, unsignedTxnBytes)) {
                   // We reject if the transactions don't match
                   throw RequestError.NonMatchingSignedTxn;
                 }
@@ -443,7 +443,7 @@ export class Task {
         /** 
          * Group validations
          */
-        const groupId = transactionWraps[0].transaction.group;
+        const providedGroupId: string = transactionWraps[0].transaction.group;
 
         if (transactionWraps.length > 1) {
           if (
@@ -454,16 +454,16 @@ export class Task {
             throw RequestError.NoDifferentLedgers;
           }
 
-          if (!groupId) {
+          if (!providedGroupId || !transactionWraps.every((wrap) => wrap.transaction.group)) {
             throw RequestError.MultipleTxsRequireGroup;
           }
 
-          if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-            throw RequestError.NonMatchingGroup;
+          if (!transactionWraps.every((wrap) => providedGroupId === wrap.transaction.group)) {
+            throw RequestError.MismatchingGroup;
           }
         }
 
-        if (groupId) {
+        if (providedGroupId) {
           // Verify group is presented as a whole
           const recreatedGroupTxs = algosdk.assignGroupID(
             rawTxArray.slice().map((tx) => {
@@ -472,7 +472,7 @@ export class Task {
             })
           );
           const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-          if (groupId !== recalculatedGroupID) {
+          if (providedGroupId !== recalculatedGroupID) {
             throw RequestError.IncompleteOrDisorderedGroup;
           }
         }
@@ -564,7 +564,7 @@ export class Task {
             );
           }
         },
-        // handle-wallet-transactions
+        // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: async (
           d: any,
           resolve: Function,
@@ -601,8 +601,8 @@ export class Task {
 
           // If none of the formats match up, we throw an error
           if (!transactionsOrGroups || (!hasSingleGroup && !hasMultipleGroups)) {
-            logging.log(RequestError.InvalidFormat.message);
-            d.error = RequestError.InvalidFormat;
+            logging.log(RequestError.InvalidSignTxnsFormat.message);
+            d.error = RequestError.InvalidSignTxnsFormat;
             reject(d);
             return;
           }
@@ -615,7 +615,7 @@ export class Task {
           d.body.params.currentGroup = 0;
           d.body.params.signedGroups = [];
 
-          Task.signIndividualGroup(d);
+          await Task.signIndividualGroup(d);
         },
         // send-transaction
         [JsonRpcMethod.SendTransaction]: (d: any, resolve: Function, reject: Function) => {
@@ -629,9 +629,7 @@ export class Task {
             },
             method: 'POST',
           };
-          const tx = atob(params.tx)
-            .split('')
-            .map((x) => x.charCodeAt(0));
+          const tx = base64ToByteArray(params.tx);
           fetchParams.body = new Uint8Array(tx);
 
           let url = conn.url;
@@ -1302,8 +1300,9 @@ export class Task {
               message.body.params.currentGroup = currentGroup + 1;
               message.body.params.signedGroups = signedGroups;
               if (message.body.params.currentGroup < groupsToSign.length) {
+                // More groups to sign, continue prompting user
                 try {
-                  Task.signIndividualGroup(message);
+                  await Task.signIndividualGroup(message);
                 } catch (e) {
                   let errorMessage = 'There was a problem validating the transaction(s). ';
 

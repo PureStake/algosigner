@@ -8,10 +8,7 @@ export class RequestError {
   data?: any;
 
   static None = new RequestError('', 0);
-  static Undefined = new RequestError(
-    'An undefined error occurred.',
-    4000
-  );
+  static Undefined = new RequestError('An undefined error occurred.', 4000);
   static UserRejected = new RequestError(
     'The extension user does not authorize the request.',
     4001
@@ -20,19 +17,17 @@ export class RequestError {
     'The extension user has not authorized requests from this website.',
     4100
   );
-  static NoMnemonicAvailable = (address: string): RequestError => new RequestError(
-    `The user does not possess the required private key to sign with for address: "${address}".`,
-    4100
-  );
+  static NoMnemonicAvailable = (address: string): RequestError =>
+    new RequestError(
+      `The user does not possess the required private key to sign with for address: "${address}".`,
+      4100
+    );
   static NoAccountMatch = (address: string, ledger: string): RequestError =>
     new RequestError(
       `No matching account found on AlgoSigner for address "${address}" on network ${ledger}.`,
       4100
     );
-  static UnsupportedLedger = new RequestError(
-    'The provided ledger is not supported.',
-    4200
-  );
+  static UnsupportedLedger = new RequestError('The provided ledger is not supported.', 4200);
   static PendingTransaction = new RequestError('Another query processing', 4201);
   static LedgerMultipleTransactions = new RequestError(
     'Ledger hardware device signing is only available for one transaction at a time.',
@@ -50,8 +45,8 @@ export class RequestError {
     new RequestError('Validation failed for transaction due to invalid properties.', 4300, data);
   static InvalidTransactionStructure = (data?: any): RequestError =>
     new RequestError('Validation failed for transaction due to invalid structure.', 4300, data);
-  static InvalidFormat = new RequestError(
-    '[RequestError.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
+  static InvalidSignTxnsFormat = new RequestError(
+    'Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
     4300
   );
   static InvalidPostTxnsFormat = new RequestError(
@@ -68,7 +63,7 @@ export class RequestError {
   static CantMatchMsigSigners = (info: string): RequestError =>
     new RequestError(
       `AlgoSigner does not currently possess one of the requested signers for this multisig transaction: ${info}.`,
-      4300,
+      4300
     );
   static InvalidSignerAddress = (address: string): RequestError =>
     new RequestError(`Signers array contains the invalid address "${address}"`, 4300);
