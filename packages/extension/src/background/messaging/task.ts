@@ -1,6 +1,6 @@
 import algosdk, { MultisigMetadata, Transaction } from 'algosdk';
 
-import { WalletTransaction } from '@algosigner/common/types';
+import { OptsKeys, WalletTransaction } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from '@algosigner/common/types';
@@ -1077,7 +1077,7 @@ export class Task {
           const { passphrase, responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
-          const { groupsToSign, currentGroup, signedGroups } = message.body.params;
+          const { groupsToSign, currentGroup, signedGroups, opts } = message.body.params;
           const singleGroup = groupsToSign.length === 1;
           const walletTransactions: Array<WalletTransaction> = groupsToSign[currentGroup];
           const transactionsWraps: Array<BaseValidatedTxnWrap> =
@@ -1264,6 +1264,13 @@ export class Task {
                 }
               });
 
+              if (opts && opts[OptsKeys.ARC01Return]) {
+                signedTxs.forEach(
+                  (maybeTxn: any, index: number) =>
+                    (signedTxs[index] = maybeTxn !== null ? maybeTxn.blob : null)
+                );
+              }
+
               // We check if there were errors signing this group
               if (signErrors.length) {
                 let data = '';
@@ -1311,19 +1318,31 @@ export class Task {
                   return;
                 }
               } else {
+                // No more groups to sign, build final user-facing response
                 let response;
-                if (signedGroups.length === 1) {
-                  response = signedGroups[0];
-                } else {
-                  response = signedGroups;
-                }
-                message.response = response;
-                // Clean class saved request
-                delete Task.requests[responseOriginTabID];
 
-                // Hardware signing will defer the response
-                if (!holdResponse) {
-                  MessageApi.send(message);
+                const finishRequest = (msg) => {
+                  // Clean class saved request
+                  delete Task.requests[responseOriginTabID];
+
+                  // Hardware signing will defer the response
+                  if (!holdResponse) {
+                    MessageApi.send(msg);
+                    return;
+                  }
+                };
+                if (opts && opts[OptsKeys.sendTxns]) {
+                  message.body.params.stxns = message.body.params.signedGroups;
+                  message.body.params.ledger = ledger;
+                  Task.methods().public[JsonRpcMethod.PostTransactions](message, finishRequest);
+                } else {
+                  if (signedGroups.length === 1) {
+                    response = signedGroups[0];
+                  } else {
+                    response = signedGroups;
+                  }
+                  message.response = response;
+                  finishRequest(message);
                 }
               }
             });

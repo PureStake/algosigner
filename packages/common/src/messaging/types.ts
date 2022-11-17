@@ -58,7 +58,7 @@ export enum JsonRpcMethod {
 }
 
 export type JsonPayload = {
-  [key: string]: string | number | Array<WalletTransaction> | JsonPayload | undefined;
+  [key: string]: string | number | boolean | Array<any> | JsonPayload | undefined;
 };
 
 export type JsonRpcBody = {
