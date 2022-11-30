@@ -10,10 +10,6 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been officially deprecated.
-
-An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html).
-
 ## 1.9.6 Release
 
 ### Main updates
@@ -43,6 +39,9 @@ For teams looking to integrate AlgoSigner into a project:
 
 - [dApp Development guide](docs/dApp-guide.md)
 - [AlgoSigner dApp Integration Guide](docs/dApp-integration.md)
+
+**NOTE:** `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been officially deprecated. An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/v1v2TransitionGuide.html) if you still need to migrate existing functionalities.
+
 
 ## AlgoSigner development
 
