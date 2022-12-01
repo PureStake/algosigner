@@ -8,6 +8,7 @@ import { API } from './types';
 import {
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
+  getLedgerFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationResponse, ValidationStatus } from '../utils/validator';
@@ -41,9 +42,47 @@ const signPopupProperties = {
 export class Task {
   private static requests: { [key: string]: any } = {};
   private static authorized_pool: Array<string> = [];
+  private static authorized_pool_details: any = {}
 
   public static isAuthorized(origin: string): boolean {
     return Task.authorized_pool.indexOf(origin) > -1;
+  }
+
+  public static isPreAuthorized(origin: string, genesisId: string, requestedAccounts: Array<any>): boolean {
+    // Validate the origin is in the authorized pool
+    if (Task.authorized_pool.indexOf(origin) === -1) {
+      return false;
+    }
+
+    // Validate the genesisId is the authorized one
+    // Note: The arc-0006 requires "genesisID" which matches the transaction, but we use "genesisId" internally
+    if (!Task.authorized_pool_details[origin] || !(Task.authorized_pool_details[origin]['genesisID'] === genesisId)) {
+      return false;
+    }
+
+    // Validate the requested accounts exist in the pool detail
+    for (let i = 0; i < requestedAccounts.length; i++) {
+      if (!(Task.authorized_pool_details[origin].accounts.includes(requestedAccounts[i]))) {
+        return false;
+      }    
+    }
+
+    // We made it through negative checks to accounts are currently authroized
+    return true;
+  }
+
+  // Checks for the originId authorization in details then call to make sure the account exists in Algosigner.
+  private static checkAccountIsImportedAndAuthorized(genesisID: string, address: string, originId: string): void {
+    // Legacy authorized and internal calls will not have an originId in authorized pool details
+    if (Task.authorized_pool_details[originId]) {
+      // This must be a dApp using enable - verify the ledger and address are authorized
+      if ((Task.authorized_pool_details[originId]['genesisID'] !== genesisID)
+      || (!Task.authorized_pool_details[originId]['accounts'].includes(address))) {
+        throw RequestError.NoAccountMatch(address, genesisID);
+      }  
+    }
+    // Call the normal account check
+    InternalMethods.checkAccountIsImported(genesisID, address);
   }
 
   public static build(request: any) {
@@ -67,6 +106,7 @@ export class Task {
 
   public static clearPool() {
     Task.authorized_pool = [];
+    Task.authorized_pool_details = {};
   }
 
   public static getChainAuthAddress = async (transaction: any): Promise<string> => {
@@ -269,8 +309,11 @@ export class Task {
           wrap.signers = signers;
 
           // We validate the authAddress if available
-          if (authAddr && !algosdk.isValidAddress(authAddr)) {
-            throw RequestError.InvalidAuthAddress(authAddr);
+          if (authAddr) {
+            Task.checkAccountIsImportedAndAuthorized(genesisID, authAddr, request.originTabID);
+            if (!algosdk.isValidAddress(authAddr)) {
+              throw RequestError.InvalidAuthAddress(authAddr);
+            }
           }
 
           // If we have msigData, we validate the addresses and fetch the resulting msig address
@@ -335,7 +378,7 @@ export class Task {
                 // We make sure we have the available accounts for signing
                 signers.forEach((address) => {
                   try {
-                    InternalMethods.checkAccountIsImported(genesisID, address);
+                    Task.checkAccountIsImportedAndAuthorized(genesisID, address, request.originTabID);
                   } catch (e) {
                     throw RequestError.CantMatchMsigSigners(e.message);
                   }
@@ -364,7 +407,7 @@ export class Task {
           } else {
             // There's no signers field, we validate the sender if there's no msig
             if (!msigData) {
-              InternalMethods.checkAccountIsImported(genesisID, wrap.transaction.from);
+              Task.checkAccountIsImportedAndAuthorized(genesisID, wrap.transaction.from, request.originTabID);
             }
           }
 
@@ -564,6 +607,170 @@ export class Task {
             );
           }
         },
+        // Enable function as defined in ARC-006
+        [JsonRpcMethod.EnableAuthorization]: (d: any) => {
+          const { accounts } = d.body.params;
+          let { genesisId, genesisHash, ledger } = d.body.params;
+
+          // Delete any previous request made from the Tab that it's trying to connect.
+          delete Task.requests[d.originTabID];
+
+          // Get an internal session - if unavailable then we will connect and deny
+          const session = InternalMethods.getHelperSession();
+
+          // If session is missing then we should throw an error, but still popup the login screen
+          if (session.availableLedgers.length === 0) {
+            // No ledgers are available. The user is logged out so just prompt them to login.  
+            extensionBrowser.windows.create({
+              url: extensionBrowser.runtime.getURL('index.html#/close'),
+              ...authPopupProperties,
+            });
+
+            // Let the dApp know there was an issue with a generic unauthorized
+            d.error = RequestError.SiteNotAuthorizedByUser;
+
+            // Set the timeout higher to allow for the previous popup before responding
+            setTimeout(() => {
+              MessageApi.send(d);
+            }, 2000);
+          }        
+          else {
+            // Get ledger/hash/id from the genesisId and/or hash
+            const ledgerTemplate = getLedgerFromMixedGenesis(genesisId, genesisHash);
+
+            // Validate that the genesis id and hash if provided match the resulting one
+            // This is because a dapp may request an id and hash from different ledgers
+            if ((genesisId && genesisId !== ledgerTemplate.genesisId) 
+            || (genesisId && genesisId !== ledgerTemplate.genesisId)) {
+              d.error = RequestError.UnsupportedLedger;
+              setTimeout(() => {
+                MessageApi.send(d);
+              }, 500);
+              return;
+            }
+
+            // We've validated the ledger information 
+            // So we can set the ledger, genesisId, and genesisHash 
+            ledger = ledgerTemplate.name;
+            genesisId = ledgerTemplate.genesisId;
+            genesisHash = ledgerTemplate.genesisHash;
+            // Then reflect those changes for the page
+            d.body.params.ledger = ledger; // For legacy name use
+            d.body.params.genesisId = genesisId;
+            d.body.params.genesisHash = genesisHash;
+
+            // If we already have the ledger authorized for this origin then check the shared accounts
+            if (Task.isAuthorized(d.origin)) {
+              // First check that we actually still have the addresses requested
+              try {
+                accounts.forEach(account => {
+                  InternalMethods.checkAccountIsImported(genesisId, account);
+                });  
+
+                // If the ledger and ALL accounts are available then respond with the cached data
+                if (Task.isPreAuthorized(d.origin, genesisId, accounts)) { 
+                  // We have the accounts and may include additional, but just make sure the order is maintained
+                  const sharedAccounts = [];
+                  accounts.forEach(account => {
+                    // Make sure we don't include accounts that have been deleted
+                    InternalMethods.checkAccountIsImported(genesisId, account);
+                    sharedAccounts.push(account);
+                  });
+                  Task.authorized_pool_details[d.origin]['accounts'].forEach(account => {
+                    if (!(sharedAccounts.includes(account))) {
+                      // Make sure we don't include accounts that have been deleted
+                      InternalMethods.checkAccountIsImported(genesisId, account);
+                      sharedAccounts.push(account);
+                    }
+                  });
+
+                  // Now we can set the response, but don't need to update the cache
+                  d.response = {
+                    'genesisID': genesisId, 
+                    'genesisHash': genesisHash,
+                    accounts: sharedAccounts
+                  };
+                  MessageApi.send(d);
+                  return;
+                }  
+              }
+              catch {
+                // Failure means we won't auto authorize, but we can sink the error as we are re-prompting
+              }   
+            }
+            // We haven't immediately failed and don't have preAuthorization so we need to prompt accounts. 
+            const promptedAccounts = [];
+           
+            // Add any requested accounts so they can be in the proper order to start
+            if (accounts) {
+              for (let i = 0; i < accounts.length; i++) {
+                // We initially push accounts as missing and don't have them selected
+                // If we also own the address it will be modified to not missing and selected by default
+                const requestedAddress = accounts[i];
+                promptedAccounts.push({
+                  address: requestedAddress,
+                  missing: true,
+                  requested: true,
+                });
+              }
+            }
+
+            // Get wallet accounts for the specified ledger
+            const walletAccounts = session.wallet[ledger];
+        
+            // If we need a requested a ledger but don't have it, respond with an error
+            if (walletAccounts === undefined) {
+              d.error = RequestError.UnsupportedLedger;
+
+              setTimeout(() => {
+                MessageApi.send(d);
+              }, 500);
+              return;
+            }    
+        
+            // Add all the walletAccounts we have for the ledger 
+            for (let i = 0; i < walletAccounts.length; i++) {
+              const walletAccount = walletAccounts[i].address;
+              const accountIndex = promptedAccounts.findIndex(e => e.address === walletAccount);
+        
+              if (accountIndex > -1) {
+                // If we have the account then mark it as valid 
+                promptedAccounts[accountIndex]['missing'] = false;
+                promptedAccounts[accountIndex]['selected'] = true;
+              }
+              else {
+                // If we are missing the address then this is an account that the dApp did not request
+                // but we can push the value an the additional choices from the user before returning
+                promptedAccounts.push({
+                  address: walletAccount,
+                  requested: false,
+                  selected: false
+                });
+              }
+            }   
+          
+            // Add the prompted accounts to the params that will go to the page
+            d.body.params['promptedAccounts'] = promptedAccounts;
+
+            extensionBrowser.windows.create(
+              {
+                url: extensionBrowser.runtime.getURL('index.html#/enable'),
+                ...authPopupProperties,
+              },
+              function (w: any) {
+                if (w) {
+                  Task.requests[d.originTabID] = {
+                    window_id: w.id,
+                    message: d,
+                  };
+                  setTimeout(function () {
+                    extensionBrowser.runtime.sendMessage(d);
+                  }, 500);
+                }
+              }
+            );
+          }
+        },
         // handle-wallet-transactions
         [JsonRpcMethod.SignWalletTransaction]: async (
           d: any,
@@ -743,7 +950,7 @@ export class Task {
       private: {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
-          const { responseOriginTabID } = d.body.params;
+          const { responseOriginTabID, isEnable, accounts, genesisId, genesisHash } = d.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
@@ -754,6 +961,34 @@ export class Task {
           setTimeout(() => {
             // Response needed
             message.response = {};
+            // We need to send the authorized accounts and genesis info back if this is an enable call
+            if (isEnable) {
+              // Check that the requested accounts have been approved
+              const rejectedAccounts = [];
+              const sharedAccounts = [];
+              for (const i in accounts) {
+                if ((accounts[i]['requested'] && !accounts[i]['selected']) || accounts[i]['missing']) {
+                  rejectedAccounts.push(accounts[i]['address']);          
+                }
+                else if(accounts[i]['selected']) {
+                  sharedAccounts.push(accounts[i]['address']);
+                }
+              }
+              if (rejectedAccounts.length > 0) {
+                message.error = RequestError.EnableRejected({ 'accounts': rejectedAccounts });
+              }
+              else { 
+                message.response = {
+                  'genesisID': genesisId, 
+                  'genesisHash': genesisHash,
+                  accounts: sharedAccounts
+                }
+
+                // Add to the authorized pool details. 
+                // This will be checked to restrict access for enable function users
+                Task.authorized_pool_details[`${message.origin}`] = message.response;
+              }
+            }
             MessageApi.send(message);
           }, 100);
         },

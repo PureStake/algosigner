@@ -7,6 +7,7 @@ export enum JsonRpcMethod {
   // dApp methods
   Heartbeat = 'heartbeat',
   Authorization = 'authorization',
+  EnableAuthorization = 'enable-authorization',
   AuthorizationAllow = 'authorization-allow',
   AuthorizationDeny = 'authorization-deny',
   SignAllow = 'sign-allow',

@@ -20,6 +20,7 @@ class Wrapper {
   };
 
   public connect: Function = this.task.connect;
+  public enable: Function = this.task.enable;
   public send: Function = this.task.send;
   public accounts: Function = this.task.accounts;
   public algod: Function = this.task.algod;

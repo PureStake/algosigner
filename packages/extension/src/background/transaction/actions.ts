@@ -24,7 +24,7 @@ import { TransactionType } from '@algosigner/common/types/transaction';
 import { RequestError } from '@algosigner/common/errors';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
-import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { removeEmptyFields } from '@algosigner/common/utils';
 import algosdk from 'algosdk';
 
@@ -142,6 +142,56 @@ export function getLedgerFromGenesisId(genesisId: string) {
     return ledger.name;
   }
   return defaultLedger;
+}
+
+export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string): LedgerTemplate {
+  // Default the ledger to mainnet
+  const defaultLedger = 'MainNet';
+
+  // Check Genesis Id and Hash for base supported ledgers first
+  const defaultLedgers = getBaseSupportedLedgers();
+  let ledger;
+  if (genesisId) {
+    ledger = defaultLedgers.find((l) => genesisId === l['genesisId']);
+    if (ledger !== undefined) {
+      // Found genesisId, make sure the hash matches 
+      if (!genesisHash || genesisHash === ledger.genesisHash) { 
+        return ledger;
+      }
+    }
+    
+    // Injected networks may have additional information, multiples, or additional checks
+    // so we will check them separately
+    ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
+    if (ledger !== undefined) {
+      // Found genesisId, make sure the hash matches 
+      if (!genesisHash || genesisHash === ledger.genesisHash) { 
+        return ledger;
+      }
+    }
+  }
+
+  // We didn't match on the genesis id so check the hashes
+  if (genesisHash) {
+    ledger = defaultLedgers.find((l) => genesisHash === l['genesisHash']);
+    if (ledger !== undefined) {
+      // Found genesisHash, make sure the id matches 
+      if (!genesisId || genesisId === ledger.genesisId) { 
+        return ledger;
+      }
+    }
+    // Injected networks may have additional information, multiples, or additional checks
+    // so we will check them separately
+    ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
+    if (ledger !== undefined) {
+      // Found genesisHash, make sure the id matches 
+      if (!genesisId || genesisId === ledger.genesisId) { 
+        return ledger;
+      }
+    }
+  }
+
+  return defaultLedgers.find((l) => defaultLedger === l['name']);
 }
 
 export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {
