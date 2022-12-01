@@ -2,11 +2,22 @@
 
 # Integrating AlgoSigner to add Transaction Capabilities for dApps on Algorand
 
-AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, discover account addresses it holds, ask AlgoSigner to request the user to sign a transaction initiated by the application and to post signed transactions to the network.
+AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, request account addresses it holds, ask AlgoSigner to request the user to sign a transaction initiated by the application, and to post signed transactions to the network.
 
-The `window.algorand` object is made available to the browser and can be accessed by the dapp to make calls to AlgoSigner. All methods of the injected `algorand` library return a Promise that needs to be handled by the dApp.
+## AlgoSigner 1.10.0 Update
+As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/) , in 1.10.0 a number of non-breaking additions have been made to how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
 
-**NOTE: If you're looking for information on the `window.AlgoSigner` object, please refer to the [legacy Integration Guide](legacy-dApp-integration.md)**
+### Additions
+
+- a new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
+
+- An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. The existing connection flow persists but will be deprecated over the next 3-6 months. 
+
+- Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
+
+- @TODO: Something about AuthADDR
+
+**NOTE: This guide refers only to the post-1.10.0 features and the `window.algorand` object. If you're looking for information on the `window.AlgoSigner` object, please refer to the [legacy Integration Guide](legacy-dApp-integration.md)**
 
 ## Methods
 
