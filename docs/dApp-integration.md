@@ -5,11 +5,11 @@
 AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, request account addresses it holds, ask AlgoSigner to request the user to sign a transaction initiated by the application, and to post signed transactions to the network.
 
 ## AlgoSigner 1.10.0 Update
-As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/) , in 1.10.0 a number of non-breaking additions have been made to how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
+As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0 a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
 
 ### Additions
 
-- a new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
+- A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
 
 - An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. The existing connection flow persists but will be deprecated over the next 3-6 months. 
 
