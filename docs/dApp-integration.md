@@ -5,6 +5,7 @@
 AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, request account addresses it holds, ask AlgoSigner to request the user to sign a transaction initiated by the application, and to post signed transactions to the network.
 
 ## AlgoSigner 1.10.0 Update
+
 As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0 a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
 
 ### Additions
@@ -15,7 +16,7 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 
 - Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
 
-- @TODO: Something about AuthADDR
+- Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
 
 **NOTE: This guide refers only to the post-1.10.0 features and the `window.algorand` object. If you're looking for information on the `window.AlgoSigner` object, please refer to the [legacy Integration Guide](legacy-dApp-integration.md)**
 
@@ -50,10 +51,11 @@ Transactions objects need to be presented with the following structure:
 
 ```
 export type TxnObject = {
-  txn: Base64-encoded string of a transaction binary,
-  signers?: [optional] array of addresses to sign with (defaults to the sender),
-  stxn?: [optional] Base64-encoded string of a signed transaction binary
-  multisig?: [optional] extra metadata needed for multisig transactions,
+  txn:        Base64-encoded string of a transaction binary,
+  signers?:   [optional] array of addresses to sign with (defaults to the sender),
+  stxn?:      [optional] Base64-encoded string of a signed transaction binary,
+  multisig?:  [optional] extra metadata needed for multisig transactions,
+  authAddr?:  [optional] used to specify which account is doing the signing when dealing with rekeyed accounts,
 };
 ```
 
@@ -98,7 +100,7 @@ let client = new algosdk.Algodv2(token, server, port, headers);
 let suggestedParams = await client.getTransactionParams().do();
 
 // Use the JS SDK to build a Transaction
-let sdkTx = new algosdk.Transaction({
+let sdkTxn = new algosdk.Transaction({
   to: 'RECEIVER_ADDRESS',
   from: 'SENDER_ADDRESS',
   amount: 100,
@@ -106,12 +108,12 @@ let sdkTx = new algosdk.Transaction({
 });
 
 // Get the binary and base64 encode it
-let binaryTx = sdkTx.toByte();
-let base64Tx = algorand.encoding.msgpackToBase64(binaryTx);
+let binaryTxn = sdkTxn.toByte();
+let base64Txn = algorand.encoding.msgpackToBase64(binaryTxn);
 
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64Tx,
+    txn: base64Txn,
   },
 ]);
 ```
@@ -152,10 +154,10 @@ The signed transactions can then be sent using the SDK (example below) or using 
 
 ```js
 // Get the base64 encoded signed transaction and convert it to binary
-let binarySignedTx = algorand.encoding.base64ToMsgpack(signedTxs[0]);
+let binarySignedTxn = algorand.encoding.base64ToMsgpack(signedTxns[0]);
 
 // Send the transaction through the SDK client
-await client.sendRawTransaction(binarySignedTx).do();
+await client.sendRawTransaction(binarySignedTxn).do();
 ```
 
 ### Atomic Transactions
@@ -165,13 +167,13 @@ For Atomic transactions, provide an array of transaction objects with the same g
 **Example**
 
 ```js
-let tx1 = new algosdk.Transaction({
+let txn1 = new algosdk.Transaction({
   to: 'SECOND_ADDRESS',
   from: 'FIRST_ADDRESS',
   amount: 100,
   ...suggestedParams,
 });
-let tx2 = new algosdk.Transaction({
+let txn2 = new algosdk.Transaction({
   to: 'FIRST_ADDRESS',
   from: 'SECOND_ADDRESS',
   amount: 100,
@@ -179,17 +181,17 @@ let tx2 = new algosdk.Transaction({
 });
 
 // Assign a Group ID to the transactions using the SDK
-algosdk.assignGroupID([tx1, tx2]);
+algosdk.assignGroupID([txn1, txn2]);
 
-let binaryTxs = [tx1.toByte(), tx2.toByte()];
-let base64Txs = binaryTxs.map((binary) => algorand.encoding.msgpackToBase64(binary));
+let binaryTxns = [txn1.toByte(), txn2.toByte()];
+let base64Txns = binaryTxns.map((binary) => algorand.encoding.msgpackToBase64(binary));
 
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64Txs[0],
+    txn: base64Txns[0],
   },
   {
-    txn: base64Txs[1],
+    txn: base64Txns[1],
   },
 ]);
 ```
@@ -197,8 +199,8 @@ let signedTxs = await algorand.signTxns([
 The signed transaction array can then be sent using the SDK.
 
 ```js
-let binarySignedTxs = signedTxs.map((stxn) => algorand.encoding.base64ToMsgpack(stxn));
-await client.sendRawTransaction(binarySignedTxs).do();
+let binarySignedTxns = signedTxns.map((stxn) => algorand.encoding.base64ToMsgpack(stxn));
+await client.sendRawTransaction(binarySignedTxns).do();
 ```
 
 #### Reference Atomic transactions
@@ -222,29 +224,29 @@ You can provide a signed reference transaction to AlgoSigner via the `stxn` fiel
 **Example**
 
 ```js
-let tx1 = new algosdk.Transaction({
+let txn1 = new algosdk.Transaction({
   to: 'EXTERNAL_ACCOUNT',
   from: 'ACCOUNT_IN_ALGOSIGNER',
   amount: 100,
   ...suggestedParams,
 });
-let tx2 = new algosdk.Transaction({
+let txn2 = new algosdk.Transaction({
   to: 'ACCOUNT_IN_ALGOSIGNER',
   from: 'EXTERNAL_ACCOUNT',
   amount: 100,
   ...suggestedParams,
 });
 
-algosdk.assignGroupID([tx1, tx2]);
-let binaryTxs = [tx1.toByte(), tx2.toByte()];
-let base64Txs = binaryTxs.map((binary) => algorand.encoding.msgpackToBase64(binary));
+algosdk.assignGroupID([txn1, txn2]);
+let binaryTxns = [txn1.toByte(), txn2.toByte()];
+let base64Txns = binaryTxns.map((binary) => algorand.encoding.msgpackToBase64(binary));
 
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64Txs[0],
+    txn: base64Txns[0],
   },
   {
-    txn: base64Txs[1],
+    txn: base64Txns[1],
     signers: [],
     stxn: 'MANUALLY_SIGNED_SECOND_TXN_B64',
   },
@@ -267,12 +269,12 @@ In case you can't or don't want to provide the `stxn`, the provided transaction 
 **Example**
 
 ```js
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64Txs[0],
+    txn: base64Txns[0],
   },
   {
-    txn: base64Txs[1],
+    txn: base64Txns[1],
     signers: [],
   },
 ]);
@@ -291,12 +293,12 @@ Afterwards, you can sign and send the remaining transaction(s) with the SDK:
 
 ```js
 // Convert first transaction to binary from the response
-let signedTx1Binary = algorand.encoding.base64ToMsgpack(signedTxs[0]);
+let signedTxn1Binary = algorand.encoding.base64ToMsgpack(signedTxns[0]);
 // Sign leftover transaction with the SDK
 let externalAccount = algosdk.mnemonicToSecretKey('EXTERNAL_ACCOUNT_MNEMONIC');
-let signedTx2Binary = tx2.signTxn(externalAccount.sk);
+let signedTxn2Binary = txn2.signTxn(externalAccount.sk);
 
-await client.sendRawTransaction([signedTx1Binary, signedTx2Binary]).do();
+await client.sendRawTransaction([signedTxn1Binary, signedTxn2Binary]).do();
 ```
 
 #### Multisig Transactions
@@ -326,7 +328,7 @@ let multisigParams = {
 
 let multisigAddress = algosdk.multisigAddress(multisigParams);
 
-let multisigTx = new algosdk.Transaction({
+let multisigTxn = new algosdk.Transaction({
   to: 'RECEIVER_ADDRESS',
   from: multisigAddress,
   amount: 100,
@@ -334,13 +336,13 @@ let multisigTx = new algosdk.Transaction({
 });
 
 // Get the binary and base64 encode it
-let binaryMultisigTx = multisigTx.toByte();
-let base64MultisigTx = algorand.encoding.msgpackToBase64(binaryMultisigTx);
+let binaryMultisigTxn = multisigTxn.toByte();
+let base64MultisigTxn = algorand.encoding.msgpackToBase64(binaryMultisigTxn);
 
 // This returns a partially signed Multisig Transaction with signatures for FIRST_ADDRESS and SECOND_ADDRESS
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64MultisigTx,
+    txn: base64MultisigTxn,
     msig: multisigParams,
   },
 ]);
@@ -350,9 +352,9 @@ In case you want to specify a subset of addresses to sign with, you can add them
 
 ```js
 // This returns a partially signed Multisig Transaction with signatures for SECOND_ADDRESS
-let signedTxs = await algorand.signTxns([
+let signedTxns = await algorand.signTxns([
   {
-    txn: base64MultisigTx,
+    txn: base64MultisigTxn,
     msig: multisigParams,
     signers: ['SECOND_ADDRESS'],
   },
@@ -360,7 +362,35 @@ let signedTxs = await algorand.signTxns([
 ```
 #### Authorized Addresses
 
-@TODO: Expand authAddr usage
+When dealing with rekeyed accounts, the authorized address to be used to sign the transaction differs from the rekeyed account. The `TxnObject.authAddr` field allows to specify a different sender address in those cases.
+
+**NOTE:** If specified, AlgoSigner will sign the transaction using this authorized address even if it sees the sender address was not rekeyed to authAddr. This is because the sender may be rekeyed before the transaction is committed.
+
+**Example**
+
+```js
+let txn = new algosdk.Transaction({
+  to: 'REKEYED_ACCOUNT',
+  from: 'REKEYED_ACCOUNT',
+  amount: 100,
+  ...suggestedParams,
+});
+
+let base64Txn = algorand.encoding.msgpackToBase64(txn.toByte());
+
+let signedTxns = await algorand.signTxns([
+  {
+    txn: base64Txn,
+    authAddr: 'AUTHORIZED_ADDRESS_FOR_REKEY',
+  },
+]);
+```
+
+**Special Considerations**
+
+In cases where both `TxnObject.authAddr` and `TxnObject.msig` are provided, both addresses need to match or the transaction will be rejected.
+
+In cases where both `TxnObject.authAddr` and a `TxnObject.signers` array with a single address are provided, but no `TxnObject.msig` was provided; `authAddr` needs to match the `signer` or the transaction will be rejected.
 
 ### algorand.postTxns(stxns: SignedTxn[] | SignedTxn[][])
 
@@ -376,7 +406,7 @@ algorand.postTxns([signedTx]);
 
 ```
 export type PostResult = {
-  txnIDs: string[],
+  txnIDs: string[] | string[][],
 };
 ```
 
