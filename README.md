@@ -10,21 +10,15 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.9.6 Release
+## 1.10.0 Release
 
 ### Main updates
-This update adds supports for easier transfers with the new autocomplete feature. Start typing an account, contact name or name service alias on the destination field when sending Algos or ASAs and you'll be able to select the desired address from a dropdown. This also marks the end of the support of the older signing methods that were previously available.
+As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0 a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
 
-- Autocomplete feature for UI-made transfers, supporting:
-  - Accounts and Contact names
-  - External name services (NFDomains and Algorand Namespace Service)
-- `AlgoSigner.sign()` and `AlgoSigner.signMultisig()` have been deprecated
-- New Account creation now occurs in the browser, improving ease of use when saving the mnemonic
-- Improved dApp support with the new [`stxn`](docs/dApp-integration.md#providing-signed-reference-transactions) field, as well as new and more descriptive error types
-
-### Other updates
-- Improved Account Importing and Cache Clearing
-- Get to your Contacts more easily with dedicated access
+- A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
+- An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. **The existing connection flow persists but will be deprecated over the next 3-6 months.**
+- Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
+- Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
 
 ## New Users
 
