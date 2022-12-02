@@ -8,10 +8,7 @@ export class RequestError {
   data?: any;
 
   static None = new RequestError('', 0);
-  static Undefined = new RequestError(
-    'An undefined error occurred.',
-    4000
-  );
+  static Undefined = new RequestError('An undefined error occurred.', 4000);
   static UserRejected = new RequestError(
     'The extension user does not authorize the request.',
     4001
@@ -20,19 +17,17 @@ export class RequestError {
     'The extension user has not authorized requests from this website.',
     4100
   );
-  static NoMnemonicAvailable = (address: string): RequestError => new RequestError(
-    `The user does not possess the required private key to sign with for address: "${address}".`,
-    4100
-  );
+  static NoMnemonicAvailable = (address: string): RequestError =>
+    new RequestError(
+      `The user does not possess the required private key to sign with for address: "${address}".`,
+      4100
+    );
   static NoAccountMatch = (address: string, ledger: string): RequestError =>
     new RequestError(
       `No matching account found on AlgoSigner for address "${address}" on network ${ledger}.`,
       4100
     );
-  static UnsupportedLedger = new RequestError(
-    'The provided ledger is not supported.',
-    4200
-  );
+  static UnsupportedLedger = new RequestError('The provided ledger is not supported.', 4200);
   static PendingTransaction = new RequestError('Another query processing', 4201);
   static LedgerMultipleTransactions = new RequestError(
     'Ledger hardware device signing is only available for one transaction at a time.',
@@ -50,14 +45,24 @@ export class RequestError {
     new RequestError('Validation failed for transaction due to invalid properties.', 4300, data);
   static InvalidTransactionStructure = (data?: any): RequestError =>
     new RequestError('Validation failed for transaction due to invalid structure.', 4300, data);
-  static InvalidFormat = new RequestError(
-    '[RequestError.InvalidFormat] Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
+  static InvalidSignTxnsFormat = new RequestError(
+    'Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
     4300
   );
+  static InvalidPostTxnsFormat = new RequestError(
+    'Please provide either an array of signed transactions or an array of groups of signed transactions.',
+    4300
+  );
+  static PostValidationFailed = (reason: any): RequestError =>
+    new RequestError(
+      "There was a problem validating the transaction(s). The reasons are provided in the 'data' property.",
+      4300,
+      reason
+    );
   static CantMatchMsigSigners = (info: string): RequestError =>
     new RequestError(
       `AlgoSigner does not currently possess one of the requested signers for this multisig transaction: ${info}.`,
-      4300,
+      4300
     );
   static InvalidSignerAddress = (address: string): RequestError =>
     new RequestError(`Signers array contains the invalid address "${address}"`, 4300);
@@ -108,20 +113,31 @@ export class RequestError {
   static InvalidAuthAddress = (address: string): RequestError =>
     new RequestError(`'authAddr' contains the invalid address "${address}"`, 4300);
   static IncompleteOrDisorderedGroup = new RequestError(
-    'The transaction group is incomplete or presented in a different order than when it was created.',
+    'The provided group ID does not match the provided transactions. This usually means the transaction group is incomplete or presented in a different order than when it was created.',
     4300
   );
   static MultipleTxsRequireGroup = new RequestError(
     'If signing multiple transactions, they need to belong to a same group.',
     4300
   );
-  static NonMatchingGroup = new RequestError(
-    'All transactions need to belong to the same group.',
+  static MismatchingGroup = new RequestError(
+    'All transactions provided in a same group need to have matching group IDs.',
     4300
   );
   static NoDifferentLedgers = new RequestError(
     'All transactions need to belong to the same ledger.',
     4300
+  );
+  static PartiallySuccessfulPost = (successTxnIDs: string[], data: any): PostError =>
+    new PostError(
+      successTxnIDs,
+      "Some of the groups of transactions were unable to be posted. The reason for each unsuccessful group is in it's corresponding position inside the 'data' array.",
+      4400,
+      data
+    );
+  static PostConfirmationFailed = new RequestError(
+    'The transaction(s) were succesfully sent to the network, but there was an issue while waiting for confirmation. Please verify that they were commited to the network before trying again.',
+    4400
   );
   static SigningError = (code: number, data?: any): RequestError =>
     new RequestError('There was a problem signing the transaction(s).', code, data);
@@ -133,5 +149,14 @@ export class RequestError {
     this.data = data;
 
     Error.captureStackTrace(this, RequestError);
+  }
+}
+
+class PostError extends RequestError {
+  successTxnIDs: string[];
+
+  public constructor(successTxnIDs: string[], message: string, code: number, data?: any) {
+    super(message, code, data);
+    this.successTxnIDs = successTxnIDs;
   }
 }

@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { openAccountDetails, goBack, inputPassword, getPopup, closeModal } = require('./helpers');
+const { openAccountDetails, goBack, inputPassword, getPopup } = require('./helpers');
 
 // Common Tests
 function WelcomePage() {
@@ -94,7 +94,128 @@ function DeleteAccount(account) {
 }
 
 // Dapp Tests
-function ConnectAlgoSigner() {
+function ConnectWithAlgorandObject() {
+  test('Expose Authorize Functions', async () => {
+    async function authorizeDapp() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#grantAccess');
+      await popup.click('#grantAccess');
+    }
+    await dappPage.exposeFunction('authorizeDapp', authorizeDapp);
+
+    async function authorizeSign() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#approveTx');
+      await popup.click('#approveTx');
+      await popup.waitForSelector('#enterPassword');
+      await popup.type('#enterPassword', wallet.password);
+      await popup.waitForSelector('#authButton');
+      await popup.click('#authButton');
+    }
+    await dappPage.exposeFunction('authorizeSign', authorizeSign);
+
+    async function rejectDapp() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#denyAccess');
+      await popup.click('#denyAccess');
+    }
+    await dappPage.exposeFunction('rejectDapp', rejectDapp);
+
+    async function rejectSign() {
+      const popup = await getPopup();
+      await popup.waitForSelector('#rejectTx');
+      await popup.click('#rejectTx');
+    }
+    await dappPage.exposeFunction('rejectSign', rejectSign);
+
+    async function authorizeSignTxn() {
+      const popup = await getPopup();
+
+      // Atomic txs Approval
+      try {
+        await popup.waitForTimeout(500);
+        const txAmount = await popup.$eval('.dropdown-trigger span', (e) => +e.innerText.slice(-1));
+
+        for (let i = 0; i < txAmount; i++) {
+          await popup.click('#toggleApproval');
+          await popup.waitForTimeout(250);
+        }
+      } catch (e) {
+        // Maybe a Single transaction
+      }
+
+      await popup.waitForSelector('#approveTx');
+      await popup.click('#approveTx');
+      await popup.waitForSelector('#enterPassword');
+      await popup.type('#enterPassword', wallet.password);
+      await popup.waitForSelector('#authButton');
+      await popup.click('#authButton');
+    }
+    await dappPage.exposeFunction('authorizeSignTxn', authorizeSignTxn);
+
+    // Groups of Groups Approvals
+    async function authorizeSignTxnGroups(amount) {
+      const popup = await getPopup();
+      for (let i = 0; i < amount; i++) {
+        try {
+          await authorizeSignTxn();
+          await popup.waitForTimeout(2000);
+        } catch (e) {
+          console.log('Error:');
+          console.log(e);
+        }
+      }
+    }
+    await dappPage.exposeFunction('authorizeSignTxnGroups', authorizeSignTxnGroups);
+  });
+
+  test('SiteNotAuthorizedByUser error before connecting', async () => {
+    await expect(
+      dappPage.evaluate(() => {
+        return Promise.resolve(algorand.postTxns())
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      })
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('The extension user has not'),
+      code: 4100,
+    });
+  });
+
+  test('UserRejected error upon connection refusal', async () => {
+    await expect(
+      dappPage.evaluate(async () => {
+        const connectPromise = algorand.enable();
+        await window.rejectDapp();
+        return Promise.resolve(connectPromise)
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      })
+    ).resolves.toMatchObject({
+      message: expect.stringContaining('The extension user does not'),
+      code: 4001,
+    });
+  });
+
+  test('Enable Dapp through content.js', async () => {
+    const connected = await dappPage.evaluate(async () => {
+      const connectPromise = algorand.enable();
+      await window.authorizeDapp();
+      return await connectPromise;
+    });
+    await expect(connected).toEqual({});
+  });
+}
+
+function ConnectWithAlgoSignerObject() {
   test('Expose Authorize Functions', async () => {
     async function authorizeDapp() {
       const popup = await getPopup();
@@ -223,5 +344,6 @@ module.exports = {
   ImportAccount,
   VerifyAccount,
   DeleteAccount,
-  ConnectAlgoSigner,
+  ConnectWithAlgorandObject,
+  ConnectWithAlgoSignerObject,
 };

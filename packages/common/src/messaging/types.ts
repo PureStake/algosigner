@@ -14,6 +14,7 @@ export enum JsonRpcMethod {
   SignDeny = 'sign-deny',
   SignWalletTransaction = 'sign-wallet-transaction',
   SendTransaction = 'send-transaction',
+  PostTransactions = 'post-txns',
   Algod = 'algod',
   Indexer = 'indexer',
   Accounts = 'accounts',
@@ -57,7 +58,7 @@ export enum JsonRpcMethod {
 }
 
 export type JsonPayload = {
-  [key: string]: string | number | Array<WalletTransaction> | JsonPayload | undefined;
+  [key: string]: string | number | boolean | Array<any> | JsonPayload | undefined;
 };
 
 export type JsonRpcBody = {
