@@ -10,7 +10,7 @@ import MainHeader from 'components/MainHeader';
 import Footer from 'components/Footer';
 
 import Authorize from 'pages/Authorize';
-import Enable from 'pages/enable';
+import Enable from 'pages/Enable';
 import Welcome from 'pages/Welcome';
 import SetPassword from 'pages/SetPassword';
 import Login from 'pages/Login';
