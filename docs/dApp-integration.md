@@ -99,8 +99,8 @@ await algorand.enable({
 
 **Response**
 
+User granting access to an additional account:
 ```json
-// Additional account
 {
   "genesisID": "mainnet-v1.0",
   "genesisHash": "USER_SELECTED_HASH",
@@ -111,8 +111,8 @@ await algorand.enable({
 }
 ```
 
+User not granting access to an account requested by the dApp:
 ```json
-// Rejected account
 {
   "code": 4400,
   "message": "...",
@@ -128,7 +128,7 @@ await algorand.enable({
 
 In cases where an enable call is made after a user has already authorized the dApp there will be additional checks before prompting the user. There is an ephemeral single network cached history and if the requested network from the dApp matches the previous one and the accounts are the same or a subset of the cached approved accounts the cache will be returned instead of prompting the user. 
 
-If the network is different or there are additional accounts requested compared to the cache the user will be prompted to re-authorized the request.
+If the network is different or there are additional accounts requested compared to the cache the user will be prompted to re-authorize the request.
 
 ## Working with Transactions
 
