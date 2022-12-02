@@ -22,7 +22,7 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 
 ## Methods
 
-- [algorand.enable()](#algorandenable)
+- [algorand.enable(enableOpts)](#algorandenableenableopts-enableopts)
 - [algorand.signTxns([txnObjects, ...])](#algorandsigntxnstxnobjects-txnobject--txnobject)
 - [algorand.postTxns([signedTxns, ...])](#algorandposttxnsstxns-signedtxn--signedtxn)
 - [algorand.signAndPostTxns([txnObjects, ...])](#algorandsignandposttxnstxnobjects-txnobject--txnobject)
@@ -37,7 +37,94 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 
 ## Method Detail
 
-### algorand.enable()
+### algorand.enable(enableOpts: EnableOpts)
+
+In order for dApps to interact with AlgoSigner, they must first request access by calling `algorand.enable()`. This will prompt the user to select which accounts they which to share with the dApp as well as the network they wish to operate on.
+
+After the user selects which network and accounts to share with the dApp, they'll be returned by AlgoSigner as the response to the `algorand.enable()` call.
+
+
+```
+export type EnableResponse = {
+  genesisID:    specific genesis ID shared by the user,
+  genesisHash:  specific genesis hash shared by the user,
+  accounts:     array of specific accounts shared by the user
+};
+```
+
+**Request**
+
+```js
+await algorand.enable();
+```
+
+**Response**
+
+```json
+{
+  "genesisID": "NETWORK_ID",
+  "genesisHash": "NETWORK_HASH",
+  "accounts": [
+    "ACCOUNT_1",
+    "ACCOUNT_2",
+  ],
+}
+```
+
+In cases were the dApp wishes to request specific accounts, a specific network or both; they will be able to do so by providing additional parameters to the `algorand.enable()` call.
+
+```
+export type EnableOpts = {
+  genesisID?:   [optional] specific genesis ID requested by the dApp,
+  genesisHash?: [optional] specific genesis hash requested by the dApp,
+  accounts?:    [optional] array of specific accounts requested by the dApp,
+};
+```
+If either `EnableOpts.genesisID` or `EnableOpts.genesisHash` are provided, they must match one of the networks available in AlgoSigner. In cases were there's ambiguity, such as to networks having a common `genesisID`, the user will be prompted to choose between the available matching networks.
+
+If neither `EnableOpts.genesisID` nor `EnableOpts.genesisHash` are provided, the user will be able to select which network they want to grant access to for the dApp.
+
+If `EnableOpts.accounts` is provided, the requested accounts will appear as required for the user and the user will be prompted to grant control over the specified accounts; these accounts will be positioned at the start of the array in the response. The user may share additional accounts than those requested by the dApp, in which case the accounts will be appended at the end of the returning account array. The user may also choose to share fewer accounts than those requested, in which case the promise will be rejected and the rejected accounts will be found inside the `data.accounts` property of the error.
+
+If `EnableOpts.accounts` is not provided, the user will be prompted to select which accounts they wish to share with the dApp.
+
+**Request**
+
+```js
+await algorand.enable({
+  genesisID: 'mainnet-v1.0',
+  accounts: ['REQUESTED_ACCOUNT'],
+});
+```
+
+**Response**
+
+```json
+// Additional account
+{
+  "genesisID": "mainnet-v1.0",
+  "genesisHash": "USER_SELECTED_HASH",
+  "accounts": [
+    "REQUESTED_ACCOUNT",
+    "ADDITIONAL_USER_SELECTED_ACCOUNT",
+  ],
+}
+```
+
+```json
+// Rejected account
+{
+  "code": 4400,
+  "message": "...",
+  "data": {
+    "accounts": [
+      "REQUESTED_ACCOUNT",
+    ],
+  },
+}
+```
+
+#### Regarding multiple calls to `algorand.enable()`
 
 @TODO: Expand
 
@@ -92,7 +179,6 @@ algorand.signTxns([
 
 ```js
 // Connect to AlgoSigner
-// @TODO: enable params
 await algorand.enable();
 
 // Create an Algod client to get suggested transaction params
@@ -479,18 +565,15 @@ algorand.signTxns([
 
 ## Custom Networks
 
-- Custom networks beta support is now in AlgoSigner. [Setup Guide](add-network.md)
-- algorand.enable() calls accept genesis IDs/hashes that have been added to the user's custom network list as valid networks.
-  @TODO: rewrite with new enable
-  - A non-matching ledger name will result in a error:
-    - The provided ledger is not supported (Code: 4200).
-  - An empty request will result with an error:
-    - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisId":"thetanet-v1.0"}].
-- Transaction requests will require a valid matching "genesisId", even for custom networks.
+Custom networks beta support is now in AlgoSigner. A setup Guide can be found [here](add-network.md).
+
+- [algorand.enable()](#algorandenableenableopts-enableopts) calls accept genesis IDs/hashes that have been added to the user's custom network list as valid networks.
+  - Non-matching `genesisID` or `genesisHash` will result in a error.
+- Transaction requests will require a valid matching `genesisID`, even for custom networks.
 
 ## Rejection Messages
 
-AlgoSigner may return some of the following error codes when requesting signatures:
+Some of the following error codes may be returned when interacting with AlgoSigner. When available, any additional info regarding the error will be found on the `data` property of the error.
 
 | Error Code | Description | Additional notes |
 | ---------- | ----------- | ---------------- |
