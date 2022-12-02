@@ -111,10 +111,10 @@ const Enable: FunctionalComponent = () => {
           </div>
         </section>
         <section class="px-2 py-0">
-          <h3> Select ledger and accounts to share${request.originTitle && html` with ${request.originTitle}`}. <b>Bolded</b> accounts are required by the dApp. </h3>
+          <h3> Select the network and accounts to share${request.originTitle && html` with ${request.originTitle}`}. <b>Bolded</b> accounts are required by the dApp. </h3>
           <div class="my-3">
             <div style="display: inline-block; vertical-align: middle; vertical-align: -webkit-baseline-middle; width:25%;">
-              Shared Ledger:
+              Shared Network:
             </div>
             <div class=${ddClass}>
               <div class="dropdown-trigger">

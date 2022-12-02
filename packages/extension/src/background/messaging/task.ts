@@ -310,10 +310,10 @@ export class Task {
 
           // We validate the authAddress if available
           if (authAddr) {
-            Task.checkAccountIsImportedAndAuthorized(genesisID, authAddr, request.originTabID);
             if (!algosdk.isValidAddress(authAddr)) {
               throw RequestError.InvalidAuthAddress(authAddr);
             }
+            Task.checkAccountIsImportedAndAuthorized(genesisID, authAddr, request.originTabID);
           }
 
           // If we have msigData, we validate the addresses and fetch the resulting msig address
@@ -641,7 +641,7 @@ export class Task {
             // Validate that the genesis id and hash if provided match the resulting one
             // This is because a dapp may request an id and hash from different ledgers
             if ((genesisId && genesisId !== ledgerTemplate.genesisId) 
-            || (genesisId && genesisId !== ledgerTemplate.genesisId)) {
+            || (genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
               d.error = RequestError.UnsupportedLedger;
               setTimeout(() => {
                 MessageApi.send(d);

@@ -162,13 +162,15 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
     
     // Injected networks may have additional information, multiples, or additional checks
     // so we will check them separately
-    ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
-    if (ledger !== undefined) {
-      // Found genesisId, make sure the hash matches 
-      if (!genesisHash || genesisHash === ledger.genesisHash) { 
-        return ledger;
+    const injectedNetworks = Settings.getCleansedInjectedNetworks();
+    injectedNetworks.forEach(network => {
+      if (network['genesisId'] === genesisId) {
+        // Found genesisId, make sure the hash matches 
+        if (!genesisHash || genesisHash === network.genesisHash) { 
+          return network;
+        }
       }
-    }
+    });
   }
 
   // We didn't match on the genesis id so check the hashes
@@ -180,15 +182,18 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
         return ledger;
       }
     }
+
     // Injected networks may have additional information, multiples, or additional checks
     // so we will check them separately
-    ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
-    if (ledger !== undefined) {
-      // Found genesisHash, make sure the id matches 
-      if (!genesisId || genesisId === ledger.genesisId) { 
-        return ledger;
+    const injectedNetworks = Settings.getCleansedInjectedNetworks();
+    injectedNetworks.forEach(network => {
+      if (network['genesisHash'] === genesisHash) {
+        // Found genesisHash, make sure the id matches 
+        if (!genesisId || genesisId === ledger.genesisId) { 
+          return network;
+        }
       }
-    }
+    });
   }
 
   return defaultLedgers.find((l) => defaultLedger === l['name']);
