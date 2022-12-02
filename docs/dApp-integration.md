@@ -126,7 +126,9 @@ await algorand.enable({
 
 #### Regarding multiple calls to `algorand.enable()`
 
-@TODO: Expand
+In cases where an enable call is made after a user has already authorized the dApp there will be additional checks before prompting the user. There is an ephemeral single network cached history and if the requested network from the dApp matches the previous one and the accounts are the same or a subset of the cached approved accounts the cache will be returned instead of prompting the user. 
+
+If the network is different or there are additional accounts requested compared to the cache the user will be prompted to re-authorized the request.
 
 ## Working with Transactions
 
