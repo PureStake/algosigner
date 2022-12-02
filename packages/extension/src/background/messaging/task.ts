@@ -1,6 +1,6 @@
 import algosdk, { MultisigMetadata, Transaction } from 'algosdk';
 
-import { WalletTransaction } from '@algosigner/common/types';
+import { OptsKeys, WalletTransaction } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { Ledger } from '@algosigner/common/types';
@@ -20,7 +20,7 @@ import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
 import { buildTransaction } from '../utils/transactionBuilder';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
-import { removeEmptyFields } from '@algosigner/common/utils';
+import { removeEmptyFields, areBuffersEqual } from '@algosigner/common/utils';
 
 // Additional space for the title bar
 const titleBarHeight = 28;
@@ -398,7 +398,7 @@ export class Task {
                   // We reject if we can't convert from b64 to a valid txn
                   throw RequestError.InvalidSignedTxn;
                 }
-                if (!signedTxnBytes.every((value, index) => unsignedTxnBytes[index] === value)) {
+                if (!areBuffersEqual(signedTxnBytes, unsignedTxnBytes)) {
                   // We reject if the transactions don't match
                   throw RequestError.NonMatchingSignedTxn;
                 }
@@ -486,7 +486,7 @@ export class Task {
         /** 
          * Group validations
          */
-        const groupId = transactionWraps[0].transaction.group;
+        const providedGroupId: string = transactionWraps[0].transaction.group;
 
         if (transactionWraps.length > 1) {
           if (
@@ -497,16 +497,16 @@ export class Task {
             throw RequestError.NoDifferentLedgers;
           }
 
-          if (!groupId) {
+          if (!providedGroupId || !transactionWraps.every((wrap) => wrap.transaction.group)) {
             throw RequestError.MultipleTxsRequireGroup;
           }
 
-          if (!transactionWraps.every((wrap) => groupId === wrap.transaction.group)) {
-            throw RequestError.NonMatchingGroup;
+          if (!transactionWraps.every((wrap) => providedGroupId === wrap.transaction.group)) {
+            throw RequestError.MismatchingGroup;
           }
         }
 
-        if (groupId) {
+        if (providedGroupId) {
           // Verify group is presented as a whole
           const recreatedGroupTxs = algosdk.assignGroupID(
             rawTxArray.slice().map((tx) => {
@@ -515,7 +515,7 @@ export class Task {
             })
           );
           const recalculatedGroupID = byteArrayToBase64(recreatedGroupTxs[0].group);
-          if (groupId !== recalculatedGroupID) {
+          if (providedGroupId !== recalculatedGroupID) {
             throw RequestError.IncompleteOrDisorderedGroup;
           }
         }
@@ -771,7 +771,7 @@ export class Task {
             );
           }
         },
-        // handle-wallet-transactions
+        // sign-wallet-transaction
         [JsonRpcMethod.SignWalletTransaction]: async (
           d: any,
           resolve: Function,
@@ -808,8 +808,8 @@ export class Task {
 
           // If none of the formats match up, we throw an error
           if (!transactionsOrGroups || (!hasSingleGroup && !hasMultipleGroups)) {
-            logging.log(RequestError.InvalidFormat.message);
-            d.error = RequestError.InvalidFormat;
+            logging.log(RequestError.InvalidSignTxnsFormat.message);
+            d.error = RequestError.InvalidSignTxnsFormat;
             reject(d);
             return;
           }
@@ -822,7 +822,7 @@ export class Task {
           d.body.params.currentGroup = 0;
           d.body.params.signedGroups = [];
 
-          Task.signIndividualGroup(d);
+          await Task.signIndividualGroup(d);
         },
         // send-transaction
         [JsonRpcMethod.SendTransaction]: (d: any, resolve: Function, reject: Function) => {
@@ -836,9 +836,7 @@ export class Task {
             },
             method: 'POST',
           };
-          const tx = atob(params.tx)
-            .split('')
-            .map((x) => x.charCodeAt(0));
+          const tx = base64ToByteArray(params.tx);
           fetchParams.body = new Uint8Array(tx);
 
           let url = conn.url;
@@ -853,6 +851,151 @@ export class Task {
               d.error = error;
               reject(d);
             });
+        },
+        // post-txns
+        [JsonRpcMethod.PostTransactions]: (d: any, resolve: Function, reject: Function) => {
+          // Separate stxns by groups
+          const { stxns } = d.body.params;
+          let groupsToSend: string[][];
+          // These arrays are nested, reflecting the content of the groups
+          const evaluationErrors = [],
+            responseIDs = [],
+            fetchBodies = [],
+            fetchPromises = [],
+            fetchErrors = [];
+          let fetchResponses = [];
+          // We check if it's a valid array and if it's nested
+          if (Array.isArray(stxns) && stxns.length) {
+            groupsToSend = Array.isArray(stxns[0]) ? stxns : [stxns];
+          } else {
+            throw RequestError.InvalidPostTxnsFormat;
+          }
+
+          groupsToSend.forEach((group, index) => {
+            let txnBinaries: Array<Uint8Array>,
+              decodedTxns: Array<Transaction>,
+              txnIDs: Array<any> = [];
+            try {
+              // Decode txns and validate group matches
+              txnBinaries = group.map((txn) => base64ToByteArray(txn));
+              decodedTxns = txnBinaries.map((bin) => algosdk.decodeSignedTransaction(bin).txn);
+              if (decodedTxns.length > 1 || decodedTxns[0].group) {
+                // Fetch group ID from provided txns
+                let providedGroupID: Uint8Array;
+                for (const dtx of decodedTxns) {
+                  if (!dtx.group) {
+                    throw RequestError.MultipleTxsRequireGroup;
+                  } else {
+                    if (providedGroupID) {
+                      if (!areBuffersEqual(dtx.group, providedGroupID)) {
+                        throw RequestError.MismatchingGroup;
+                      }
+                    } else {
+                      providedGroupID = dtx.group;
+                    }
+                  }
+                }
+                // Recalculate Group ID based on transactions provided to make sure they match
+                const cleanTxns = decodedTxns.slice().map((tx) => {
+                  delete tx.group;
+                  return tx;
+                });
+                const computedGroupID: Buffer = algosdk.computeGroupID(cleanTxns);
+                if (!areBuffersEqual(providedGroupID, computedGroupID)) {
+                  throw RequestError.IncompleteOrDisorderedGroup;
+                }
+              }
+
+              // Calculate txIDs for response and create merged binaries
+              txnIDs = decodedTxns.map((tx) => tx.txID());
+              const totalLength = txnBinaries
+                .map((bin) => bin.byteLength)
+                .reduce((pv, cv) => pv + cv, 0);
+              const mergedBinaries: Uint8Array = new Uint8Array(totalLength);
+              for (let i = 0; i < txnBinaries.length; i++) {
+                const bin = txnBinaries[i];
+                const position = i > 0 ? txnBinaries[i - 1].byteLength : 0;
+                mergedBinaries.set(bin, position);
+              }
+              fetchBodies[index] = new Uint8Array(mergedBinaries);
+              responseIDs[index] = txnIDs;
+            } catch (e) {
+              evaluationErrors[index] = e;
+            }
+          });
+
+          if (evaluationErrors.length) {
+            let reasons = new Array(groupsToSend.length);
+            evaluationErrors.forEach((e, i) => (reasons[i] = e ? e.message : null));
+            if (groupsToSend.length === 1) {
+              reasons = reasons[0];
+            }
+            d.error = RequestError.PostValidationFailed(reasons);
+            resolve(d);
+          } else {
+            // @TODO: get ledger from enable
+            const ledger: Ledger = Ledger.TestNet;
+            const conn = Settings.getBackendParams(ledger, API.Algod);
+            const sendPath = '/v2/transactions';
+            const fetchParams: any = {
+              headers: {
+                ...conn.headers,
+                'Content-Type': 'application/x-binary',
+              },
+              method: 'POST',
+            };
+
+            let url = conn.url;
+            if (conn.port.length > 0) url += ':' + conn.port;
+
+            fetchBodies.forEach((body, index) => {
+              fetchParams.body = body;
+              fetchPromises[index] = Task.fetchAPI(`${url}${sendPath}`, fetchParams);
+            });
+
+            Promise.allSettled(fetchPromises).then((results) => {
+              const algod = InternalMethods.getAlgod(ledger);
+              const confirmationPromises = [];
+              results.forEach((res, index) => {
+                if (res.status === 'fulfilled') {
+                  const txID = res.value.txId;
+                  confirmationPromises[index] = algosdk.waitForConfirmation(algod, txID, 2);
+                } else {
+                  fetchErrors[index] = res.reason.message;
+                  fetchResponses[index] = null;
+                }
+              });
+
+              Promise.all(confirmationPromises).then((confirmations) => {
+                // We add values to both arrays to preserve indexes across all possible return arrays
+                confirmations.forEach((c, index) => {
+                  if (c && 'confirmed-round' in c) {
+                    fetchResponses[index] = responseIDs[index];
+                    fetchErrors[index] = null;
+                  } else {
+                    fetchErrors[index] = RequestError.PostConfirmationFailed;
+                    fetchResponses[index] = null;
+                  }
+                });
+
+                if (groupsToSend.length === 1) {
+                  fetchResponses = fetchResponses.length ? fetchResponses[0] : [];
+                }
+
+                // Check if there's any non-null errors
+                if (fetchErrors.filter(Boolean).length) {
+                  const successTxnIDs = fetchResponses;
+                  const reasons = new Array(groupsToSend.length);
+                  fetchErrors.forEach((e, i) => (reasons[i] = e ? e.message : null));
+                  d.error = RequestError.PartiallySuccessfulPost(successTxnIDs, reasons);
+                  resolve(d);
+                } else {
+                  d.response = { txnIDs: fetchResponses };
+                  resolve(d);
+                }
+              });
+            });
+          }
         },
         // algod
         [JsonRpcMethod.Algod]: (d: any, resolve: Function, reject: Function) => {
@@ -1167,7 +1310,7 @@ export class Task {
           const { passphrase, responseOriginTabID } = request.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
-          const { groupsToSign, currentGroup, signedGroups } = message.body.params;
+          const { groupsToSign, currentGroup, signedGroups, opts } = message.body.params;
           const singleGroup = groupsToSign.length === 1;
           const walletTransactions: Array<WalletTransaction> = groupsToSign[currentGroup];
           const transactionsWraps: Array<BaseValidatedTxnWrap> =
@@ -1354,6 +1497,13 @@ export class Task {
                 }
               });
 
+              if (opts && opts[OptsKeys.ARC01Return]) {
+                signedTxs.forEach(
+                  (maybeTxn: any, index: number) =>
+                    (signedTxs[index] = maybeTxn !== null ? maybeTxn.blob : null)
+                );
+              }
+
               // We check if there were errors signing this group
               if (signErrors.length) {
                 let data = '';
@@ -1385,8 +1535,9 @@ export class Task {
               message.body.params.currentGroup = currentGroup + 1;
               message.body.params.signedGroups = signedGroups;
               if (message.body.params.currentGroup < groupsToSign.length) {
+                // More groups to sign, continue prompting user
                 try {
-                  Task.signIndividualGroup(message);
+                  await Task.signIndividualGroup(message);
                 } catch (e) {
                   let errorMessage = 'There was a problem validating the transaction(s). ';
 
@@ -1401,19 +1552,23 @@ export class Task {
                   return;
                 }
               } else {
-                let response;
-                if (signedGroups.length === 1) {
-                  response = signedGroups[0];
+                // No more groups to sign, build final user-facing response
+                if (opts && opts[OptsKeys.sendTxns]) {
+                  message.body.params.stxns = message.body.params.signedGroups;
                 } else {
-                  response = signedGroups;
+                  message.response = signedGroups.length === 1 ? signedGroups[0] : signedGroups;
                 }
-                message.response = response;
                 // Clean class saved request
                 delete Task.requests[responseOriginTabID];
-
+                
                 // Hardware signing will defer the response
                 if (!holdResponse) {
-                  MessageApi.send(message);
+                  if (opts && opts[OptsKeys.sendTxns]) {
+                    Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+                  } else {
+                    MessageApi.send(message);
+                    return;
+                  }
                 }
               }
             });
@@ -1551,21 +1706,38 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (response) {
+          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (internalResponse) {
             logging.log(
-              `Task method - LedgerSendTxnResponse - Returning: ${JSON.stringify(response)}`,
+              `Task method - LedgerSendTxnResponse - Received: ${JSON.stringify(internalResponse)}`,
               2
             );
 
             // Message indicates that this response will go to the DApp
-            if ('message' in response) {
-              // Send the response back to the origniating page
-              MessageApi.send(response.message);
-              // Also pass back the blob response to the caller
-              sendResponse(response.message.response);
-            } else {
-              // Send repsonse to the calling function
+            if ('message' in internalResponse) {
+              const message = internalResponse.message;
+              const opts = message.body.params.opts;
+              const response = message.response;
+
+              if (opts && opts[OptsKeys.ARC01Return]) {
+                response.forEach(
+                  (maybeTxn: any, index: number) =>
+                    (response[index] = maybeTxn !== null ? maybeTxn.blob : null)
+                );
+              }
+              // We pass back the blob response to the UI
               sendResponse(response);
+
+              if (opts && opts[OptsKeys.sendTxns]) {
+                message.body.params.stxns = response;
+                Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+              } else {
+                // Send the response back to the originating page
+                MessageApi.send(message);
+                return;
+              }
+            } else {
+              // Send response to the calling function
+              sendResponse(internalResponse);
             }
           });
           return true;

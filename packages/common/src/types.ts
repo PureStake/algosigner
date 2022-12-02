@@ -32,6 +32,15 @@ export type WalletTransaction = {
   readonly authAddr?: string;
 };
 
+export type SignTxnsOpts = {
+  [key: string]: string | boolean,
+};
+
+export enum OptsKeys {
+  ARC01Return = 'AlgoSigner_arc01',
+  sendTxns = 'AlgoSigner_send'
+}
+
 export type Alias = {
   readonly name: string;
   readonly address: string;

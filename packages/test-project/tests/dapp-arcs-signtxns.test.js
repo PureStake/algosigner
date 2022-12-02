@@ -1,7 +1,7 @@
 /**
  * dapp e2e tests for the AlgoSigner V2 Signing functionality
  *
- * @group dapp/signtxn
+ * @group dapp/arcs/signtxns
  */
 
 const { accounts } = require('./common/constants');
@@ -9,12 +9,12 @@ const {
   openExtension,
   getPopup,
   getLedgerSuggestedParams,
-  signDappTxns,
+  signDappTxnsWAlgorand,
   decodeBase64Blob,
   buildSdkTx,
   prepareWalletTx,
 } = require('./common/helpers');
-const { CreateWallet, ConnectAlgoSigner, ImportAccount } = require('./common/tests');
+const { CreateWallet, ConnectWithAlgorandObject, ImportAccount } = require('./common/tests');
 
 const msigAccount = accounts.multisig;
 const account1 = msigAccount.subaccounts[0];
@@ -30,7 +30,7 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectAlgoSigner();
+  ConnectWithAlgorandObject();
 
   test('Get TestNet params', async () => {
     ledgerParams = await getLedgerSuggestedParams();
@@ -73,7 +73,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate(async (transactions) => {
-        const signPromise = AlgoSigner.signTxn(transactions);
+        const signPromise = algorand.signTxns(transactions);
         await window.rejectSign();
         return Promise.resolve(signPromise)
           .then((data) => {
@@ -105,7 +105,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -138,7 +138,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -169,7 +169,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -202,7 +202,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -235,7 +235,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -269,7 +269,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -294,7 +294,7 @@ describe('Txn Signing Validation errors', () => {
 
     await expect(
       dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
+        return Promise.resolve(algorand.signTxns(transactions))
           .then((data) => {
             return data;
           })
@@ -316,7 +316,7 @@ describe('Txn Signing Validation errors', () => {
 describe('Multisig Transaction Use cases', () => {
   test('Sign MultiSig Transaction with All Accounts', async () => {
     unsignedTransactions = [msigTxn];
-    const signedTransactions = await signDappTxns(unsignedTransactions, async () => {
+    const signedTransactions = await signDappTxnsWAlgorand(unsignedTransactions, async () => {
       const popup = await getPopup();
       const tooltipText = await popup.evaluate(() => {
         return getComputedStyle(
@@ -328,7 +328,7 @@ describe('Multisig Transaction Use cases', () => {
     });
 
     // Verify signature is added
-    const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
+    const decodedTransaction = decodeBase64Blob(signedTransactions[0]);
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
     expect(decodedTransaction.msig).toHaveProperty('subsig');
@@ -340,10 +340,10 @@ describe('Multisig Transaction Use cases', () => {
 
   test('Sign MultiSig Transaction with Specific Signer', async () => {
     unsignedTransactions[0].signers = [account1.address];
-    const signedTransactions = await signDappTxns(unsignedTransactions);
+    const signedTransactions = await signDappTxnsWAlgorand(unsignedTransactions);
 
     // Verify correct signature is added
-    const decodedTransaction = decodeBase64Blob(signedTransactions[0].blob);
+    const decodedTransaction = decodeBase64Blob(signedTransactions[0]);
     expect(decodedTransaction).toHaveProperty('txn');
     expect(decodedTransaction).toHaveProperty('msig');
     expect(decodedTransaction.msig).toHaveProperty('subsig');
