@@ -10,11 +10,11 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 
 ### Additions
 
-- A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
+- A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year.
 
-- An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. The existing connection flow persists but will be deprecated over the next 3-6 months. 
+- An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. The existing connection flow persists but will be deprecated over the next 3-6 months.
 
-- Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
+- Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling.
 
 - Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
 
