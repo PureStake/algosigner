@@ -27,7 +27,7 @@ const Enable: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [genesisID, setGenesisID] = useState<any>('');
   const [genesisHash, setGenesisHash] = useState<any>('');
-  const [isNetworkSpecified, setIsNetworkSpecified] = useState<any>('');
+  const [networkSpecifiedType, setNetworkSpecifiedType] = useState<any>('');
   const [accounts, setPromptedAccounts] = useState<any>([]);
   const [request, setRequest] = useState<any>({});
   const [active, setActive] = useState<boolean>(false);
@@ -37,16 +37,16 @@ const Enable: FunctionalComponent = () => {
   store.getAvailableLedgers((availableLedgers) => {
     if (!availableLedgers.error) {
       let restrictedLedgers: any[] = [];
-      if (isNetworkSpecified && genesisID && !genesisHash) {
+      if (networkSpecifiedType === 1) {
+        restrictedLedgers.push(availableLedgers.find(l => (l.genesisId === genesisID && l.genesisHash === genesisHash)));       
+      }
+      else if (networkSpecifiedType === 2) {
         for (let i=0; i < availableLedgers.length; i++) {
           if (availableLedgers[i]['genesisId'] === genesisID) {
             restrictedLedgers.push(availableLedgers[i]);
           }
         }
-      }
-      else if (isNetworkSpecified && genesisID && genesisHash) {
-        restrictedLedgers.push(availableLedgers.find(l => (l.genesisId === genesisID && l.genesisHash === genesisHash)));       
-      }
+      } 
       else {
         restrictedLedgers = availableLedgers;
       }
@@ -77,8 +77,8 @@ const Enable: FunctionalComponent = () => {
       // Ledger is added during EnableAuthorization to match with legacy ledger name and with GetEnableAccounts
       store.setLedger(params.ledger);
     }
-    if(params.isNetworkSpecified) {
-      setIsNetworkSpecified(params.isNetworkSpecified);
+    if(params.networkSpecifiedType) {
+      setNetworkSpecifiedType(params.networkSpecifiedType);
     }
   }
 

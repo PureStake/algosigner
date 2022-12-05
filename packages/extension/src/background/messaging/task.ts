@@ -619,7 +619,14 @@ export class Task {
           const session = InternalMethods.getHelperSession();
 
           // Set a flag for a specified network
-          d.body.params.isNetworkSpecified = (genesisID || genesisHash);
+          let networkSpecifiedType = 0;
+          if (genesisID && genesisHash) {
+            networkSpecifiedType = 1;
+          }
+          else if (genesisID || genesisHash) {
+            networkSpecifiedType = 2;
+          }
+          d.body.params.networkSpecifiedType = networkSpecifiedType;
 
           // If session is missing then we should throw an error, but still popup the login screen
           if (session.availableLedgers.length === 0) {
