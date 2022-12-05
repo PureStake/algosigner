@@ -33,6 +33,11 @@ export class Task extends Runtime implements ITask {
     return MessageBuilder.promise(JsonRpcMethod.Authorization, {});
   }
 
+  enable(opts: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
+    const params = {...opts}
+    return MessageBuilder.promise(JsonRpcMethod.EnableAuthorization, params, error);
+  }
+
   accounts(params: JsonPayload, error: RequestError = RequestError.None): Promise<JsonPayload> {
     return MessageBuilder.promise(JsonRpcMethod.Accounts, params, error);
   }

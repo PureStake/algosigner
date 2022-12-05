@@ -13,6 +13,11 @@ export class RequestError {
     'The extension user does not authorize the request.',
     4001
   );
+  static EnableRejected = (data: object): RequestError => new RequestError(
+    'The extension user does not authorize the request.',
+    4001,
+    data
+  );
   static SiteNotAuthorizedByUser = new RequestError(
     'The extension user has not authorized requests from this website.',
     4100
