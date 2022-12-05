@@ -6,7 +6,6 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { obfuscateAddress } from '@algosigner/common/utils';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
-import { sendMessage } from 'services/Messaging';
 
 function deny() {
   chrome.runtime.sendMessage({
@@ -25,7 +24,7 @@ let responseOriginTabID;
 
 const Enable: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
-  const [genesisID, setGenesisID] = useState<any>('');
+  const [genesisId, setGenesisId] = useState<any>('');
   const [genesisHash, setGenesisHash] = useState<any>('');
   const [accounts, setPromptedAccounts] = useState<any>([]);
   const [request, setRequest] = useState<any>({});
@@ -44,39 +43,9 @@ const Enable: FunctionalComponent = () => {
     setActive(!active);
   };
 
-  const setDetails = (params) => {
-    // Check for existence of the params and set page values
-    if (params.promptedAccounts && params.promptedAccounts.length > 0) {
-      setPromptedAccounts(params.promptedAccounts);
-    }
-    if (params.genesisID) {
-      setGenesisID(params.genesisID);
-    }
-    if (params.genesisHash) {
-      setGenesisHash(params.genesisHash);
-    }
-    if (params.ledger) {
-      // Ledger is added during EnableAuthorization to match with legacy ledger name and with GetEnableAccounts
-      store.setLedger(params.ledger);
-    }
-  }
-
   const setLedger = (ledger) => {
     store.setLedger(ledger);
     flip();
-
-    // Set the new ledger to be loaded
-    request.body.params['ledger'] = ledger;
-
-    sendMessage(JsonRpcMethod.GetEnableAccounts, request.body.params, function (response) {
-      console.log(`[JsonRpcMethod.GetEnableAccounts] response:`, JSON.stringify(response))
-
-      if (response.error) {
-        console.error(response.error);
-      } else {
-        setDetails(response);
-      }
-    });
   };
 
   useEffect(() => {
@@ -89,7 +58,19 @@ const Enable: FunctionalComponent = () => {
         responseOriginTabID = request.originTabID;
 
         // Check for existence of the params and set page values
-        setDetails(request.body.params);
+        if (request.body.params.promptedAccounts && request.body.params.promptedAccounts.length > 0) {
+          setPromptedAccounts(request.body.params.promptedAccounts);
+        }
+        if (request.body.params.genesisId) {
+          setGenesisId(request.body.params.genesisId);
+        }
+        if (request.body.params.genesisHash) {
+          setGenesisHash(request.body.params.genesisHash);
+        }
+        if (request.body.params.ledger) {
+          // Ledger is added during EnableAuthorization to match with legacy ledger name
+          store.setLedger(request.body.params.ledger);
+        }
       }
     })
   }, []);
@@ -104,7 +85,7 @@ const Enable: FunctionalComponent = () => {
         params: {
           responseOriginTabID: responseOriginTabID,
           isEnable: true,
-          genesisID: genesisID,
+          genesisId: genesisId,
           genesisHash: genesisHash, 
           accounts: accounts,
           ledger: store.ledger

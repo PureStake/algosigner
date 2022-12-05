@@ -48,15 +48,15 @@ export class Task {
     return Task.authorized_pool.indexOf(origin) > -1;
   }
 
-  public static isPreAuthorized(origin: string, genesisID: string, requestedAccounts: Array<any>): boolean {
+  public static isPreAuthorized(origin: string, genesisId: string, requestedAccounts: Array<any>): boolean {
     // Validate the origin is in the authorized pool
     if (Task.authorized_pool.indexOf(origin) === -1) {
       return false;
     }
 
-    // Validate the genesisID is the authorized one
-    // Note: The arc-0006 requires "genesisID" which matches the transaction, but we use "genesisId" internally in some places
-    if (!Task.authorized_pool_details[origin] || !(Task.authorized_pool_details[origin]['genesisID'] === genesisID)) {
+    // Validate the genesisId is the authorized one
+    // Note: The arc-0006 requires "genesisID" which matches the transaction, but we use "genesisId" internally
+    if (!Task.authorized_pool_details[origin] || !(Task.authorized_pool_details[origin]['genesisID'] === genesisId)) {
       return false;
     }
 
@@ -610,7 +610,7 @@ export class Task {
         // Enable function as defined in ARC-006
         [JsonRpcMethod.EnableAuthorization]: (d: any) => {
           const { accounts } = d.body.params;
-          let { genesisID, genesisHash, ledger } = d.body.params;
+          let { genesisId, genesisHash, ledger } = d.body.params;
 
           // Delete any previous request made from the Tab that it's trying to connect.
           delete Task.requests[d.originTabID];
@@ -635,12 +635,12 @@ export class Task {
             }, 2000);
           }        
           else {
-            // Get ledger/hash/id from the genesisID and/or hash
-            const ledgerTemplate = getLedgerFromMixedGenesis(genesisID, genesisHash);
+            // Get ledger/hash/id from the genesisId and/or hash
+            const ledgerTemplate = getLedgerFromMixedGenesis(genesisId, genesisHash);
 
             // Validate that the genesis id and hash if provided match the resulting one
             // This is because a dapp may request an id and hash from different ledgers
-            if ((genesisID && genesisID !== ledgerTemplate.genesisId) 
+            if ((genesisId && genesisId !== ledgerTemplate.genesisId) 
             || (genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
               d.error = RequestError.UnsupportedLedger;
               setTimeout(() => {
@@ -650,13 +650,13 @@ export class Task {
             }
 
             // We've validated the ledger information 
-            // So we can set the ledger, genesisID, and genesisHash 
+            // So we can set the ledger, genesisId, and genesisHash 
             ledger = ledgerTemplate.name;
-            genesisID = ledgerTemplate.genesisId;
+            genesisId = ledgerTemplate.genesisId;
             genesisHash = ledgerTemplate.genesisHash;
             // Then reflect those changes for the page
             d.body.params.ledger = ledger; // For legacy name use
-            d.body.params.genesisID = genesisID;
+            d.body.params.genesisId = genesisId;
             d.body.params.genesisHash = genesisHash;
 
             // If we already have the ledger authorized for this origin then check the shared accounts
@@ -664,29 +664,29 @@ export class Task {
               // First check that we actually still have the addresses requested
               try {
                 accounts.forEach(account => {
-                  InternalMethods.checkAccountIsImported(genesisID, account);
+                  InternalMethods.checkAccountIsImported(genesisId, account);
                 });  
 
                 // If the ledger and ALL accounts are available then respond with the cached data
-                if (Task.isPreAuthorized(d.origin, genesisID, accounts)) { 
+                if (Task.isPreAuthorized(d.origin, genesisId, accounts)) { 
                   // We have the accounts and may include additional, but just make sure the order is maintained
                   const sharedAccounts = [];
                   accounts.forEach(account => {
                     // Make sure we don't include accounts that have been deleted
-                    InternalMethods.checkAccountIsImported(genesisID, account);
+                    InternalMethods.checkAccountIsImported(genesisId, account);
                     sharedAccounts.push(account);
                   });
                   Task.authorized_pool_details[d.origin]['accounts'].forEach(account => {
                     if (!(sharedAccounts.includes(account))) {
                       // Make sure we don't include accounts that have been deleted
-                      InternalMethods.checkAccountIsImported(genesisID, account);
+                      InternalMethods.checkAccountIsImported(genesisId, account);
                       sharedAccounts.push(account);
                     }
                   });
 
                   // Now we can set the response, but don't need to update the cache
                   d.response = {
-                    'genesisID': genesisID, 
+                    'genesisID': genesisId, 
                     'genesisHash': genesisHash,
                     accounts: sharedAccounts
                   };
@@ -1093,7 +1093,7 @@ export class Task {
       private: {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
-          const { responseOriginTabID, isEnable, accounts, genesisID, genesisHash } = d.body.params;
+          const { responseOriginTabID, isEnable, accounts, genesisId, genesisHash } = d.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
@@ -1122,7 +1122,7 @@ export class Task {
               }
               else { 
                 message.response = {
-                  'genesisID': genesisID, 
+                  'genesisID': genesisId, 
                   'genesisHash': genesisHash,
                   accounts: sharedAccounts
                 }
@@ -1770,60 +1770,6 @@ export class Task {
         },
         [JsonRpcMethod.GetGovernanceAddresses]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.GetGovernanceAddresses](request, sendResponse);
-        },
-        [JsonRpcMethod.GetEnableAccounts]: (request: any, sendResponse: Function) => {
-          const { promptedAccounts, ledger } = request.body.params;
-
-          // Setup new prompted accounts which will be the return values
-          const newPromptedAccounts = [];
-           
-          // Add any requested accounts so they can be in the proper order to start
-          if (promptedAccounts) {
-            for (let i = 0; i < promptedAccounts.length; i++) {
-              // This call is a ledger change so we already have requested values included in the accounts
-              if (promptedAccounts[i].requested) {
-                newPromptedAccounts.push({
-                  address: promptedAccounts[i]['address'],
-                  missing: true,
-                  requested: true,
-                });
-              }
-            }
-          }          
-
-          // Get an internal session and get wallet accounts for the new chosen ledger
-          const session = InternalMethods.getHelperSession();
-          const walletAccounts = session.wallet[ledger];
-          
-          // We only need to add accounts if we actually have them
-          if (walletAccounts) {
-            // Add all the walletAccounts we have for the ledger 
-            for (let i = 0; i < walletAccounts.length; i++) {
-              const walletAccount = walletAccounts[i].address;
-              const accountIndex = newPromptedAccounts.findIndex(e => e.address === walletAccount);
-        
-              if (accountIndex > -1) {
-                // If we have the account then mark it as valid 
-                newPromptedAccounts[accountIndex]['missing'] = false;
-                newPromptedAccounts[accountIndex]['selected'] = true;
-              }
-              else {
-                // If we are missing the address then this is an account that the dApp did not request
-                // but we can push the value an the additional choices from the user before returning
-                newPromptedAccounts.push({
-                  address: walletAccount,
-                  requested: false,
-                  selected: false
-                });
-              }
-            }   
-          }
-
-          // Replace the prompted accounts on params that will go back to the page
-          request.body.params['promptedAccounts'] = newPromptedAccounts;
-
-          // Respond with the new params
-          sendResponse(request.body.params);
         },
       },
     };

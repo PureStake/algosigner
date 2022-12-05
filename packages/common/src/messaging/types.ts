@@ -49,7 +49,6 @@ export enum JsonRpcMethod {
   GetNamespaceConfigs = 'get-namespace-configs',
   ToggleNamespaceConfig = 'toggle-namespace-config',
   GetGovernanceAddresses = 'get-governance-addresses',
-  GetEnableAccounts = 'get-enable-accounts',
 
   // Ledger Device Methods
   LedgerSaveAccount = 'ledger-save-account',
