@@ -618,6 +618,9 @@ export class Task {
           // Get an internal session - if unavailable then we will connect and deny
           const session = InternalMethods.getHelperSession();
 
+          // Set a flag for a specified network
+          d.body.params.isNetworkSpecified = (genesisID || genesisHash);
+
           // If session is missing then we should throw an error, but still popup the login screen
           if (session.availableLedgers.length === 0) {
             // No ledgers are available. The user is logged out so just prompt them to login.  

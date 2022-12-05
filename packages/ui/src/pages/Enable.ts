@@ -27,6 +27,7 @@ const Enable: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [genesisID, setGenesisID] = useState<any>('');
   const [genesisHash, setGenesisHash] = useState<any>('');
+  const [isNetworkSpecified, setIsNetworkSpecified] = useState<any>('');
   const [accounts, setPromptedAccounts] = useState<any>([]);
   const [request, setRequest] = useState<any>({});
   const [active, setActive] = useState<boolean>(false);
@@ -35,7 +36,21 @@ const Enable: FunctionalComponent = () => {
 
   store.getAvailableLedgers((availableLedgers) => {
     if (!availableLedgers.error) {
-      sessionLedgers = availableLedgers;
+      let restrictedLedgers: any[] = [];
+      if (isNetworkSpecified && genesisID && !genesisHash) {
+        for (let i=0; i < availableLedgers.length; i++) {
+          if (availableLedgers[i]['genesisId'] === genesisID) {
+            restrictedLedgers.push(availableLedgers[i]);
+          }
+        }
+      }
+      else if (isNetworkSpecified && genesisID && genesisHash) {
+        restrictedLedgers.push(availableLedgers.find(l => (l.genesisId === genesisID && l.genesisHash === genesisHash)));       
+      }
+      else {
+        restrictedLedgers = availableLedgers;
+      }
+      sessionLedgers = restrictedLedgers;
     }
   });
   
@@ -49,6 +64,9 @@ const Enable: FunctionalComponent = () => {
     if (params.promptedAccounts && params.promptedAccounts.length > 0) {
       setPromptedAccounts(params.promptedAccounts);
     }
+    else {
+      setPromptedAccounts(null);
+    }
     if (params.genesisID) {
       setGenesisID(params.genesisID);
     }
@@ -58,6 +76,9 @@ const Enable: FunctionalComponent = () => {
     if (params.ledger) {
       // Ledger is added during EnableAuthorization to match with legacy ledger name and with GetEnableAccounts
       store.setLedger(params.ledger);
+    }
+    if(params.isNetworkSpecified) {
+      setIsNetworkSpecified(params.isNetworkSpecified);
     }
   }
 
@@ -69,8 +90,6 @@ const Enable: FunctionalComponent = () => {
     request.body.params['ledger'] = ledger;
 
     sendMessage(JsonRpcMethod.GetEnableAccounts, request.body.params, function (response) {
-      console.log(`[JsonRpcMethod.GetEnableAccounts] response:`, JSON.stringify(response))
-
       if (response.error) {
         console.error(response.error);
       } else {
@@ -130,48 +149,58 @@ const Enable: FunctionalComponent = () => {
           </div>
         </section>
         <section class="px-2 py-0">
-          <h3> Select the network and accounts to share${request.originTitle && html` with ${request.originTitle}`}. <b>Bolded</b> accounts are required by the dApp. </h3>
+          <h3> Select the accounts to share${request.originTitle && html` with ${request.originTitle}`}. <b>Bolded</b> accounts are required by the dApp. </h3>
           <div class="my-3">
-            <div style="display: inline-block; vertical-align: middle; vertical-align: -webkit-baseline-middle; width:25%;">
-              Shared Network:
-            </div>
-            <div class=${ddClass}>
-              <div class="dropdown-trigger">
-                <button
-                  id="selectLedger"
-                  class="button is-fullwidth is-justify-content-start"
-                  onClick=${flip}
-                  aria-haspopup="true"
-                  aria-controls="dropdown-menu"
-                >
-                  <span class="icon is-small">
-                    <i class="fas fa-caret-down" aria-hidden="true"></i>
-                  </span>
-                  <span>${store.ledger}</span>
-                </button>
-              </div>          
-              <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                <div class="dropdown-mask" onClick=${flip} />
-                <div class="dropdown-content">
-                  ${sessionLedgers &&
-                  sessionLedgers.map(
-                    (availableLedger: any) =>
-                      html`
-                        <a
-                          id="select${availableLedger.name}"
-                          onClick=${() => setLedger(availableLedger.name)}
-                          class="dropdown-item"
-                        >
-                          ${availableLedger.name}
-                        </a>
-                      `
-                  )}
+            ${sessionLedgers && sessionLedgers.length === 1 && html`
+              <span>Sharing accounts on the <b>${store.ledger}</b> network.</span>
+            `}
+            ${sessionLedgers && sessionLedgers.length > 1 && html`
+              <div style="display: inline-block; vertical-align: middle; vertical-align: -webkit-baseline-middle; width:25%;">
+                Shared Network:
+              </div>
+              <div class=${ddClass}>
+                <div class="dropdown-trigger">
+                  <button
+                    id="selectLedger"
+                    class="button is-fullwidth is-justify-content-start"
+                    onClick=${flip}
+                    aria-haspopup="true"
+                    aria-controls="dropdown-menu"
+                  >
+                    <span class="icon is-small">
+                      <i class="fas fa-caret-down" aria-hidden="true"></i>
+                    </span>
+                    <span>${store.ledger}</span>
+                  </button>
+                </div>          
+                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                  <div class="dropdown-mask" onClick=${flip} />
+                  <div class="dropdown-content">
+                    ${sessionLedgers &&
+                    sessionLedgers.map(
+                      (availableLedger: any) =>
+                        html`
+                          <a
+                            id="select${availableLedger.name}"
+                            onClick=${() => setLedger(availableLedger.name)}
+                            class="dropdown-item"
+                          >
+                            ${availableLedger.name}
+                          </a>
+                        `
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            `}
           </div>
           ${!!store[store.ledger] &&
           html`
+            ${!accounts || accounts.length === 0 && html`
+              <div class="mb-2">
+                There are no accounts available to share on this network
+              </div>
+            `}
             ${accounts && accounts.length > 0 && html`
               <div class="mb-2">
                 <div style="width: 50%; display: inline-block;"><b>Account</b></div>
@@ -216,16 +245,18 @@ const Enable: FunctionalComponent = () => {
         >
           Reject
         </button>
-        <button
-          class="button is-primary ml-3"
-          id="grantAccess"
-          style="flex: 1;"
-          onClick=${() => {
-            grant();
-          }}
-        >
-          Grant access
-        </button>
+        ${accounts && accounts.length > 0 && html`
+          <button
+            class="button is-primary ml-3"
+            id="grantAccess"
+            style="flex: 1;"
+            onClick=${() => {
+              grant();
+            }}
+          > 
+            Grant access
+          </button>
+        `}
       </div>
     </div>
     `
