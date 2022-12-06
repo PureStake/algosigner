@@ -19,7 +19,7 @@ class Wrapper {
     byteArrayToString,
   };
 
-  public enable: Function = this.task.connect;
+  public enable: Function = this.task.enable;
   public signAndPostTxns: Function = this.task.signAndPostTxns;
   // public getAlgodv2Client: Function = this.task.algod;
   // public getIndexerClient: Function = this.task.indexer;

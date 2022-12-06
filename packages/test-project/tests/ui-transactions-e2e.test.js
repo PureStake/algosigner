@@ -31,7 +31,7 @@ describe('Wallet Setup', () => {
 });
 
 describe('UI Transactions Tests', () => {
-  const amount = Math.ceil(Math.random() * 9); // txn size, modify multiplier for bulk
+  const amount = Math.ceil(Math.random() * 3); // txn size, modify multiplier for bulk
 
   let txId; // returned tx id from send txn
   let txTitle; // for tx verification

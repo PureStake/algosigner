@@ -18,21 +18,12 @@ import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging } from '@algosigner/common/logging';
-import { buildTransaction } from '../utils/transactionBuilder';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
-import { removeEmptyFields, areBuffersEqual } from '@algosigner/common/utils';
+import { areBuffersEqual } from '@algosigner/common/utils';
 
-// Additional space for the title bar
+// Popup properties accounts for additional space needed for the title bar
 const titleBarHeight = 28;
-
-const authPopupProperties = {
-  type: 'popup',
-  focused: true,
-  width: 400,
-  height: 550 + titleBarHeight,
-};
-
-const signPopupProperties = {
+const popupProperties = {
   type: 'popup',
   focused: true,
   width: 400,
@@ -535,7 +526,7 @@ export class Task {
         extensionBrowser.windows.create(
           {
             url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-            ...signPopupProperties,
+            ...popupProperties,
           },
           function (w) {
             if (w) {
@@ -591,7 +582,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/authorize'),
-                ...authPopupProperties,
+                ...popupProperties,
               },
               function (w: any) {
                 if (w) {
@@ -633,7 +624,7 @@ export class Task {
             // No ledgers are available. The user is logged out so just prompt them to login.  
             extensionBrowser.windows.create({
               url: extensionBrowser.runtime.getURL('index.html#/close'),
-              ...authPopupProperties,
+              ...popupProperties,
             });
 
             // Let the dApp know there was an issue with a generic unauthorized
@@ -765,7 +756,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/enable'),
-                ...authPopupProperties,
+                ...popupProperties,
               },
               function (w: any) {
                 if (w) {
@@ -943,8 +934,9 @@ export class Task {
             d.error = RequestError.PostValidationFailed(reasons);
             resolve(d);
           } else {
-            // @TODO: get ledger from enable
-            const ledger: Ledger = Ledger.TestNet;
+            const genesisID = Task.authorized_pool_details[d.origin]['genesisID'];
+            const genesisHash = Task.authorized_pool_details[d.origin]['genesisHash'];
+            const ledger = getLedgerFromMixedGenesis(genesisID, genesisHash).name;
             const conn = Settings.getBackendParams(ledger, API.Algod);
             const sendPath = '/v2/transactions';
             const fetchParams: any = {
@@ -1161,160 +1153,6 @@ export class Task {
         },
       },
       extension: {
-        // sign-allow
-        [JsonRpcMethod.SignAllow]: (request: any, sendResponse: Function) => {
-          const { passphrase, responseOriginTabID } = request.body.params;
-          const auth = Task.requests[responseOriginTabID];
-          const message = auth.message;
-          let holdResponse = false;
-
-          const {
-            from,
-            // to,
-            // fee,
-            // amount,
-            // firstRound,
-            // lastRound,
-            genesisID,
-            // genesisHash,
-            // note,
-          } = message.body.params.transaction;
-
-          try {
-            const ledger = getLedgerFromGenesisId(genesisID);
-
-            const context = new encryptionWrap(passphrase);
-            context.unlock(async (unlockedValue: any) => {
-              if ('error' in unlockedValue) {
-                sendResponse(unlockedValue);
-                return false;
-              }
-
-              extensionBrowser.windows.remove(auth.window_id);
-
-              let account;
-
-              if (unlockedValue[ledger] === undefined) {
-                message.error = RequestError.UnsupportedLedger;
-                MessageApi.send(message);
-              }
-              // Find address to send algos from
-              for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                if (unlockedValue[ledger][i].address === from) {
-                  account = unlockedValue[ledger][i];
-                  break;
-                }
-              }
-
-              // If the account is not a hardware account we need to get the mnemonic
-              let recoveredAccount;
-              if (!account.isHardware) {
-                recoveredAccount = algosdk.mnemonicToSecretKey(account.mnemonic);
-              }
-
-              const txn = { ...message.body.params.transaction };
-              removeEmptyFields(txn);
-
-              // Modify base64 encoded fields
-              if ('note' in txn && txn.note !== undefined) {
-                txn.note = new Uint8Array(Buffer.from(txn.note));
-              }
-              // Application transactions only
-              if (txn && txn.type == 'appl') {
-                if ('appApprovalProgram' in txn) {
-                  try {
-                    txn.appApprovalProgram = Uint8Array.from(
-                      Buffer.from(txn.appApprovalProgram, 'base64')
-                    );
-                  } catch {
-                    message.error =
-                      'Error trying to parse appApprovalProgram into a Uint8Array value.';
-                  }
-                }
-                if ('appClearProgram' in txn) {
-                  try {
-                    txn.appClearProgram = Uint8Array.from(
-                      Buffer.from(txn.appClearProgram, 'base64')
-                    );
-                  } catch {
-                    message.error =
-                      'Error trying to parse appClearProgram into a Uint8Array value.';
-                  }
-                }
-                if ('appArgs' in txn) {
-                  try {
-                    const tempArgs = [];
-                    txn.appArgs.forEach((element) => {
-                      logging.log(element);
-                      tempArgs.push(Uint8Array.from(Buffer.from(element, 'base64')));
-                    });
-                    txn.appArgs = tempArgs;
-                  } catch {
-                    message.error = 'Error trying to parse appArgs into Uint8Array values.';
-                  }
-                }
-              }
-
-              try {
-                // This step transitions a raw object into a transaction style object
-                const builtTx = buildTransaction(txn);
-
-                if (recoveredAccount) {
-                  // We recovered an account from within the saved extension data and can sign with it
-                  const txblob = builtTx.signTxn(recoveredAccount.sk);
-
-                  // We are combining the tx id get and sign into one step/object because of legacy,
-                  // this may not need to be the case any longer.
-                  const signedTxn = {
-                    txID: builtTx.txID().toString(),
-                    blob: txblob,
-                  };
-
-                  const b64Obj = Buffer.from(signedTxn.blob).toString('base64');
-
-                  message.response = {
-                    txID: signedTxn.txID,
-                    blob: b64Obj,
-                  };
-                } else if (account.isHardware) {
-                  // The account is hardware based. We need to open the extension in tab to connect.
-                  // We will need to hold the response to dApps
-                  holdResponse = true;
-
-                  // Create an encoded transaction for the ledger sign
-                  const encodedTxn = Buffer.from(
-                    algosdk.encodeUnsignedTransaction(builtTx)
-                  ).toString('base64');
-                  message.body.params.encodedTxn = encodedTxn;
-
-                  InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
-                    // We only have to worry about possible errors here
-                    if ('error' in response) {
-                      // Cancel the hold response since errors needs to be returned
-                      holdResponse = false;
-                      message.error = response.error;
-                    }
-                  });
-                }
-              } catch (e) {
-                message.error = e.message;
-              }
-
-              // Clean class saved request
-              delete Task.requests[responseOriginTabID];
-
-              // Hardware signing will defer the response
-              if (!holdResponse) {
-                MessageApi.send(message);
-              }
-            });
-          } catch {
-            // On error we should remove the task
-            delete Task.requests[responseOriginTabID];
-            return false;
-          }
-          return true;
-        },
         // sign-allow-wallet-tx
         [JsonRpcMethod.SignAllowWalletTx]: (request: any, sendResponse: Function) => {
           const { passphrase, responseOriginTabID } = request.body.params;

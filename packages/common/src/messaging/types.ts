@@ -1,5 +1,3 @@
-import { WalletTransaction } from '../types';
-
 export const JSONRPC_VERSION: string = '2.0';
 
 /* eslint-disable no-unused-vars */
@@ -10,7 +8,6 @@ export enum JsonRpcMethod {
   EnableAuthorization = 'enable-authorization',
   AuthorizationAllow = 'authorization-allow',
   AuthorizationDeny = 'authorization-deny',
-  SignAllow = 'sign-allow',
   SignAllowWalletTx = 'sign-allow-wallet-tx',
   SignDeny = 'sign-deny',
   SignWalletTransaction = 'sign-wallet-transaction',
