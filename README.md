@@ -20,7 +20,7 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 - Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
 - Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
 
-An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/arcTransitionGuide.html) to aid in the migration of existing functionalities.
+An interactive transition guide will be available soon to aid in the migration of existing functionalities.
 
 ## New Users
 
