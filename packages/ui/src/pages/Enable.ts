@@ -196,9 +196,9 @@ const Enable: FunctionalComponent = () => {
           </div>
           ${!!store[store.ledger] &&
           html`
-            ${!accounts || accounts.length === 0 && html`
+            ${(!accounts || accounts.length === 0) && html`
               <div class="mb-2">
-                There are no accounts available to share on this network
+                There are no accounts available to share on this network.
               </div>
             `}
             ${accounts && accounts.length > 0 && html`
@@ -245,18 +245,17 @@ const Enable: FunctionalComponent = () => {
         >
           Reject
         </button>
-        ${accounts && accounts.length > 0 && html`
-          <button
-            class="button is-primary ml-3"
-            id="grantAccess"
-            style="flex: 1;"
-            onClick=${() => {
-              grant();
-            }}
-          > 
-            Grant access
-          </button>
-        `}
+        <button
+          class="button is-primary ml-3"
+          disabled=${!(accounts && accounts.length > 0)}
+          id="grantAccess"
+          style="flex: 1;"
+          onClick=${() => {
+            grant();
+          }}
+        > 
+          Grant access
+        </button>
       </div>
     </div>
     `
