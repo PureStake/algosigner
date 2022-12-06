@@ -943,8 +943,9 @@ export class Task {
             d.error = RequestError.PostValidationFailed(reasons);
             resolve(d);
           } else {
-            // @TODO: get ledger from enable
-            const ledger: Ledger = Ledger.TestNet;
+            const genesisID = Task.authorized_pool_details[d.origin]['genesisID'];
+            const genesisHash = Task.authorized_pool_details[d.origin]['genesisHash'];
+            const ledger = getLedgerFromMixedGenesis(genesisID, genesisHash).name;
             const conn = Settings.getBackendParams(ledger, API.Algod);
             const sendPath = '/v2/transactions';
             const fetchParams: any = {
