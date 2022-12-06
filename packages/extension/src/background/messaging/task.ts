@@ -21,17 +21,9 @@ import { logging } from '@algosigner/common/logging';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { areBuffersEqual } from '@algosigner/common/utils';
 
-// Additional space for the title bar
+// Popup properties accounts for additional space needed for the title bar
 const titleBarHeight = 28;
-
-const authPopupProperties = {
-  type: 'popup',
-  focused: true,
-  width: 400,
-  height: 550 + titleBarHeight,
-};
-
-const signPopupProperties = {
+const popupProperties = {
   type: 'popup',
   focused: true,
   width: 400,
@@ -534,7 +526,7 @@ export class Task {
         extensionBrowser.windows.create(
           {
             url: extensionBrowser.runtime.getURL('index.html#/sign-v2-transaction'),
-            ...signPopupProperties,
+            ...popupProperties,
           },
           function (w) {
             if (w) {
@@ -590,7 +582,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/authorize'),
-                ...authPopupProperties,
+                ...popupProperties,
               },
               function (w: any) {
                 if (w) {
@@ -632,7 +624,7 @@ export class Task {
             // No ledgers are available. The user is logged out so just prompt them to login.  
             extensionBrowser.windows.create({
               url: extensionBrowser.runtime.getURL('index.html#/close'),
-              ...authPopupProperties,
+              ...popupProperties,
             });
 
             // Let the dApp know there was an issue with a generic unauthorized
@@ -764,7 +756,7 @@ export class Task {
             extensionBrowser.windows.create(
               {
                 url: extensionBrowser.runtime.getURL('index.html#/enable'),
-                ...authPopupProperties,
+                ...popupProperties,
               },
               function (w: any) {
                 if (w) {
