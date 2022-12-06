@@ -1,11 +1,11 @@
 {
   "name": "algorand-test-project",
-  "version": "1.9.6",
+  "version": "1.10.0",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
   "description": "Repository for tests",
   "devDependencies": {
-    "algosdk": "1.19.0",
+    "algosdk": "1.22.0",
     "jest": "^28.1.0",
     "jest-runner-groups": "^2.2.0",
     "puppeteer": "^13.7.0",
@@ -14,14 +14,17 @@
   },
   "scripts": {
     "github": "jest -i --group=github",
-    "ui": "jest --group=ui",
+    "ui": "jest -i --group=ui",
     "ui/accounts": "jest --group=ui/accounts",
     "ui/networks": "jest --group=ui/networks",
     "ui/transactions": "jest --group=ui/transactions",
-    "dapp": "jest --group=dapp",
-    "dapp/signtxn": "jest --group=dapp/signtxn",
+    "dapp": "jest -i --group=dapp",
+    "dapp/legacy/signtxn": "jest --group=dapp/legacy/signtxn",
     "dapp/groups": "jest --group=dapp/groups",
-    "ledger": "jest --group=ledger",
+    "dapp/arcs": "jest -i --group=dapp/arcs",
+    "dapp/arcs/signtxns": "jest --group=dapp/arcs/signtxns",
+    "dapp/arcs/misc": "jest --group=dapp/arcs/misc",
+    "ledger": "jest -i --group=ledger",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && bash -c \"start chrome \"$(realpath ./coverage/lcov-report/index.html\"\")",
     "test": "jest -i --group=-github --group=-ledger"
   }

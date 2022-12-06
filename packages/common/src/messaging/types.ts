@@ -1,5 +1,3 @@
-import { WalletTransaction } from '../types';
-
 export const JSONRPC_VERSION: string = '2.0';
 
 /* eslint-disable no-unused-vars */
@@ -7,13 +5,14 @@ export enum JsonRpcMethod {
   // dApp methods
   Heartbeat = 'heartbeat',
   Authorization = 'authorization',
+  EnableAuthorization = 'enable-authorization',
   AuthorizationAllow = 'authorization-allow',
   AuthorizationDeny = 'authorization-deny',
-  SignAllow = 'sign-allow',
   SignAllowWalletTx = 'sign-allow-wallet-tx',
   SignDeny = 'sign-deny',
   SignWalletTransaction = 'sign-wallet-transaction',
   SendTransaction = 'send-transaction',
+  PostTransactions = 'post-txns',
   Algod = 'algod',
   Indexer = 'indexer',
   Accounts = 'accounts',
@@ -47,6 +46,7 @@ export enum JsonRpcMethod {
   GetNamespaceConfigs = 'get-namespace-configs',
   ToggleNamespaceConfig = 'toggle-namespace-config',
   GetGovernanceAddresses = 'get-governance-addresses',
+  GetEnableAccounts = 'get-enable-accounts',
 
   // Ledger Device Methods
   LedgerSaveAccount = 'ledger-save-account',
@@ -57,7 +57,7 @@ export enum JsonRpcMethod {
 }
 
 export type JsonPayload = {
-  [key: string]: string | number | Array<WalletTransaction> | JsonPayload | undefined;
+  [key: string]: string | number | boolean | Array<any> | JsonPayload | undefined;
 };
 
 export type JsonRpcBody = {

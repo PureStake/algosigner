@@ -10,6 +10,7 @@ const auth_methods = [
   JsonRpcMethod.Authorization,
   JsonRpcMethod.AuthorizationAllow,
   JsonRpcMethod.AuthorizationDeny,
+  JsonRpcMethod.EnableAuthorization,
 ];
 
 class RequestValidation {

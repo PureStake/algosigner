@@ -35,6 +35,17 @@ export function isLedgerBaseSupported(ledger: string): boolean {
  * @param address 
  * @returns string
  */
-export function obfuscateAddress(address: string): string {
-  return `${address.slice(0, 10)}.....${address.slice(-10)}`;
+export function obfuscateAddress(address: string, range: number = 10): string {
+  return `${address.slice(0, range)}.....${address.slice(-range)}`;
+}
+
+/**
+ * Compares to buffers to make sure it's contents match
+ * Useful for validating groups or other msgpack encoded data
+ * @param b1 first buffer to compare
+ * @param b2 second buffer to compare
+ * @returns boolean
+ */
+export function areBuffersEqual(b1: Uint8Array, b2: Uint8Array): boolean {
+  return b1.every((value, index) => b2[index] === value);
 }
