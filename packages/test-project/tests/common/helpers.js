@@ -77,7 +77,8 @@ async function inputPassword() {
   await extensionPage.waitForSelector('#enterPassword');
   await extensionPage.type('#enterPassword', wallet.password);
   await extensionPage.click('#authButton');
-  await extensionPage.waitForFunction(() => !document.querySelector('#authButton'));
+  await extensionPage.waitForFunction(() => document.querySelector('#authButton') === null);
+  await expect(extensionPage.select('#authButton')).rejects.toThrow();
 }
 
 async function getOpenedTab() {
@@ -133,7 +134,7 @@ async function getLedgerSuggestedParams(ledger = 'TestNet') {
   };
 }
 
-async function signDappTxns(transactionsToSign, testFunction) {
+async function signDappTxnsWAlgoSigner(transactionsToSign, testFunction) {
   const timestampedName = `popupTest-${new Date().getTime().toString()}`;
   if (testFunction) {
     await dappPage.exposeFunction(timestampedName, async () => {
@@ -172,6 +173,49 @@ async function signDappTxns(transactionsToSign, testFunction) {
     if (signedTx) {
       await expect(signedTx).toHaveProperty('txID');
       await expect(signedTx).toHaveProperty('blob');
+    }
+  }
+  return signedTransactions;
+}
+
+async function signDappTxnsWAlgorand(transactionsToSign, testFunction) {
+  const timestampedName = `popupTest-${new Date().getTime().toString()}`;
+  if (testFunction) {
+    await dappPage.exposeFunction(timestampedName, async () => {
+      try {
+        await testFunction();
+      } catch (e) {
+        console.log(e);
+      }
+    });
+  }
+
+  await dappPage.waitForTimeout(2000);
+  const signedTransactions = await dappPage.evaluate(
+    async (transactionsToSign, testFunction, testTimestamp) => {
+      const signPromise = algorand.signTxns(transactionsToSign)
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+
+      if (testFunction) {
+        await window[testTimestamp]();
+      }
+
+      await window['authorizeSignTxn']();
+      return await Promise.resolve(signPromise);
+    },
+    transactionsToSign,
+    !!testFunction,
+    timestampedName
+  );
+  for (let i = 0; i < signedTransactions.length; i++) {
+    const signedTx = signedTransactions[i];
+    if (signedTx) {
+      await expect(signedTx).toHaveProperty('length');
     }
   }
   return signedTransactions;
@@ -265,7 +309,8 @@ module.exports = {
   getOpenedTab,
   getPopup,
   getLedgerSuggestedParams,
-  signDappTxns,
+  signDappTxnsWAlgoSigner,
+  signDappTxnsWAlgorand,
   sendTransaction,
   base64ToByteArray,
   byteArrayToBase64,

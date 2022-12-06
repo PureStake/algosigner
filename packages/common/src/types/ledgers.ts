@@ -50,12 +50,12 @@ export function getBaseSupportedLedgers(): Array<LedgerTemplate> {
     new LedgerTemplate({
       name: 'MainNet',
       genesisId: 'mainnet-v1.0',
-      genesisHash: '',
+      genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
     }),
     new LedgerTemplate({
       name: 'TestNet',
       genesisId: 'testnet-v1.0',
-      genesisHash: '',
+      genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
     }),
   ];
 }
