@@ -1217,21 +1217,25 @@ export class Task {
               const recoveredAccounts = [];
 
               if (unlockedValue[ledger] === undefined) {
+                delete Task.requests[responseOriginTabID];
                 message.error = RequestError.UnsupportedLedger;
                 MessageApi.send(message);
+                return;
               }
 
               const hardwareAccounts = [];
 
               // Find addresses to send algos from
               // We store them using the public address as dictionary key
+              let addressWithNoMnemonic = '';
               for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
                 const account = unlockedValue[ledger][i];
                 if (neededAccounts.includes(account.address)) {
                   if (!account.isHardware) {
                     // Check for an address that we were expected but unable to sign with
                     if (!unlockedValue[ledger][i].mnemonic) {
-                      throw RequestError.NoMnemonicAvailable(account.address);
+                      addressWithNoMnemonic = account.address;
+                      break;
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
@@ -1240,6 +1244,13 @@ export class Task {
                     hardwareAccounts.push(account.address);
                   }
                 }
+              }
+
+              if (addressWithNoMnemonic.length) {
+                delete Task.requests[responseOriginTabID];
+                message.error = RequestError.NoMnemonicAvailable(addressWithNoMnemonic);
+                MessageApi.send(message);
+                return;
               }
 
               transactionObjs.forEach((txn: Transaction, index) => {
