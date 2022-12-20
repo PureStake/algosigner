@@ -2,7 +2,7 @@
 
 # Integrating AlgoSigner to dApps using the `AlgoSigner` object
 
-**NOTE:** As of 1.10.0, a new top level object `window.algorand` is made available for integration with AlgoSigner. This page refers to integrating AlgoSigner using the previous `window.AlgoSigner` object; if you need to migrate existing functionalities, an interactive transition guide will be available soon.
+**NOTE:** As of 1.10.0, a new top level object `window.algorand` is made available for integration with AlgoSigner; this page refers to integrating AlgoSigner using the previous `window.AlgoSigner` object. If you need to migrate existing functionalities, an interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/arcTransitionGuide.html).
 
 AlgoSigner injects a JavaScript library into every web page the browser user visits, which allows the site to interact with the extension. The dApp can use the injected library to connect to the user's Wallet, discover account addresses it holds, query the Network (make calls to AlgoD v2 or the Indexer) and request AlgoSigner to request for the user to sign a transaction initiated by the application. **All methods of the injected library return a Promise that needs to be handled by the dApp.**
 
