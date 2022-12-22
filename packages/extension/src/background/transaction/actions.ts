@@ -19,7 +19,7 @@ import { AssetAcceptTransaction } from './axferAcceptTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetClawbackTransaction } from './axferClawbackTransaction';
 import { KeyregTransaction } from './keyregTransaction';
-import { ApplTransaction } from './applTransaction';
+import { ApplicationTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
 import { RequestError } from '@algosigner/common/errors';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
@@ -116,7 +116,7 @@ export function getValidatedTxnWrap(
       validatedTxnWrap = new KeyregTransaction(txn as IKeyRegistrationTx);
       break;
     case TransactionType.Appl:
-      validatedTxnWrap = new ApplTransaction(txn as IApplTx);
+      validatedTxnWrap = new ApplicationTransaction(txn as IApplTx);
       break;
     default:
       throw new Error('Type of transaction not specified or known.');

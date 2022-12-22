@@ -219,9 +219,12 @@ span[data-tooltip] {
   display: block;
 }
 
-span.truncate-text:not(:first-child) {
-  // This is used for tx keys that have a list of values
-  margin-top: -6px;
+// Used for  previewing tx keys that have a list of values
+p.value-list span {
+  display: block;
+  &:not(:first-child) {
+    margin-top: -6px;
+  }
 }
 
 // Custom IDs
