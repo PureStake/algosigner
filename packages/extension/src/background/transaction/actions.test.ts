@@ -4,6 +4,7 @@ import { AssetConfigTransaction } from './acfgTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
+import { KeyregTransaction } from './keyregTransaction';
 import { ApplicationTransaction } from './applTransaction';
 
 test('Validate build of pay transaction', () => {
@@ -63,17 +64,20 @@ test('Validate build of keygreg transaction', () => {
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     voteKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     selectionKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    stateProofKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQNM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     voteFirst: 1,
     voteLast: 1001,
     firstRound: 1,
     lastRound: 1001,
     genesisID: 'testnet-v1.0',
     genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    nonParticipation: true,
     note: new Uint8Array(0),
   };
 
   const result = getValidatedTxnWrap(preTransaction, 'keyreg');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
+  expect(result instanceof KeyregTransaction).toBe(true);
 });
 
 test('Validate build of acfg transaction', () => {
