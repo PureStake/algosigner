@@ -163,9 +163,13 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 // then from that will extract the first walletTransaction of the calculated group
 ///
 function cleanseBuildEncodeUnsignedTransaction(sessionTxnObj: any): any {
-  // If there's no dApp structure, we're coming from the UI
-  if (!sessionTxnObj.groupsToSign) {
-    const removedFieldsTxn = removeEmptyFields(sessionTxnObj.transaction);
+  // We only accept single groups for now
+  const { groupsToSign, ledgerIndexes, currentLedgerTransaction } = sessionTxnObj;
+
+  // If there's no complete dApp structure, we're coming from the UI
+  if (!groupsToSign) {
+    const wrap = sessionTxnObj.transactionWraps[0];
+    const removedFieldsTxn = removeEmptyFields(wrap.transaction);
 
     // Explicit conversion of amount. Ledger transactions are stringified and retrieved,
     // which converts the amount to a string. Moving to int/bigint here. 
@@ -185,9 +189,6 @@ function cleanseBuildEncodeUnsignedTransaction(sessionTxnObj: any): any {
 
     return { transaction: byteTxn, error: '' };
   }
-
-  // We only accept single groups for now
-  const { groupsToSign, ledgerIndexes, currentLedgerTransaction } = sessionTxnObj;
 
   const walletTransactionGroup: Array<WalletTransaction> = groupsToSign[0];
   const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];

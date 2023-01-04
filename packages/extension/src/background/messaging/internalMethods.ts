@@ -457,10 +457,10 @@ export class InternalMethods {
       const sessionTxnToSign = transactionWraps[nextIndexToSign];
 
       // Set the fee to the estimate we showed on the screen for validation if there is one.
-      if (session.txnObject.estimatedFee) {
-        sessionTxnToSign['fee'] = session.txnObject.estimatedFee;
+      if (sessionTxnToSign.estimatedFee) {
+        sessionTxnToSign.transaction['fee'] = sessionTxnToSign.estimatedFee;
       }
-      const sessTxnEntries = Object.entries(sessionTxnToSign).sort();
+      const sessionTxnEntries = Object.entries(sessionTxnToSign).sort();
 
       // Update fields in the signed transaction that are not the same format
       for (let i = 0; i < signedTxnEntries.length; i++) {
@@ -474,18 +474,18 @@ export class InternalMethods {
       }
 
       logging.log(`Signed Txn: ${signedTxnEntries}`, LogLevel.Debug);
-      logging.log(`Session Txn: ${sessTxnEntries}`, LogLevel.Debug);
+      logging.log(`Session Txn: ${sessionTxnEntries}`, LogLevel.Debug);
 
       if (
-        signedTxnEntries['amount'] === sessTxnEntries['amount'] &&
-        signedTxnEntries['fee'] === sessTxnEntries['fee'] &&
-        signedTxnEntries['genesisID'] === sessTxnEntries['genesisID'] &&
-        signedTxnEntries['firstRound'] === sessTxnEntries['firstRound'] &&
-        signedTxnEntries['lastRound'] === sessTxnEntries['lastRound'] &&
-        signedTxnEntries['type'] === sessTxnEntries['type'] &&
-        signedTxnEntries['to'] === sessTxnEntries['to'] &&
-        signedTxnEntries['from'] === sessTxnEntries['from'] &&
-        signedTxnEntries['closeRemainderTo'] === sessTxnEntries['closeRemainderTo']
+        signedTxnEntries['amount'] === sessionTxnEntries['amount'] &&
+        signedTxnEntries['fee'] === sessionTxnEntries['fee'] &&
+        signedTxnEntries['genesisID'] === sessionTxnEntries['genesisID'] &&
+        signedTxnEntries['firstRound'] === sessionTxnEntries['firstRound'] &&
+        signedTxnEntries['lastRound'] === sessionTxnEntries['lastRound'] &&
+        signedTxnEntries['type'] === sessionTxnEntries['type'] &&
+        signedTxnEntries['to'] === sessionTxnEntries['to'] &&
+        signedTxnEntries['from'] === sessionTxnEntries['from'] &&
+        signedTxnEntries['closeRemainderTo'] === sessionTxnEntries['closeRemainderTo']
       ) {
         // Check the original request to see where it comes from
         if (session.txnRequest.source === 'dapp') {
@@ -495,15 +495,15 @@ export class InternalMethods {
 
           sendResponse({ message: message });
         } else if (session.txnRequest.source === 'ui') {
-          // If this is a ui transaction then we need to also submit
+          // If this is an UI transaction then we need to submit to the network
           const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
 
           const algod = this.getAlgod(ledger);
           algod
             .sendRawTransaction(txnBuffer)
             .do()
-            .then((resp: any) => {
-              sendResponse({ txId: resp.txId });
+            .then((response: any) => {
+              sendResponse({ txId: response.txId });
             })
             .catch((e: any) => {
               if (e.message.includes('overspend')) {
@@ -536,6 +536,8 @@ export class InternalMethods {
     // 1) So it lives inside background sandbox containment.
     // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
     session.txnRequest = request;
+    logging.log('Ledger Sign request:', LogLevel.Debug);
+    logging.log(request, LogLevel.Debug);
 
     // Transaction wrap will contain response message if from dApp and structure will be different
     const txn = session.txnObject.transactionWraps[0].transaction;
@@ -869,20 +871,26 @@ export class InternalMethods {
           params['min-fee'] = 1000;
           calculateEstimatedFee(transactionWrap, params);
 
-          // Pass the transaction wrap we can pass to the
-          // central sign ledger function for consistency
-          this[JsonRpcMethod.LedgerSignTransaction](
-            { source: 'ui', body: { params: transactionWrap } },
-            (response) => {
-              // We only have to worry about possible errors here so we can ignore the created tab
-              if ('error' in response) {
-                sendResponse(response);
-              } else {
-                // Respond with a 0 tx id so that the page knows not to try and show it.
-                sendResponse({ txId: 0 });
-              }
+          // Pass the transaction wrap like a dApp request for consistency
+          const message = {
+            source: 'ui',
+            body: {
+              params: {
+                transactionWraps: [transactionWrap],
+                ledgerIndexes: [0],
+                currentLedgerTransaction: 0,
+              },
+            },
+          };
+          this[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
+            // We only have to worry about possible errors here so we can ignore the created tab
+            if ('error' in response) {
+              sendResponse(response);
+            } else {
+              // Respond with a 0 tx id so that the page knows not to try and show it.
+              sendResponse({ txId: 0 });
             }
-          );
+          });
 
           // Return to close connection
           return true;

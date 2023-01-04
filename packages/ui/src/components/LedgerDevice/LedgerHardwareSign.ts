@@ -41,21 +41,11 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           setError(returnedSessionObj.error);
         } else {
           // Get the next transaction to sign and put it in the same format
-          let txToSign;
-          console.log('returnedSessionObj');
-          console.log(returnedSessionObj);
+          logging.log('Request object obtained from stored session:', LogLevel.Debug);
+          logging.log(returnedSessionObj, LogLevel.Debug);
           const { transactionWraps, ledgerIndexes, currentLedgerTransaction } = returnedSessionObj;
-          if (transactionWraps && transactionWraps.length > 0) {
-            const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];
-            txToSign = returnedSessionObj.transactionWraps[nextIndexToSign];
-          } else {
-            // If no wraps, we come from the UI
-            txToSign = {
-              transaction: returnedSessionObj.transaction,
-              estimatedFee: returnedSessionObj.estimatedFee,
-              txDerivedTypeText: returnedSessionObj.txDerivedTypeText,
-            };
-          }
+          const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];
+          const txToSign = transactionWraps[nextIndexToSign];
 
           getBaseSupportedLedgers().forEach((l) => {
             if (txToSign.transaction?.genesisID === l['genesisId']) {
@@ -87,14 +77,14 @@ const LedgerHardwareSign: FunctionalComponent = () => {
     setLoading(true);
     setError('');
     ledgerActions.signTransaction(sessionTxnObj).then((lar: LedgerActionResponse) => {
+      logging.log('Ledger response:', LogLevel.Debug);
+      logging.log(lar, LogLevel.Debug);
       if (lar.error) {
         setError(lar.error);
         setLoading(false);
         return;
       }
 
-      console.log('Message from ledger');
-      console.log(lar.message);
       const b64Response = lar.message;
       sendMessage(JsonRpcMethod.LedgerSendTxnResponse, { txn: b64Response }, function (response) {
         logging.log('UI: Ledger response:', LogLevel.Debug);
