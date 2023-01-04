@@ -1,15 +1,17 @@
-/* eslint-disable no-unused-vars */
 ///
 // Central error handling.
 ///
 export enum LogLevel {
+  /* eslint-disable no-unused-vars */
   None = 0,
   Normal = 1,
   Debug = 2,
+  Extensive = 3,
 }
 
 class Logging {
   // Raise to Debug to show additional messages, or lower to None to ignore all
+  // Extensive adds on top of Debug the internal messaging logs between background & UI
   logThreshold = LogLevel.Normal;
 
   log(error: any, level?: LogLevel): void {
@@ -31,5 +33,6 @@ class Logging {
     }
   }
 }
-export var logging = new Logging();
+
+export const logging = new Logging();
 export default logging;
