@@ -297,7 +297,7 @@ export class Task {
           const authAddr: string = walletTransactions[index].authAddr;
 
           let msigAddress: string;
-          wrap.signers = signers;
+          if (signers) wrap.signers = signers;
 
           // We validate the authAddress if available
           if (authAddr) {
@@ -1378,10 +1378,10 @@ export class Task {
               }
 
               // We check if there are more groups to sign
-              message.body.params.currentGroup = currentGroup + 1;
               message.body.params.signedGroups = signedGroups;
-              if (message.body.params.currentGroup < groupsToSign.length) {
+              if (message.body.params.currentGroup + 1 < groupsToSign.length) {
                 // More groups to sign, continue prompting user
+                message.body.params.currentGroup = currentGroup + 1;
                 try {
                   await Task.signIndividualGroup(message);
                 } catch (e) {
