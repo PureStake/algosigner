@@ -12,7 +12,7 @@ class Logging {
   // Raise to Debug to show additional messages, or lower to None to ignore all
   logThreshold = LogLevel.Normal;
 
-  log(error: string, level?: LogLevel): void {
+  log(error: any, level?: LogLevel): void {
     // Set the default to Normal for backwards compatibility
     level = level || LogLevel.Normal;
 

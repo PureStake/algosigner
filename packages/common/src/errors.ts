@@ -34,8 +34,8 @@ export class RequestError {
     );
   static UnsupportedLedger = new RequestError('The provided ledger is not supported.', 4200);
   static PendingTransaction = new RequestError('Another query processing', 4201);
-  static LedgerMultipleTransactions = new RequestError(
-    'Ledger hardware device signing is only available for one transaction at a time.',
+  static LedgerMultipleGroups = new RequestError(
+    'Ledger hardware device signing is only available for one transaction group at a time.',
     4201
   );
   static TooManyTransactions = new RequestError(
