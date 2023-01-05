@@ -613,8 +613,7 @@ export class Task {
           let networkSpecifiedType = 0;
           if (genesisID && genesisHash) {
             networkSpecifiedType = 1;
-          }
-          else if (genesisID || genesisHash) {
+          } else if (genesisID || genesisHash) {
             networkSpecifiedType = 2;
           }
           d.body.params.networkSpecifiedType = networkSpecifiedType;
@@ -634,15 +633,14 @@ export class Task {
             setTimeout(() => {
               MessageApi.send(d);
             }, 2000);
-          }        
-          else {
+          } else {
             // Get ledger/hash/id from the genesisID and/or hash
             const ledgerTemplate = getLedgerFromMixedGenesis(genesisID, genesisHash);
 
             // Validate that the genesis id and hash if provided match the resulting one
             // This is because a dapp may request an id and hash from different ledgers
             if ((genesisID && genesisID !== ledgerTemplate.genesisId) 
-            || (genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
+            || (genesisHash && ledgerTemplate.genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
               d.error = RequestError.UnsupportedLedger;
               setTimeout(() => {
                 MessageApi.send(d);
@@ -699,9 +697,10 @@ export class Task {
                 // Failure means we won't auto authorize, but we can sink the error as we are re-prompting
               }   
             }
+
             // We haven't immediately failed and don't have preAuthorization so we need to prompt accounts. 
             const promptedAccounts = [];
-           
+
             // Add any requested accounts so they can be in the proper order to start
             if (accounts) {
               for (let i = 0; i < accounts.length; i++) {
@@ -1058,7 +1057,6 @@ export class Task {
             });
         },
         // Accounts
-        /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
           // If we don't have a ledger requested, respond with an error giving available ledgers
@@ -1635,7 +1633,7 @@ export class Task {
 
           // Setup new prompted accounts which will be the return values
           const newPromptedAccounts = [];
-           
+
           // Add any requested accounts so they can be in the proper order to start
           if (promptedAccounts) {
             for (let i = 0; i < promptedAccounts.length; i++) {
