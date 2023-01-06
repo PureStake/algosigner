@@ -144,7 +144,7 @@ export function getLedgerFromGenesisId(genesisId: string) {
   return defaultLedger;
 }
 
-export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string): LedgerTemplate {
+export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: string): LedgerTemplate {
   // Default the ledger to mainnet
   const defaultLedger = 'MainNet';
 
@@ -160,17 +160,12 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
       }
     }
     
-    // Injected networks may have additional information, multiples, or additional checks
-    // so we will check them separately
+    // Injected networks may have additional validations so we check them separately
     const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    injectedNetworks.forEach(network => {
-      if (network['genesisId'] === genesisId) {
-        // Found genesisId, make sure the hash matches 
-        if (!genesisHash || genesisHash === network.genesisHash) { 
-          return network;
-        }
-      }
-    });
+    ledger = injectedNetworks.find((network) => network['genesisId'] === genesisId);
+    if (ledger) {
+      return ledger;
+    }
   }
 
   // We didn't match on the genesis id so check the hashes
@@ -183,17 +178,7 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
       }
     }
 
-    // Injected networks may have additional information, multiples, or additional checks
-    // so we will check them separately
-    const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    injectedNetworks.forEach(network => {
-      if (network['genesisHash'] === genesisHash) {
-        // Found genesisHash, make sure the id matches 
-        if (!genesisId || genesisId === ledger.genesisId) { 
-          return network;
-        }
-      }
-    });
+    // We don't currently store the genesisHash of the custom networks
   }
 
   return defaultLedgers.find((l) => defaultLedger === l['name']);
