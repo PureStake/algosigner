@@ -8,9 +8,11 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
   type: string = undefined;
   voteKey: string = undefined;
   selectionKey: string = undefined;
+  stateProofKey?: string = null;
   voteFirst: number = undefined;
   voteLast: number = undefined;
   voteKeyDilution?: number = null;
+  nonParticipation?: boolean = false;
   from: string = undefined;
   fee?: number = 0;
   firstRound: number = undefined;
