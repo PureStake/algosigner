@@ -34,6 +34,20 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   let currentTransaction: number = 0;
   let totalTxns: number = 0;
 
+  const updateAccountName = (ledger: string, from: string): void => {
+    if (store[ledger] && store[ledger].length) {
+      for (let i = 0; i < store[ledger].length; i++) {
+        const lookupAddress = store[ledger][i].address;
+        const lookupName = store[ledger][i].name;
+        if (lookupAddress === from) setAccount(lookupName);
+      }
+    } else {
+      setTimeout(() => {
+        updateAccountName(ledger, from);
+      }, 100);
+    }
+  };
+
   useEffect(() => {
     try {
       sendMessage(JsonRpcMethod.LedgerGetSessionTxn, {}, function (returnedSessionObj) {
@@ -46,23 +60,17 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           const { transactionWraps, ledgerIndexes, currentLedgerTransaction } = returnedSessionObj;
           const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];
           const txToSign = transactionWraps[nextIndexToSign];
+          setSessionTxnObj(returnedSessionObj);
+          setTxn(txToSign);
 
           getBaseSupportedLedgers().forEach((l) => {
             if (txToSign.transaction?.genesisID === l['genesisId']) {
-              setLedger(l['name']);
-
-              // Update the ledger dropdown to the signing one
-              sendMessage(JsonRpcMethod.ChangeLedger, { ledger: l['name'] }, function () {
-                store.setLedger(l['name']);
-              });
+              const fetchedLedger = l['name'];
+              setLedger(fetchedLedger);
+              store.setLedger(fetchedLedger);
+              updateAccountName(fetchedLedger, txToSign.transaction?.from);
             }
           });
-
-          // Update account value to the signer
-          setAccount(txToSign.transaction?.from);
-
-          setSessionTxnObj(returnedSessionObj);
-          setTxn(txToSign);
         }
       });
     } catch (ex) {
@@ -77,7 +85,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
     setLoading(true);
     setError('');
     ledgerActions.signTransaction(sessionTxnObj).then((lar: LedgerActionResponse) => {
-      logging.log('Ledger response:', LogLevel.Debug);
+      logging.log('Ledger response from device:', LogLevel.Debug);
       logging.log(lar, LogLevel.Debug);
       if (lar.error) {
         setError(lar.error);
@@ -87,7 +95,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
 
       const b64Response = lar.message;
       sendMessage(JsonRpcMethod.LedgerSendTxnResponse, { txn: b64Response }, function (response) {
-        logging.log('UI: Ledger response:', LogLevel.Debug);
+        logging.log('Ledger response from background:', LogLevel.Debug);
         logging.log(response, LogLevel.Debug);
         if (response && 'error' in response) {
           setError(response['error']);
@@ -105,6 +113,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
 
           setSessionTxnObj(message.body.params);
           setTxn(txToSign);
+          updateAccountName(ledger, txToSign.transaction?.from);
           setShowTooltip(true);
         } else if (response) {
           setTxResponseHeader('Transaction(s) signed. Result sent to origin tab.');
@@ -134,7 +143,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
         totalTxns > 1 && !isComplete &&
         html`
           <span style="min-width: fit-content; float: right;">
-            Signing txn ${currentTransaction} out of ${totalTxns}
+            Signing transaction ${currentTransaction} out of ${totalTxns}
           </span>
         `
       }
