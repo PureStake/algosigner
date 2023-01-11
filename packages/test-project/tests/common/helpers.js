@@ -1,6 +1,25 @@
 const algosdk = require('algosdk');
 const { extension, wallet } = require('./constants');
 
+const listenToPageLogs = async (page, name) => {
+  page.on('console', async (message) => {
+    const args = await Promise.all(
+      message
+        .args()
+        .map((jsHandle) =>
+          jsHandle.executionContext().evaluate((obj) => JSON.stringify(obj), jsHandle)
+        )
+    );
+    const type = message.type().substr(0, 3).toUpperCase();
+    let text = message.text();
+    console.log(`${name} ${type}:`, text);
+    for (let i = 0; i < args.length; ++i) {
+      const parsedJson = JSON.parse(args[i]);
+      if (parsedJson !== text) console.log(parsedJson);
+    }
+  });
+};
+
 // UI Helpers
 async function openExtension() {
   const targets = await browser.targets();
@@ -8,14 +27,16 @@ async function openExtension() {
   const extensionTarget = targets.find(({ _targetInfo }) => {
     return _targetInfo.title === extension.name && _targetInfo.type === 'background_page';
   });
+  const backgroundPage = await extensionTarget.page();
 
   const extensionUrl = extensionTarget._targetInfo.url || '';
   const [, , extensionID] = extensionUrl.split('/');
 
   const baseUrl = `chrome-extension://${extensionID}/${extension.html}`;
 
-  extensionPage.on('console', (msg) => console.log('EXTENSION PAGE LOG:', msg.text()));
-  dappPage.on('console', (msg) => console.log('DAPP PAGE LOG:', msg.text()));
+  await listenToPageLogs(backgroundPage, 'BACKGROUND PAGE');
+  await listenToPageLogs(extensionPage, 'EXTENSION PAGE');
+  await listenToPageLogs(dappPage, 'DAPP PAGE');
   await extensionPage.goto(baseUrl);
 }
 
@@ -86,7 +107,7 @@ async function getOpenedTab() {
   const pages = await browser.pages();
   const tab = pages[pages.length - 1];
 
-  tab.on('console', (msg) => console.log('OPENED TAB LOG:', msg.text()));
+  await listenToPageLogs(tab, 'OPENED TAB');
   return tab;
 }
 
@@ -96,7 +117,7 @@ async function getPopup() {
   const pages = await browser.pages();
   const popup = pages[pages.length - 1];
 
-  popup.on('console', (msg) => console.log('POPUP PAGE LOG:', msg.text()));
+  await listenToPageLogs(popup, 'OPENED POPUP');
   return popup;
 }
 

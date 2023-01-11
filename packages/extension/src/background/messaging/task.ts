@@ -601,13 +601,17 @@ export class Task {
         // Enable function as defined in ARC-006
         [JsonRpcMethod.EnableAuthorization]: (d: any) => {
           const { accounts } = d.body.params;
-          let { genesisID, genesisHash, ledger } = d.body.params;
+          let { genesisID, genesisHash } = d.body.params;
+          logging.log('Enable params:', LogLevel.Debug);
+          logging.log(d.body.params, LogLevel.Debug);
 
           // Delete any previous request made from the Tab that it's trying to connect.
           delete Task.requests[d.originTabID];
 
           // Get an internal session - if unavailable then we will connect and deny
           const session = InternalMethods.getHelperSession();
+          logging.log('Session:', LogLevel.Debug);
+          logging.log(session, LogLevel.Debug);
 
           // Set a flag for a specified network
           let networkSpecifiedType = 0;
@@ -650,7 +654,7 @@ export class Task {
 
             // We've validated the ledger information 
             // So we can set the ledger, genesisID, and genesisHash 
-            ledger = ledgerTemplate.name;
+            const ledger = ledgerTemplate.name;
             genesisID = ledgerTemplate.genesisId;
             genesisHash = ledgerTemplate.genesisHash;
             // Then reflect those changes for the page
