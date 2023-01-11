@@ -125,7 +125,7 @@ export function getValidatedTxnWrap(
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisId(genesisId: string) {
+export function getLedgerFromGenesisId(genesisId: string): string {
   // Default the ledger to mainnet
   const defaultLedger = 'MainNet';
 
@@ -145,9 +145,6 @@ export function getLedgerFromGenesisId(genesisId: string) {
 }
 
 export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: string): LedgerTemplate {
-  // Default the ledger to mainnet
-  const defaultLedger = 'MainNet';
-
   // Check Genesis Id and Hash for base supported ledgers first
   const defaultLedgers = getBaseSupportedLedgers();
   let ledger;
@@ -181,7 +178,8 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: strin
     // We don't currently store the genesisHash of the custom networks
   }
 
-  return defaultLedgers.find((l) => defaultLedger === l['name']);
+  // Default the ledger to mainnet
+  return defaultLedgers.find((l) => 'MainNet' === l['name']);
 }
 
 export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {

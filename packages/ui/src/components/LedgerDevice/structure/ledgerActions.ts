@@ -4,6 +4,7 @@ const algosdk = require('algosdk');
 const Algorand = require('@ledgerhq/hw-app-algorand');
 import LedgerActionResponse from './ledgerActionsResponse';
 import { WalletTransaction } from '@algosigner/common/types';
+import { base64ToByteArray } from '@algosigner/common/encoding';
 import { removeEmptyFields } from '@algosigner/common/utils';
 import { EncodedSignedTransaction, Transaction } from 'algosdk';
 
@@ -161,10 +162,14 @@ const getAllAddresses = async (): Promise<LedgerActionResponse> => {
 // Takes the modified transaction request which contains groupsToSign
 // then from that will extract the first walletTransaction of the calculated group
 ///
-function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
-  // If there's no dApp structure, we're coming from the UI
-  if (!transaction.groupsToSign) {
-    const removedFieldsTxn = removeEmptyFields(transaction.transaction);
+function cleanseBuildEncodeUnsignedTransaction(sessionTxnObj: any): any {
+  // We only accept single groups for now
+  const { groupsToSign, ledgerIndexes, currentLedgerTransaction } = sessionTxnObj;
+
+  // If there's no complete dApp structure, we're coming from the UI
+  if (!groupsToSign) {
+    const wrap = sessionTxnObj.transactionWraps[0];
+    const removedFieldsTxn = removeEmptyFields(wrap.transaction);
 
     // Explicit conversion of amount. Ledger transactions are stringified and retrieved,
     // which converts the amount to a string. Moving to int/bigint here. 
@@ -185,35 +190,19 @@ function cleanseBuildEncodeUnsignedTransaction(transaction: any): any {
     return { transaction: byteTxn, error: '' };
   }
 
-  // Using ledgerGroup if provided since the user may sign multiple more by the time we sign.
-  // Defaulting to current after, but making sure we don't go above the current length.
-  const { groupsToSign, currentGroup, ledgerGroup } = transaction;
-  const txPositionInGroup = Math.min(ledgerGroup || currentGroup || 0, groupsToSign.length - 1);
+  const walletTransactionGroup: Array<WalletTransaction> = groupsToSign[0];
+  const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];
+  const txToSign = base64ToByteArray(walletTransactionGroup[nextIndexToSign].txn);
 
-  const walletTransactions: Array<WalletTransaction> = groupsToSign[txPositionInGroup];
-
-  const transactionObjs = walletTransactions.map((walletTx) => {
-    const byteWalletTxn = new Uint8Array(
-      Buffer.from(walletTx.txn, 'base64')
-        .toString('binary')
-        .split('')
-        .map((x) => x.charCodeAt(0))
-    );
-    return byteWalletTxn;
-  });
-
-  if (transactionObjs.length === 0) {
+  if (!txToSign) {
     return {
       transaction: undefined,
       error: 'No signable transaction found in cached Ledger transactions.',
     };
   }
 
-  // Currently we only allow a single transaction going into Ledger.
-  // TODO: To work with groups in the future this should grab the first acceptable one, not the first one overall.
-  const txToSign = transactionObjs[0];
-
-  return { transaction: txToSign, error: '' };
+  // Currently we only allow a single transaction going into Ledger at a time.
+  return { transaction: txToSign, error: undefined };
 }
 
 const getAddress = async (): Promise<LedgerActionResponse> => {
@@ -252,7 +241,7 @@ const getAddress = async (): Promise<LedgerActionResponse> => {
   return lar;
 };
 
-const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
+const signTransaction = async (sessionTxnObj: any): Promise<LedgerActionResponse> => {
   let lar: LedgerActionResponse = {};
 
   // If we haven't connected yet, do it now. This will prompt the tab to ask for device.
@@ -273,11 +262,14 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
 
   // Sign method accepts a message that is "hex" format, need to convert
   // and remove any empty fields before the conversion
-  const txnResponse = cleanseBuildEncodeUnsignedTransaction(txn);
-  const decodedTxn = algosdk.decodeUnsignedTransaction(txnResponse.transaction);
-  const message = Buffer.from(txnResponse.transaction).toString('hex');
+  const requestedTxnObj = cleanseBuildEncodeUnsignedTransaction(sessionTxnObj);
+  if (requestedTxnObj.error) {
+    return requestedTxnObj;
+  }
+  const decodedTxn = algosdk.decodeUnsignedTransaction(requestedTxnObj.transaction);
+  const message = Buffer.from(requestedTxnObj.transaction).toString('hex');
 
-  // Since we currently don't support groups, logic, or rekeyed accounts on Ledger sign
+  // Since we currently don't support logic, or rekeyed accounts on Ledger sign
   // we can check just the from field to get the index
   const fromAccount = algosdk.encodeAddress(decodedTxn.from.publicKey);
   const foundIndex = await findAccountIndex(fromAccount);
@@ -295,10 +287,10 @@ const signTransaction = async (txn: any): Promise<LedgerActionResponse> => {
           sig: o.signature,
           txn: decodedTxn.get_obj_for_encoding(),
         };
-        const encTxn = algosdk.encodeObj(sTxn);
+        const encodedTxn = algosdk.encodeObj(sTxn);
 
         // Convert to base64 string for return
-        lar = { message: Buffer.from(encTxn, 'base64').toString('base64') };
+        lar = { message: Buffer.from(encodedTxn).toString('base64') };
       })
       .catch((e) => {
         // If this is a known error from Ledger it will contain a message
