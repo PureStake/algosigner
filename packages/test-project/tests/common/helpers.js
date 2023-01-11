@@ -155,6 +155,25 @@ async function getLedgerSuggestedParams(ledger = 'TestNet') {
   };
 }
 
+async function getSDKSuggestedParams() {
+  const algodServer = 'https://testnet-algorand.api.purestake.io/ps2';
+  const token = { 'X-API-Key': 'B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab' };
+  const algodClient = new algosdk.Algodv2(token, algodServer, '');
+
+  const params = await algodClient.getTransactionParams().do();
+
+  expect(params).toHaveProperty('flatFee');
+  expect(params.flatFee).toEqual(false);
+  expect(params).toHaveProperty('fee');
+  expect(params.fee).toEqual(0);
+  expect(params).toHaveProperty('genesisHash');
+  expect(params).toHaveProperty('genesisID');
+  expect(params).toHaveProperty('firstRound');
+  expect(params).toHaveProperty('lastRound');
+
+  return params;
+}
+
 async function signDappTxnsWAlgoSigner(transactionsToSign, testFunction) {
   const timestampedName = `popupTest-${new Date().getTime().toString()}`;
   if (testFunction) {
@@ -214,7 +233,8 @@ async function signDappTxnsWAlgorand(transactionsToSign, testFunction) {
   await dappPage.waitForTimeout(2000);
   const signedTransactions = await dappPage.evaluate(
     async (transactionsToSign, testFunction, testTimestamp) => {
-      const signPromise = algorand.signTxns(transactionsToSign)
+      const signPromise = algorand
+        .signTxns(transactionsToSign)
         .then((data) => {
           return data;
         })
@@ -330,6 +350,7 @@ module.exports = {
   getOpenedTab,
   getPopup,
   getLedgerSuggestedParams,
+  getSDKSuggestedParams,
   signDappTxnsWAlgoSigner,
   signDappTxnsWAlgorand,
   sendTransaction,

@@ -110,6 +110,8 @@ const Enable: FunctionalComponent = () => {
         setDetails(request.body.params);
       }
     });
+    window.addEventListener('beforeunload', deny);
+    return () => window.removeEventListener('beforeunload', deny);
   }, []);
 
   const grant = () => {
@@ -218,20 +220,19 @@ const Enable: FunctionalComponent = () => {
                     <tbody>
                       ${accounts &&
                       accounts.map(
-                        (account) => html` <tr>
+                        (account) => html`<tr>
                           <td title=${account.address}>
                             ${account.requested &&
                             html`<b>${obfuscateAddress(account.address, 7)}</b>`}
                             ${!account.requested && html`${obfuscateAddress(account.address, 7)}`}
                           </td>
                           ${account.missing &&
-                          html` <td style="color: red; vertical-align: top;"> Not Available </td>`}
+                          html`<td style="color: red; vertical-align: top;">Not Available</td>`}
                           ${!account.missing &&
                           html`<td style="vertical-align: top;">
                             <input
                               type="checkbox"
-                              id="selectCheckbox${account.address}"
-                              name="selectCheckbox${account.address}"
+                              id="checkbox-${account.address}"
                               checked=${account.selected}
                               onClick=${() => {
                                 account.selected = !account.selected;
