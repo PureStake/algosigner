@@ -183,8 +183,12 @@ export class InternalMethods {
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
-        (session.wallet = this.safeWallet(newWallet)), (session.ledger = Ledger.MainNet);
-        sendResponse(session.session);
+        getAvailableLedgersExt((availableLedgers) => {
+          session.availableLedgers = availableLedgers;
+          session.wallet = this.safeWallet(newWallet); 
+          session.ledger = Ledger.MainNet;
+          sendResponse(session.session);
+        });
       } else {
         sendResponse({ error: 'Lock failed' });
       }

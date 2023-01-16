@@ -94,7 +94,28 @@ describe('wallet flow', () => {
     InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({
-      availableLedgers: [],
+      availableLedgers: [
+        {
+          algodUrl: undefined,
+          genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
+          genesisId: 'mainnet-v1.0',
+          headers: undefined,
+          indexerUrl: undefined,
+          isEditable: false,
+          name: 'MainNet',
+          symbol: undefined,
+        },
+        {
+          algodUrl: undefined,
+          genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+          genesisId: 'testnet-v1.0',
+          headers: undefined,
+          indexerUrl: undefined,
+          isEditable: false,
+          name: 'TestNet',
+          symbol: undefined,
+        },
+      ],
       ledger: Ledger.MainNet,
       wallet: {
         TestNet: [],
@@ -117,7 +138,28 @@ describe('wallet flow', () => {
     const sendResponse = jest.fn();
 
     const session = {
-      availableLedgers: [],
+      availableLedgers: [
+        {
+          algodUrl: undefined,
+          genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
+          genesisId: 'mainnet-v1.0',
+          headers: undefined,
+          indexerUrl: undefined,
+          isEditable: false,
+          name: 'MainNet',
+          symbol: undefined,
+        },
+        {
+          algodUrl: undefined,
+          genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+          genesisId: 'testnet-v1.0',
+          headers: undefined,
+          indexerUrl: undefined,
+          isEditable: false,
+          name: 'TestNet',
+          symbol: undefined,
+        },
+      ],
       ledger: Ledger.MainNet,
       wallet: {
         TestNet: [],

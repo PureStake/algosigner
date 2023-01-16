@@ -1,5 +1,5 @@
 const { wallet, extension } = require('./constants');
-const { openAccountDetails, goBack, inputPassword, getPopup } = require('./helpers');
+const { openAccountDetails, goBack, inputPassword, getPopup, getSDKSuggestedParams } = require('./helpers');
 
 // Common Tests
 function WelcomePage() {
@@ -94,11 +94,17 @@ function DeleteAccount(account) {
 }
 
 // Dapp Tests
-function ConnectWithAlgorandObject() {
+function ConnectWithAlgorandObject(accounts) {
   test('Expose Authorize Functions', async () => {
     async function authorizeDapp() {
       const popup = await getPopup();
       await popup.waitForSelector('#grantAccess');
+      for (const acc of accounts) {
+        const checkboxSelector = `#checkbox-${acc.address}`;
+        await popup.waitForSelector(checkboxSelector);
+        await popup.click(checkboxSelector);
+      }
+      await popup.waitForTimeout(200);
       await popup.click('#grantAccess');
     }
     await dappPage.exposeFunction('authorizeDapp', authorizeDapp);
@@ -189,9 +195,9 @@ function ConnectWithAlgorandObject() {
   test('UserRejected error upon connection refusal', async () => {
     await expect(
       dappPage.evaluate(async () => {
-        const connectPromise = algorand.enable();
+        const enablePromise = algorand.enable();
         await window.rejectDapp();
-        return Promise.resolve(connectPromise)
+        return Promise.resolve(enablePromise)
           .then((data) => {
             return data;
           })
@@ -206,12 +212,18 @@ function ConnectWithAlgorandObject() {
   });
 
   test('Enable Dapp through content.js', async () => {
-    const connected = await dappPage.evaluate(async () => {
-      const connectPromise = algorand.enable();
+    const txnParams = await getSDKSuggestedParams();
+    const enabled = await dappPage.evaluate(async (params) => {
+      const connectPromise = algorand.enable({genesisID: params.genesisID});
       await window.authorizeDapp();
       return await connectPromise;
+    }, txnParams);
+    const addressArray = accounts.map((acc) => acc.address);
+    await expect(enabled).toMatchObject({
+      accounts: expect.arrayContaining(addressArray),
+      genesisID: txnParams.genesisID,
+      genesisHash: txnParams.genesisHash,
     });
-    await expect(connected).toEqual({});
   });
 }
 

@@ -72,14 +72,16 @@ describe('Create and Test Custom Networks', () => {
     await expect(extensionPage.select('#networkError')).rejects.toThrow();
 
     // // Save Network
-    await extensionPage.waitForTimeout(1000);
-    await extensionPage.click('#saveNetwork:not(disabled)');
-    await extensionPage.waitForTimeout(4000);
+    await extensionPage.waitForTimeout(2000);
+    await extensionPage.waitForSelector('#saveNetwork:not(disabled)');
+    await extensionPage.click('#saveNetwork');
+    await extensionPage.waitForTimeout(3000);
   });
 
   ImportAccount(accounts.ui);
 
   test('Test Modifying Custom Network', async () => {
+    await extensionPage.waitForTimeout(1000);
     await openNetworkMenu();
 
     // Change Network name
@@ -88,8 +90,8 @@ describe('Create and Test Custom Networks', () => {
     await extensionPage.waitForSelector('#networkName');
     await extensionPage.evaluate(() => (document.getElementById('networkName').value = ''));
     await extensionPage.type('#networkName', otherNet);
-    await extensionPage.click('#saveNetwork:not(disabled)');
-    await extensionPage.click('#saveNetwork:not(disabled)');
+    await extensionPage.waitForSelector('#saveNetwork:not(disabled)');
+    await extensionPage.click('#saveNetwork');
     await inputPassword();
   });
 
