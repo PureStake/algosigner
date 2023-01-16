@@ -10,10 +10,10 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.10.0 Release
+## 1.10.1 Release
 
 ### Main updates
-As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0 a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
+As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0, a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
 
 - A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
 - An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. **The existing connection flow persists but will be deprecated over the next 3-6 months.**
@@ -21,6 +21,13 @@ As part of the process of supporting the [Algorand Foundations ARCs](https://arc
 - Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
 
 An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/arcTransitionGuide.html) to aid in the migration of existing functionalities.
+
+### Other updates (1.10.1):
+- Transaction signing with Ledger devices now support signing multiple transactions in a single group at once. Also updated the Ledger libraries.
+- Added support for the `boxes` field on application transactions and the `stateProofKey` & `nonParticipation` fields for key registration transactions.
+- Various bugfixes:
+  - Fixed an issue where custom networks weren't working correctly on `algorand.enable()` calls.
+  - Fixed an issue AlgoSigner becoming unresponsive when trying to sign a transaction with a Reference Account with no `authAddr` provided.
 
 ## New Users
 
