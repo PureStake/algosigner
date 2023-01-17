@@ -4,7 +4,7 @@ import encryptionWrap from '../encryptionWrap';
 import { isFromExtension } from '@algosigner/common/utils';
 import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod, MessageSource } from '@algosigner/common/messaging/types';
-import logging from '@algosigner/common/logging';
+import { logging, LogLevel } from '@algosigner/common/logging';
 
 const auth_methods = [
   JsonRpcMethod.Authorization,
@@ -28,10 +28,9 @@ export class OnMessageHandler extends RequestValidation {
   static events: { [key: string]: any } = {};
 
   static handle(request: any, sender: any, sendResponse: any) {
-    logging.log(
-      `Handler in background messaging: ${JSON.stringify(request)}, ${JSON.stringify(sender)}`,
-      2
-    );
+    logging.log('Background handler message (request, sender):', LogLevel.Extensive);
+    logging.log(request, LogLevel.Extensive);
+    logging.log(sender, LogLevel.Extensive);
 
     if ('tab' in sender) {
       request.originTabID = sender.tab.id;

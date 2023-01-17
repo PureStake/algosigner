@@ -1,11 +1,11 @@
 {
   "name": "algorand-test-project",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "repository": "https://github.com/PureStake/algosigner",
   "license": "MIT",
   "description": "Repository for tests",
   "devDependencies": {
-    "algosdk": "1.22.0",
+    "algosdk": "1.24.1",
     "jest": "^28.1.0",
     "jest-runner-groups": "^2.2.0",
     "puppeteer": "^13.7.0",
@@ -25,6 +25,8 @@
     "dapp/arcs/signtxns": "jest --group=dapp/arcs/signtxns",
     "dapp/arcs/misc": "jest --group=dapp/arcs/misc",
     "ledger": "jest -i --group=ledger",
+    "ledger/arcs": "jest -i --group=ledger/arcs",
+    "ledger/legacy": "jest -i --group=ledger/legacy",
     "coveragetest": "jest --coverage=true --coverageDirectory ../test-project/coverage --projects ../crypto ../extension ../storage ../common ../dapp --runInBand && bash -c \"start chrome \"$(realpath ./coverage/lcov-report/index.html\"\")",
     "test": "jest -i --group=-github --group=-ledger"
   }

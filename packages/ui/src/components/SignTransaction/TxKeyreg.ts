@@ -25,6 +25,20 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
         <p style="width: 30%;">Selection Key:</p>
         <p style="width: 70%; word-break: break-word;">${tx.selectionKey}</p>
       </div>
+      ${tx.stateProofKey &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">State Proof Key:</p>
+          <p style="width: 70%; word-break: break-word;">${tx.stateProofKey}</p>
+        </div>
+      `}
+      ${tx.nonParticipation &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Non-participation:</p>
+          <p style="width: 70%;">${tx.nonParticipation}</p>
+        </div>
+      `}
       <div class="is-flex">
         <p style="width: 30%;"> ${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'} </p>
         <p style="width: 70%;">${fee / 1e6} Algos</p>

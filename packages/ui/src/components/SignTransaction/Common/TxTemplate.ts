@@ -9,7 +9,7 @@ const TxTemplate: FunctionalComponent = (props: any) => {
   const { tx, vo, account, msig, midsection, overview, authAddr } = props;
 
   const txText = JSON.stringify(tx, null, 2);
-  const tabsStyle = 'height: 160px; overflow: auto;';
+  const tabsStyle = 'height: 170px; overflow: auto;';
 
   return html`
     ${vo && html`<${TxAlert} vo=${vo} />`}
@@ -48,10 +48,10 @@ const TxTemplate: FunctionalComponent = (props: any) => {
       <div class="tabs is-centered mb-2">
         <ul>
           <li class=${tab === 'overview' ? 'is-active' : ''} onClick=${() => setTab('overview')}>
-            <a>Overview</a>
+            <a style="padding: 0.25em 1em;">Overview</a>
           </li>
           <li class=${tab === 'details' ? 'is-active' : ''} onClick=${() => setTab('details')}>
-            <a>Details</a>
+            <a style="padding: 0.25em 1em;">Details</a>
           </li>
         </ul>
       </div>

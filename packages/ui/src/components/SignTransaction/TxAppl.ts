@@ -1,3 +1,4 @@
+import { obfuscateAddress } from '@algosigner/common/utils';
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
@@ -46,9 +47,9 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">App Accounts:</p>
-          <p style="width: 60%;">
+          <p style="width: 60%;" class="value-list">
             ${tx.appAccounts.map((item) => {
-              return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
+              return html`<span>${'\u2022'} ${obfuscateAddress(item, 7)}</span>`;
             })}
           </p>
         </div>
@@ -64,8 +65,8 @@ const TxAppl: FunctionalComponent = (props: any) => {
       tx.appArgs.length &&
       html`
         <div class="is-flex">
-          <p style="width: 40%;">Args:</p>
-          <p style="width: 60%;">
+          <p style="width: 40%;">App Arguments:</p>
+          <p style="width: 60%;" class="value-list">
             ${tx.appArgs.map((item) => {
               return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
             })}
@@ -83,7 +84,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Foreign Apps:</p>
-          <p style="width: 60%;">
+          <p style="width: 60%;" class="value-list">
             ${tx.appForeignApps.map((item) => {
               return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
             })}
@@ -94,7 +95,7 @@ const TxAppl: FunctionalComponent = (props: any) => {
       html`
         <div class="is-flex">
           <p style="width: 40%;">Foreign Assets:</p>
-          <p style="width: 60%;">
+          <p style="width: 60%;" class="value-list">
             ${tx.appForeignAssets.map((item) => {
               return html`<span class="truncate-text">${'\u2022'} ${item}</span>`;
             })}
@@ -134,6 +135,17 @@ const TxAppl: FunctionalComponent = (props: any) => {
         <div class="is-flex">
           <p style="width: 40%;">Extra Pages:</p>
           <p style="width: 60%;">${tx.extraPages}</p>
+        </div>
+      `}
+      ${tx.boxes &&
+      html`
+        <div class="is-flex">
+          <p style="width: 40%;">Boxes: (ID | Name)</p>
+          <p style="width: 60%;" class="value-list">
+            ${tx.boxes.map((item) => {
+              return html`<span class="truncate-text">${'\u2022'} ${item.appIndex} | ${item.name}</span>`;
+            })}
+          </p>
         </div>
       `}
       <div class="is-flex">

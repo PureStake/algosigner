@@ -12,7 +12,7 @@ DApp users can trust AlgoSigner to:
 
 ## Signing transactions with AlgoSigner
 
-You can start by looking at examples of how to sign transactions with AlgoSigner in the [example dapp](https://purestake.github.io/algosigner-dapp-example/index.html).
+You can start by looking at examples of how to sign transactions with AlgoSigner in the [example dapp](https://purestake.github.io/algosigner-dapp-example).
 
 Also available to read is our [dApp integration guide](dApp-integration.md).
 

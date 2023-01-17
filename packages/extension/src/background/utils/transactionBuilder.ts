@@ -1,5 +1,5 @@
 import { Transaction } from 'algosdk';
-import AnyTransaction from 'algosdk/dist/types/src/types/transactions';
+import AnyTransaction from 'algosdk/dist/types/types/transactions';
 
 export function buildTransaction(txn: object): Transaction {
   const builtTxn = new Transaction(txn as AnyTransaction);

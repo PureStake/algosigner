@@ -8,7 +8,7 @@ const { accounts } = require('./common/constants');
 const {
   openExtension,
   getPopup,
-  getLedgerSuggestedParams,
+  getSDKSuggestedParams,
   signDappTxnsWAlgorand,
   decodeBase64Blob,
   buildSdkTx,
@@ -20,7 +20,7 @@ const msigAccount = accounts.multisig;
 const account1 = msigAccount.subaccounts[0];
 const account2 = msigAccount.subaccounts[1];
 
-let ledgerParams;
+let sdkParams;
 let unsignedTransactions;
 let msigTxn;
 
@@ -30,17 +30,16 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectWithAlgorandObject();
 
   test('Get TestNet params', async () => {
-    ledgerParams = await getLedgerSuggestedParams();
+    sdkParams = await getSDKSuggestedParams();
     const baseTxn = prepareWalletTx(
       buildSdkTx({
         type: 'pay',
         from: msigAccount.address,
         to: msigAccount.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -54,6 +53,7 @@ describe('Wallet Setup', () => {
 
   ImportAccount(account1);
   ImportAccount(account2);
+  ConnectWithAlgorandObject([account1, account2]);
 });
 
 describe('Txn Signing Validation errors', () => {
@@ -65,7 +65,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -97,7 +97,7 @@ describe('Txn Signing Validation errors', () => {
         from: invalidAccount,
         to: invalidAccount,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -129,7 +129,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -160,7 +160,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -192,7 +192,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -226,7 +226,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );
@@ -260,7 +260,7 @@ describe('Txn Signing Validation errors', () => {
         from: account1.address,
         to: account1.address,
         amount: Math.ceil(Math.random() * 1000),
-        ...ledgerParams,
+        ...sdkParams,
         fee: 1000,
       })
     );

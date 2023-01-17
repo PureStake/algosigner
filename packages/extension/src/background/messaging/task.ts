@@ -17,7 +17,7 @@ import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
 import { extensionBrowser } from '@algosigner/common/chrome';
-import { logging } from '@algosigner/common/logging';
+import { logging, LogLevel } from '@algosigner/common/logging';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { areBuffersEqual } from '@algosigner/common/utils';
 
@@ -297,7 +297,7 @@ export class Task {
           const authAddr: string = walletTransactions[index].authAddr;
 
           let msigAddress: string;
-          wrap.signers = signers;
+          if (signers) wrap.signers = signers;
 
           // We validate the authAddress if available
           if (authAddr) {
@@ -601,20 +601,23 @@ export class Task {
         // Enable function as defined in ARC-006
         [JsonRpcMethod.EnableAuthorization]: (d: any) => {
           const { accounts } = d.body.params;
-          let { genesisID, genesisHash, ledger } = d.body.params;
+          let { genesisID, genesisHash } = d.body.params;
+          logging.log('Enable params:', LogLevel.Debug);
+          logging.log(d.body.params, LogLevel.Debug);
 
           // Delete any previous request made from the Tab that it's trying to connect.
           delete Task.requests[d.originTabID];
 
           // Get an internal session - if unavailable then we will connect and deny
           const session = InternalMethods.getHelperSession();
+          logging.log('Session:', LogLevel.Debug);
+          logging.log(session, LogLevel.Debug);
 
           // Set a flag for a specified network
           let networkSpecifiedType = 0;
           if (genesisID && genesisHash) {
             networkSpecifiedType = 1;
-          }
-          else if (genesisID || genesisHash) {
+          } else if (genesisID || genesisHash) {
             networkSpecifiedType = 2;
           }
           d.body.params.networkSpecifiedType = networkSpecifiedType;
@@ -634,15 +637,14 @@ export class Task {
             setTimeout(() => {
               MessageApi.send(d);
             }, 2000);
-          }        
-          else {
+          } else {
             // Get ledger/hash/id from the genesisID and/or hash
             const ledgerTemplate = getLedgerFromMixedGenesis(genesisID, genesisHash);
 
             // Validate that the genesis id and hash if provided match the resulting one
             // This is because a dapp may request an id and hash from different ledgers
             if ((genesisID && genesisID !== ledgerTemplate.genesisId) 
-            || (genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
+            || (genesisHash && ledgerTemplate.genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
               d.error = RequestError.UnsupportedLedger;
               setTimeout(() => {
                 MessageApi.send(d);
@@ -652,7 +654,7 @@ export class Task {
 
             // We've validated the ledger information 
             // So we can set the ledger, genesisID, and genesisHash 
-            ledger = ledgerTemplate.name;
+            const ledger = ledgerTemplate.name;
             genesisID = ledgerTemplate.genesisId;
             genesisHash = ledgerTemplate.genesisHash;
             // Then reflect those changes for the page
@@ -699,9 +701,10 @@ export class Task {
                 // Failure means we won't auto authorize, but we can sink the error as we are re-prompting
               }   
             }
+
             // We haven't immediately failed and don't have preAuthorization so we need to prompt accounts. 
             const promptedAccounts = [];
-           
+
             // Add any requested accounts so they can be in the proper order to start
             if (accounts) {
               for (let i = 0; i < accounts.length; i++) {
@@ -1058,7 +1061,6 @@ export class Task {
             });
         },
         // Accounts
-        /* eslint-disable-next-line no-unused-vars */
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
           // If we don't have a ledger requested, respond with an error giving available ledgers
@@ -1217,21 +1219,25 @@ export class Task {
               const recoveredAccounts = [];
 
               if (unlockedValue[ledger] === undefined) {
+                delete Task.requests[responseOriginTabID];
                 message.error = RequestError.UnsupportedLedger;
                 MessageApi.send(message);
+                return;
               }
 
               const hardwareAccounts = [];
 
               // Find addresses to send algos from
               // We store them using the public address as dictionary key
+              let addressWithNoMnemonic = '';
               for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
                 const account = unlockedValue[ledger][i];
                 if (neededAccounts.includes(account.address)) {
                   if (!account.isHardware) {
                     // Check for an address that we were expected but unable to sign with
                     if (!unlockedValue[ledger][i].mnemonic) {
-                      throw RequestError.NoMnemonicAvailable(account.address);
+                      addressWithNoMnemonic = account.address;
+                      break;
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
                       unlockedValue[ledger][i].mnemonic
@@ -1240,6 +1246,18 @@ export class Task {
                     hardwareAccounts.push(account.address);
                   }
                 }
+              }
+
+              if (addressWithNoMnemonic.length) {
+                delete Task.requests[responseOriginTabID];
+                message.error = RequestError.NoMnemonicAvailable(addressWithNoMnemonic);
+                MessageApi.send(message);
+                return;
+              }
+
+              if (hardwareAccounts.length){
+                message.body.params.ledgerIndexes = [];
+                message.body.params.currentLedgerTransaction = 0;
               }
 
               transactionObjs.forEach((txn: Transaction, index) => {
@@ -1308,34 +1326,16 @@ export class Task {
                         };
                       } else if (hardwareAccounts.some((a) => a === address)) {
                         // Limit to single group transactions
-                        if (!singleGroup || transactionObjs.length > 1) {
-                          throw RequestError.LedgerMultipleTransactions;
+                        if (!singleGroup) {
+                          throw RequestError.LedgerMultipleGroups;
                         }
 
-                        // Now that we know it is a single group adjust the transaction property to be the current wrap
-                        // This will be where the transaction presented to the user in the first Ledger popup.
-                        // This can probably be removed in favor of mapping to the current transaction
-                        message.body.params.transaction = wrap;
-
-                        // Set the ledgerGroup in the message to the current group
-                        // Since the signing will move into the next signs we need to know what group we were supposed to sign
-                        message.body.params.ledgerGroup = parseInt(currentGroup);
+                        // Now that we know it is a single group we map to the appropiate index
+                        message.body.params.ledgerIndexes.push(index);
 
                         // The account is hardware based. We need to open the extension in tab to connect.
                         // We will need to hold the response to dApps
                         holdResponse = true;
-
-                        InternalMethods[JsonRpcMethod.LedgerSignTransaction](
-                          message,
-                          (response) => {
-                            // We only have to worry about possible errors here
-                            if ('error' in response) {
-                              // Cancel the hold response since errors needs to be returned
-                              holdResponse = false;
-                              message.error = response.error;
-                            }
-                          }
-                        );
                       }
                     }
                   } catch (e) {
@@ -1380,10 +1380,10 @@ export class Task {
               }
 
               // We check if there are more groups to sign
-              message.body.params.currentGroup = currentGroup + 1;
               message.body.params.signedGroups = signedGroups;
-              if (message.body.params.currentGroup < groupsToSign.length) {
+              if (message.body.params.currentGroup + 1 < groupsToSign.length) {
                 // More groups to sign, continue prompting user
+                message.body.params.currentGroup = currentGroup + 1;
                 try {
                   await Task.signIndividualGroup(message);
                 } catch (e) {
@@ -1417,6 +1417,18 @@ export class Task {
                     MessageApi.send(message);
                     return;
                   }
+                } else {
+                  InternalMethods[JsonRpcMethod.LedgerSignTransaction](
+                    message,
+                    (response) => {
+                      // We only have to worry about possible errors here
+                      if ('error' in response) {
+                        // Cancel the hold response since errors needs to be returned
+                        holdResponse = false;
+                        message.error = response.error;
+                      }
+                    }
+                  );
                 }
               }
             });
@@ -1555,34 +1567,50 @@ export class Task {
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
           InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (internalResponse) {
-            logging.log(
-              `Task method - LedgerSendTxnResponse - Received: ${JSON.stringify(internalResponse)}`,
-              2
-            );
+            logging.log('Internal response from LedgerSendTxnResponse:', LogLevel.Debug);
+            logging.log(internalResponse, LogLevel.Debug);
 
             // Message indicates that this response will go to the DApp
             if ('message' in internalResponse) {
               const message = internalResponse.message;
-              const opts = message.body.params.opts;
-              const response = message.response;
+              const { ledgerIndexes, currentLedgerTransaction, currentGroup, signedGroups, opts } = message.body.params;
+              const signedTxnIndex = ledgerIndexes[currentLedgerTransaction];
+              const b64Response = message.response;
 
-              if (opts && opts[OptsKeys.ARC01Return]) {
-                response.forEach(
-                  (maybeTxn: any, index: number) =>
-                    (response[index] = maybeTxn !== null ? maybeTxn.blob : null)
-                );
-              }
-              // We pass back the blob response to the UI
-              sendResponse(response);
+              // We add the signed txn to the final response
+              signedGroups[currentGroup][signedTxnIndex] =
+                opts && opts[OptsKeys.ARC01Return]
+                  ? b64Response
+                  : {
+                      blob: b64Response,
+                    };
 
-              if (opts && opts[OptsKeys.sendTxns]) {
-                message.body.params.stxns = response;
-                Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+              // We determine if there's more txns to sign before sending a response back
+              if (currentLedgerTransaction + 1 < ledgerIndexes.length) {
+                message.body.params.currentLedgerTransaction++;
+                sendResponse(internalResponse);
               } else {
-                // Send the response back to the originating page
-                MessageApi.send(message);
-                return;
+                // If there's no more ledger transactions to sign, we prepare to return a response
+                // First we clear the cached ledger info
+                message.body.params.ledgerIndexes = undefined;
+                message.body.params.currentLedgerTransaction = undefined;
+  
+                // Then we send an informative response to the UI
+                const displayResponse = signedGroups[currentGroup].filter((_, index) => ledgerIndexes.includes(index));
+                sendResponse(displayResponse);
+
+                // Lastly we prepare & send the dApp response
+                if (opts && opts[OptsKeys.sendTxns]) {
+                  message.body.params.stxns = signedGroups;
+                  Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+                } else {
+                  // Send the response back to the originating page
+                  message.response = signedGroups.length === 1 ? signedGroups[0] : signedGroups;
+                  MessageApi.send(message);
+                  return;
+                }
               }
+
             } else {
               // Send response to the calling function
               sendResponse(internalResponse);
@@ -1624,7 +1652,7 @@ export class Task {
 
           // Setup new prompted accounts which will be the return values
           const newPromptedAccounts = [];
-           
+
           // Add any requested accounts so they can be in the proper order to start
           if (promptedAccounts) {
             for (let i = 0; i < promptedAccounts.length; i++) {

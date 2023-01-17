@@ -19,7 +19,7 @@ import { AssetAcceptTransaction } from './axferAcceptTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetClawbackTransaction } from './axferClawbackTransaction';
 import { KeyregTransaction } from './keyregTransaction';
-import { ApplTransaction } from './applTransaction';
+import { ApplicationTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
 import { RequestError } from '@algosigner/common/errors';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
@@ -116,7 +116,7 @@ export function getValidatedTxnWrap(
       validatedTxnWrap = new KeyregTransaction(txn as IKeyRegistrationTx);
       break;
     case TransactionType.Appl:
-      validatedTxnWrap = new ApplTransaction(txn as IApplTx);
+      validatedTxnWrap = new ApplicationTransaction(txn as IApplTx);
       break;
     default:
       throw new Error('Type of transaction not specified or known.');
@@ -125,7 +125,7 @@ export function getValidatedTxnWrap(
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisId(genesisId: string) {
+export function getLedgerFromGenesisId(genesisId: string): string {
   // Default the ledger to mainnet
   const defaultLedger = 'MainNet';
 
@@ -144,10 +144,7 @@ export function getLedgerFromGenesisId(genesisId: string) {
   return defaultLedger;
 }
 
-export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string): LedgerTemplate {
-  // Default the ledger to mainnet
-  const defaultLedger = 'MainNet';
-
+export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: string): LedgerTemplate {
   // Check Genesis Id and Hash for base supported ledgers first
   const defaultLedgers = getBaseSupportedLedgers();
   let ledger;
@@ -160,17 +157,12 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
       }
     }
     
-    // Injected networks may have additional information, multiples, or additional checks
-    // so we will check them separately
+    // Injected networks may have additional validations so we check them separately
     const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    injectedNetworks.forEach(network => {
-      if (network['genesisId'] === genesisId) {
-        // Found genesisId, make sure the hash matches 
-        if (!genesisHash || genesisHash === network.genesisHash) { 
-          return network;
-        }
-      }
-    });
+    ledger = injectedNetworks.find((network) => network['genesisId'] === genesisId);
+    if (ledger) {
+      return ledger;
+    }
   }
 
   // We didn't match on the genesis id so check the hashes
@@ -183,20 +175,11 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash: string
       }
     }
 
-    // Injected networks may have additional information, multiples, or additional checks
-    // so we will check them separately
-    const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    injectedNetworks.forEach(network => {
-      if (network['genesisHash'] === genesisHash) {
-        // Found genesisHash, make sure the id matches 
-        if (!genesisId || genesisId === ledger.genesisId) { 
-          return network;
-        }
-      }
-    });
+    // We don't currently store the genesisHash of the custom networks
   }
 
-  return defaultLedgers.find((l) => defaultLedger === l['name']);
+  // Default the ledger to mainnet
+  return defaultLedgers.find((l) => 'MainNet' === l['name']);
 }
 
 export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {
