@@ -8,7 +8,7 @@ const algosdk = require('algosdk');
 const { accounts } = require('./common/constants');
 const {
   openExtension,
-  getLedgerSuggestedParams,
+  getSDKSuggestedParams,
   buildSdkTx,
   prepareWalletTx,
   base64ToByteArray,
@@ -18,14 +18,14 @@ const { CreateWallet, ConnectWithAlgorandObject, ImportAccount } = require('./co
 
 const uiAccount = accounts.ui;
 
-let ledgerParams;
+let sdkParams;
 
 const getBasicSdkTxn = () => buildSdkTx({
   type: 'pay',
   from: uiAccount.address,
   to: uiAccount.address,
   amount: Math.ceil(Math.random() * 100),
-  ...ledgerParams,
+  ...sdkParams,
   fee: 1000,
 });
 
@@ -39,13 +39,13 @@ describe('Wallet Setup', () => {
   });
 
   CreateWallet();
-  ConnectWithAlgorandObject();
 
   test('Get TestNet params', async () => {
-    ledgerParams = await getLedgerSuggestedParams();
+    sdkParams = await getSDKSuggestedParams();
   });
 
   ImportAccount(uiAccount);
+  ConnectWithAlgorandObject([uiAccount]);
 });
 
 describe('PostTxns Validations', () => {
@@ -141,12 +141,15 @@ describe('PostTxns Validations', () => {
       from: uiAccount.address,
       to: uiAccount.address,
       amount: Math.ceil(Math.random() * 100),
-      ...ledgerParams,
-    })
+      ...sdkParams,
+      fee: 0,
+      flatFee: true,
+    });
 
     const sdkTxns = [noFeeTx, getBasicSdkTxn()];
     const unsignedTxns = sdkTxns.map(prepareWalletTx);
     const nestedTxns = unsignedTxns.map((tx) => [tx]);
+    await extensionPage.waitForTimeout(2000);
     const signedTxns = await signTxnGroups(nestedTxns);
     const postResponse = await dappPage.evaluate((transactions) => {
       return Promise.resolve(algorand.postTxns(transactions))
@@ -175,7 +178,8 @@ describe('PostTxns Validations', () => {
     async function signAndPostTxns(transactionsToSign) {
       return await dappPage.evaluate(
         async (transactionsToSign) => {
-          const signPromise = algorand.signAndPostTxns(transactionsToSign)
+          console.log('before sign');
+          const signPostPromise = algorand.signAndPostTxns(transactionsToSign)
             .then((data) => {
               return data;
             })
@@ -184,7 +188,7 @@ describe('PostTxns Validations', () => {
             });
     
           await window['authorizeSignTxn']();
-          return await Promise.resolve(signPromise);
+          return await Promise.resolve(signPostPromise);
         },
         transactionsToSign,
       );
@@ -193,7 +197,9 @@ describe('PostTxns Validations', () => {
     const sdkTxn = getBasicSdkTxn();
     const unsignedTxns = [sdkTxn].map(prepareWalletTx);
     const txID = sdkTxn.txID();
-    await expect(signAndPostTxns(unsignedTxns)).resolves.toMatchObject({
+    await extensionPage.waitForTimeout(2000);
+    const signPostResponse = await signAndPostTxns(unsignedTxns);
+    await expect(signPostResponse).toMatchObject({
       txnIDs: expect.arrayContaining([txID]),
     });
     

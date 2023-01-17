@@ -10,7 +10,7 @@ const {
   getOpenedTab,
   selectAccount,
   verifyUITransaction,
-  getLedgerSuggestedParams,
+  getSDKSuggestedParams,
   decodeBase64Blob,
   buildSdkTx,
   prepareWalletTx,
@@ -36,12 +36,11 @@ describe('Wallet Setup', () => {
   beforeAll(async () => {
     await openExtension();
   });
-
+  
   CreateWallet();
-  ConnectWithAlgorandObject();
-
+  
   test('Get TestNet params', async () => {
-    ledgerParams = await getLedgerSuggestedParams();
+    ledgerParams = await getSDKSuggestedParams();
   });
 });
 
@@ -86,6 +85,8 @@ describe('Link Ledger Account', () => {
 describe('dApp functionalities', () => {
   let txPromise;
   let signedBlob;
+
+  ConnectWithAlgorandObject([linkedLedgerAccount]);
 
   test('Create Asset Opt-in tx and send it to AlgoSigner', async () => {
     await extensionPage.waitForSelector('#addAccount');

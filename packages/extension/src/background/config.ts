@@ -1,6 +1,6 @@
-import logging from '@algosigner/common/logging';
 import { LedgerTemplate } from '@algosigner/common/types/ledgers';
 import { Ledger } from '@algosigner/common/types';
+import { logging, LogLevel } from '@algosigner/common/logging';
 import { Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
 
@@ -138,7 +138,7 @@ export class Settings {
         null,
         1
       )}`,
-      2
+      LogLevel.Debug
     );
   }
 
@@ -164,7 +164,7 @@ export class Settings {
         null,
         1
       )}`,
-      2
+      LogLevel.Debug
     );
   }
 

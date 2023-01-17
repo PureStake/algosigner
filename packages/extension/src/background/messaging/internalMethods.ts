@@ -17,6 +17,7 @@ import {
   calculateEstimatedFee,
   getValidatedTxnWrap,
   getLedgerFromGenesisId,
+  getLedgerFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
@@ -182,8 +183,12 @@ export class InternalMethods {
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
-        (session.wallet = this.safeWallet(newWallet)), (session.ledger = Ledger.MainNet);
-        sendResponse(session.session);
+        getAvailableLedgersExt((availableLedgers) => {
+          session.availableLedgers = availableLedgers;
+          session.wallet = this.safeWallet(newWallet); 
+          session.ledger = Ledger.MainNet;
+          sendResponse(session.session);
+        });
       } else {
         sendResponse({ error: 'Lock failed' });
       }
@@ -446,18 +451,20 @@ export class InternalMethods {
   public static [JsonRpcMethod.LedgerSendTxnResponse](request: any, sendResponse: Function) {
     if (session.txnRequest && session.txnObject && request.body?.params?.txn) {
       const signedTxn = request.body.params.txn;
-      const txnBuf = Buffer.from(signedTxn, 'base64');
-      const decodedTxn = algosdk.decodeSignedTransaction(txnBuf);
+      const txnBuffer = Buffer.from(signedTxn, 'base64');
+      const decodedTxn = algosdk.decodeSignedTransaction(txnBuffer);
       const signedTxnEntries = Object.entries(decodedTxn.txn).sort();
 
-      // Get the session transaction
-      const sessTxn = session.txnObject.transaction;
+      // Get the current session transaction
+      const { transactionWraps, ledgerIndexes, currentLedgerTransaction } = session.txnObject;
+      const nextIndexToSign = ledgerIndexes[currentLedgerTransaction];
+      const sessionTxnToSign = transactionWraps[nextIndexToSign];
 
       // Set the fee to the estimate we showed on the screen for validation if there is one.
-      if (session.txnObject.estimatedFee) {
-        sessTxn['fee'] = session.txnObject.estimatedFee;
+      if (sessionTxnToSign.estimatedFee) {
+        sessionTxnToSign.transaction['fee'] = sessionTxnToSign.estimatedFee;
       }
-      const sessTxnEntries = Object.entries(sessTxn).sort();
+      const sessionTxnEntries = Object.entries(sessionTxnToSign).sort();
 
       // Update fields in the signed transaction that are not the same format
       for (let i = 0; i < signedTxnEntries.length; i++) {
@@ -466,46 +473,41 @@ export class InternalMethods {
         } else if (signedTxnEntries[i][0] === 'to') {
           signedTxnEntries[i][1] = algosdk.encodeAddress(signedTxnEntries[i][1]['publicKey']);
         } else if (signedTxnEntries[i][1] && signedTxnEntries[i][1].constructor === Uint8Array) {
-          //@ts-ignore
           signedTxnEntries[i][1] = Buffer.from(signedTxnEntries[i][1]).toString('base64');
         }
       }
 
-      logging.log(`Signed Txn: ${signedTxnEntries}`, 2);
-      logging.log(`Session Txn: ${sessTxnEntries}`, 2);
+      logging.log(`Signed Txn: ${signedTxnEntries}`, LogLevel.Debug);
+      logging.log(`Session Txn: ${sessionTxnEntries}`, LogLevel.Debug);
 
       if (
-        signedTxnEntries['amount'] === sessTxnEntries['amount'] &&
-        signedTxnEntries['fee'] === sessTxnEntries['fee'] &&
-        signedTxnEntries['genesisID'] === sessTxnEntries['genesisID'] &&
-        signedTxnEntries['firstRound'] === sessTxnEntries['firstRound'] &&
-        signedTxnEntries['lastRound'] === sessTxnEntries['lastRound'] &&
-        signedTxnEntries['type'] === sessTxnEntries['type'] &&
-        signedTxnEntries['to'] === sessTxnEntries['to'] &&
-        signedTxnEntries['from'] === sessTxnEntries['from'] &&
-        signedTxnEntries['closeRemainderTo'] === sessTxnEntries['closeRemainderTo']
+        signedTxnEntries['amount'] === sessionTxnEntries['amount'] &&
+        signedTxnEntries['fee'] === sessionTxnEntries['fee'] &&
+        signedTxnEntries['genesisID'] === sessionTxnEntries['genesisID'] &&
+        signedTxnEntries['firstRound'] === sessionTxnEntries['firstRound'] &&
+        signedTxnEntries['lastRound'] === sessionTxnEntries['lastRound'] &&
+        signedTxnEntries['type'] === sessionTxnEntries['type'] &&
+        signedTxnEntries['to'] === sessionTxnEntries['to'] &&
+        signedTxnEntries['from'] === sessionTxnEntries['from'] &&
+        signedTxnEntries['closeRemainderTo'] === sessionTxnEntries['closeRemainderTo']
       ) {
-        //Check the txnWrap for a dApp response and return the transaction
+        // Check the original request to see where it comes from
         if (session.txnRequest.source === 'dapp') {
+          // If it comes from the dApp, we send the whole original request
           const message = session.txnRequest;
-          message.response = [
-            {
-              blob: signedTxn,
-            },
-          ];
+          message.response = signedTxn;
 
           sendResponse({ message: message });
-        }
-        // If this is a ui transaction then we need to also submit
-        else if (session.txnRequest.source === 'ui') {
+        } else if (session.txnRequest.source === 'ui') {
+          // If this is an UI transaction then we need to submit to the network
           const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
 
           const algod = this.getAlgod(ledger);
           algod
-            .sendRawTransaction(txnBuf)
+            .sendRawTransaction(txnBuffer)
             .do()
-            .then((resp: any) => {
-              sendResponse({ txId: resp.txId });
+            .then((response: any) => {
+              sendResponse({ txId: response.txId });
             })
             .catch((e: any) => {
               if (e.message.includes('overspend')) {
@@ -524,9 +526,6 @@ export class InternalMethods {
         } else {
           sendResponse({ error: 'Session transaction does not match the signed transaction.' });
         }
-
-        // Clear the cached transaction
-        session.txnRequest.body.params.transaction = undefined;
       } else {
         sendResponse({ error: 'Transaction not found in session, unable to validate for send.' });
       }
@@ -541,13 +540,16 @@ export class InternalMethods {
     // 1) So it lives inside background sandbox containment.
     // 2) The extension may close before a proper id on the new tab can allow the data to be saved.
     session.txnRequest = request;
+    logging.log('Ledger Sign request:', LogLevel.Debug);
+    logging.log(request, LogLevel.Debug);
 
     // Transaction wrap will contain response message if from dApp and structure will be different
-    const ledger = getLedgerFromGenesisId(request.body.params.transaction.genesisID);
+    const txn = session.txnObject.transactionWraps[0].transaction;
+    const ledger = getLedgerFromMixedGenesis(txn.genesisID, txn.genesisHash);
     extensionBrowser.tabs.create(
       {
         active: true,
-        url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/ledger-hardware-sign`),
+        url: extensionBrowser.extension.getURL(`/index.html#/${ledger.name}/ledger-hardware-sign`),
       },
       (tab) => {
         // Tab object is created here, but extension popover will close.
@@ -873,20 +875,26 @@ export class InternalMethods {
           params['min-fee'] = 1000;
           calculateEstimatedFee(transactionWrap, params);
 
-          // Pass the transaction wrap we can pass to the
-          // central sign ledger function for consistency
-          this[JsonRpcMethod.LedgerSignTransaction](
-            { source: 'ui', body: { params: transactionWrap } },
-            (response) => {
-              // We only have to worry about possible errors here so we can ignore the created tab
-              if ('error' in response) {
-                sendResponse(response);
-              } else {
-                // Respond with a 0 tx id so that the page knows not to try and show it.
-                sendResponse({ txId: 0 });
-              }
+          // Pass the transaction wrap like a dApp request for consistency
+          const message = {
+            source: 'ui',
+            body: {
+              params: {
+                transactionWraps: [transactionWrap],
+                ledgerIndexes: [0],
+                currentLedgerTransaction: 0,
+              },
+            },
+          };
+          this[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
+            // We only have to worry about possible errors here so we can ignore the created tab
+            if ('error' in response) {
+              sendResponse(response);
+            } else {
+              // Respond with a 0 tx id so that the page knows not to try and show it.
+              sendResponse({ txId: 0 });
             }
-          );
+          });
 
           // Return to close connection
           return true;
@@ -1292,15 +1300,20 @@ export class InternalMethods {
         const governanceResponse = await fetchResponse.json();
         if ('results' in governanceResponse) {
           try {
-            governanceResponse['results'].forEach((p) => governanceAccounts.push(p['sign_up_address']));
+            governanceResponse['results'].forEach((p) =>
+              governanceAccounts.push(p['sign_up_address'])
+            );
           } catch (e) {
-            logging.log("Governance accounts couldn't be fetched. Error: "+e.message, LogLevel.Debug);
+            logging.log(
+              "Governance accounts couldn't be fetched. Error: " + e.message,
+              LogLevel.Debug
+            );
           }
         }
       }
-  
+
       if (governanceAccounts.length) {
-        sendResponse({accounts: governanceAccounts});
+        sendResponse({ accounts: governanceAccounts });
       }
     });
     return true;

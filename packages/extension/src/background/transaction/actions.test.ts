@@ -4,6 +4,8 @@ import { AssetConfigTransaction } from './acfgTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
+import { KeyregTransaction } from './keyregTransaction';
+import { ApplicationTransaction } from './applTransaction';
 
 test('Validate build of pay transaction', () => {
   const preTransaction = {
@@ -23,6 +25,38 @@ test('Validate build of pay transaction', () => {
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
 });
 
+test('Validate build of appl transaction', () => {
+  const preTransaction = {
+    type: 'appl',
+    from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    appAccounts: ['NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ'],
+    appArgs: new Uint8Array(0),
+    appApprovalProgram: new Uint8Array(0),
+    appClearProgram: new Uint8Array(0),
+    lease: new Uint8Array(0),
+    fee: 1000,
+    appIndex: 1,
+    extraPages: 1,
+    appOnComplete: 0,
+    appGlobalByteSlices: 1,
+    appGlobalInts: 1,
+    appLocalByteSlices: 1,
+    appLocalInts: 1,
+    appForeignApps: [1],
+    appForeignAssets: [1],
+    firstRound: 1,
+    lastRound: 1001,
+    genesisID: 'testnet-v1.0',
+    genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    note: new Uint8Array(0),
+    boxes: [{appIndex: 2, name: new Uint8Array(1)}],
+  };
+
+  const result = getValidatedTxnWrap(preTransaction, 'appl');
+  expect(result instanceof BaseValidatedTxnWrap).toBe(true);
+  expect(result instanceof ApplicationTransaction).toBe(true);
+});
+
 test('Validate build of keygreg transaction', () => {
   const preTransaction = {
     type: 'keyreg',
@@ -30,17 +64,20 @@ test('Validate build of keygreg transaction', () => {
     from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     voteKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     selectionKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    stateProofKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQNM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     voteFirst: 1,
     voteLast: 1001,
     firstRound: 1,
     lastRound: 1001,
     genesisID: 'testnet-v1.0',
     genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    nonParticipation: true,
     note: new Uint8Array(0),
   };
 
   const result = getValidatedTxnWrap(preTransaction, 'keyreg');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
+  expect(result instanceof KeyregTransaction).toBe(true);
 });
 
 test('Validate build of acfg transaction', () => {
@@ -97,7 +134,6 @@ test('Validate build of axfer transaction', () => {
   };
 
   const result = getValidatedTxnWrap(preTransaction, 'axfer');
-  console.log(result)
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetTransferTransaction).toBe(true);
 });
@@ -119,7 +155,6 @@ test('Validate build of axfer close transaction', () => {
   };
 
   const result = getValidatedTxnWrap(preTransaction, 'axfer');
-  console.log(result);
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
   expect(result instanceof AssetCloseTransaction).toBe(true);
 });
@@ -130,6 +165,7 @@ test('Validate build of transaction', () => {
   };
   expect(() => getValidatedTxnWrap(preTransaction, 'faketype')).toThrow();
 });
+
 // Check missing fields from transactions in all types
 test('Validate pay transaction required fields', () => {
   const preTransaction = {
@@ -151,6 +187,7 @@ test('Validate pay transaction required fields', () => {
   expect(data).toContain('to');
   expect(data).toContain('from');
 });
+
 test('Validate clawback transaction required fields', () => {
   const preTransaction = {
     type: 'axfer',
@@ -172,6 +209,7 @@ test('Validate clawback transaction required fields', () => {
   expect(data).toContain('assetIndex');
   expect(data).toContain('assetRevocationTarget');
 });
+
 test('Validate accept transaction required fields', () => {
   const preTransaction = {
     type: 'axfer',
@@ -192,6 +230,7 @@ test('Validate accept transaction required fields', () => {
   expect(data).toContain('from');
   expect(data).toContain('assetIndex');
 });
+
 test('Validate create transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',
@@ -212,6 +251,7 @@ test('Validate create transaction required fields', () => {
   expect(data).toContain('from');
   expect(data).toContain('assetTotal');
 });
+
 test('Validate destroy transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',
@@ -221,7 +261,6 @@ test('Validate destroy transaction required fields', () => {
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
-    console.log(e.message);
     message = e.message;
     data = e.data;
   }
@@ -233,6 +272,7 @@ test('Validate destroy transaction required fields', () => {
   expect(data).toContain('from');
   expect(data).toContain('assetIndex');
 });
+
 test('Validate modify asset transaction required fields', () => {
   const preTransaction = {
     type: 'acfg',

@@ -127,7 +127,6 @@ describe('UI Transactions Tests', () => {
     await extensionPage.click('#showNamespacesConfiguration');
     await extensionPage.waitForTimeout(250);
     const namespaceToggles = await extensionPage.$$('#namespaceList .box a');
-    console.log(namespaceToggles);
     for (const toggle of namespaceToggles) {
       await extensionPage.waitForTimeout(250);
       await toggle.click();

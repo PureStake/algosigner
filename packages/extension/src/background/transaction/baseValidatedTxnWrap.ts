@@ -69,7 +69,7 @@ export class BaseValidatedTxnWrap {
           this.transaction[prop] = params[prop];
           // This is where conversion for different keys happens
           // This could be done for validation purposes or improving readability on the UI
-          // Done more liberally on v2 since we use the unmodified transaction afterwards
+          // Done liberally since we use the unmodified transaction afterwards
           if (
             // First we check for UintArrays and make them readable
             prop === 'group' ||
@@ -82,16 +82,22 @@ export class BaseValidatedTxnWrap {
             prop === 'voteKey'
           ) {
             this.transaction[prop] = Buffer.from(params[prop]).toString('base64');
-            // Then we check for UintArray arrays
+          // Then we check for UintArray arrays
           } else if (prop === 'appArgs') {
             this.transaction[prop] = this.transaction[prop].map((arg) =>
-              Buffer.from(arg).toString('base64')
+              Buffer.from(arg).toString()
             );
-            // Then for address arrays
+          // Then for address arrays
           } else if (prop === 'appAccounts') {
             const accArray = params[prop];
-            if (Array.isArray(accArray) && accArray.every((accObj) => 'publicKey' in accObj)) {
+            if (Array.isArray(accArray) && accArray.every((accObj) => typeof accObj !== 'string' && 'publicKey' in accObj)) {
               this.transaction[prop] = accArray.map((a) => algosdk.encodeAddress(a.publicKey));
+            }
+          // Finally, we check for appl boxes
+          } else if (prop === 'boxes') {
+            const boxesArray = params[prop];
+            if (Array.isArray(boxesArray) && boxesArray.every((box) => 'appIndex' in box && 'name' in box)) {
+              this.transaction[prop] = boxesArray.map((box) => ({appIndex: box.appIndex, name: Buffer.from(box.name).toString()}));
             }
           } else if (prop === 'note') {
             this.transaction[prop] = Buffer.from(params[prop]).toString();

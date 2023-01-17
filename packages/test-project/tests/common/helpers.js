@@ -1,6 +1,25 @@
 const algosdk = require('algosdk');
 const { extension, wallet } = require('./constants');
 
+const listenToPageLogs = async (page, name) => {
+  page.on('console', async (message) => {
+    const args = await Promise.all(
+      message
+        .args()
+        .map((jsHandle) =>
+          jsHandle.executionContext().evaluate((obj) => JSON.stringify(obj), jsHandle)
+        )
+    );
+    const type = message.type().substr(0, 3).toUpperCase();
+    let text = message.text();
+    console.log(`${name} ${type}:`, text);
+    for (let i = 0; i < args.length; ++i) {
+      const parsedJson = JSON.parse(args[i]);
+      if (parsedJson !== text) console.log(parsedJson);
+    }
+  });
+};
+
 // UI Helpers
 async function openExtension() {
   const targets = await browser.targets();
@@ -8,14 +27,16 @@ async function openExtension() {
   const extensionTarget = targets.find(({ _targetInfo }) => {
     return _targetInfo.title === extension.name && _targetInfo.type === 'background_page';
   });
+  const backgroundPage = await extensionTarget.page();
 
   const extensionUrl = extensionTarget._targetInfo.url || '';
   const [, , extensionID] = extensionUrl.split('/');
 
   const baseUrl = `chrome-extension://${extensionID}/${extension.html}`;
 
-  extensionPage.on('console', (msg) => console.log('EXTENSION PAGE LOG:', msg.text()));
-  dappPage.on('console', (msg) => console.log('DAPP PAGE LOG:', msg.text()));
+  await listenToPageLogs(backgroundPage, 'BACKGROUND PAGE');
+  await listenToPageLogs(extensionPage, 'EXTENSION PAGE');
+  await listenToPageLogs(dappPage, 'DAPP PAGE');
   await extensionPage.goto(baseUrl);
 }
 
@@ -86,7 +107,7 @@ async function getOpenedTab() {
   const pages = await browser.pages();
   const tab = pages[pages.length - 1];
 
-  tab.on('console', (msg) => console.log('OPENED TAB LOG:', msg.text()));
+  await listenToPageLogs(tab, 'OPENED TAB');
   return tab;
 }
 
@@ -96,7 +117,7 @@ async function getPopup() {
   const pages = await browser.pages();
   const popup = pages[pages.length - 1];
 
-  popup.on('console', (msg) => console.log('POPUP PAGE LOG:', msg.text()));
+  await listenToPageLogs(popup, 'OPENED POPUP');
   return popup;
 }
 
@@ -132,6 +153,25 @@ async function getLedgerSuggestedParams(ledger = 'TestNet') {
     genesisID: params['genesis-id'],
     genesisHash: params['genesis-hash'],
   };
+}
+
+async function getSDKSuggestedParams() {
+  const algodServer = 'https://testnet-algorand.api.purestake.io/ps2';
+  const token = { 'X-API-Key': 'B3SU4KcVKi94Jap2VXkK83xx38bsv95K5UZm2lab' };
+  const algodClient = new algosdk.Algodv2(token, algodServer, '');
+
+  const params = await algodClient.getTransactionParams().do();
+
+  expect(params).toHaveProperty('flatFee');
+  expect(params.flatFee).toEqual(false);
+  expect(params).toHaveProperty('fee');
+  expect(params.fee).toEqual(0);
+  expect(params).toHaveProperty('genesisHash');
+  expect(params).toHaveProperty('genesisID');
+  expect(params).toHaveProperty('firstRound');
+  expect(params).toHaveProperty('lastRound');
+
+  return params;
 }
 
 async function signDappTxnsWAlgoSigner(transactionsToSign, testFunction) {
@@ -193,7 +233,8 @@ async function signDappTxnsWAlgorand(transactionsToSign, testFunction) {
   await dappPage.waitForTimeout(2000);
   const signedTransactions = await dappPage.evaluate(
     async (transactionsToSign, testFunction, testTimestamp) => {
-      const signPromise = algorand.signTxns(transactionsToSign)
+      const signPromise = algorand
+        .signTxns(transactionsToSign)
         .then((data) => {
           return data;
         })
@@ -309,6 +350,7 @@ module.exports = {
   getOpenedTab,
   getPopup,
   getLedgerSuggestedParams,
+  getSDKSuggestedParams,
   signDappTxnsWAlgoSigner,
   signDappTxnsWAlgorand,
   sendTransaction,

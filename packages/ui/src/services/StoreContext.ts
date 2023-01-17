@@ -5,6 +5,7 @@ import { route } from 'preact-router';
 import { autorun } from 'mobx';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
+import logging, { LogLevel } from '@algosigner/common/logging';
 
 export const StoreContext = createContext(undefined);
 
@@ -72,7 +73,8 @@ export const StoreProvider = ({ children }) => {
       });
     },
     updateAccountDetails: (ledger: string, details: any) => {
-      console.log(details);
+      logging.log(`Updating account details on ledger '${ledger}':`, LogLevel.Debug);
+      logging.log(details, LogLevel.Debug);
       for (let i = store[ledger].length - 1; i >= 0; i--) {
         if (store[ledger][i].address === details.address) {
           store[ledger][i].details = details;

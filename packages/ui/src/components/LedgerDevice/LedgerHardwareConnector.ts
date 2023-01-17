@@ -9,6 +9,7 @@ import ReducedHeader from 'components/ReducedHeader';
 import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import { ledgerActions } from './structure/ledgerActions';
+import LedgerActionResponse from './structure/ledgerActionsResponse';
 
 const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
   const { ledger } = props;
@@ -43,15 +44,15 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
 
     ledgerActions
       .getAllAddresses()
-      .then((response) => {
-        if ('error' in response) {
+      .then((lar: LedgerActionResponse) => {
+        if ('error' in lar) {
           setError(
-            `Unable to obtain list of addresses. Verify the Ledger hardware device is connected and unlocked. ${response['error']}`
+            `Unable to obtain list of addresses. Verify the Ledger hardware device is connected and unlocked. ${lar['error']}`
           );
         } else {
-          for (let i = 0; i < response.message?.length; i++) {
-            if (!storeLedgerAddresses?.includes(`${response.message[i].publicAddress}`)) {
-              ddItems.push(response.message[i]);
+          for (let i = 0; i < lar.message?.length; i++) {
+            if (!storeLedgerAddresses?.includes(`${lar.message[i].publicAddress}`)) {
+              ddItems.push(lar.message[i]);
             }
           }
           setAccounts(ddItems);

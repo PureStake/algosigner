@@ -10,14 +10,15 @@
 import { MessageApi } from '../messaging/api';
 import { Task } from './task';
 import { MessageSource } from '@algosigner/common/messaging/types';
-import logging from '@algosigner/common/logging';
+import { logging, LogLevel } from '@algosigner/common/logging';
 
 export class Router {
   handler: Function;
   constructor() {
     this.handler = this.default;
     window.addEventListener('message', (event) => {
-      logging.log(`Router DApp message event: ${JSON.stringify(event)}`, 2);
+      logging.log('Router DApp message event:', LogLevel.Extensive);
+      logging.log(event, LogLevel.Extensive);
       const d = event.data;
 
       try {
