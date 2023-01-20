@@ -485,10 +485,12 @@ export class Task {
         if (transactionWraps.length > 1) {
           if (
             !transactionWraps.every(
-              (wrap) => transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID
+              (wrap) =>
+                transactionWraps[0].transaction.genesisID === wrap.transaction.genesisID ||
+                transactionWraps[0].transaction.genesisHash === wrap.transaction.genesisHash
             )
           ) {
-            throw RequestError.NoDifferentLedgers;
+            throw RequestError.NoDifferentNetworks;
           }
 
           if (!providedGroupId || !transactionWraps.every((wrap) => wrap.transaction.group)) {
@@ -648,7 +650,7 @@ export class Task {
             // This is because a dapp may request an id and hash from different ledgers
             if ((genesisID && genesisID !== ledgerTemplate.genesisId) 
             || (genesisHash && ledgerTemplate.genesisHash && genesisHash !== ledgerTemplate.genesisHash)) {
-              d.error = RequestError.UnsupportedLedger;
+              d.error = RequestError.UnsupportedNetwork;
               setTimeout(() => {
                 MessageApi.send(d);
               }, 500);
@@ -727,7 +729,7 @@ export class Task {
         
             // If we need a requested a ledger but don't have it, respond with an error
             if (walletAccounts === undefined) {
-              d.error = RequestError.UnsupportedLedger;
+              d.error = RequestError.UnsupportedNetwork;
 
               setTimeout(() => {
                 MessageApi.send(d);
@@ -1082,7 +1084,7 @@ export class Task {
           const accounts = session.wallet[d.body.params.ledger];
           // If we have requested a ledger but don't have it, respond with an error
           if (accounts === undefined) {
-            d.error = RequestError.UnsupportedLedger;
+            d.error = RequestError.UnsupportedNetwork;
             reject(d);
             return;
           }
@@ -1224,7 +1226,7 @@ export class Task {
 
               if (unlockedValue[ledger] === undefined) {
                 delete Task.requests[responseOriginTabID];
-                message.error = RequestError.UnsupportedLedger;
+                message.error = RequestError.UnsupportedNetwork;
                 MessageApi.send(message);
                 return;
               }
