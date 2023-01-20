@@ -133,8 +133,14 @@ export class RequestError {
     'All transactions need to belong to the same ledger.',
     4300
   );
-  static PartiallySuccessfulPost = (successTxnIDs: string[], data: any): PostError =>
-    new PostError(
+  static FailedPost = (data: any): RequestError =>
+    new RequestError(
+      "The transaction was unable to be posted. The reason returned by the network is found inside the 'data' property.",
+      4400,
+      data
+    );
+  static PartiallySuccessfulPost = (successTxnIDs: string[], data: any): PartialPostError =>
+    new PartialPostError(
       successTxnIDs,
       "Some of the groups of transactions were unable to be posted. The reason for each unsuccessful group is in it's corresponding position inside the 'data' array.",
       4400,
@@ -157,7 +163,7 @@ export class RequestError {
   }
 }
 
-class PostError extends RequestError {
+class PartialPostError extends RequestError {
   successTxnIDs: string[];
 
   public constructor(successTxnIDs: string[], message: string, code: number, data?: any) {

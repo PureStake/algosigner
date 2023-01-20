@@ -966,7 +966,9 @@ export class Task {
                   const txID = res.value.txId;
                   confirmationPromises[index] = algosdk.waitForConfirmation(algod, txID, 2);
                 } else {
-                  fetchErrors[index] = res.reason.message;
+                  logging.log('Failed post response:', LogLevel.Debug);
+                  logging.log(res, LogLevel.Debug);
+                  fetchErrors[index] = res.reason;
                   fetchResponses[index] = null;
                 }
               });
@@ -990,9 +992,14 @@ export class Task {
                 // Check if there's any non-null errors
                 if (fetchErrors.filter(Boolean).length) {
                   const successTxnIDs = fetchResponses;
-                  const reasons = new Array(groupsToSend.length);
-                  fetchErrors.forEach((e, i) => (reasons[i] = e ? e.message : null));
-                  d.error = RequestError.PartiallySuccessfulPost(successTxnIDs, reasons);
+                  if (groupsToSend.length > 1) {
+                    const reasons = new Array(groupsToSend.length);
+                    fetchErrors.forEach((e, i) => (reasons[i] = e ? e.message : null));
+                    d.error = RequestError.PartiallySuccessfulPost(successTxnIDs, reasons);
+                  } else {
+                    const reason = fetchErrors[0].message;
+                    d.error = RequestError.FailedPost(reason);
+                  }
                   resolve(d);
                 } else {
                   d.response = { txnIDs: fetchResponses };

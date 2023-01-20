@@ -20,18 +20,20 @@ const uiAccount = accounts.ui;
 
 let sdkParams;
 
-const getBasicSdkTxn = () => buildSdkTx({
-  type: 'pay',
-  from: uiAccount.address,
-  to: uiAccount.address,
-  amount: Math.ceil(Math.random() * 100),
-  ...sdkParams,
-  fee: 1000,
-});
+const getBasicSdkTxn = () =>
+  buildSdkTx({
+    type: 'pay',
+    from: uiAccount.address,
+    to: uiAccount.address,
+    amount: Math.ceil(Math.random() * 100),
+    ...sdkParams,
+    fee: 1000,
+  });
 
 const getSdkTxnArray = () => [getBasicSdkTxn(), getBasicSdkTxn()];
 
-const signWithSDK = (tx) => byteArrayToBase64(tx.signTxn(algosdk.mnemonicToSecretKey(uiAccount.mnemonic).sk));
+const signWithSDK = (tx) =>
+  byteArrayToBase64(tx.signTxn(algosdk.mnemonicToSecretKey(uiAccount.mnemonic).sk));
 
 describe('Wallet Setup', () => {
   beforeAll(async () => {
@@ -49,159 +51,182 @@ describe('Wallet Setup', () => {
 });
 
 describe('PostTxns Validations', () => {
-  test('Error on missing group(s)', async () => {
-    const sdkTxns = getSdkTxnArray();
-    const signedTxns = sdkTxns.map(signWithSDK);
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(algorand.postTxns(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, signedTxns)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('reasons are provided'),
-      code: 4300,
-      data: expect.stringContaining('same group')
-    });
-  });
-
-
-  test('Error on unordered group(s)', async () => {
-    const sdkTxns = algosdk.assignGroupID(getSdkTxnArray());
-    const unsignedTxns = sdkTxns.map(signWithSDK);
-    const unorderedTxns = [unsignedTxns[1], unsignedTxns[0]];
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(algorand.postTxns(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unorderedTxns)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('reasons are provided'),
-      code: 4300,
-      data: expect.stringContaining('different order')
-    });
-  });
-
-
-  test('Error on incomplete group(s)', async () => {
-    const sdkTxns = algosdk.assignGroupID(getSdkTxnArray());
-    const unsignedTxns = sdkTxns.map(signWithSDK);
-    const incompleteTxns = [unsignedTxns.shift()];
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(algorand.postTxns(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, incompleteTxns)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('reasons are provided'),
-      code: 4300,
-      data: expect.stringContaining('group is incomplete')
-    });
-  });
-  
-  jest.setTimeout(20000);
-
-  test('Partially succeded post', async () => {
-    async function signTxnGroups(transactionsToSign) {
-      return await dappPage.evaluate(
-        async (transactionsToSign) => {
-          const signPromise = algorand.signTxns(transactionsToSign)
+  describe('Transaction validations', () => {
+    test('Error on missing group(s)', async () => {
+      const sdkTxns = getSdkTxnArray();
+      const signedTxns = sdkTxns.map(signWithSDK);
+      await expect(
+        dappPage.evaluate((transactions) => {
+          return Promise.resolve(algorand.postTxns(transactions))
             .then((data) => {
               return data;
             })
             .catch((error) => {
               return error;
             });
-    
-          const amountOfGroups = Array.isArray(transactionsToSign[0]) ? transactionsToSign.length : 1;
+        }, signedTxns)
+      ).resolves.toMatchObject({
+        message: expect.stringContaining('reasons are provided'),
+        code: 4300,
+        data: expect.stringContaining('same group'),
+      });
+    });
+
+    test('Error on unordered group(s)', async () => {
+      const sdkTxns = algosdk.assignGroupID(getSdkTxnArray());
+      const signedTxns = sdkTxns.map(signWithSDK);
+      const unorderedTxns = [signedTxns[1], signedTxns[0]];
+      await expect(
+        dappPage.evaluate((transactions) => {
+          return Promise.resolve(algorand.postTxns(transactions))
+            .then((data) => {
+              return data;
+            })
+            .catch((error) => {
+              return error;
+            });
+        }, unorderedTxns)
+      ).resolves.toMatchObject({
+        message: expect.stringContaining('reasons are provided'),
+        code: 4300,
+        data: expect.stringContaining('different order'),
+      });
+    });
+
+    test('Error on incomplete group(s)', async () => {
+      const sdkTxns = algosdk.assignGroupID(getSdkTxnArray());
+      const signedTxns = sdkTxns.map(signWithSDK);
+      const incompleteTxns = [signedTxns.shift()];
+      await expect(
+        dappPage.evaluate((transactions) => {
+          return Promise.resolve(algorand.postTxns(transactions))
+            .then((data) => {
+              return data;
+            })
+            .catch((error) => {
+              return error;
+            });
+        }, incompleteTxns)
+      ).resolves.toMatchObject({
+        message: expect.stringContaining('reasons are provided'),
+        code: 4300,
+        data: expect.stringContaining('group is incomplete'),
+      });
+    });
+  });
+
+  describe('Network validations', () => {
+    test('Error on failed post', async () => {
+      const noFeeTxn = getBasicSdkTxn();
+      noFeeTxn.fee = 0;
+      console.log(noFeeTxn);
+      const sdkTxns = [noFeeTxn];
+      const signedTxns = sdkTxns.map(signWithSDK);
+      await expect(
+        dappPage.evaluate((transactions) => {
+          return Promise.resolve(algorand.postTxns(transactions))
+            .then((data) => {
+              return data;
+            })
+            .catch((error) => {
+              return error;
+            });
+        }, signedTxns)
+      ).resolves.toMatchObject({
+        message: expect.stringContaining('unable to be posted. The reason'),
+        code: 4400,
+        data: expect.stringContaining('had 0 in fees'),
+      });
+    });
+
+    jest.setTimeout(25000);
+
+    test('Partially succeded post', async () => {
+      async function signTxnGroups(transactionsToSign) {
+        return await dappPage.evaluate(async (transactionsToSign) => {
+          const signPromise = algorand
+            .signTxns(transactionsToSign)
+            .then((data) => {
+              return data;
+            })
+            .catch((error) => {
+              return error;
+            });
+
+          const amountOfGroups = Array.isArray(transactionsToSign[0])
+            ? transactionsToSign.length
+            : 1;
           await window['authorizeSignTxnGroups'](amountOfGroups);
-    
+
           return await Promise.resolve(signPromise);
-        },
-        transactionsToSign,
-      );
-    }
+        }, transactionsToSign);
+      }
 
-    const noFeeTx = buildSdkTx({
-      type: 'pay',
-      from: uiAccount.address,
-      to: uiAccount.address,
-      amount: Math.ceil(Math.random() * 100),
-      ...sdkParams,
-      fee: 0,
-      flatFee: true,
+      const noFeeTx = buildSdkTx({
+        type: 'pay',
+        from: uiAccount.address,
+        to: uiAccount.address,
+        amount: Math.ceil(Math.random() * 100),
+        ...sdkParams,
+        fee: 0,
+        flatFee: true,
+      });
+
+      const sdkTxns = [noFeeTx, getBasicSdkTxn()];
+      const unsignedTxns = sdkTxns.map(prepareWalletTx);
+      const nestedTxns = unsignedTxns.map((tx) => [tx]);
+      await extensionPage.waitForTimeout(2000);
+      const signedTxns = await signTxnGroups(nestedTxns);
+      const postResponse = await dappPage.evaluate((transactions) => {
+        return Promise.resolve(algorand.postTxns(transactions))
+          .then((data) => {
+            return data;
+          })
+          .catch((error) => {
+            return error;
+          });
+      }, signedTxns);
+
+      const txID = algosdk.decodeSignedTransaction(base64ToByteArray(signedTxns[1][0])).txn.txID();
+      await expect(postResponse).toMatchObject({
+        message: expect.stringContaining('unsuccessful group'),
+        code: 4400,
+        data: expect.anything(),
+        successTxnIDs: expect.anything(),
+      });
+      await expect(postResponse.successTxnIDs).toHaveLength(2);
+      await expect(postResponse.successTxnIDs[1]).toHaveLength(1);
+      await expect(postResponse.successTxnIDs[1]).toContain(txID);
+      await expect(postResponse.data).toHaveLength(2);
     });
 
-    const sdkTxns = [noFeeTx, getBasicSdkTxn()];
-    const unsignedTxns = sdkTxns.map(prepareWalletTx);
-    const nestedTxns = unsignedTxns.map((tx) => [tx]);
-    await extensionPage.waitForTimeout(2000);
-    const signedTxns = await signTxnGroups(nestedTxns);
-    const postResponse = await dappPage.evaluate((transactions) => {
-      return Promise.resolve(algorand.postTxns(transactions))
-        .then((data) => {
-          return data;
-        })
-        .catch((error) => {
-          return error;
-        });
-    }, signedTxns);
+    jest.setTimeout(30000);
 
-    const txID = algosdk.decodeSignedTransaction(base64ToByteArray(signedTxns[1][0])).txn.txID();
-    await expect(postResponse).toMatchObject({
-      message: expect.stringContaining('unsuccessful group'),
-      code: 4400,
-      data: expect.anything(),
-      successTxnIDs: expect.anything(),
-    });
-    await expect(postResponse.successTxnIDs).toHaveLength(2);
-    await expect(postResponse.successTxnIDs[1]).toHaveLength(1);
-    await expect(postResponse.successTxnIDs[1]).toContain(txID);
-    await expect(postResponse.data).toHaveLength(2);
-  });
-
-  test('Sign and Send commits txs to the network', async () => {
-    async function signAndPostTxns(transactionsToSign) {
-      return await dappPage.evaluate(
-        async (transactionsToSign) => {
-          console.log('before sign');
-          const signPostPromise = algorand.signAndPostTxns(transactionsToSign)
+    test('Sign and Send commits txs to the network', async () => {
+      async function signAndPostTxns(transactionsToSign) {
+        return await dappPage.evaluate(async (transactionsToSign) => {
+          const signPostPromise = algorand
+            .signAndPostTxns(transactionsToSign)
             .then((data) => {
               return data;
             })
             .catch((error) => {
               return error;
             });
-    
+
           await window['authorizeSignTxn']();
           return await Promise.resolve(signPostPromise);
-        },
-        transactionsToSign,
-      );
-    }
+        }, transactionsToSign);
+      }
 
-    const sdkTxn = getBasicSdkTxn();
-    const unsignedTxns = [sdkTxn].map(prepareWalletTx);
-    const txID = sdkTxn.txID();
-    await extensionPage.waitForTimeout(2000);
-    const signPostResponse = await signAndPostTxns(unsignedTxns);
-    await expect(signPostResponse).toMatchObject({
-      txnIDs: expect.arrayContaining([txID]),
+      const sdkTxn = getBasicSdkTxn();
+      const unsignedTxns = [sdkTxn].map(prepareWalletTx);
+      const txID = sdkTxn.txID();
+      await extensionPage.waitForTimeout(2000);
+      const signPostResponse = await signAndPostTxns(unsignedTxns);
+      await expect(signPostResponse).toMatchObject({
+        txnIDs: expect.arrayContaining([txID]),
+      });
     });
-    
   });
 });
