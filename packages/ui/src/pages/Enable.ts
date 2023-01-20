@@ -51,6 +51,7 @@ const Enable: FunctionalComponent = () => {
         restrictedLedgers = availableLedgers;
       }
       sessionLedgers = restrictedLedgers;
+      store.setLedger(restrictedLedgers[0].name);
     }
   });
 
