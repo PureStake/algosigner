@@ -63,13 +63,15 @@ export class Task {
   }
 
   // Checks for the originId authorization in details then call to make sure the account exists in Algosigner.
-  private static checkAccountIsImportedAndAuthorized(genesisID: string, address: string, originId: string): void {
-    // Legacy authorized and internal calls will not have an originId in authorized pool details
-    if (Task.authorized_pool_details[originId]) {
+  private static checkAccountIsImportedAndAuthorized(ledger: string, genesisID: string, genesisHash: string, address: string, origin: string): void {
+    // Legacy authorized and internal calls will not have an origin in authorized pool details
+    if (Task.authorized_pool_details[origin]) {
       // This must be a dApp using enable - verify the ledger and address are authorized
-      if ((Task.authorized_pool_details[originId]['genesisID'] !== genesisID)
-      || (!Task.authorized_pool_details[originId]['accounts'].includes(address))) {
-        throw RequestError.NoAccountMatch(address, genesisID);
+      if ((Task.authorized_pool_details[origin]['genesisID'] !== genesisID)
+      || (Task.authorized_pool_details[origin]['ledger'] !== ledger)
+      || (genesisHash && Task.authorized_pool_details[origin]['genesisHash'] !== genesisHash)
+      || (!Task.authorized_pool_details[origin]['accounts'].includes(address))) {
+        throw RequestError.NoAccountMatch(address, ledger);
       }  
     }
     // Call the normal account check
@@ -289,8 +291,9 @@ export class Task {
           processedTxArray[index] = processedTx;
           const wrap = getValidatedTxnWrap(processedTx, processedTx['type']);
           transactionWraps[index] = wrap;
-          const genesisID = wrap.transaction.genesisID;
 
+          const ledger = getLedgerFromMixedGenesis(wrap.transaction.genesisID, wrap.transaction.genesisHash);
+          
           const signers: Array<string> = walletTransactions[index].signers;
           const signedTxn: string = walletTransactions[index].stxn;
           const msigData: MultisigMetadata = walletTransactions[index].msig;
@@ -304,7 +307,7 @@ export class Task {
             if (!algosdk.isValidAddress(authAddr)) {
               throw RequestError.InvalidAuthAddress(authAddr);
             }
-            Task.checkAccountIsImportedAndAuthorized(genesisID, authAddr, request.originTabID);
+            Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, authAddr, request.origin);
           }
 
           // If we have msigData, we validate the addresses and fetch the resulting msig address
@@ -369,7 +372,7 @@ export class Task {
                 // We make sure we have the available accounts for signing
                 signers.forEach((address) => {
                   try {
-                    Task.checkAccountIsImportedAndAuthorized(genesisID, address, request.originTabID);
+                    Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, address, request.origin);
                   } catch (e) {
                     throw RequestError.CantMatchMsigSigners(e.message);
                   }
@@ -398,7 +401,7 @@ export class Task {
           } else {
             // There's no signers field, we validate the sender if there's no msig
             if (!msigData) {
-              Task.checkAccountIsImportedAndAuthorized(genesisID, wrap.transaction.from, request.originTabID);
+              Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, wrap.transaction.from, request.origin);
             }
           }
 
@@ -1097,7 +1100,7 @@ export class Task {
       private: {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
-          const { responseOriginTabID, isEnable, accounts, genesisID, genesisHash } = d.body.params;
+          const { responseOriginTabID, isEnable, accounts, genesisID, genesisHash, ledger } = d.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
@@ -1123,17 +1126,18 @@ export class Task {
               }
               if (rejectedAccounts.length > 0) {
                 message.error = RequestError.EnableRejected({ 'accounts': rejectedAccounts });
-              }
-              else { 
+              } else { 
                 message.response = {
                   'genesisID': genesisID, 
                   'genesisHash': genesisHash,
                   accounts: sharedAccounts
                 }
 
+                const poolDetails = { ...message.response, ledger: ledger }
+
                 // Add to the authorized pool details. 
                 // This will be checked to restrict access for enable function users
-                Task.authorized_pool_details[`${message.origin}`] = message.response;
+                Task.authorized_pool_details[`${message.origin}`] = poolDetails;
               }
             }
             MessageApi.send(message);
