@@ -7,7 +7,7 @@ import { Ledger } from '@algosigner/common/types';
 import { API } from './types';
 import {
   getValidatedTxnWrap,
-  getLedgerFromGenesisId,
+  getLedgerFromGenesisID,
   getLedgerFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
@@ -46,7 +46,6 @@ export class Task {
     }
 
     // Validate the genesisID is the authorized one
-    // Note: The arc-0006 requires "genesisID" which matches the transaction, but we use "genesisId" internally in some places
     if (!Task.authorized_pool_details[origin] || !(Task.authorized_pool_details[origin]['genesisID'] === genesisID)) {
       return false;
     }
@@ -104,7 +103,7 @@ export class Task {
 
   public static getChainAuthAddress = async (transaction: any): Promise<string> => {
     // The ledger and address will be provided differently from UI and dapp
-    const ledger = transaction.ledger || getLedgerFromGenesisId(transaction.genesisID);
+    const ledger = transaction.ledger || getLedgerFromGenesisID(transaction.genesisID);
     const address = transaction.address || transaction.from;
 
     const conn = Settings.getBackendParams(ledger, API.Algod);
@@ -158,7 +157,7 @@ export class Task {
 
     if (transactionWrap.transaction['type'] === 'axfer') {
       const assetIndex = transactionWrap.transaction['assetIndex'];
-      const ledger = getLedgerFromGenesisId(transactionWrap.transaction['genesisID']);
+      const ledger = getLedgerFromGenesisID(transactionWrap.transaction['genesisID']);
       const conn = Settings.getBackendParams(ledger, API.Algod);
       const sendPath = `/v2/assets/${assetIndex}`;
       const fetchAssets: any = {
@@ -307,7 +306,7 @@ export class Task {
             if (!algosdk.isValidAddress(authAddr)) {
               throw RequestError.InvalidAuthAddress(authAddr);
             }
-            Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, authAddr, request.origin);
+            Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, authAddr, request.origin);
           }
 
           // If we have msigData, we validate the addresses and fetch the resulting msig address
@@ -372,7 +371,7 @@ export class Task {
                 // We make sure we have the available accounts for signing
                 signers.forEach((address) => {
                   try {
-                    Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, address, request.origin);
+                    Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, address, request.origin);
                   } catch (e) {
                     throw RequestError.CantMatchMsigSigners(e.message);
                   }
@@ -401,7 +400,7 @@ export class Task {
           } else {
             // There's no signers field, we validate the sender if there's no msig
             if (!msigData) {
-              Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisId, ledger.genesisHash, wrap.transaction.from, request.origin);
+              Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, wrap.transaction.from, request.origin);
             }
           }
 
@@ -628,7 +627,7 @@ export class Task {
           // Validate that the genesis id and hash if provided match the resulting one
           // This is because a dapp may request an id and hash from different ledgers
           if (
-            (genesisID && genesisID !== ledgerTemplate.genesisId) ||
+            (genesisID && genesisID !== ledgerTemplate.genesisID) ||
             (genesisHash &&
               ledgerTemplate.genesisHash &&
               genesisHash !== ledgerTemplate.genesisHash)
@@ -643,7 +642,7 @@ export class Task {
           // We've validated the ledger information
           // So we can set the ledger, genesisID, and genesisHash
           const ledger = ledgerTemplate.name;
-          genesisID = ledgerTemplate.genesisId;
+          genesisID = ledgerTemplate.genesisID;
           genesisHash = ledgerTemplate.genesisHash;
 
           // Then reflect those changes for the page
@@ -1128,7 +1127,7 @@ export class Task {
           const signErrors = [];
 
           try {
-            const ledger = getLedgerFromGenesisId(transactionObjs[0].genesisID);
+            const ledger = getLedgerFromGenesisID(transactionObjs[0].genesisID);
             const neededAccounts: Array<string> = [];
             walletTransactions.forEach((w, i) => {
               const msig = w.msig;

@@ -64,7 +64,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           setTxn(txToSign);
 
           getBaseSupportedLedgers().forEach((l) => {
-            if (txToSign.transaction?.genesisID === l['genesisId']) {
+            if (txToSign.transaction?.genesisID === l['genesisID']) {
               const fetchedLedger = l['name'];
               setLedger(fetchedLedger);
               store.setLedger(fetchedLedger);

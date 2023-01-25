@@ -217,8 +217,8 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Genesis ID must be present and one of the approved values
     case 'genesisID':
       if (
-        getBaseSupportedLedgers().some((l) => value === l['genesisId']) ||
-        Settings.getCleansedInjectedNetworks().find((l) => value === l['genesisId'])
+        getBaseSupportedLedgers().some((l) => value === l['genesisID']) ||
+        Settings.getCleansedInjectedNetworks().find((l) => value === l['genesisID'])
       ) {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {

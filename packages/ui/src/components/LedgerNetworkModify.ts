@@ -19,7 +19,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [networkName, setNetworkName] = useState<string>(props.name || '');
-  const [networkId, setNetworkId] = useState<string>(props.genesisId || '');
+  const [networkID, setNetworkID] = useState<string>(props.genesisID || '');
   const [networkSymbol, setNetworkSymbol] = useState<string>(props.symbol || '');
   const [networkAlgodUrl, setNetworkAlgodUrl] = useState<string>(props.algodUrl || '');
   const [networkIndexerUrl, setNetworkIndexerUrl] = useState<string>(props.indexerUrl || '');
@@ -66,7 +66,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     setError('');
     const params = {
       name: networkName,
-      genesisId: networkId,
+      genesisID: networkID,
       symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
@@ -97,7 +97,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     const params = {
       name: networkName,
       previousName: previousName,
-      genesisId: networkId,
+      genesisID: networkID,
       symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
@@ -159,8 +159,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             id="networkId"
             class="input"
             placeholder="mainnet-v1.0"
-            value=${networkId}
-            onInput=${(e) => setNetworkId(e.target.value)}
+            value=${networkID}
+            onInput=${(e) => setNetworkID(e.target.value)}
           />
           <label>Network Algod URL</label>
           <input

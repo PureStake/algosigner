@@ -183,7 +183,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
       // Search for ledger and find accounts
       let txLedger;
       getBaseSupportedLedgers().forEach((l) => {
-        if (transactionWraps[0].transaction.genesisID === l['genesisId']) {
+        if (transactionWraps[0].transaction.genesisID === l['genesisID']) {
           txLedger = l['name'];
           setLedger(txLedger);
           findAccountNames(txLedger);
@@ -197,7 +197,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
           if (!availableLedgers.error) {
             sessionLedgers = availableLedgers;
             sessionLedgers.forEach((l) => {
-              if (transactionWraps[0].transaction.genesisID === l['genesisId']) {
+              if (transactionWraps[0].transaction.genesisID === l['genesisID']) {
                 txLedger = l['name'];
               }
             });

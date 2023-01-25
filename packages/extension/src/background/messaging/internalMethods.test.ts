@@ -98,7 +98,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
-          genesisId: 'mainnet-v1.0',
+          genesisID: 'mainnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -108,7 +108,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
-          genesisId: 'testnet-v1.0',
+          genesisID: 'testnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -142,7 +142,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
-          genesisId: 'mainnet-v1.0',
+          genesisID: 'mainnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -152,7 +152,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
-          genesisId: 'testnet-v1.0',
+          genesisID: 'testnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,

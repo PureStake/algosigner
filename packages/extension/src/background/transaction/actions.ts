@@ -125,33 +125,33 @@ export function getValidatedTxnWrap(
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisId(genesisId: string): string {
+export function getLedgerFromGenesisID(genesisID: string): string {
   // Default the ledger to mainnet
   const defaultLedger = 'MainNet';
 
   // Check Genesis ID for base supported ledgers first
   const defaultLedgers = getBaseSupportedLedgers();
-  let ledger = defaultLedgers.find((l) => genesisId === l['genesisId']);
+  let ledger = defaultLedgers.find((l) => genesisID === l['genesisID']);
   if (ledger !== undefined) {
     return ledger.name;
   }
   // Injected networks may have additional information, multiples, or additional checks
   // so we will check them separately
-  ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisId === l['genesisId']);
+  ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisID === l['genesisID']);
   if (ledger !== undefined) {
     return ledger.name;
   }
   return defaultLedger;
 }
 
-export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: string): LedgerTemplate {
+export function getLedgerFromMixedGenesis(genesisID: string, genesisHash?: string): LedgerTemplate {
   // Check Genesis Id and Hash for base supported ledgers first
   const defaultLedgers = getBaseSupportedLedgers();
   let ledger;
-  if (genesisId) {
-    ledger = defaultLedgers.find((l) => genesisId === l['genesisId']);
+  if (genesisID) {
+    ledger = defaultLedgers.find((l) => genesisID === l['genesisID']);
     if (ledger !== undefined) {
-      // Found genesisId, make sure the hash matches 
+      // Found genesisID, make sure the hash matches 
       if (!genesisHash || genesisHash === ledger.genesisHash) { 
         return ledger;
       }
@@ -159,7 +159,7 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: strin
     
     // Injected networks may have additional validations so we check them separately
     const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    ledger = injectedNetworks.find((network) => network['genesisId'] === genesisId);
+    ledger = injectedNetworks.find((network) => network['genesisID'] === genesisID);
     if (ledger) {
       return ledger;
     }
@@ -170,7 +170,7 @@ export function getLedgerFromMixedGenesis(genesisId: string, genesisHash?: strin
     ledger = defaultLedgers.find((l) => genesisHash === l['genesisHash']);
     if (ledger !== undefined) {
       // Found genesisHash, make sure the id matches 
-      if (!genesisId || genesisId === ledger.genesisId) { 
+      if (!genesisID || genesisID === ledger.genesisID) { 
         return ledger;
       }
     }
@@ -203,7 +203,7 @@ export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, par
         dummy replica transaction that's similar to what the SDK eventually sends
         For this we ignore all empty fields and shorten field names to 4 characters 
         so we use smaller field names like the SDK does
-        i.e.: the SDK uses 'gen' fpr 'genesisId', 'amt' for 'amount', etc
+        i.e.: the SDK uses 'gen' for 'genesisID', 'amt' for 'amount', etc
       */
       const dummyTransaction = {};
       Object.keys(transaction).map((key, index) => {

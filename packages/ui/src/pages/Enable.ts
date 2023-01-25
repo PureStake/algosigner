@@ -38,11 +38,11 @@ const Enable: FunctionalComponent = () => {
       let restrictedLedgers: any[] = [];
       if (networkSpecifiedType === 1) {
         restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisId === genesisID && l.genesisHash === genesisHash)
+          availableLedgers.find((l) => l.genesisID === genesisID && l.genesisHash === genesisHash)
         );
       } else if (networkSpecifiedType === 2) {
         restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisId === genesisID)
+          availableLedgers.find((l) => l.genesisID === genesisID)
         );
       } else {
         restrictedLedgers = availableLedgers;

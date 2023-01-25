@@ -16,7 +16,7 @@ import { ValidationStatus } from '../utils/validator';
 import {
   calculateEstimatedFee,
   getValidatedTxnWrap,
-  getLedgerFromGenesisId,
+  getLedgerFromGenesisID,
   getLedgerFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
@@ -100,7 +100,7 @@ export class InternalMethods {
 
   // Checks if an account for the given address exists on AlgoSigner for a given ledger.
   public static checkAccountIsImported(genesisID: string, address: string): void {
-    const ledger: string = getLedgerFromGenesisId(genesisID);
+    const ledger: string = getLedgerFromGenesisID(genesisID);
     let found = false;
     for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
       if (session.wallet[ledger][i].address === address) {
@@ -500,7 +500,7 @@ export class InternalMethods {
           sendResponse({ message: message });
         } else if (session.txnRequest.source === 'ui') {
           // If this is an UI transaction then we need to submit to the network
-          const ledger = getLedgerFromGenesisId(decodedTxn.txn.genesisID);
+          const ledger = getLedgerFromGenesisID(decodedTxn.txn.genesisID);
 
           const algod = this.getAlgod(ledger);
           algod
@@ -1044,7 +1044,7 @@ export class InternalMethods {
       const targetName = previousName ? previousName : params['name'].toLowerCase();
       const addedLedger = new LedgerTemplate({
         name: params['name'],
-        genesisId: params['genesisId'],
+        genesisID: params['genesisID'],
         genesisHash: params['genesisHash'],
         symbol: params['symbol'],
         algodUrl: params['algodUrl'],
@@ -1070,7 +1070,7 @@ export class InternalMethods {
           if (!defaultLedgers.some((dledg) => dledg.uniqueName === matchingLedger.uniqueName)) {
             Settings.updateInjectedNetwork(addedLedger, previousName);
             matchingLedger.name = addedLedger.name;
-            matchingLedger.genesisId = addedLedger.genesisId;
+            matchingLedger.genesisID = addedLedger.genesisID;
             matchingLedger.symbol = addedLedger.symbol;
             matchingLedger.genesisHash = addedLedger.genesisHash;
             matchingLedger.algodUrl = addedLedger.algodUrl;
