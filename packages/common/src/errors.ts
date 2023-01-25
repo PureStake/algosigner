@@ -13,11 +13,8 @@ export class RequestError {
     'The extension user does not authorize the request.',
     4001
   );
-  static EnableRejected = (data: object): RequestError => new RequestError(
-    'The extension user does not authorize the request.',
-    4001,
-    data
-  );
+  static EnableRejected = (data: object): RequestError =>
+    new RequestError('The extension user does not authorize the request.', 4001, data);
   static NoMnemonicAvailable = (address: string): RequestError =>
     new RequestError(
       `The user does not possess the required private key to sign with for address: "${address}".`,
@@ -28,6 +25,12 @@ export class RequestError {
       `No matching account found on AlgoSigner for address "${address}" on network ${ledger}.`,
       4100
     );
+  static NoLedgerProvided = (base: string, injected: string): RequestError =>
+    new RequestError(
+      `Ledger not provided. Please use a base ledger: [${base}] or an available custom one ${injected}.`,
+      4200
+    );
+  static UnsupportedLedger = new RequestError('The provided ledger is not supported.', 4200);
   static UnsupportedNetwork = new RequestError('The provided network is not supported.', 4200);
   static PendingTransaction = new RequestError('Another query processing', 4201);
   static LedgerMultipleGroups = new RequestError(

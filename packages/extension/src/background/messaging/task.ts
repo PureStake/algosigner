@@ -435,13 +435,21 @@ export class Task {
         let data = '';
         let code = 4300;
 
-        // We format the validation errors for better readability and clarity
-        validationErrors.forEach((error, index) => {
-          // Concatenate the errors in a single formatted message
-          data = data + `Validation failed for transaction ${index} due to: ${error.message}. `;
-          // Take the lowest error code as they're _more_ generic the higher they go
-          code = error.code < code ? error.code : code;
-        });
+        if (walletTransactions.length > 1) {
+          // We format the validation errors for better readability and clarity
+          validationErrors.forEach((error, index) => {
+            // Concatenate the errors in a single formatted message
+            data = data + `Validation failed for transaction ${index} due to: ${error.message} `;
+            // Take the lowest error code as they're _more_ generic the higher they go
+            code = error.code < code ? error.code : code;
+          });
+        } else {
+          const error = validationErrors[0];
+          if (error) {
+            data = data + `Validation failed on transaction due to: ${error.message}`;
+            code = error.code;
+          }
+        }
         throw RequestError.SigningError(code, data.trim());
       } else if (
         transactionWraps.some(
@@ -1016,14 +1024,10 @@ export class Task {
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
           const session = InternalMethods.getHelperSession();
           // If we don't have a ledger requested, respond with an error giving available ledgers
-          if (!d.body.params.ledger) {
-            const baseNetworks = Object.keys(Ledger);
+          if (!d.body.params?.ledger) {
+            const baseLedgers = Object.keys(Ledger);
             const injectedNetworks = Settings.getCleansedInjectedNetworks();
-            d.error = {
-              message: `Ledger not provided. Please use a base ledger: [${baseNetworks}] or an available custom one ${JSON.stringify(
-                injectedNetworks
-              )}.`,
-            };
+            d.error = RequestError.NoLedgerProvided(baseLedgers.toString(), JSON.stringify(injectedNetworks));
             reject(d);
             return;
           }
@@ -1031,7 +1035,7 @@ export class Task {
           const accounts = session.wallet[d.body.params.ledger];
           // If we have requested a ledger but don't have it, respond with an error
           if (accounts === undefined) {
-            d.error = RequestError.UnsupportedNetwork;
+            d.error = RequestError.UnsupportedLedger;
             reject(d);
             return;
           }

@@ -524,8 +524,8 @@ AlgoSigner.send({
   - A non-matching ledger name will result in a error:
     - The provided ledger is not supported (Code: 4200).
   - An empty request will result with an error:
-    - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisId":"thetanet-v1.0"}].
-- Transaction requests will require a valid matching "genesisId", even for custom networks.
+    - Ledger not provided. Please use a base ledger: [TestNet,MainNet] or an available custom one [{"name":"Theta","genesisID":"thetanet-v1.0"}].
+- Transaction requests will require a valid matching "genesisID", even for custom networks.
 
 ## Signature Rejection Messages
 
@@ -536,9 +536,9 @@ AlgoSigner may return some of the following error codes when requesting signatur
 | 4000 | An unknown error occured. | N/A |
 | 4001 | The user rejected the signature request. | N/A |
 | 4100 | The requested operation and/or account has not been authorized by the user. | This is usually due to the connection between the dApp and the wallet becoming stale and the user [needing to reconnect](connection-issues.md). Otherwise, it may signal that you are trying to sign with private keys not found on AlgoSigner. | 
-| 4200 | The wallet does not support the requested operation. | N/A |
+| 4200 | The wallet does not support the requested operation. | Users need to have imported or created an account on AlgoSigner before connecting to dApps, as well as succesfully having configured any custom networks required. |
 | 4201 | The wallet does not support signing that many transactions at a time. | The max number of transactions per group is 16. For Ledger devices, they can't sign more than one transaction at the same time. |
-| 4202 | The wallet was not initialized properly beforehand. | Users need to have imported or created an account on AlgoSigner before connecting to dApps |
+| 4202 | The wallet was not initialized properly beforehand. | The extension user has not authorized requests from this website. |
 | 4300 | The input provided is invalid. | AlgoSigner rejected some of the transactions due to invalid fields. |
 
 Additional information, if available, would be provided in the `data` field of the error object.
