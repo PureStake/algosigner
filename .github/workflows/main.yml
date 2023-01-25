@@ -42,7 +42,7 @@ jobs:
         args: npm run test:github
     - name: Upload screenshots
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: screenshot
         path: ./packages/test-project/screenshots/*.png
@@ -62,7 +62,7 @@ jobs:
     - name: Build
       run: npm run build
     - name: Upload build artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: build
         path: ./dist/*
