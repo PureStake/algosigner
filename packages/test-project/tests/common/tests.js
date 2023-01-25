@@ -188,7 +188,7 @@ function ConnectWithAlgorandObject(accounts) {
       })
     ).resolves.toMatchObject({
       message: expect.stringContaining('The extension user has not'),
-      code: 4100,
+      code: 4202,
     });
   });
 
@@ -315,7 +315,7 @@ function ConnectWithAlgoSignerObject() {
       })
     ).resolves.toMatchObject({
       message: expect.stringContaining('The extension user has not'),
-      code: 4100,
+      code: 4202,
     });
   });
 
