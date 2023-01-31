@@ -6,13 +6,13 @@ on:
       - released
 
 jobs:
-  test_zip_upload:
+  build_zip_upload:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: '12.15'
+        node-version: '16.15'
     - name: Delete all dist
       run: npm run clean
     - name: Install dependencies
@@ -22,12 +22,9 @@ jobs:
     - name: Zip up release
       id: zip_up
       run: zip -r AlgoSigner.zip ./dist/*
-    - name: Upload
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload build as asset
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./AlgoSigner.zip
-        asset_name: AlgoSigner.zip
-        asset_content_type: application/zip
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref }}
+        file: AlgoSigner.zip

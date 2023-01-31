@@ -1,3 +1,6 @@
+name-template: "Patch $NEXT_PATCH_VERSION"
+tag-template: "v$NEXT_PATCH_VERSION"
+commitish: refs/heads/release
 template: |
   ## Updates
 
