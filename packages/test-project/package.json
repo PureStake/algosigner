@@ -6,7 +6,7 @@
   "description": "Repository for tests",
   "devDependencies": {
     "algosdk": "2.0.0",
-    "jest": "^29.4.0",
+    "jest": "^29.4.1",
     "jest-runner-groups": "^2.2.0",
     "puppeteer": "^13.7.0",
     "ts-jest": "^29.0.5",

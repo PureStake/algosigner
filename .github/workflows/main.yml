@@ -12,10 +12,10 @@ jobs:
     env:
       CI: 'true'
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: '12.15'
+        node-version: '16.15'
     - name: Install build dependencies
       run: npm run install:extension
     - name: Run unit tests
@@ -26,10 +26,10 @@ jobs:
     env:
       CI: 'true'
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: '12.15'
+        node-version: '16.15'
     - name: Install test dependencies
       env:
         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
@@ -37,12 +37,12 @@ jobs:
     - name: Build
       run: npm run build
     - name: Run headful puppeteer tests
-      uses: djp3/puppeteer-headful@master
+      uses: mujo-code/puppeteer-headful@16.6.0
       with:
         args: npm run test:github
     - name: Upload screenshots
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: screenshot
         path: ./packages/test-project/screenshots/*.png
@@ -53,16 +53,16 @@ jobs:
     env:
       CI: 'true'
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: '12.15'
+        node-version: '16.15'
     - name: Install build dependencies
       run: npm run install:extension
     - name: Build
       run: npm run build
     - name: Upload build artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: build
         path: ./dist/*
