@@ -1,7 +1,7 @@
 export class LedgerTemplate {
   name: string;
   readonly isEditable: boolean;
-  genesisId?: string;
+  genesisID?: string;
   genesisHash?: string;
   symbol?: string;
   algodUrl?: string;
@@ -14,7 +14,7 @@ export class LedgerTemplate {
 
   constructor({
     name,
-    genesisId,
+    genesisID,
     genesisHash,
     symbol,
     algodUrl,
@@ -22,7 +22,7 @@ export class LedgerTemplate {
     headers,
   }: {
     name: string;
-    genesisId?: string;
+    genesisID?: string;
     genesisHash?: string;
     symbol?: string;
     algodUrl?: string;
@@ -34,7 +34,7 @@ export class LedgerTemplate {
     }
 
     this.name = name;
-    this.genesisId = genesisId || 'mainnet-v1.0';
+    this.genesisID = genesisID || 'mainnet-v1.0';
     this.genesisHash = genesisHash;
     this.symbol = symbol;
     this.algodUrl = algodUrl;
@@ -49,12 +49,12 @@ export function getBaseSupportedLedgers(): Array<LedgerTemplate> {
   return [
     new LedgerTemplate({
       name: 'MainNet',
-      genesisId: 'mainnet-v1.0',
+      genesisID: 'mainnet-v1.0',
       genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
     }),
     new LedgerTemplate({
       name: 'TestNet',
-      genesisId: 'testnet-v1.0',
+      genesisID: 'testnet-v1.0',
       genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
     }),
   ];

@@ -29,7 +29,6 @@ const Enable: FunctionalComponent = () => {
   const [genesisHash, setGenesisHash] = useState<any>('');
   const [networkSpecifiedType, setNetworkSpecifiedType] = useState<any>('');
   const [accounts, setPromptedAccounts] = useState<any>([]);
-  const [request, setRequest] = useState<any>({});
   const [active, setActive] = useState<boolean>(false);
   let sessionLedgers;
   let ddClass: string = 'dropdown';
@@ -39,14 +38,12 @@ const Enable: FunctionalComponent = () => {
       let restrictedLedgers: any[] = [];
       if (networkSpecifiedType === 1) {
         restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisId === genesisID && l.genesisHash === genesisHash)
+          availableLedgers.find((l) => l.genesisID === genesisID && l.genesisHash === genesisHash)
         );
       } else if (networkSpecifiedType === 2) {
-        for (let i = 0; i < availableLedgers.length; i++) {
-          if (availableLedgers[i]['genesisId'] === genesisID) {
-            restrictedLedgers.push(availableLedgers[i]);
-          }
-        }
+        restrictedLedgers.push(
+          availableLedgers.find((l) => l.genesisID === genesisID)
+        );
       } else {
         restrictedLedgers = availableLedgers;
       }
@@ -72,29 +69,28 @@ const Enable: FunctionalComponent = () => {
     if (params.genesisHash) {
       setGenesisHash(params.genesisHash);
     }
-    if (params.ledger) {
-      // Ledger is added during EnableAuthorization to match with legacy ledger name and with GetEnableAccounts
-      store.setLedger(params.ledger);
-    }
     if (params.networkSpecifiedType) {
       setNetworkSpecifiedType(params.networkSpecifiedType);
     }
   };
 
-  const setLedger = (ledger) => {
-    store.setLedger(ledger);
-    flip();
-
-    // Set the new ledger to be loaded
-    request.body.params['ledger'] = ledger;
-
-    sendMessage(JsonRpcMethod.GetEnableAccounts, request.body.params, function (response) {
-      if (response.error) {
-        console.error(response.error);
-      } else {
-        setDetails(response);
+  const setLedger = (ledger: string) => {
+    if (ledger && store.savedRequest?.body) {
+      store.setLedger(ledger);
+  
+      // Set the new ledger to be loaded
+      const params = {
+        ...store.savedRequest.body.params,
+        ledger: ledger,
       }
-    });
+      sendMessage(JsonRpcMethod.GetEnableAccounts, params, function (response) {
+        if (response.error) {
+          console.error(response.error);
+        } else {
+          setDetails(response);
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -102,17 +98,18 @@ const Enable: FunctionalComponent = () => {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.body.method == JsonRpcMethod.EnableAuthorization) {
         // Set the request in the store with origin so we can respond later
-        setRequest(request);
         store.saveRequest(request);
         responseOriginTabID = request.originTabID;
-
-        // Check for existence of the params and set page values
-        setDetails(request.body.params);
+        setLedger(request?.body?.params?.ledger);
       }
     });
     window.addEventListener('beforeunload', deny);
     return () => window.removeEventListener('beforeunload', deny);
   }, []);
+
+  useEffect(() => {
+    setLedger(store.savedRequest?.body?.params?.ledger);
+  }, [store.savedRequest]);
 
   const grant = () => {
     window.removeEventListener('beforeunload', deny);
@@ -142,18 +139,18 @@ const Enable: FunctionalComponent = () => {
         <div style="flex: 1">
           <section class="hero">
             <div class="hero-body py-5">
-              ${request.favIconUrl &&
-              html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
+              ${store.savedRequest?.favIconUrl &&
+              html` <img src=${store.savedRequest.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
                 Access requested to your
-                wallet${request.originTitle && html` from ${request.originTitle}`}
+                wallet${store.savedRequest?.originTitle && html` from ${store.savedRequest?.originTitle}`}
               </h1>
             </div>
           </section>
           <section class="px-5 py-0">
             <h3
               >Select the accounts to
-              share${request.originTitle && html` with ${request.originTitle}`}.
+              share${store.savedRequest?.originTitle && html` with ${store.savedRequest?.originTitle}`}.
               <b> Bolded</b> accounts are required by the dApp.</h3
             >
             <div class="is-flex is-align-items-baseline my-3">
@@ -188,7 +185,7 @@ const Enable: FunctionalComponent = () => {
                           html`
                             <a
                               id="select${availableLedger.name}"
-                              onClick=${() => setLedger(availableLedger.name)}
+                              onClick=${() => { setLedger(availableLedger.name); flip(); }}
                               class="dropdown-item"
                             >
                               ${availableLedger.name}

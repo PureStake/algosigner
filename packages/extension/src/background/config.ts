@@ -44,7 +44,7 @@ export class Settings {
     for (var i = 0; i < injectedNetworkKeys.length; i++) {
       injectedNetworks.push({
         name: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].name,
-        genesisId: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisId,
+        genesisID: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisID,
       });
     }
 
@@ -86,9 +86,9 @@ export class Settings {
       }
     }
 
-    // Add the algod links defaulting the url to one based on the genesisId
+    // Add the algod links defaulting the url to one based on the genesisID
     let defaultUrl = 'https://algosigner.api.purestake.io/mainnet';
-    if (ledger.genesisId && ledger.genesisId.indexOf('testnet') > -1) {
+    if (ledger.genesisID && ledger.genesisID.indexOf('testnet') > -1) {
       defaultUrl = 'https://algosigner.api.purestake.io/testnet';
     }
 
@@ -125,10 +125,10 @@ export class Settings {
   }
 
   public static addInjectedNetwork(ledger: LedgerTemplate) {
-    // Initialize the injected network with the genesisId and a name that mimics the ledger for reference
+    // Initialize the injected network with the genesisID and a name that mimics the ledger for reference
     this.backend_settings.InjectedNetworks[ledger.name] = {
       name: ledger.name,
-      genesisId: ledger.genesisId || '',
+      genesisID: ledger.genesisID || '',
     };
 
     this.setInjectedHeaders(ledger);
@@ -149,7 +149,7 @@ export class Settings {
       this.deleteInjectedNetwork(previousName);
       this.backend_settings.InjectedNetworks[targetName] = {};
     }
-    this.backend_settings.InjectedNetworks[targetName].genesisId = updatedLedger.genesisId;
+    this.backend_settings.InjectedNetworks[targetName].genesisID = updatedLedger.genesisID;
     this.backend_settings.InjectedNetworks[targetName].symbol = updatedLedger.symbol;
     this.backend_settings.InjectedNetworks[targetName].genesisHash =
       updatedLedger.genesisHash;

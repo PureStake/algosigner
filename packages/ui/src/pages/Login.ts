@@ -42,13 +42,9 @@ const Login: FunctionalComponent = (props: any) => {
         store.setAvailableLedgers(response.availableLedgers);
         store.updateWallet(response.wallet, () => {
           store.setLedger(response.ledger);
-          if (redirect.length > 0 && redirect === 'close') { 
-            window.close();
-          }
-          else if (redirect.length > 0) { 
+          if (redirect.length > 0) { 
             route(`/${redirect}`);
-          }
-          else { 
+          } else { 
             route('/wallet');
           }
         });

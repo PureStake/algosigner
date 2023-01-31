@@ -13,15 +13,8 @@ export class RequestError {
     'The extension user does not authorize the request.',
     4001
   );
-  static EnableRejected = (data: object): RequestError => new RequestError(
-    'The extension user does not authorize the request.',
-    4001,
-    data
-  );
-  static SiteNotAuthorizedByUser = new RequestError(
-    'The extension user has not authorized requests from this website.',
-    4100
-  );
+  static EnableRejected = (data: object): RequestError =>
+    new RequestError('The extension user does not authorize the request.', 4001, data);
   static NoMnemonicAvailable = (address: string): RequestError =>
     new RequestError(
       `The user does not possess the required private key to sign with for address: "${address}".`,
@@ -32,7 +25,13 @@ export class RequestError {
       `No matching account found on AlgoSigner for address "${address}" on network ${ledger}.`,
       4100
     );
+  static NoLedgerProvided = (base: string, injected: string): RequestError =>
+    new RequestError(
+      `Ledger not provided. Please use a base ledger: [${base}] or an available custom one ${injected}.`,
+      4200
+    );
   static UnsupportedLedger = new RequestError('The provided ledger is not supported.', 4200);
+  static UnsupportedNetwork = new RequestError('The provided network is not supported.', 4200);
   static PendingTransaction = new RequestError('Another query processing', 4201);
   static LedgerMultipleGroups = new RequestError(
     'Ledger hardware device signing is only available for one transaction group at a time.',
@@ -44,6 +43,10 @@ export class RequestError {
   );
   static AlgoSignerNotInitialized = new RequestError(
     'AlgoSigner was not initialized properly beforehand.',
+    4200
+  );
+  static SiteNotAuthorizedByUser = new RequestError(
+    'The extension user has not authorized requests from this website.',
     4202
   );
   static InvalidFields = (data?: any): RequestError =>
@@ -129,8 +132,8 @@ export class RequestError {
     'All transactions provided in a same group need to have matching group IDs.',
     4300
   );
-  static NoDifferentLedgers = new RequestError(
-    'All transactions need to belong to the same ledger.',
+  static NoDifferentNetworks = new RequestError(
+    'All transactions need to belong to the same network.',
     4300
   );
   static PartiallySuccessfulPost = (successTxnIDs: string[], data: any): PostError =>

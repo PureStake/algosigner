@@ -92,7 +92,7 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
                 }
               }}
               name=${activeLedgerTemplate.name}
-              genesisId=${activeLedgerTemplate.genesisId}
+              genesisID=${activeLedgerTemplate.genesisID}
               symbol=${activeLedgerTemplate.symbol}
               algodUrl=${activeLedgerTemplate.algodUrl}
               indexerUrl=${activeLedgerTemplate.indexerUrl}
