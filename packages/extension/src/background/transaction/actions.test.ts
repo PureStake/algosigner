@@ -110,6 +110,10 @@ test('Validate build of acfg transaction', () => {
     lastRound: 1001,
     genesisID: 'testnet-v1.0',
     genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    assetManager: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetReserve: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetFreeze: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetClawback: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     note: new Uint8Array(0),
   };
 
@@ -339,10 +343,15 @@ test('Validate modify asset transaction required fields', () => {
     message = e.message;
   }
   expect(message).toContain('Validation failed');
+  expect(message).toContain('AssetConfigTx');
   expect(message).toContain('firstRound');
   expect(message).toContain('lastRound');
   expect(message).toContain('genesisID');
   expect(message).toContain('genesisHash');
   expect(message).toContain('from');
   expect(message).toContain('assetIndex');
+  expect(message).toContain('assetManager');
+  expect(message).toContain('assetReserve');
+  expect(message).toContain('assetFreeze');
+  expect(message).toContain('assetClawback');
 });

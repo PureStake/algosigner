@@ -1,3 +1,4 @@
+import { obfuscateAddress } from '@algosigner/common/utils';
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
@@ -52,6 +53,34 @@ const TxAcfg: FunctionalComponent = (props: any) => {
         <div class="is-flex">
           <p style="width: 30%;">Asset Total:</p>
           <p style="width: 70%;">${tx.assetTotal}</p>
+        </div>
+      `}
+      ${tx.assetManager &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Manager Address:</p>
+          <p style="width: 70%;">${obfuscateAddress(tx.assetManager)}</p>
+        </div>
+      `}
+      ${tx.assetReserve &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Manager Address:</p>
+          <p style="width: 70%;">${obfuscateAddress(tx.assetReserve)}</p>
+        </div>
+      `}
+      ${tx.assetFreeze &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Manager Address:</p>
+          <p style="width: 70%;">${obfuscateAddress(tx.assetFreeze)}</p>
+        </div>
+      `}
+      ${tx.assetClawback &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Manager Address:</p>
+          <p style="width: 70%;">${obfuscateAddress(tx.assetClawback)}</p>
         </div>
       `}
       <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
