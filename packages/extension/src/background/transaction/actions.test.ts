@@ -305,12 +305,15 @@ test('Validate create transaction required fields', () => {
     message = e.message;
   }
   expect(message).toContain('Validation failed');
+  expect(message).toContain('AssetCreateTx');
   expect(message).toContain('firstRound');
   expect(message).toContain('lastRound');
   expect(message).toContain('genesisID');
   expect(message).toContain('genesisHash');
   expect(message).toContain('from');
   expect(message).toContain('assetTotal');
+  expect(message).toContain('assetDecimals');
+  expect(message).toContain('assetDefaultFrozen');
 });
 
 test('Validate destroy transaction required fields', () => {
@@ -324,6 +327,7 @@ test('Validate destroy transaction required fields', () => {
     message = e.message;
   }
   expect(message).toContain('Validation failed');
+  expect(message).toContain('AssetDestroyTx');
   expect(message).toContain('firstRound');
   expect(message).toContain('lastRound');
   expect(message).toContain('genesisID');
