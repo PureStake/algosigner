@@ -44,7 +44,7 @@ test('RequestError - Structure', () => {
     code: 4100,
   });
 
-  expect(RequestError.SigningError(4000, [testError])).toMatchObject({
+  expect(RequestError.SigningValidationError(4000, [testError])).toMatchObject({
     message: 'There was a problem signing the transaction(s).',
     code: 4000,
     data: [testError],

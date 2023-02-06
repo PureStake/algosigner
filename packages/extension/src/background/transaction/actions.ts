@@ -57,7 +57,7 @@ export function getValidatedTxnWrap(
         try {
           validatedTxnWrap = new AssetCreateTransaction(txn as IAssetCreateTx);
         } catch (e) {
-          e.data = [error.data, e.data].join(' ');
+          e.message = [error.message, e.message].join(' ');
           error = e;
         }
       }
@@ -65,7 +65,7 @@ export function getValidatedTxnWrap(
         try {
           validatedTxnWrap = new AssetDestroyTransaction(txn as IAssetDestroyTx);
         } catch (e) {
-          e.data = [error.data, e.data].join(' ');
+          e.message = [error.message, e.message].join(' ');
           error = e;
         }
       }

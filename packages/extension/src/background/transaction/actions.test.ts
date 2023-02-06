@@ -172,20 +172,18 @@ test('Validate pay transaction required fields', () => {
     type: 'pay',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'pay');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('to');
-  expect(data).toContain('from');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('to');
+  expect(message).toContain('from');
 });
 
 test('Validate clawback transaction required fields', () => {
@@ -193,21 +191,19 @@ test('Validate clawback transaction required fields', () => {
     type: 'axfer',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
-  expect(data).toContain('assetRevocationTarget');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
+  expect(message).toContain('assetRevocationTarget');
 });
 
 test('Validate accept transaction required fields', () => {
@@ -215,20 +211,18 @@ test('Validate accept transaction required fields', () => {
     type: 'axfer',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
 });
 
 test('Validate create transaction required fields', () => {
@@ -236,20 +230,18 @@ test('Validate create transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetTotal');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetTotal');
 });
 
 test('Validate destroy transaction required fields', () => {
@@ -257,20 +249,18 @@ test('Validate destroy transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
 });
 
 test('Validate modify asset transaction required fields', () => {
@@ -278,18 +268,16 @@ test('Validate modify asset transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
 });
