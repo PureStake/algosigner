@@ -83,7 +83,7 @@ const TxAcfg: FunctionalComponent = (props: any) => {
           <p style="width: 70%;">${obfuscateAddress(tx.assetClawback)}</p>
         </div>
       `}
-      <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
+      <div class="is-flex">
         <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
         <p style="width: 70%;">${fee / 1e6} Algos</p>
       </div>
