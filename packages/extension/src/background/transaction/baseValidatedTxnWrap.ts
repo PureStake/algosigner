@@ -45,10 +45,13 @@ export class BaseValidatedTxnWrap {
           foundRequiredParams.push(key);
         }
       });
-      const missingRequiredParams = requiredParamsSet.filter(
-        (p) => !foundRequiredParams.includes(p)
-      );
-      missingFields.concat(missingRequiredParams);
+      if (!foundRequiredParams.length) {
+        throw RequestError.InvalidTransactionStructure(
+          `Creation of ${
+            txnType.name
+          } requires at least one of these properties: ${missingFields.toString()}.`
+        );
+      }
     }
 
     // Throwing error here so that missing fields can be combined.
