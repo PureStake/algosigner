@@ -17,14 +17,20 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
           <p style="width: 70%;" class="truncate-text">${tx.group}</p>
         </div>
       `}
-      <div class="is-flex">
-        <p style="width: 30%;">Vote Key:</p>
-        <p style="width: 70%; word-break: break-word;">${tx.voteKey}</p>
-      </div>
-      <div class="is-flex">
-        <p style="width: 30%;">Selection Key:</p>
-        <p style="width: 70%; word-break: break-word;">${tx.selectionKey}</p>
-      </div>
+      ${tx.voteKey &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Vote Key:</p>
+          <p style="width: 70%; word-break: break-word;">${tx.voteKey}</p>
+        </div>
+      `}
+      ${tx.selectionKey &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Selection Key:</p>
+          <p style="width: 70%; word-break: break-word;">${tx.selectionKey}</p>
+        </div>
+      `}
       ${tx.stateProofKey &&
       html`
         <div class="is-flex">
@@ -35,12 +41,12 @@ const TxKeyreg: FunctionalComponent = (props: any) => {
       ${tx.nonParticipation &&
       html`
         <div class="is-flex">
-          <p style="width: 30%;">Non-participation:</p>
-          <p style="width: 70%;">${tx.nonParticipation}</p>
+          <p style="width: 30%;">Non Participation:</p>
+          <p style="width: 70%;">${tx.nonParticipation.toString()}</p>
         </div>
       `}
       <div class="is-flex">
-        <p style="width: 30%;"> ${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'} </p>
+        <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
         <p style="width: 70%;">${fee / 1e6} Algos</p>
       </div>
     </div>

@@ -4,15 +4,10 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 // Base implementation of the transactions type interface, for use in the export wrapper class below.
 ///
-class KeyRegistrationTx implements IKeyRegistrationTx {
+class OfflineKeyRegistrationTx implements IKeyRegistrationTx {
   type: string = undefined;
-  voteKey: string = undefined;
-  selectionKey: string = undefined;
   stateProofKey?: string = null;
-  voteFirst: number = undefined;
-  voteLast: number = undefined;
-  voteKeyDilution?: number = null;
-  nonParticipation?: boolean = false;
+  nonParticipation: boolean = undefined;
   from: string = undefined;
   fee?: number = 0;
   firstRound: number = undefined;
@@ -31,9 +26,9 @@ class KeyRegistrationTx implements IKeyRegistrationTx {
 ///
 // Mapping, validation and error checking for keyreg transactions prior to sign.
 ///
-export class KeyregTransaction extends BaseValidatedTxnWrap {
-  txDerivedTypeText: string = 'Key Registration';
+export class OfflineKeyregTransaction extends BaseValidatedTxnWrap {
+  txDerivedTypeText: string = 'Offline Key Registration';
   constructor(params: IKeyRegistrationTx) {
-    super(params, KeyRegistrationTx);
+    super(params, OfflineKeyRegistrationTx);
   }
 }

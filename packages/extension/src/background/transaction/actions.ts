@@ -18,7 +18,8 @@ import { AssetTransferTransaction } from './axferTransaction';
 import { AssetAcceptTransaction } from './axferAcceptTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetClawbackTransaction } from './axferClawbackTransaction';
-import { KeyregTransaction } from './keyregTransaction';
+import { OnlineKeyregTransaction } from './keyregOnlineTransaction';
+import { OfflineKeyregTransaction } from './keyregOfflineTransaction';
 import { ApplicationTransaction } from './applTransaction';
 import { TransactionType } from '@algosigner/common/types/transaction';
 import { RequestError } from '@algosigner/common/errors';
@@ -113,7 +114,24 @@ export function getValidatedTxnWrap(
       }
       break;
     case TransactionType.Keyreg:
-      validatedTxnWrap = new KeyregTransaction(txn as IKeyRegistrationTx);
+      // Validate any of the 2 variants of transactions that can occur with keyreg
+      // Use the second error as the passback error.
+      try {
+        validatedTxnWrap = new OnlineKeyregTransaction(txn as IKeyRegistrationTx);
+      } catch (e) {
+        error = e;
+      }
+      if (!validatedTxnWrap) {
+        try {
+          validatedTxnWrap = new OfflineKeyregTransaction(txn as IKeyRegistrationTx);
+        } catch (e) {
+          e.message = [e.message, error.message].join(' ');
+          error = e;
+        }
+      }
+      if (!validatedTxnWrap && error) {
+        throw error;
+      }
       break;
     case TransactionType.Appl:
       validatedTxnWrap = new ApplicationTransaction(txn as IApplTx);
