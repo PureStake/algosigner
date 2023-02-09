@@ -55,6 +55,13 @@ const TxAcfg: FunctionalComponent = (props: any) => {
           <p style="width: 70%;">${tx.assetTotal}</p>
         </div>
       `}
+      ${Number.isInteger(tx.assetDecimals) &&
+      html`
+        <div class="is-flex">
+          <p style="width: 30%;">Asset Decimals:</p>
+          <p style="width: 70%;">${tx.assetDecimals}</p>
+        </div>
+      `}
       ${tx.assetManager &&
       html`
         <div class="is-flex">
