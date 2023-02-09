@@ -35,7 +35,7 @@ const ImportAccount: FunctionalComponent = (props: any) => {
   const importAccount = (pwd: string) => {
     const params = {
       passphrase: pwd,
-      mnemonic: mnemonicArray.map((w) => w.trim()).join(' '),
+      mnemonic: mnemonicArray.filter(Boolean).map((w) => w.trim()).join(' '),
       address: address,
       isRef: isRef,
       name: name.trim(),
