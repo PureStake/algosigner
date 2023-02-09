@@ -45,7 +45,7 @@ test('RequestError - Structure', () => {
   });
 
   expect(RequestError.SigningValidationError(4000, [testError])).toMatchObject({
-    message: 'There was a problem signing the transaction(s).',
+    message: 'There was a problem validating the transaction(s) to be signed. Please refer to the data property for the reasons behind each transaction.',
     code: 4000,
     data: [testError],
   });

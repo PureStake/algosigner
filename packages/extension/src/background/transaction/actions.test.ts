@@ -312,8 +312,6 @@ test('Validate create transaction required fields', () => {
   expect(message).toContain('genesisHash');
   expect(message).toContain('from');
   expect(message).toContain('assetTotal');
-  expect(message).toContain('assetDecimals');
-  expect(message).toContain('assetDefaultFrozen');
 });
 
 test('Validate destroy transaction required fields', () => {

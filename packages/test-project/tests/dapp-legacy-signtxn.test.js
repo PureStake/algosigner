@@ -103,22 +103,24 @@ describe('Txn Signing Validation errors', () => {
     );
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4100,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining(invalidAccount),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain(invalidAccount);
+    expect(signResponse.data[0]).toContain('No matching account found');
   });
 
   // Signers validations
@@ -167,22 +169,23 @@ describe('Txn Signing Validation errors', () => {
     txn.signers = [account2.address];
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining("When a single-address 'signers'"),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain("a single-address 'signers' is provided");
   });
 
   test('Error on Single signer not matching authAddr', async () => {
@@ -200,22 +203,23 @@ describe('Txn Signing Validation errors', () => {
     txn.authAddr = account2.address;
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining("When a single-address 'signers'"),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain("a single-address 'signers' is provided");
   });
 
   test('Error on Invalid signer address', async () => {
@@ -233,22 +237,23 @@ describe('Txn Signing Validation errors', () => {
     txn.signers = [fakeAccount];
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining(`Signers array contains the invalid address "${fakeAccount}"`),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain(`Signers array contains the invalid address "${fakeAccount}"`);
   });
 
   // AuthAddr validations
@@ -267,22 +272,23 @@ describe('Txn Signing Validation errors', () => {
     txn.authAddr = fakeAccount;
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining(`'authAddr' contains the invalid address "${fakeAccount}"`),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain(`'authAddr' contains the invalid address "${fakeAccount}"`);
   });
 
   // Msig validations
@@ -292,22 +298,24 @@ describe('Txn Signing Validation errors', () => {
     txn.signers = [account1.address, invalidAccount];
     unsignedTransactions = [txn];
 
-    await expect(
-      dappPage.evaluate((transactions) => {
-        return Promise.resolve(AlgoSigner.signTxn(transactions))
-          .then((data) => {
-            return data;
-          })
-          .catch((error) => {
-            return error;
-          });
-      }, unsignedTransactions)
-    ).resolves.toMatchObject({
-      message: expect.stringContaining('There was a problem signing the transaction(s).'),
+    const signResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(AlgoSigner.signTxn(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTransactions);
+    expect(signResponse).toMatchObject({
+      message: expect.stringContaining('There was a problem validating the transaction(s) to be signed.'),
       code: 4300,
       name: expect.stringContaining('AlgoSignerRequestError'),
-      data: expect.stringContaining(invalidAccount),
+      data: expect.anything(),
     });
+    expect(signResponse.data).toHaveLength(1);
+    expect(signResponse.data[0]).toContain(invalidAccount);
+    expect(signResponse.data[0]).toContain('does not currently possess one of');
   });
 
   // // @TODO: Wallet Transaction Structure check tests
