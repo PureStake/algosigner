@@ -16,19 +16,6 @@ export enum ValidationStatus {
   Warning = 2, // Field is out of normal parameters and should be inspected closely
   Dangerous = 3, // Field has risky or costly fields with values and should be inspected very closely
 }
-///
-// Helper to convert a validation status into a classname for display purposes
-///
-function _convertFieldResponseToClassname(validationStatus: ValidationStatus): string {
-  switch (validationStatus) {
-    case ValidationStatus.Dangerous:
-      return 'tx-field-danger';
-    case ValidationStatus.Warning:
-      return 'tx-field-warning';
-    default:
-      return '';
-  }
-}
 
 ///
 // Validation responses.
@@ -36,11 +23,9 @@ function _convertFieldResponseToClassname(validationStatus: ValidationStatus): s
 export class ValidationResponse {
   status: ValidationStatus;
   info: string;
-  className: string;
   constructor(props) {
     this.status = props.status;
     this.info = props.info;
-    this.className = _convertFieldResponseToClassname(this.status);
   }
 }
 

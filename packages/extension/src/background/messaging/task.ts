@@ -258,7 +258,7 @@ export class Task {
             (walletTx.msig && typeof walletTx.msig !== 'object')
           ) {
             logging.log('Invalid Wallet Transaction Structure');
-            throw RequestError.InvalidStructure;
+            throw RequestError.InvalidWalletTxnStructure;
           } else if (
             // prettier-ignore
             walletTx.msig && (
@@ -290,6 +290,22 @@ export class Task {
           processedTxArray[index] = processedTx;
           const wrap = getValidatedTxnWrap(processedTx, processedTx['type']);
           transactionWraps[index] = wrap;
+
+          if (
+            wrap.validityObject &&
+            Object.values(wrap.validityObject).some(
+              (value) => value['status'] === ValidationStatus.Invalid
+            )
+          ) {
+            // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
+            const invalidKeys = [];
+            Object.entries(wrap.validityObject).forEach(([key, value]) => {
+              if (value['status'] === ValidationStatus.Invalid) {
+                invalidKeys.push(`${key}: ${value['info']}`);
+              }
+            });
+            throw RequestError.InvalidFields(invalidKeys);
+          }
 
           const ledger = getLedgerFromMixedGenesis(wrap.transaction.genesisID, wrap.transaction.genesisHash);
           
@@ -431,58 +447,19 @@ export class Task {
         !transactionWraps.length ||
         transactionWraps.some((w) => w === undefined || w === null)
       ) {
-        // We don't have transaction wraps or we have an building error, reject the transaction.
-        let data = '';
+        // We don't have transaction wraps or we have a validation error, reject the transaction.
+        const data = [];
         let code = 4300;
 
-        if (walletTransactions.length > 1) {
-          // We format the validation errors for better readability and clarity
-          validationErrors.forEach((error, index) => {
-            // Concatenate the errors in a single formatted message
-            data = data + `Validation failed for transaction ${index} due to: ${error.message} `;
-            // Take the lowest error code as they're _more_ generic the higher they go
-            code = error.code < code ? error.code : code;
-          });
-        } else {
-          const error = validationErrors[0];
-          if (error) {
-            data = data + `Validation failed on transaction due to: ${error.message}`;
-            code = error.code;
-          }
-        }
-        throw RequestError.SigningError(code, data.trim());
-      } else if (
-        transactionWraps.some(
-          (tx) =>
-            tx.validityObject &&
-            Object.values(tx.validityObject).some(
-              (value) => value['status'] === ValidationStatus.Invalid
-            )
-        )
-      ) {
-        // We have a transaction that contains fields which are deemed invalid. We should reject the transaction.
-        // We can use a modified popup that allows users to review the transaction and invalid fields and close the transaction.
-        const invalidKeys = {};
-        transactionWraps.forEach((tx, index) => {
-          invalidKeys[index] = [];
-          Object.entries(tx.validityObject).forEach(([key, value]) => {
-            if (value['status'] === ValidationStatus.Invalid) {
-              invalidKeys[index].push(`${key}: ${value['info']}`);
-            }
-          });
-          if (!invalidKeys[index].length) delete invalidKeys[index];
+        // We format the validation errors for better readability and clarity
+        validationErrors.forEach((error, index) => {
+          // Store the error message in the corresponding array position
+          data[index] = error.message;
+          // Take the lowest error code as they're _more_ generic the higher they go
+          code = error.code < code ? error.code : code;
         });
 
-        let data = '';
-        Object.keys(invalidKeys).forEach((index) => {
-          data =
-            data +
-            `Validation failed for transaction #${index} because of invalid properties [${invalidKeys[
-              index
-            ].join(', ')}]. `;
-        });
-
-        throw RequestError.InvalidFields(data);
+        throw RequestError.SigningValidationError(code, data);
       } else {
         /** 
          * Group validations
@@ -555,21 +532,19 @@ export class Task {
         );
       }
     } catch (e) {
-      let data = '';
+      const errorResponse = { ...e };
 
-      if (groupsToSign.length === 1) {
-        data += e.data;
-      } else {
-        data += `On group ${currentGroup}: [${e.data}]. `;
+      if (groupsToSign.length > 1) {
+        errorResponse.message = `On group ${currentGroup}: ${e.message}`;
       }
-      logging.log(data);
 
-      request.error = e;
-      request.error.data = data;
+      logging.log(errorResponse);
+      request.error = errorResponse
 
       // Clean class saved request
       delete Task.requests[request.originTabID];
       MessageApi.send(request);
+      return;
     }
   };
 
@@ -1135,7 +1110,7 @@ export class Task {
           let holdResponse = false;
 
           const signedTxs = [];
-          const signErrors = [];
+          const signErrors: Array<string> = [];
 
           try {
             const ledger = getLedgerFromGenesisID(transactionObjs[0].genesisID);
@@ -1318,19 +1293,18 @@ export class Task {
 
               // We check if there were errors signing this group
               if (signErrors.length) {
-                let data = '';
-                if (transactionObjs.length > 1) {
-                  signErrors.forEach((error, index) => {
-                    data += `On transaction ${index}, the error was: ${error}. `;
-                  });
-                } else {
-                  data += signErrors[0];
-                }
+                const data = [];
+                signErrors.forEach((error, index) => {
+                  data[index] = error;
+                });
+
+                const responseError = RequestError.ApplySignatureError(data);
                 if (!singleGroup) {
-                  data = `On group ${currentGroup}: [${data.trim()}]. `;
+                  responseError.message = `On group ${currentGroup}: ${responseError.message}`;
                 }
-                message.error = RequestError.SigningError(4000, data);
-                logging.log(data);
+
+                message.error = responseError;
+                logging.log(responseError);
               } else {
                 signedGroups[currentGroup] = signedTxs;
               }
@@ -1348,21 +1322,7 @@ export class Task {
               if (message.body.params.currentGroup + 1 < groupsToSign.length) {
                 // More groups to sign, continue prompting user
                 message.body.params.currentGroup = currentGroup + 1;
-                try {
-                  await Task.signIndividualGroup(message);
-                } catch (e) {
-                  let errorMessage = 'There was a problem validating the transaction(s). ';
-
-                  if (singleGroup) {
-                    errorMessage += e.message;
-                  } else {
-                    errorMessage += `On group ${currentGroup}: [${e.message}].`;
-                  }
-                  logging.log(errorMessage);
-                  const error = new Error(errorMessage);
-                  sendResponse(error);
-                  return;
-                }
+                await Task.signIndividualGroup(message);
               } else {
                 // No more groups to sign, build final user-facing response
                 if (opts && opts[OptsKeys.sendTxns]) {

@@ -9,6 +9,8 @@ export class RequestError {
 
   static None = new RequestError('', 0);
   static Undefined = new RequestError('An undefined error occurred.', 4000);
+  static ApplySignatureError = (data?: any): RequestError =>
+  new RequestError('There was a problem signing the transaction(s).', 4000, data);
   static UserRejected = new RequestError(
     'The extension user does not authorize the request.',
     4001
@@ -49,10 +51,10 @@ export class RequestError {
     'The extension user has not authorized requests from this website.',
     4202
   );
-  static InvalidFields = (data?: any): RequestError =>
-    new RequestError('Validation failed for transaction due to invalid properties.', 4300, data);
-  static InvalidTransactionStructure = (data?: any): RequestError =>
-    new RequestError('Validation failed for transaction due to invalid structure.', 4300, data);
+  static InvalidFields = (fields?: any): RequestError =>
+    new RequestError(`Validation failed for transaction since it has invalid properties: [${fields.join(', ')}]`, 4300);
+  static InvalidTransactionStructure = (reason?: any): RequestError =>
+    new RequestError(`Validation failed for transaction since it has an invalid structure: ${reason}`, 4300);
   static InvalidSignTxnsFormat = new RequestError(
     'Please provide an array of either valid transaction objects or nested arrays of valid transaction objects.',
     4300
@@ -102,7 +104,7 @@ export class RequestError {
     "There are no transactions to sign as the provided ones are for reference-only ('{ signers: [] }').",
     4300
   );
-  static InvalidStructure = new RequestError(
+  static InvalidWalletTxnStructure = new RequestError(
     "The provided transaction object doesn't adhere to the correct structure.",
     4300
   );
@@ -153,8 +155,8 @@ export class RequestError {
     'The transaction(s) were succesfully sent to the network, but there was an issue while waiting for confirmation. Please verify that they were commited to the network before trying again.',
     4400
   );
-  static SigningError = (code: number, data?: any): RequestError =>
-    new RequestError('There was a problem signing the transaction(s).', code, data);
+  static SigningValidationError = (code: number, data?: any): RequestError =>
+  new RequestError('There was a problem validating the transaction(s) to be signed. Please refer to the data property for the reasons behind each transaction.', code, data);
 
   protected constructor(message: string, code: number, data?: any) {
     this.name = 'AlgoSignerRequestError';

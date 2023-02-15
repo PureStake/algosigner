@@ -6,13 +6,13 @@ on:
     types: [opened,closed,synchronize]
 
 jobs:
-  CLAssistant:
+  CLA_assistant:
     runs-on: ubuntu-latest
     steps:
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
         # Beta Release
-        uses: cla-assistant/github-action@v2.1.3-beta
+        uses: cla-assistant/github-action@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # the below token should have repo scope and must be manually added by you in the repository's secret
@@ -24,7 +24,7 @@ jobs:
           branch: 'main'
           allowlist: janmarcano,fxgamundi,purestaketdb,PureBrent,mmaurello,ekenigs
 
-         #below are the optional inputs - If the optional inputs are not given, then default values will be taken
+          #below are the optional inputs - If the optional inputs are not given, then default values will be taken
           remote-organization-name: purestake
           remote-repository-name:  algosigner-cla
           #create-file-commit-message: 'For example: Creating file for storing CLA Signatures'
