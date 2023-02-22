@@ -25,7 +25,7 @@ const NetworkSelect: FunctionalComponent = () => {
     setActive(!active);
   };
 
-  const setLedger = (network) => {
+  const setNetwork = (network) => {
     const params = {
       ledger: network,
     };
@@ -63,7 +63,7 @@ const NetworkSelect: FunctionalComponent = () => {
                 html`
                   <a
                     id="select${network.name}"
-                    onClick=${() => setLedger(network.name)}
+                    onClick=${() => setNetwork(network.name)}
                     class="dropdown-item"
                   >
                     ${network.name}

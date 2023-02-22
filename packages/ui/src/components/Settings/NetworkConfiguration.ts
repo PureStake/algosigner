@@ -4,27 +4,27 @@ import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { StoreContext } from 'services/StoreContext';
 import { NetworkTemplate } from '@algosigner/common/types/network';
-import LedgerNetworkModify from './LedgerNetworkModify';
+import NetworkModify from './NetworkModify';
 import { route } from 'preact-router';
 
-const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
+const NetworkConfiguration: FunctionalComponent = (props: any) => {
   const { closeFunction } = props;
   const store: any = useContext(StoreContext);
   const [isNetConfigModalVisible, setNetConfigModalVisible] = useState<boolean>(false);
-  const [activeLedgerTemplate, setActiveLedgerTemplate] = useState<any>(undefined);
+  const [activeNetworkTemplate, setActiveNetworkTemplate] = useState<any>(undefined);
 
-  let sessionLedgers;
-  store.getAvailableLedgers((availableLedgers) => {
-    if (!availableLedgers.error) {
-      sessionLedgers = availableLedgers;
+  let sessionNetworks;
+  store.getAvailableLedgers((availableNetworks) => {
+    if (!availableNetworks.error) {
+      sessionNetworks = availableNetworks;
     }
   });
 
-  const setActiveNetwork = (ledger?: NetworkTemplate) => {
-    if (ledger) {
-      setActiveLedgerTemplate({ ...ledger });
+  const setActiveNetwork = (network?: NetworkTemplate) => {
+    if (network) {
+      setActiveNetworkTemplate({ ...network });
     } else {
-      setActiveLedgerTemplate({ name: '', isEditable: true });
+      setActiveNetworkTemplate({ name: '', isEditable: true });
     }
     setNetConfigModalVisible(true);
   };
@@ -45,20 +45,20 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
         <div style="flex: 1; text-align: -webkit-center;">
           ${!isNetConfigModalVisible &&
           html`
-            ${sessionLedgers &&
-            sessionLedgers.map(
-              (availableLedger: any) =>
+            ${sessionNetworks &&
+            sessionNetworks.map(
+              (network: any) =>
                 html`
                   <div style="padding: 0.2rem 0.3rem; width: 100%;">
                     <button
-                      id="select${availableLedger.name}"
+                      id="select${network.name}"
                       style="width: 90%;"
-                      onClick=${() => setActiveNetwork(availableLedger)}
-                      class="button ${(!availableLedger.isEditable && 'is-dark is-outlined') ||
+                      onClick=${() => setActiveNetwork(network)}
+                      class="button ${(!network.isEditable && 'is-dark is-outlined') ||
                       'is-primary is-outlined'}"
                     >
-                      ${availableLedger.name}
-                      ${!availableLedger.isEditable &&
+                      ${network.name}
+                      ${!network.isEditable &&
                       html`<span
                         class="icon"
                         style="padding-right: 5%;padding-left: 90%;position: absolute;"
@@ -68,7 +68,7 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
                   </div>
                 `
             )}
-            ${sessionLedgers &&
+            ${sessionNetworks &&
             html`
               <button
                 id="createNetwork"
@@ -81,7 +81,7 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
           `}
           ${isNetConfigModalVisible &&
           html`
-            <${LedgerNetworkModify}
+            <${NetworkModify}
               closeFunction=${(closeType) => {
                 setNetConfigModalVisible(false);
                 if (closeType === 1) {
@@ -91,14 +91,14 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
                   route('/wallet');
                 }
               }}
-              name=${activeLedgerTemplate.name}
-              genesisID=${activeLedgerTemplate.genesisID}
-              symbol=${activeLedgerTemplate.symbol}
-              algodUrl=${activeLedgerTemplate.algodUrl}
-              indexerUrl=${activeLedgerTemplate.indexerUrl}
-              headers=${activeLedgerTemplate.headers}
-              isEditable=${activeLedgerTemplate.isEditable}
-              isModify=${activeLedgerTemplate.name !== ''}
+              name=${activeNetworkTemplate.name}
+              genesisID=${activeNetworkTemplate.genesisID}
+              symbol=${activeNetworkTemplate.symbol}
+              algodUrl=${activeNetworkTemplate.algodUrl}
+              indexerUrl=${activeNetworkTemplate.indexerUrl}
+              headers=${activeNetworkTemplate.headers}
+              isEditable=${activeNetworkTemplate.isEditable}
+              isModify=${activeNetworkTemplate.name !== ''}
             />
           `}
         </div>
@@ -107,4 +107,4 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
   );
 };
 
-export default LedgerNetworksConfiguration;
+export default NetworkConfiguration;
