@@ -1,12 +1,10 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-var */
 /* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/ban-types */
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { SessionObject } from '@algosigner/common/types';
 
 import { sendMessage } from 'services/Messaging';
 
@@ -15,37 +13,38 @@ import { StoreContext } from 'services/StoreContext';
 import background from 'assets/background.png';
 import walletLock from 'assets/wallet-lock.png';
 
-var zxcvbn = require('zxcvbn');
+const zxcvbn = require('zxcvbn');
 
-const SetPassword: FunctionalComponent = (props) => {
-  const [pwd, setPwd] = useState<String>('');
-  const [confirmPwd, setConfirmPwd] = useState<String>('');
-  const [error, setError] = useState<String>('');
+const SetPassword: FunctionalComponent = () => {
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const store: any = useContext(StoreContext);
 
   const createWallet = () => {
-    if (pwd !== confirmPwd) {
+    if (password !== confirmPassword) {
       setError("Confirmation doesn't match!");
       return false;
-    } else if (pwd.length < 8 || pwd.length > 64) {
+    } else if (password.length < 8 || password.length > 64) {
       setError('Password needs to be 8-64 characters long!');
       return false;
     }
 
     const params = {
-      passphrase: pwd,
+      passphrase: password,
     };
 
     setLoading(true);
 
-    sendMessage(JsonRpcMethod.CreateWallet, params, function (response) {
+    sendMessage(JsonRpcMethod.CreateWallet, params, function (response: SessionObject | { error }) {
       setLoading(false);
       if ('error' in response) {
         setError(response.error);
       } else {
-        store.updateWallet(response.wallet, () => {
-          store.setLedger(response.ledger);
+        const session = response as SessionObject;
+        store.updateWallet(session.wallet, () => {
+          store.setLedger(session.network);
           route('/wallet');
         });
       }
@@ -77,9 +76,9 @@ const SetPassword: FunctionalComponent = (props) => {
             placeholder="Password"
             id="setPassword"
             type="password"
-            value=${pwd}
+            value=${password}
             onInput=${(e) => {
-              setPwd(e.target.value);
+              setPassword(e.target.value);
               setError('');
             }}
           />
@@ -88,9 +87,9 @@ const SetPassword: FunctionalComponent = (props) => {
             id="confirmPassword"
             type="password"
             placeholder="Confirm password"
-            value=${confirmPwd}
+            value=${confirmPassword}
             onInput=${(e) => {
-              setConfirmPwd(e.target.value);
+              setConfirmPassword(e.target.value);
               setError('');
             }}
           />
@@ -99,7 +98,7 @@ const SetPassword: FunctionalComponent = (props) => {
           <div class="mt-3 has-text-centered  fa-sm">
             ${error.length == 0 &&
             html` <div
-              style="display:flex; color:rgb(${255 - (zxcvbn(pwd).score + 1) * 50},${zxcvbn(pwd)
+              style="display:flex; color:rgb(${255 - (zxcvbn(password).score + 1) * 50},${zxcvbn(password)
                 .score * 50},50);"
             >
               <div class="mx-2 mt-2 mb-2" style="order: 1; align-self: center;">
@@ -107,11 +106,11 @@ const SetPassword: FunctionalComponent = (props) => {
                   <i class="fas fa-lock fa-2x" aria-hidden="true"></i>
                 </span>
               </div>
-              ${zxcvbn(pwd).score < 3 &&
-              html`<div style="order: 2;">${zxcvbn(pwd).feedback.suggestions.join('\n')}</div>`}
-              ${zxcvbn(pwd).score > 2 &&
+              ${zxcvbn(password).score < 3 &&
+              html`<div style="order: 2;">${zxcvbn(password).feedback.suggestions.join('\n')}</div>`}
+              ${zxcvbn(password).score > 2 &&
               html`<div style="order: 2;"
-                >Complexity acceptable. Estimated guesses: ${zxcvbn(pwd).guesses}</div
+                >Complexity acceptable. Estimated guesses: ${zxcvbn(password).guesses}</div
               >`}
             </div>`}
           </div>
@@ -122,7 +121,7 @@ const SetPassword: FunctionalComponent = (props) => {
         <button
           id="createWallet"
           class="button is-link is-fullwidth ${loading ? 'is-loading' : ''}"
-          disabled=${pwd.length === 0 || confirmPwd.length === 0}
+          disabled=${password.length === 0 || confirmPassword.length === 0}
           onClick=${createWallet}
         >
           Create wallet

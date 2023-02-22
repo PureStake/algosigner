@@ -2,7 +2,7 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Network, Namespace, NamespaceConfig } from '@algosigner/common/types';
+import { Alias, Network, Namespace, NamespaceConfig, SessionObject, SensitiveAccount, SafeAccount } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
@@ -38,9 +38,9 @@ export class InternalMethods {
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
   }
 
-  private static safeWallet(wallet: any) {
+  private static safeWallet(wallet: Record<string, Array<SafeAccount>>): Record<string, Array<SafeAccount>> {
     // Intialize the safe wallet then add the wallet networks in as empty arrays
-    const safeWallet = {};
+    const safeWallet: Record<string, Array<SafeAccount>> = {};
     Object.keys(wallet).forEach((key) => {
       safeWallet[key] = [];
 
@@ -129,8 +129,8 @@ export class InternalMethods {
       });
   }
 
-  public static getHelperSession(): Session {
-    return session.session;
+  public static getSessionObject(): SessionObject {
+    return session.asObject();
   }
 
   public static clearSession(): void {
@@ -144,7 +144,7 @@ export class InternalMethods {
       if (!exist) {
         sendResponse({ exist: false });
       } else {
-        if (session.wallet) sendResponse({ exist: true, session: session.session });
+        if (session.wallet) sendResponse({ exist: true, session: session.asObject() });
         else sendResponse({ exist: true });
       }
     });
@@ -183,10 +183,10 @@ export class InternalMethods {
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
-        session.availableLedgers = getBaseSupportedNetworks();
-        session.wallet = this.safeWallet(newWallet);
-        session.ledger = Network.MainNet;
-        sendResponse(session.session);
+        session.availableNetworks = getBaseSupportedNetworks();
+        session.wallet = this.safeWallet(newWallet); 
+        session.network = Network.MainNet;
+        sendResponse(session.asObject());
       } else {
         sendResponse({ error: 'Lock failed' });
       }
@@ -243,8 +243,8 @@ export class InternalMethods {
 
             // Setup session
             session.wallet = wallet;
-            session.ledger = Network.MainNet;
-            session.availableLedgers = availableNetworks;
+            session.network = Network.MainNet;
+            session.availableNetworks = availableNetworks;
 
             // Load internal aliases && namespace configurations
             this.reloadAliases();
@@ -269,7 +269,7 @@ export class InternalMethods {
               extensionStorage.setStorage('namespaces', namespaceConfigs, null);
             });
 
-            sendResponse(session.session);
+            sendResponse(session.asObject());
           });
         });
       }
@@ -363,7 +363,7 @@ export class InternalMethods {
   public static [JsonRpcMethod.ImportAccount](request: any, sendResponse: Function) {
     const { mnemonic, address, isRef, name, ledger: network } = request.body.params;
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
-    let newAccount;
+    let newAccount: SensitiveAccount;
 
     try {
       const existingAccounts = session.wallet[network];
@@ -940,8 +940,8 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.ChangeNetwork](request: any, sendResponse: Function) {
-    session.ledger = request.body.params['ledger'];
-    sendResponse({ ledger: session.ledger });
+    session.network = request.body.params['ledger'];
+    sendResponse({ ledger: session.network });
   }
 
   public static [JsonRpcMethod.DeleteNetwork](request: any, sendResponse: Function) {
@@ -963,7 +963,7 @@ export class InternalMethods {
         // Delete Accounts from wallet
         this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
-        // Remove existing accoutns in session.wallet
+        // Remove existing accounts in session.wallet
         const existingAccounts = session.wallet[request.body.params['ledger']];
         if (existingAccounts) {
           delete session.wallet[request.body.params['ledger']];
@@ -1000,7 +1000,7 @@ export class InternalMethods {
                   }
 
                   // Update the session
-                  session.availableLedgers = remainingNetworks;
+                  session.availableNetworks = remainingNetworks;
 
                   // Delete from the injected network settings
                   Settings.deleteInjectedNetwork(networkUniqueName);
@@ -1079,7 +1079,7 @@ export class InternalMethods {
           }
         }
         // Update the session and send response before setting cache.
-        session.availableLedgers = availableNetworks;
+        session.availableNetworks = availableNetworks;
         sendResponse({ availableLedgers: availableNetworks });
 
         // Updated the cached networks.

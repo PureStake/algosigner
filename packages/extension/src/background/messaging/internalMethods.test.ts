@@ -94,7 +94,7 @@ describe('wallet flow', () => {
     InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({
-      availableLedgers: [
+      availableNetworks: [
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
@@ -116,7 +116,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Network.MainNet,
+      network: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -137,8 +137,8 @@ describe('wallet flow', () => {
     };
     const sendResponse = jest.fn();
 
-    const session = {
-      availableLedgers: [
+    const sessionObject = {
+      availableNetworks: [
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
@@ -160,7 +160,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Network.MainNet,
+      network: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -176,7 +176,7 @@ describe('wallet flow', () => {
 
     InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);
 
-    expect(sendResponse).toHaveBeenCalledWith({ exist: true, session: session });
+    expect(sendResponse).toHaveBeenCalledWith({ exist: true, session: sessionObject });
   });
 
   test('a TestNet account can be added', () => {

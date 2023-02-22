@@ -6,6 +6,7 @@ import { autorun } from 'mobx';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 import logging, { LogLevel } from '@algosigner/common/logging';
+import { SessionObject } from '@algosigner/common/types';
 
 export const StoreContext = createContext(undefined);
 
@@ -133,9 +134,10 @@ export const StoreProvider = ({ children }) => {
         hashPath = window.location.hash.slice(2);
       }
       if ('session' in response) {
-        store.setAvailableLedgers(response.session.availableLedgers);
-        store.updateWallet(response.session.wallet, () => {
-          store.setLedger(response.session.ledger);
+        const session: SessionObject = response.session;
+        store.setAvailableLedgers(session.availableNetworks);
+        store.updateWallet(session.wallet, () => {
+          store.setLedger(session.network);
           if (hashPath.length > 0) {
             route(`/${hashPath}`);
           } else {

@@ -1033,7 +1033,7 @@ export class Task {
         },
         // Accounts
         [JsonRpcMethod.Accounts]: (d: any, resolve: Function, reject: Function) => {
-          const session = InternalMethods.getHelperSession();
+          const session = InternalMethods.getSessionObject();
           // If we don't have a ledger requested, respond with an error giving available ledgers
           if (!d.body.params?.ledger) {
             const baseNetworks = Object.keys(Network);
@@ -1067,7 +1067,8 @@ export class Task {
       private: {
         // authorization-allow
         [JsonRpcMethod.AuthorizationAllow]: (d) => {
-          const { responseOriginTabID, isEnable, accounts, genesisID, genesisHash, ledger } = d.body.params;
+          const { responseOriginTabID, isEnable, accounts, genesisID, genesisHash, ledger: network } =
+            d.body.params;
           const auth = Task.requests[responseOriginTabID];
           const message = auth.message;
 
@@ -1084,25 +1085,27 @@ export class Task {
               const rejectedAccounts = [];
               const sharedAccounts = [];
               for (const i in accounts) {
-                if ((accounts[i]['requested'] && !accounts[i]['selected']) || accounts[i]['missing']) {
-                  rejectedAccounts.push(accounts[i]['address']);          
-                }
-                else if(accounts[i]['selected']) {
+                if (
+                  (accounts[i]['requested'] && !accounts[i]['selected']) ||
+                  accounts[i]['missing']
+                ) {
+                  rejectedAccounts.push(accounts[i]['address']);
+                } else if (accounts[i]['selected']) {
                   sharedAccounts.push(accounts[i]['address']);
                 }
               }
               if (rejectedAccounts.length > 0) {
-                message.error = RequestError.EnableRejected({ 'accounts': rejectedAccounts });
-              } else { 
+                message.error = RequestError.EnableRejected({ accounts: rejectedAccounts });
+              } else {
                 message.response = {
-                  'genesisID': genesisID, 
-                  'genesisHash': genesisHash,
-                  accounts: sharedAccounts
-                }
+                  genesisID: genesisID,
+                  genesisHash: genesisHash,
+                  accounts: sharedAccounts,
+                };
 
-                const poolDetails = { ...message.response, ledger: ledger }
+                const poolDetails = { ...message.response, ledger: network };
 
-                // Add to the authorized pool details. 
+                // Add to the authorized pool details.
                 // This will be checked to restrict access for enable function users
                 Task.authorized_pool_details[`${message.origin}`] = poolDetails;
               }
@@ -1604,7 +1607,7 @@ export class Task {
           return InternalMethods[JsonRpcMethod.GetGovernanceAddresses](request, sendResponse);
         },
         [JsonRpcMethod.GetEnableAccounts]: (request: any, sendResponse: Function) => {
-          const { promptedAccounts, ledger } = request.body.params;
+          const { promptedAccounts, ledger: network } = request.body.params;
 
           // Setup new prompted accounts which will be the return values
           const newPromptedAccounts = [];
@@ -1624,8 +1627,8 @@ export class Task {
           }
 
           // Get an internal session and get wallet accounts for the new chosen ledger
-          const session = InternalMethods.getHelperSession();
-          const walletAccounts = session.wallet && session.wallet[ledger];
+          const session = InternalMethods.getSessionObject();
+          const walletAccounts = session.wallet && session.wallet[network];
 
           // We only need to add accounts if we actually have them
           if (walletAccounts) {
