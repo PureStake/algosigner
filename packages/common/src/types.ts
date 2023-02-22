@@ -12,9 +12,15 @@ export type Transaction = {
   readonly to: TAccount;
 };
 
-export enum Ledger {
+export enum Network {
   TestNet = 'TestNet',
   MainNet = 'MainNet',
+}
+
+export enum NetworkSelectionType {
+  NoneProvided,
+  OnlyIDProvided,
+  BothProvided,
 }
 
 export type WalletMultisigMetadata = {

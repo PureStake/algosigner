@@ -1,4 +1,4 @@
-export class LedgerTemplate {
+export class NetworkTemplate {
   name: string;
   readonly isEditable: boolean;
   genesisID?: string;
@@ -44,15 +44,15 @@ export class LedgerTemplate {
   }
 }
 
-export function getBaseSupportedLedgers(): Array<LedgerTemplate> {
-  // Need to add access to additional ledger types from import
+export function getBaseSupportedNetworks(): Array<NetworkTemplate> {
+  // Need to add access to additional network types from import
   return [
-    new LedgerTemplate({
+    new NetworkTemplate({
       name: 'MainNet',
       genesisID: 'mainnet-v1.0',
       genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
     }),
-    new LedgerTemplate({
+    new NetworkTemplate({
       name: 'TestNet',
       genesisID: 'testnet-v1.0',
       genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',

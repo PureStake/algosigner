@@ -1,6 +1,6 @@
 import algosdk from 'algosdk';
-import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
-import { Ledger } from '@algosigner/common/types';
+import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
+import { Network } from '@algosigner/common/types';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';
 import { API, Cache } from '../messaging/types';
@@ -18,7 +18,7 @@ export function getIndexer(ledger: string) {
 // Helper function to initialize Cache
 export function initializeCache(
   c: Cache | undefined = undefined,
-  ledger: Ledger | undefined = undefined
+  network: Network | undefined = undefined
 ): Cache {
   let cache: Cache;
   if (c === undefined) {
@@ -31,37 +31,41 @@ export function initializeCache(
     cache = c;
   }
 
-  if (ledger !== undefined) {
-    if (!(ledger in cache.assets)) cache.assets[ledger] = {};
-    if (!(ledger in cache.accounts)) cache.accounts[ledger] = {};
+  if (network !== undefined) {
+    if (!(network in cache.assets)) cache.assets[network] = {};
+    if (!(network in cache.accounts)) cache.accounts[network] = {};
   }
 
   return cache;
 }
 
-export function getAvailableLedgersExt(callback) {
+export function getAvailableNetworksFromCache(callback?: Function): Array<NetworkTemplate> | void {
   // Load Accounts details from Cache
-  const availableLedgers = getBaseSupportedLedgers();
+  const availableNetworks = getBaseSupportedNetworks();
   const extensionStorage = new ExtensionStorage();
-  extensionStorage.getStorage('cache', (storedCache: any) => {
-    const cache: Cache = initializeCache(storedCache);
-    // Add ledgers from cache to the base ledgers
-    if (cache.availableLedgers && cache.availableLedgers.length > 0) {
-      // We should reset and update the injected networks to ensure they will be available for use
-      Settings.backend_settings.InjectedNetworks = {};
+  const storedCache = extensionStorage.getStorage('cache');
+  const cache: Cache = initializeCache(storedCache);
 
-      for (var i = 0; i < cache.availableLedgers.length; i++) {
-        if (
-          !availableLedgers.some(
-            (e) => e.name.toLowerCase() === cache.availableLedgers[i].name.toLowerCase()
-          )
-        ) {
-          const ledgerFromCache = new LedgerTemplate(cache.availableLedgers[i]);
-          Settings.addInjectedNetwork(ledgerFromCache);
-          availableLedgers.push(ledgerFromCache);
-        }
+  // Join networks from cache with the base networks
+  if (cache.availableLedgers && cache.availableLedgers.length > 0) {
+    // We should reset and update the injected networks to ensure they will be available for use
+    Settings.backend_settings.InjectedNetworks = {};
+
+    for (let i = 0; i < cache.availableLedgers.length; i++) {
+      if (
+        !availableNetworks.some(
+          (network) => network.name.toLowerCase() === cache.availableLedgers[i].name.toLowerCase()
+        )
+      ) {
+        const networkFromCache = new NetworkTemplate(cache.availableLedgers[i]);
+        Settings.addInjectedNetwork(networkFromCache);
+        availableNetworks.push(networkFromCache);
       }
     }
-    callback(availableLedgers);
-  });
+  }
+  if (callback) {
+    callback(availableNetworks);
+  } else {
+    return availableNetworks;
+  }
 }

@@ -2,7 +2,7 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Ledger, Namespace, NamespaceConfig } from '@algosigner/common/types';
+import { Alias, Network, Namespace, NamespaceConfig } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
@@ -11,17 +11,17 @@ import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
 import AssetsDetailsHelper from '../utils/assetsDetailsHelper';
-import { initializeCache, getAvailableLedgersExt } from '../utils/helper';
+import { initializeCache, getAvailableNetworksFromCache } from '../utils/helper';
 import { ValidationStatus } from '../utils/validator';
 import {
   calculateEstimatedFee,
   getValidatedTxnWrap,
-  getLedgerFromGenesisID,
-  getLedgerFromMixedGenesis,
+  getNetworkNameFromGenesisID,
+  getNetworkFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
-import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
 import { extensionBrowser } from '@algosigner/common/chrome';
 
 const session = new Session();
@@ -29,22 +29,22 @@ const session = new Session();
 export class InternalMethods {
   private static _encryptionWrap: encryptionWrap | undefined;
 
-  public static getAlgod(ledger: string): algosdk.Algodv2 {
-    const params = Settings.getBackendParams(ledger, API.Algod);
+  public static getAlgod(network: string): algosdk.Algodv2 {
+    const params = Settings.getBackendParams(network, API.Algod);
     return new algosdk.Algodv2(params.apiKey, params.url, params.port);
   }
-  public static getIndexer(ledger: string): algosdk.Indexer {
-    const params = Settings.getBackendParams(ledger, API.Indexer);
+  public static getIndexer(network: string): algosdk.Indexer {
+    const params = Settings.getBackendParams(network, API.Indexer);
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
   }
 
   private static safeWallet(wallet: any) {
-    // Intialize the safe wallet then add the wallet ledgers in as empty arrays
+    // Intialize the safe wallet then add the wallet networks in as empty arrays
     const safeWallet = {};
     Object.keys(wallet).forEach((key) => {
       safeWallet[key] = [];
 
-      // Afterwards we can add in all the non-private keys and names into the safewallet
+      // Afterwards we can add in all the non-private keys and names into the safeWallet
       for (let j = 0; j < wallet[key].length; j++) {
         const { address, name, isRef } = wallet[key][j];
         safeWallet[key].push({
@@ -77,19 +77,19 @@ export class InternalMethods {
         });
       }
 
-      for (const l in Ledger) {
+      for (const n in Network) {
         // Format accounts as aliases
-        const ledgerAccountAliases = [];
-        for (const acc of wallet[l]) {
-          ledgerAccountAliases.push({
+        const networkAccountAliases = [];
+        for (const acc of wallet[n]) {
+          networkAccountAliases.push({
             name: acc.name,
             address: acc.address,
             namespace: Namespace.AlgoSigner_Accounts,
           });
         }
         // Save accounts and contacts as aliases
-        aliases[l] = {
-          [Namespace.AlgoSigner_Accounts]: ledgerAccountAliases,
+        aliases[n] = {
+          [Namespace.AlgoSigner_Accounts]: networkAccountAliases,
           [Namespace.AlgoSigner_Contacts]: contactAliases,
         };
       }
@@ -98,21 +98,21 @@ export class InternalMethods {
     });
   }
 
-  // Checks if an account for the given address exists on AlgoSigner for a given ledger.
+  // Checks if an account for the given address exists on AlgoSigner for a given network.
   public static checkAccountIsImported(genesisID: string, address: string): void {
-    const ledger: string = getLedgerFromGenesisID(genesisID);
+    const network: string = getNetworkNameFromGenesisID(genesisID);
     let found = false;
-    for (let i = session.wallet[ledger].length - 1; i >= 0; i--) {
-      if (session.wallet[ledger][i].address === address) {
+    for (let i = session.wallet[network].length - 1; i >= 0; i--) {
+      if (session.wallet[network][i].address === address) {
         found = true;
         break;
       }
     }
-    if (!found) throw RequestError.NoAccountMatch(address, ledger);
+    if (!found) throw RequestError.NoAccountMatch(address, network);
   }
 
-  private static loadAccountAssetsDetails(address: string, ledger: Ledger) {
-    const algod = this.getAlgod(ledger);
+  private static loadAccountAssetsDetails(address: string, network: Network) {
+    const algod = this.getAlgod(network);
     algod
       .accountInformation(address)
       .do()
@@ -120,7 +120,7 @@ export class InternalMethods {
         if ('assets' in res && res.assets.length > 0) {
           AssetsDetailsHelper.add(
             res.assets.map((x) => x['asset-id']),
-            ledger
+            network
           );
         }
       })
@@ -162,7 +162,7 @@ export class InternalMethods {
     };
     extensionStorage.setStorage(
       'aliases',
-      { [Ledger.MainNet]: emptyAliases, [Ledger.MainNet]: emptyAliases },
+      { [Network.MainNet]: emptyAliases, [Network.MainNet]: emptyAliases },
       null
     );
     const namespaceConfigs: Array<NamespaceConfig> = [];
@@ -178,17 +178,15 @@ export class InternalMethods {
 
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
-      [Ledger.MainNet]: [],
-      [Ledger.TestNet]: [],
+      [Network.MainNet]: [],
+      [Network.TestNet]: [],
     };
     this._encryptionWrap?.lock(JSON.stringify(newWallet), (isSuccessful: any) => {
       if (isSuccessful) {
-        getAvailableLedgersExt((availableLedgers) => {
-          session.availableLedgers = availableLedgers;
-          session.wallet = this.safeWallet(newWallet); 
-          session.ledger = Ledger.MainNet;
-          sendResponse(session.session);
-        });
+        session.availableLedgers = getBaseSupportedNetworks();
+        session.wallet = this.safeWallet(newWallet);
+        session.ledger = Network.MainNet;
+        sendResponse(session.session);
       } else {
         sendResponse({ error: 'Lock failed' });
       }
@@ -225,19 +223,19 @@ export class InternalMethods {
         sendResponse(response);
       } else {
         const wallet = this.safeWallet(response);
-        getAvailableLedgersExt((availableLedgers) => {
+        getAvailableNetworksFromCache((availableNetworks: Array<NetworkTemplate>) => {
           const extensionStorage = new ExtensionStorage();
           // Load Accounts details from Cache
-          extensionStorage.getStorage('cache', (storedCache: any) => {
+          extensionStorage.getStorage('cache', async (storedCache: any) => {
             const cache: Cache = initializeCache(storedCache);
-            const cachedLedgerAccounts = Object.keys(cache.accounts);
+            const cachedNetworkAccounts = Object.keys(cache.accounts);
 
-            for (var j = cachedLedgerAccounts.length - 1; j >= 0; j--) {
-              const ledger = cachedLedgerAccounts[j];
-              if (wallet[ledger]) {
-                for (var i = wallet[ledger].length - 1; i >= 0; i--) {
-                  if (wallet[ledger][i].address in cache.accounts[ledger]) {
-                    wallet[ledger][i].details = cache.accounts[ledger][wallet[ledger][i].address];
+            for (let j = cachedNetworkAccounts.length - 1; j >= 0; j--) {
+              const network = cachedNetworkAccounts[j];
+              if (wallet[network]) {
+                for (let i = wallet[network].length - 1; i >= 0; i--) {
+                  if (wallet[network][i].address in cache.accounts[network]) {
+                    wallet[network][i].details = cache.accounts[network][wallet[network][i].address];
                   }
                 }
               }
@@ -245,8 +243,8 @@ export class InternalMethods {
 
             // Setup session
             session.wallet = wallet;
-            session.ledger = Ledger.MainNet;
-            session.availableLedgers = availableLedgers;
+            session.ledger = Network.MainNet;
+            session.availableLedgers = availableNetworks;
 
             // Load internal aliases && namespace configurations
             this.reloadAliases();
@@ -301,7 +299,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.SaveAccount](request: any, sendResponse: Function) {
-    const { mnemonic, name, ledger, address, passphrase } = request.body.params;
+    const { mnemonic, name, ledger: network, address, passphrase } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
 
     this._encryptionWrap.unlock((unlockedValue: any) => {
@@ -314,11 +312,11 @@ export class InternalMethods {
           name: name,
         };
 
-        if (!unlockedValue[ledger]) {
-          unlockedValue[ledger] = [];
+        if (!unlockedValue[network]) {
+          unlockedValue[network] = [];
         }
 
-        unlockedValue[ledger].push(newAccount);
+        unlockedValue[network].push(newAccount);
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
@@ -334,7 +332,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.DeleteAccount](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase } = request.body.params;
+    const { ledger: network, address, passphrase } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
 
     this._encryptionWrap.unlock((unlockedValue: any) => {
@@ -342,9 +340,9 @@ export class InternalMethods {
         sendResponse(unlockedValue);
       } else {
         // Find address to delete
-        for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-          if (unlockedValue[ledger][i].address === address) {
-            unlockedValue[ledger].splice(i, 1);
+        for (var i = unlockedValue[network].length - 1; i >= 0; i--) {
+          if (unlockedValue[network][i].address === address) {
+            unlockedValue[network].splice(i, 1);
             break;
           }
         }
@@ -363,12 +361,12 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.ImportAccount](request: any, sendResponse: Function) {
-    const { mnemonic, address, isRef, name, ledger } = request.body.params;
+    const { mnemonic, address, isRef, name, ledger: network } = request.body.params;
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     let newAccount;
 
     try {
-      const existingAccounts = session.wallet[ledger];
+      const existingAccounts = session.wallet[network];
       let targetAddress = address;
 
       if (!isRef) {
@@ -379,11 +377,11 @@ export class InternalMethods {
         for (let i = 0; i < existingAccounts.length; i++) {
           if (existingAccounts[i].address === targetAddress) {
             throw new Error(
-              `An account with this address already exists in your ${ledger} wallet.`
+              `An account with this address already exists in your ${network} wallet.`
             );
           }
           if (existingAccounts[i].name === name) {
-            throw new Error(`An account named '${name}' already exists in your ${ledger} wallet.`);
+            throw new Error(`An account named '${name}' already exists in your ${network} wallet.`);
           }
         }
       }
@@ -403,14 +401,14 @@ export class InternalMethods {
       if ('error' in unlockedValue) {
         sendResponse(unlockedValue);
       } else {
-        if (!unlockedValue[ledger]) {
-          unlockedValue[ledger] = [];
+        if (!unlockedValue[network]) {
+          unlockedValue[network] = [];
         }
 
-        unlockedValue[ledger].push(newAccount);
+        unlockedValue[network].push(newAccount);
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
-            this.loadAccountAssetsDetails(newAccount.address, ledger);
+            this.loadAccountAssetsDetails(newAccount.address, network);
             session.wallet = this.safeWallet(unlockedValue);
             this.reloadAliases();
             sendResponse(session.wallet);
@@ -424,11 +422,11 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerLinkAddress](request: any, sendResponse: Function) {
-    const ledger = request.body.params.ledger;
+    const network = request.body.params.ledger;
     extensionBrowser.tabs.create(
       {
         active: true,
-        url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/ledger-hardware-connector`),
+        url: extensionBrowser.extension.getURL(`/index.html#/${network}/ledger-hardware-connector`),
       },
       (tab) => {
         // Tab object is created here, but extension popover will close.
@@ -500,9 +498,9 @@ export class InternalMethods {
           sendResponse({ message: message });
         } else if (session.txnRequest.source === 'ui') {
           // If this is an UI transaction then we need to submit to the network
-          const ledger = getLedgerFromGenesisID(decodedTxn.txn.genesisID);
+          const network = getNetworkNameFromGenesisID(decodedTxn.txn.genesisID);
 
-          const algod = this.getAlgod(ledger);
+          const algod = this.getAlgod(network);
           algod
             .sendRawTransaction(txnBuffer)
             .do()
@@ -545,11 +543,11 @@ export class InternalMethods {
 
     // Transaction wrap will contain response message if from dApp and structure will be different
     const txn = session.txnObject.transactionWraps[0].transaction;
-    const ledger = getLedgerFromMixedGenesis(txn.genesisID, txn.genesisHash);
+    const network = getNetworkFromMixedGenesis(txn.genesisID, txn.genesisHash);
     extensionBrowser.tabs.create(
       {
         active: true,
-        url: extensionBrowser.extension.getURL(`/index.html#/${ledger.name}/ledger-hardware-sign`),
+        url: extensionBrowser.extension.getURL(`/index.html#/${network.name}/ledger-hardware-sign`),
       },
       (tab) => {
         // Tab object is created here, but extension popover will close.
@@ -559,7 +557,7 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.LedgerSaveAccount](request: any, sendResponse: Function) {
-    const { name, ledger, passphrase } = request.body.params;
+    const { name, ledger: network, passphrase } = request.body.params;
     // The value returned from the Ledger device is hex.
     // This is passed directly to save and needs to be converted.
     const address = algosdk.encodeAddress(Buffer.from(request.body.params.hexAddress, 'hex'));
@@ -575,11 +573,11 @@ export class InternalMethods {
           isHardware: true,
         };
 
-        if (!unlockedValue[ledger]) {
-          unlockedValue[ledger] = [];
+        if (!unlockedValue[network]) {
+          unlockedValue[network] = [];
         }
 
-        unlockedValue[ledger].push(newAccount);
+        unlockedValue[network].push(newAccount);
         this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
           if (isSuccessful) {
             session.wallet = this.safeWallet(unlockedValue);
@@ -594,31 +592,31 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AccountDetails](request: any, sendResponse: Function) {
-    const { ledger, address } = request.body.params;
-    const algod = this.getAlgod(ledger);
+    const { ledger: network, address } = request.body.params;
+    const algod = this.getAlgod(network);
     algod
       .accountInformation(address)
       .do()
       .then((res: any) => {
         const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (storedCache: any) => {
-          const cache: Cache = initializeCache(storedCache, ledger);
+          const cache: Cache = initializeCache(storedCache, network);
 
           // Check for asset details saved in storage, if needed
           if ('assets' in res && res.assets.length > 0) {
             const assetDetails = [];
             for (var i = res.assets.length - 1; i >= 0; i--) {
               const assetId = res.assets[i]['asset-id'];
-              if (assetId in cache.assets[ledger]) {
+              if (assetId in cache.assets[network]) {
                 res.assets[i] = {
-                  ...cache.assets[ledger][assetId],
+                  ...cache.assets[network][assetId],
                   ...res.assets[i],
                 };
               }
               assetDetails.push(assetId);
             }
 
-            if (assetDetails.length > 0) AssetsDetailsHelper.add(assetDetails, ledger);
+            if (assetDetails.length > 0) AssetsDetailsHelper.add(assetDetails, network);
 
             res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
           }
@@ -626,16 +624,16 @@ export class InternalMethods {
           sendResponse(res);
 
           // Save account updated account details in cache
-          cache.accounts[ledger][address] = res;
+          cache.accounts[network][address] = res;
           extensionStorage.setStorage('cache', cache, null);
 
           // Add details to session
           const wallet = session.wallet;
-          // Validate the ledger still exists in the wallet
-          if (ledger && wallet[ledger]) {
-            for (var i = wallet[ledger].length - 1; i >= 0; i--) {
-              if (wallet[ledger][i].address === address) {
-                wallet[ledger][i].details = res;
+          // Validate the network still exists in the wallet
+          if (network && wallet[network]) {
+            for (var i = wallet[network].length - 1; i >= 0; i--) {
+              if (wallet[network][i].address === address) {
+                wallet[network][i].details = res;
               }
             }
           }
@@ -648,9 +646,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.Transactions](request: any, sendResponse: Function) {
-    const { ledger, address, limit, 'next-token': token } = request.body.params;
-    const indexer = this.getIndexer(ledger);
-    const algod = this.getAlgod(ledger);
+    const { ledger: network, address, limit, 'next-token': token } = request.body.params;
+    const indexer = this.getIndexer(network);
+    const algod = this.getAlgod(network);
     const txList = indexer.lookupAccountTransactions(address);
     const pendingTxList = algod.pendingTransactionByAddress(address);
     if (limit) txList.limit(limit);
@@ -670,7 +668,7 @@ export class InternalMethods {
               // asset or appl id
               const id = pend['txn']['xaid'] || pend['txn']['faid'] || pend['txn']['apid'];
               const cachedAsset =
-                (pend['txn']['xaid'] || pend['txn']['faid']) && cache.assets[ledger][id];
+                (pend['txn']['xaid'] || pend['txn']['faid']) && cache.assets[network][id];
               const assetName =
                 cachedAsset &&
                 (cachedAsset['unit-name'] || cachedAsset['name'] || cachedAsset['asset-id']);
@@ -702,9 +700,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AssetDetails](request: any, sendResponse: Function) {
+    const { ledger: network } = request.body.params;
     const assetId = request.body.params['asset-id'];
-    const { ledger } = request.body.params;
-    const indexer = this.getIndexer(ledger);
+    const indexer = this.getIndexer(network);
     indexer
       .lookupAssetByID(assetId)
       .do()
@@ -714,10 +712,10 @@ export class InternalMethods {
         const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (cache: any) => {
           if (cache === undefined) cache = new Cache();
-          if (!(ledger in cache.assets)) cache.assets[ledger] = {};
+          if (!(network in cache.assets)) cache.assets[network] = {};
 
-          if (!(assetId in cache.assets[ledger])) {
-            cache.assets[ledger][assetId] = res.asset.params;
+          if (!(assetId in cache.assets[network])) {
+            cache.assets[network][assetId] = res.asset.params;
             extensionStorage.setStorage('cache', cache, null);
           }
         });
@@ -752,8 +750,8 @@ export class InternalMethods {
         });
     }
 
-    const { ledger, filter, nextToken } = request.body.params;
-    const indexer = this.getIndexer(ledger);
+    const { ledger: network, filter, nextToken } = request.body.params;
+    const indexer = this.getIndexer(network);
     // Do the search for asset id (if filter value is integer)
     // and asset name and concat them.
     if (filter.length > 0 && !isNaN(filter) && (!nextToken || nextToken.length === 0)) {
@@ -774,9 +772,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.AssetsVerifiedList](request: any, sendResponse: Function) {
-    const { ledger } = request.body.params;
+    const { ledger: network } = request.body.params;
 
-    if (ledger === Ledger.MainNet) {
+    if (network === Network.MainNet) {
       fetch('https://mobile-api.algorand.com/api/assets/?status=verified')
         .then((response) => {
           return response.json().then((json) => {
@@ -799,9 +797,9 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.SignSendTransaction](request: any, sendResponse: Function) {
-    const { ledger, address, passphrase, txnParams } = request.body.params;
+    const { ledger: network, address, passphrase, txnParams } = request.body.params;
     this._encryptionWrap = new encryptionWrap(passphrase);
-    const algod = this.getAlgod(ledger);
+    const algod = this.getAlgod(network);
 
     this._encryptionWrap.unlock(async (unlockedValue: any) => {
       if ('error' in unlockedValue) {
@@ -822,13 +820,13 @@ export class InternalMethods {
       if ('note' in txn) txn.note = new Uint8Array(Buffer.from(txn.note));
 
       let account;
-      const authAddr = await Task.getChainAuthAddress({ address, ledger });
+      const authAddr = await Task.getChainAuthAddress({ address, network });
       const signAddress = authAddr || address;
 
       // Find address to send algos from
-      for (var i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-        if (unlockedValue[ledger][i].address === signAddress) {
-          account = unlockedValue[ledger][i];
+      for (var i = unlockedValue[network].length - 1; i >= 0; i--) {
+        if (unlockedValue[network][i].address === signAddress) {
+          account = unlockedValue[network][i];
           break;
         }
       }
@@ -915,7 +913,7 @@ export class InternalMethods {
             return false;
           }
 
-          this.getAlgod(ledger)
+          this.getAlgod(network)
             .sendRawTransaction(signedTxn.blob)
             .do()
             .then((resp: any) => {
@@ -941,30 +939,32 @@ export class InternalMethods {
     return true;
   }
 
-  public static [JsonRpcMethod.ChangeLedger](request: any, sendResponse: Function) {
+  public static [JsonRpcMethod.ChangeNetwork](request: any, sendResponse: Function) {
     session.ledger = request.body.params['ledger'];
     sendResponse({ ledger: session.ledger });
   }
 
   public static [JsonRpcMethod.DeleteNetwork](request: any, sendResponse: Function) {
-    const ledger = request.body.params['name'];
-    const ledgerUniqueName = ledger.toLowerCase();
-    getAvailableLedgersExt((availiableLedgers) => {
-      const matchingLedger = availiableLedgers.find((avls) => avls.uniqueName === ledgerUniqueName);
+    const network = request.body.params['name'];
+    const networkUniqueName = network.toLowerCase();
+    getAvailableNetworksFromCache((availiableNetworks) => {
+      const matchingNetwork = availiableNetworks.find(
+        (network) => network.uniqueName === networkUniqueName
+      );
 
-      if (!matchingLedger || !matchingLedger.isEditable) {
-        sendResponse({ error: 'This ledger can not be deleted.' });
+      if (!matchingNetwork || !matchingNetwork.isEditable) {
+        sendResponse({ error: 'This network can not be deleted.' });
       } else {
-        // Delete ledger from availableLedgers and assign to new array //
-        const remainingLedgers = availiableLedgers.filter(
-          (avls) => avls.uniqueName !== ledgerUniqueName
+        // Delete network from availableNetworks and assign to new array
+        const remainingNetworks = availiableNetworks.filter(
+          (network) => network.uniqueName !== networkUniqueName
         );
 
-        // Delete Accounts from wallet //
+        // Delete Accounts from wallet
         this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
 
         // Remove existing accoutns in session.wallet
-        var existingAccounts = session.wallet[request.body.params['ledger']];
+        const existingAccounts = session.wallet[request.body.params['ledger']];
         if (existingAccounts) {
           delete session.wallet[request.body.params['ledger']];
         }
@@ -974,9 +974,9 @@ export class InternalMethods {
           if ('error' in unlockedValue) {
             sendResponse(unlockedValue);
           } else {
-            if (unlockedValue[ledger]) {
-              // The unlocked value contains ledger information - delete it
-              delete unlockedValue[ledger];
+            if (unlockedValue[network]) {
+              // The unlocked value contains network information - delete it
+              delete unlockedValue[network];
             }
 
             // Resave the updated wallet value
@@ -988,25 +988,25 @@ export class InternalMethods {
                 }
               })
               .then(() => {
-                // Update cache with remaining ledgers//
+                // Update cache with remaining networks
                 const extensionStorage = new ExtensionStorage();
                 extensionStorage.getStorage('cache', (cache: any) => {
                   if (cache === undefined) {
                     cache = initializeCache(cache);
                   }
                   if (cache) {
-                    cache.availableLedgers = remainingLedgers;
+                    cache.availableLedgers = remainingNetworks;
                     extensionStorage.setStorage('cache', cache, () => {});
                   }
 
-                  // Update the session //
-                  session.availableLedgers = remainingLedgers;
+                  // Update the session
+                  session.availableLedgers = remainingNetworks;
 
-                  // Delete from the injected ledger settings //
-                  Settings.deleteInjectedNetwork(ledgerUniqueName);
+                  // Delete from the injected network settings
+                  Settings.deleteInjectedNetwork(networkUniqueName);
 
-                  // Send back remaining ledgers //
-                  sendResponse({ availableLedgers: remainingLedgers });
+                  // Send back remaining networks
+                  sendResponse({ availableNetworks: remainingNetworks });
                 });
               });
           }
@@ -1039,10 +1039,10 @@ export class InternalMethods {
           // We have evaluated the passphrase and it was valid.
         });
       }
-
+      
       const previousName = params['previousName'].toLowerCase();
       const targetName = previousName ? previousName : params['name'].toLowerCase();
-      const addedLedger = new LedgerTemplate({
+      const addedNetwork = new NetworkTemplate({
         name: params['name'],
         genesisID: params['genesisID'],
         genesisHash: params['genesisHash'],
@@ -1052,44 +1052,44 @@ export class InternalMethods {
         headers: params['headers'],
       });
 
-      // Specifically get the base ledgers to check and prevent them from being overriden.
-      const defaultLedgers = getBaseSupportedLedgers();
+      // Specifically get the base networks to check and prevent them from being overriden.
+      const defaultNetworks = getBaseSupportedNetworks();
 
-      getAvailableLedgersExt((availiableLedgers) => {
-        const comboLedgers = [...availiableLedgers];
+      getAvailableNetworksFromCache((cacheNetworks) => {
+        const availableNetworks = [...cacheNetworks];
 
-        // Add the new ledger if it isn't there.
-        if (!comboLedgers.some((cledg) => cledg.uniqueName === targetName)) {
-          comboLedgers.push(addedLedger);
+        // Add the new network if it isn't there.
+        if (!availableNetworks.some((network) => network.uniqueName === targetName)) {
+          availableNetworks.push(addedNetwork);
 
-          // Also add the ledger to the injected ledgers in settings
-          Settings.addInjectedNetwork(addedLedger);
+          // Also add the network to the injected networks in settings
+          Settings.addInjectedNetwork(addedNetwork);
         } else {
-          // If the new ledger name does exist, we sould update the values as long as it is not a default ledger.
-          const matchingLedger = comboLedgers.find((cledg) => cledg.uniqueName === targetName);
-          if (!defaultLedgers.some((dledg) => dledg.uniqueName === matchingLedger.uniqueName)) {
-            Settings.updateInjectedNetwork(addedLedger, previousName);
-            matchingLedger.name = addedLedger.name;
-            matchingLedger.genesisID = addedLedger.genesisID;
-            matchingLedger.symbol = addedLedger.symbol;
-            matchingLedger.genesisHash = addedLedger.genesisHash;
-            matchingLedger.algodUrl = addedLedger.algodUrl;
-            matchingLedger.indexerUrl = addedLedger.indexerUrl;
-            matchingLedger.headers = addedLedger.headers;
+          // If the new network name does exist, we sould update the values as long as it is not a default network.
+          const matchingNetwork = availableNetworks.find((network) => network.uniqueName === targetName);
+          if (!defaultNetworks.some((network) => network.uniqueName === matchingNetwork.uniqueName)) {
+            Settings.updateInjectedNetwork(addedNetwork, previousName);
+            matchingNetwork.name = addedNetwork.name;
+            matchingNetwork.genesisID = addedNetwork.genesisID;
+            matchingNetwork.symbol = addedNetwork.symbol;
+            matchingNetwork.genesisHash = addedNetwork.genesisHash;
+            matchingNetwork.algodUrl = addedNetwork.algodUrl;
+            matchingNetwork.indexerUrl = addedNetwork.indexerUrl;
+            matchingNetwork.headers = addedNetwork.headers;
           }
         }
         // Update the session and send response before setting cache.
-        session.availableLedgers = comboLedgers;
-        sendResponse({ availableLedgers: comboLedgers });
+        session.availableLedgers = availableNetworks;
+        sendResponse({ availableLedgers: availableNetworks });
 
-        // Updated the cached ledgers.
+        // Updated the cached networks.
         const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (cache: any) => {
           if (cache === undefined) {
             cache = initializeCache(cache);
           }
           if (cache) {
-            cache.availableLedgers = comboLedgers;
+            cache.availableLedgers = availableNetworks;
             extensionStorage.setStorage('cache', cache, () => {});
           }
         });
@@ -1100,9 +1100,9 @@ export class InternalMethods {
     }
   }
 
-  public static [JsonRpcMethod.GetLedgers](request: any, sendResponse: Function) {
-    getAvailableLedgersExt((availableLedgers) => {
-      sendResponse(availableLedgers);
+  public static [JsonRpcMethod.GetNetworks](request: any, sendResponse: Function) {
+    getAvailableNetworksFromCache((availableNetworks) => {
+      sendResponse(availableNetworks);
     });
 
     return true;
@@ -1177,14 +1177,14 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.GetAliasedAddresses](request: any, sendResponse: Function) {
-    const { ledger, searchTerm } = request.body.params;
+    const { ledger: network, searchTerm } = request.body.params;
 
     // Check if the term matches any of our namespaces
-    const matchingNamespaces: Array<Namespace> = AliasConfig.getMatchingNamespaces(ledger);
+    const matchingNamespaces: Array<Namespace> = AliasConfig.getMatchingNamespaces(network);
     const extensionStorage = new ExtensionStorage();
 
     extensionStorage.getStorage('aliases', async (aliases: any) => {
-      // aliases: { ledger: { namespace: [...aliases] } }
+      // aliases: { network: { namespace: [...aliases] } }
       await extensionStorage.getStorage(
         'namespaces',
         async (storedConfigs: Array<NamespaceConfig>) => {
@@ -1198,8 +1198,8 @@ export class InternalMethods {
           const apiFetches = [];
           for (const namespace of matchingNamespaces) {
             const aliasesMatchingInNamespace: Array<Alias> = [];
-            if (aliases[ledger][namespace]) {
-              for (const alias of aliases[ledger][namespace]) {
+            if (aliases[network][namespace]) {
+              for (const alias of aliases[network][namespace]) {
                 if (alias.name.toLowerCase().includes(searchTerm.toLowerCase())) {
                   aliasesMatchingInNamespace.push({
                     name: alias.name,
@@ -1214,11 +1214,11 @@ export class InternalMethods {
             if (
               searchTerm.length &&
               availableExternalNamespaces.includes(namespace) &&
-              AliasConfig[namespace].ledgers &&
-              AliasConfig[namespace].ledgers[ledger]?.length > 0
+              AliasConfig[namespace].networks &&
+              AliasConfig[namespace].networks[network]?.length > 0
             ) {
               // If we find enabled external namespaces, we prepare an API fetch
-              const apiURL = AliasConfig[namespace].ledgers[ledger].replace('${term}', searchTerm);
+              const apiURL = AliasConfig[namespace].networks[network].replace('${term}', searchTerm);
               const apiTimeout = AliasConfig[namespace].apiTimeout;
 
               // We set a max timeout for each call

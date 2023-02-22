@@ -1,5 +1,5 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Ledger } from '@algosigner/common/types';
+import { Network } from '@algosigner/common/types';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
 import algosdk from 'algosdk';
@@ -116,7 +116,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Ledger.MainNet,
+      ledger: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -160,7 +160,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Ledger.MainNet,
+      ledger: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -197,7 +197,7 @@ describe('wallet flow', () => {
         params: {
           ...account,
           mnemonic: mnemonic,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -238,7 +238,7 @@ describe('wallet flow', () => {
         params: {
           name: testImportAccount.name,
           mnemonic: testImportAccount.mnemonic,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -283,7 +283,7 @@ describe('wallet flow', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -329,7 +329,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -371,7 +371,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -505,7 +505,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           assetId: 12008492,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },

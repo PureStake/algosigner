@@ -34,14 +34,14 @@ const Login: FunctionalComponent = (props: any) => {
     const params = {
       passphrase: pwd,
     };
-    sendMessage(JsonRpcMethod.Login, params, function (response) {
-      if ('error' in response) {
+    sendMessage(JsonRpcMethod.Login, params, function (sessionResponse) {
+      if ('error' in sessionResponse) {
         setLoading(false);
         setError('Wrong password!');
       } else {
-        store.setAvailableLedgers(response.availableLedgers);
-        store.updateWallet(response.wallet, () => {
-          store.setLedger(response.ledger);
+        store.setAvailableLedgers(sessionResponse.availableNetworks);
+        store.updateWallet(sessionResponse.wallet, () => {
+          store.setLedger(sessionResponse.network);
           if (redirect.length > 0) { 
             route(`/${redirect}`);
           } else { 

@@ -1,14 +1,14 @@
 import algosdk, { MultisigMetadata, Transaction } from 'algosdk';
 
-import { OptsKeys, WalletTransaction } from '@algosigner/common/types';
+import { NetworkSelectionType, OptsKeys, WalletTransaction } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Ledger } from '@algosigner/common/types';
+import { Network } from '@algosigner/common/types';
 import { API } from './types';
 import {
   getValidatedTxnWrap,
-  getLedgerFromGenesisID,
-  getLedgerFromMixedGenesis,
+  getNetworkNameFromGenesisID,
+  getNetworkFromMixedGenesis,
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationResponse, ValidationStatus } from '../utils/validator';
@@ -20,6 +20,7 @@ import { extensionBrowser } from '@algosigner/common/chrome';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { areBuffersEqual } from '@algosigner/common/utils';
+import { NetworkTemplate } from '@algosigner/common/types/network';
 
 // Popup properties accounts for additional space needed for the title bar
 const titleBarHeight = 28;
@@ -62,16 +63,24 @@ export class Task {
   }
 
   // Checks for the originId authorization in details then call to make sure the account exists in Algosigner.
-  private static checkAccountIsImportedAndAuthorized(ledger: string, genesisID: string, genesisHash: string, address: string, origin: string): void {
+  private static checkAccountIsImportedAndAuthorized(
+    network: string,
+    genesisID: string,
+    genesisHash: string,
+    address: string,
+    origin: string
+  ): void {
     // Legacy authorized and internal calls will not have an origin in authorized pool details
     if (Task.authorized_pool_details[origin]) {
       // This must be a dApp using enable - verify the ledger and address are authorized
-      if ((Task.authorized_pool_details[origin]['genesisID'] !== genesisID)
-      || (Task.authorized_pool_details[origin]['ledger'] !== ledger)
-      || (genesisHash && Task.authorized_pool_details[origin]['genesisHash'] !== genesisHash)
-      || (!Task.authorized_pool_details[origin]['accounts'].includes(address))) {
-        throw RequestError.NoAccountMatch(address, ledger);
-      }  
+      if (
+        Task.authorized_pool_details[origin]['genesisID'] !== genesisID ||
+        Task.authorized_pool_details[origin]['ledger'] !== network ||
+        (genesisHash && Task.authorized_pool_details[origin]['genesisHash'] !== genesisHash) ||
+        !Task.authorized_pool_details[origin]['accounts'].includes(address)
+      ) {
+        throw RequestError.NoAccountMatch(address, network);
+      }
     }
     // Call the normal account check
     InternalMethods.checkAccountIsImported(genesisID, address);
@@ -103,10 +112,10 @@ export class Task {
 
   public static getChainAuthAddress = async (transaction: any): Promise<string> => {
     // The ledger and address will be provided differently from UI and dapp
-    const ledger = transaction.ledger || getLedgerFromGenesisID(transaction.genesisID);
+    const network = transaction.network || getNetworkNameFromGenesisID(transaction.genesisID);
     const address = transaction.address || transaction.from;
 
-    const conn = Settings.getBackendParams(ledger, API.Algod);
+    const conn = Settings.getBackendParams(network, API.Algod);
     const sendPath = `/v2/accounts/${address}`;
     const fetchParams: any = {
       headers: {
@@ -157,8 +166,8 @@ export class Task {
 
     if (transactionWrap.transaction['type'] === 'axfer') {
       const assetIndex = transactionWrap.transaction['assetIndex'];
-      const ledger = getLedgerFromGenesisID(transactionWrap.transaction['genesisID']);
-      const conn = Settings.getBackendParams(ledger, API.Algod);
+      const network = getNetworkNameFromGenesisID(transactionWrap.transaction['genesisID']);
+      const conn = Settings.getBackendParams(network, API.Algod);
       const sendPath = `/v2/assets/${assetIndex}`;
       const fetchAssets: any = {
         headers: {
@@ -307,8 +316,10 @@ export class Task {
             throw RequestError.InvalidFields(invalidKeys);
           }
 
-          const ledger = getLedgerFromMixedGenesis(wrap.transaction.genesisID, wrap.transaction.genesisHash);
-          
+          const network = getNetworkFromMixedGenesis(
+            wrap.transaction.genesisID,
+            wrap.transaction.genesisHash
+          );
           const signers: Array<string> = walletTransactions[index].signers;
           const signedTxn: string = walletTransactions[index].stxn;
           const msigData: MultisigMetadata = walletTransactions[index].msig;
@@ -322,7 +333,13 @@ export class Task {
             if (!algosdk.isValidAddress(authAddr)) {
               throw RequestError.InvalidAuthAddress(authAddr);
             }
-            Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, authAddr, request.origin);
+            Task.checkAccountIsImportedAndAuthorized(
+              network.name,
+              network.genesisID,
+              network.genesisHash,
+              authAddr,
+              request.origin
+            );
           }
 
           // If we have msigData, we validate the addresses and fetch the resulting msig address
@@ -387,7 +404,13 @@ export class Task {
                 // We make sure we have the available accounts for signing
                 signers.forEach((address) => {
                   try {
-                    Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, address, request.origin);
+                    Task.checkAccountIsImportedAndAuthorized(
+                      network.name,
+                      network.genesisID,
+                      network.genesisHash,
+                      address,
+                      request.origin
+                    );
                   } catch (e) {
                     throw RequestError.CantMatchMsigSigners(e.message);
                   }
@@ -416,7 +439,13 @@ export class Task {
           } else {
             // There's no signers field, we validate the sender if there's no msig
             if (!msigData) {
-              Task.checkAccountIsImportedAndAuthorized(ledger.name, ledger.genesisID, ledger.genesisHash, wrap.transaction.from, request.origin);
+              Task.checkAccountIsImportedAndAuthorized(
+                network.name,
+                network.genesisID,
+                network.genesisHash,
+                wrap.transaction.from,
+                request.origin
+              );
             }
           }
 
@@ -461,7 +490,7 @@ export class Task {
 
         throw RequestError.SigningValidationError(code, data);
       } else {
-        /** 
+        /**
          * Group validations
          */
         const providedGroupId: string = transactionWraps[0].transaction.group;
@@ -539,7 +568,7 @@ export class Task {
       }
 
       logging.log(errorResponse);
-      request.error = errorResponse
+      request.error = errorResponse;
 
       // Clean class saved request
       delete Task.requests[request.originTabID];
@@ -596,24 +625,24 @@ export class Task {
           delete Task.requests[d.originTabID];
 
           // Set a flag for a specified network
-          let networkSpecifiedType = 0;
+          let specifiedNetworkType: NetworkSelectionType = NetworkSelectionType.NoneProvided;
           if (genesisID && genesisHash) {
-            networkSpecifiedType = 1;
-          } else if (genesisID || genesisHash) {
-            networkSpecifiedType = 2;
+            specifiedNetworkType = NetworkSelectionType.BothProvided;
+          } else if (genesisID) {
+            specifiedNetworkType = NetworkSelectionType.OnlyIDProvided;
           }
-          d.body.params.networkSpecifiedType = networkSpecifiedType;
+          d.body.params.specifiedNetworkType = specifiedNetworkType;
 
           // Get ledger/hash/id from the genesisID and/or hash
-          const ledgerTemplate = getLedgerFromMixedGenesis(genesisID, genesisHash);
+          const network: NetworkTemplate = getNetworkFromMixedGenesis(genesisID, genesisHash);
 
           // Validate that the genesis id and hash if provided match the resulting one
           // This is because a dapp may request an id and hash from different ledgers
           if (
-            (genesisID && genesisID !== ledgerTemplate.genesisID) ||
+            (genesisID && genesisID !== network.genesisID) ||
             (genesisHash &&
-              ledgerTemplate.genesisHash &&
-              genesisHash !== ledgerTemplate.genesisHash)
+              network.genesisHash &&
+              genesisHash !== network.genesisHash)
           ) {
             d.error = RequestError.UnsupportedNetwork;
             setTimeout(() => {
@@ -624,9 +653,9 @@ export class Task {
 
           // We've validated the ledger information
           // So we can set the ledger, genesisID, and genesisHash
-          const ledger = ledgerTemplate.name;
-          genesisID = ledgerTemplate.genesisID;
-          genesisHash = ledgerTemplate.genesisHash;
+          const ledger = network.name;
+          genesisID = network.genesisID;
+          genesisHash = network.genesisHash;
 
           // Then reflect those changes for the page
           d.body.params.ledger = ledger;
@@ -874,8 +903,8 @@ export class Task {
           } else {
             const genesisID = Task.authorized_pool_details[d.origin]['genesisID'];
             const genesisHash = Task.authorized_pool_details[d.origin]['genesisHash'];
-            const ledger = getLedgerFromMixedGenesis(genesisID, genesisHash).name;
-            const conn = Settings.getBackendParams(ledger, API.Algod);
+            const network = getNetworkFromMixedGenesis(genesisID, genesisHash).name;
+            const conn = Settings.getBackendParams(network, API.Algod);
             const sendPath = '/v2/transactions';
             const fetchParams: any = {
               headers: {
@@ -894,7 +923,7 @@ export class Task {
             });
 
             Promise.allSettled(fetchPromises).then((results) => {
-              const algod = InternalMethods.getAlgod(ledger);
+              const algod = InternalMethods.getAlgod(network);
               const confirmationPromises = [];
               results.forEach((res, index) => {
                 if (res.status === 'fulfilled') {
@@ -1007,9 +1036,12 @@ export class Task {
           const session = InternalMethods.getHelperSession();
           // If we don't have a ledger requested, respond with an error giving available ledgers
           if (!d.body.params?.ledger) {
-            const baseLedgers = Object.keys(Ledger);
+            const baseNetworks = Object.keys(Network);
             const injectedNetworks = Settings.getCleansedInjectedNetworks();
-            d.error = RequestError.NoLedgerProvided(baseLedgers.toString(), JSON.stringify(injectedNetworks));
+            d.error = RequestError.NoLedgerProvided(
+              baseNetworks.toString(),
+              JSON.stringify(injectedNetworks)
+            );
             reject(d);
             return;
           }
@@ -1113,7 +1145,7 @@ export class Task {
           const signErrors: Array<string> = [];
 
           try {
-            const ledger = getLedgerFromGenesisID(transactionObjs[0].genesisID);
+            const network = getNetworkNameFromGenesisID(transactionObjs[0].genesisID);
             const neededAccounts: Array<string> = [];
             walletTransactions.forEach((w, i) => {
               const msig = w.msig;
@@ -1157,7 +1189,7 @@ export class Task {
               extensionBrowser.windows.remove(auth.window_id);
               const recoveredAccounts = [];
 
-              if (unlockedValue[ledger] === undefined) {
+              if (unlockedValue[network] === undefined) {
                 delete Task.requests[responseOriginTabID];
                 message.error = RequestError.UnsupportedNetwork;
                 MessageApi.send(message);
@@ -1169,17 +1201,17 @@ export class Task {
               // Find addresses to send algos from
               // We store them using the public address as dictionary key
               let addressWithNoMnemonic = '';
-              for (let i = unlockedValue[ledger].length - 1; i >= 0; i--) {
-                const account = unlockedValue[ledger][i];
+              for (let i = unlockedValue[network].length - 1; i >= 0; i--) {
+                const account = unlockedValue[network][i];
                 if (neededAccounts.includes(account.address)) {
                   if (!account.isHardware) {
                     // Check for an address that we were expected but unable to sign with
-                    if (!unlockedValue[ledger][i].mnemonic) {
+                    if (!unlockedValue[network][i].mnemonic) {
                       addressWithNoMnemonic = account.address;
                       break;
                     }
                     recoveredAccounts[account.address] = algosdk.mnemonicToSecretKey(
-                      unlockedValue[ledger][i].mnemonic
+                      unlockedValue[network][i].mnemonic
                     );
                   } else {
                     hardwareAccounts.push(account.address);
@@ -1194,7 +1226,7 @@ export class Task {
                 return;
               }
 
-              if (hardwareAccounts.length){
+              if (hardwareAccounts.length) {
                 message.body.params.ledgerIndexes = [];
                 message.body.params.currentLedgerTransaction = 0;
               }
@@ -1332,7 +1364,7 @@ export class Task {
                 }
                 // Clean class saved request
                 delete Task.requests[responseOriginTabID];
-                
+
                 // Hardware signing will defer the response
                 if (!holdResponse) {
                   if (opts && opts[OptsKeys.sendTxns]) {
@@ -1426,8 +1458,8 @@ export class Task {
         [JsonRpcMethod.SignSendTransaction]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SignSendTransaction](request, sendResponse);
         },
-        [JsonRpcMethod.ChangeLedger]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.ChangeLedger](request, sendResponse);
+        [JsonRpcMethod.ChangeNetwork]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.ChangeNetwork](request, sendResponse);
         },
         [JsonRpcMethod.SaveNetwork]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
@@ -1480,8 +1512,8 @@ export class Task {
         [JsonRpcMethod.DeleteNetwork]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.DeleteNetwork](request, sendResponse);
         },
-        [JsonRpcMethod.GetLedgers]: (request: any, sendResponse: Function) => {
-          return InternalMethods[JsonRpcMethod.GetLedgers](request, sendResponse);
+        [JsonRpcMethod.GetNetworks]: (request: any, sendResponse: Function) => {
+          return InternalMethods[JsonRpcMethod.GetNetworks](request, sendResponse);
         },
         [JsonRpcMethod.LedgerLinkAddress]: (request: any, sendResponse: Function) => {
           return InternalMethods[JsonRpcMethod.LedgerLinkAddress](request, sendResponse);

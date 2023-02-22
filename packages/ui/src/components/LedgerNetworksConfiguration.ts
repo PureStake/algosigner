@@ -3,7 +3,7 @@ import { html } from 'htm/preact';
 import { useState, useContext } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
 import { StoreContext } from 'services/StoreContext';
-import { LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { NetworkTemplate } from '@algosigner/common/types/network';
 import LedgerNetworkModify from './LedgerNetworkModify';
 import { route } from 'preact-router';
 
@@ -20,7 +20,7 @@ const LedgerNetworksConfiguration: FunctionalComponent = (props: any) => {
     }
   });
 
-  const setActiveNetwork = (ledger?: LedgerTemplate) => {
+  const setActiveNetwork = (ledger?: NetworkTemplate) => {
     if (ledger) {
       setActiveLedgerTemplate({ ...ledger });
     } else {

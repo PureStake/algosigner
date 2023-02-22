@@ -39,7 +39,7 @@ export const StoreProvider = ({ children }) => {
     getAvailableLedgers: (callback: Function) => {
       if (!store.availableLedgers || store.availableLedgers.length === 0) {
         try {
-          sendMessage(JsonRpcMethod.GetLedgers, undefined, (response) => {
+          sendMessage(JsonRpcMethod.GetNetworks, undefined, (response) => {
             if (response) {
               store.setAvailableLedgers(response);
             }

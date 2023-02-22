@@ -19,12 +19,12 @@ const Wallet: FunctionalComponent = () => {
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 
   return useObserver(() => {
-    const { ledger } = store;
+    const network = store.ledger;
     const onCreateAccount = () => {
       extensionBrowser.tabs.create(
         {
           active: true,
-          url: extensionBrowser.extension.getURL(`/index.html#/${ledger}/create-account`),
+          url: extensionBrowser.extension.getURL(`/index.html#/${network}/create-account`),
         }
       );
     };
@@ -33,11 +33,11 @@ const Wallet: FunctionalComponent = () => {
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div class="px-4 py-4" style="flex: 1; overflow: auto; max-height: 430px;">
           ${
-            store[ledger] &&
-            store[ledger].length !== 0 &&
-            store[ledger].map(
+            store[network] &&
+            store[network].length !== 0 &&
+            store[network].map(
               (x: Account) => html`
-                <${AccountPreview} key=${ledger + x} ledger=${ledger} account=${x} />
+                <${AccountPreview} key=${network + x} ledger=${network} account=${x} />
               `
             )
           }
@@ -45,7 +45,7 @@ const Wallet: FunctionalComponent = () => {
 
         <div class="has-text-centered" style="padding: 0.5em 0.75em;">
           ${
-            (store[ledger] === undefined || store[ledger].length === 0) &&
+            (store[network] === undefined || store[network].length === 0) &&
             html`
               <div class="mb-4" style="color: #8A9FA8;">
                 <p class="has-text-weight-bold is-size-4 mb-4" style="letter-spacing: 1px;">
@@ -76,12 +76,12 @@ const Wallet: FunctionalComponent = () => {
               </div>
             </div>
             <div>
-              <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${ledger}/import-account`}>
+              <${Link} class="button is-fullwidth mt-5" id="importAccount" href=${`/${network}/import-account`}>
                 Import existing account
               </${Link}>
             </div>
             <div>
-              <${Link} class="button is-fullwidth mt-5" id="linkAccount" href=${`/${ledger}/link-hardware-account`}>
+              <${Link} class="button is-fullwidth mt-5" id="linkAccount" href=${`/${network}/link-hardware-account`}>
                 Link hardware device account
               </${Link}>
             </div>
