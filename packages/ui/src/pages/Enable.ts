@@ -34,7 +34,7 @@ const Enable: FunctionalComponent = () => {
   let sessionNetworks;
   let ddClass: string = 'dropdown';
 
-  store.getAvailableLedgers((availableNetwork) => {
+  store.getAvailableNetworks((availableNetwork) => {
     if (!availableNetwork.error) {
       let restrictedNetworks: any[] = [];
       if (specifiedNetworkType === NetworkSelectionType.BothProvided) {
@@ -77,7 +77,7 @@ const Enable: FunctionalComponent = () => {
 
   const setNetwork = (network: string) => {
     if (network && store.savedRequest?.body) {
-      store.setLedger(network);
+      store.setActiveNetwork(network);
       // Set the new network to be loaded
       const params = {
         ...store.savedRequest.body.params,
@@ -99,7 +99,7 @@ const Enable: FunctionalComponent = () => {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.body.method == JsonRpcMethod.EnableAuthorization) {
         // Set the request in the store with origin so we can respond later
-        store.saveRequest(request);
+        store.setSavedRequest(request);
         responseOriginTabID = request.originTabID;
         setNetwork(request?.body?.params?.ledger);
       }
@@ -125,7 +125,7 @@ const Enable: FunctionalComponent = () => {
           genesisID: genesisID,
           genesisHash: genesisHash,
           accounts: accounts,
-          ledger: store.ledger,
+          ledger: store.activeNetwork,
         },
       },
     });
@@ -157,7 +157,7 @@ const Enable: FunctionalComponent = () => {
             <div class="is-flex is-align-items-baseline my-3">
               ${sessionNetworks &&
               sessionNetworks.length === 1 &&
-              html` <span>Sharing accounts on the <b>${store.ledger}</b> network.</span> `}
+              html` <span>Sharing accounts on the <b>${store.activeNetwork}</b> network.</span> `}
               ${sessionNetworks &&
               sessionNetworks.length > 1 &&
               html`
@@ -174,7 +174,7 @@ const Enable: FunctionalComponent = () => {
                       <span class="icon is-small">
                         <i class="fas fa-caret-down" aria-hidden="true"></i>
                       </span>
-                      <span>${store.ledger}</span>
+                      <span>${store.activeNetwork}</span>
                     </button>
                   </div>
                   <div class="dropdown-menu" id="dropdown-menu" role="menu">
@@ -198,7 +198,7 @@ const Enable: FunctionalComponent = () => {
                 </div>
               `}
             </div>
-            ${!!store[store.ledger] &&
+            ${!!store.wallet[store.activeNetwork] &&
             html`
               ${(!accounts || accounts.length === 0) &&
               html`

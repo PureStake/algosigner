@@ -36,10 +36,10 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
     setError('');
 
     const ddItems = new Array<object>();
-    const storeLedgerAddresses = new Array<string>();
+    const storedNetworkAddresses = new Array<string>();
 
-    for (let i = 0; i < store[ledger]?.length; i++) {
-      storeLedgerAddresses.push(store[ledger][i].address);
+    for (let i = 0; i < store.wallet[ledger]?.length; i++) {
+      storedNetworkAddresses.push(store.wallet[ledger][i].address);
     }
 
     ledgerActions
@@ -51,7 +51,7 @@ const LedgerHardwareConnector: FunctionalComponent = (props: any) => {
           );
         } else {
           for (let i = 0; i < lar.message?.length; i++) {
-            if (!storeLedgerAddresses?.includes(`${lar.message[i].publicAddress}`)) {
+            if (!storedNetworkAddresses?.includes(`${lar.message[i].publicAddress}`)) {
               ddItems.push(lar.message[i]);
             }
           }

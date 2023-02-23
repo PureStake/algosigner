@@ -2,7 +2,7 @@ import algosdk from 'algosdk';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Network, Namespace, NamespaceConfig, SessionObject, SensitiveAccount, SafeAccount } from '@algosigner/common/types';
+import { Alias, Network, Namespace, NamespaceConfig, SessionObject, SensitiveAccount, WalletStorage } from '@algosigner/common/types';
 import { RequestError } from '@algosigner/common/errors';
 import { AliasConfig } from '@algosigner/common/config';
 import { Task } from './task';
@@ -38,9 +38,9 @@ export class InternalMethods {
     return new algosdk.Indexer(params.apiKey, params.url, params.port);
   }
 
-  private static safeWallet(wallet: Record<string, Array<SafeAccount>>): Record<string, Array<SafeAccount>> {
+  private static safeWallet(wallet: WalletStorage): WalletStorage {
     // Intialize the safe wallet then add the wallet networks in as empty arrays
-    const safeWallet: Record<string, Array<SafeAccount>> = {};
+    const safeWallet: WalletStorage = {};
     Object.keys(wallet).forEach((key) => {
       safeWallet[key] = [];
 
@@ -1080,7 +1080,7 @@ export class InternalMethods {
         }
         // Update the session and send response before setting cache.
         session.availableNetworks = availableNetworks;
-        sendResponse({ availableLedgers: availableNetworks });
+        sendResponse({ availableNetworks: availableNetworks });
 
         // Updated the cached networks.
         const extensionStorage = new ExtensionStorage();

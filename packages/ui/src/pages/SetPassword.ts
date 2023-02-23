@@ -44,7 +44,7 @@ const SetPassword: FunctionalComponent = () => {
       } else {
         const session = response as SessionObject;
         store.updateWallet(session.wallet, () => {
-          store.setLedger(session.network);
+          store.setActiveNetwork(session.network);
           route('/wallet');
         });
       }

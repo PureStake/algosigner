@@ -27,10 +27,10 @@ const Account: FunctionalComponent = (props: any) => {
     )}\nRewards: ${numFormat(details['pending-rewards'] / 1e6, 6)}`;
 
   useEffect(() => {
-    for (let i = store[ledger].length - 1; i >= 0; i--) {
-      if (store[ledger][i].address === address) {
-        setAccount(store[ledger][i]);
-        setDetails(store[ledger][i].details);
+    for (let i = store.wallet[ledger].length - 1; i >= 0; i--) {
+      if (store.wallet[ledger][i].address === address) {
+        setAccount(store.wallet[ledger][i]);
+        setDetails(store.wallet[ledger][i].details);
         break;
       }
     }

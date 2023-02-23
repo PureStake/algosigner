@@ -1,17 +1,17 @@
-import { Network, SafeAccount, SessionObject } from "@algosigner/common/types";
+import { Network, SessionObject, WalletStorage } from "@algosigner/common/types";
 import { NetworkTemplate } from "@algosigner/common/types/network";
 
 export default class Session {
-  private _wallet: Record<string, Array<SafeAccount>>;
+  private _wallet: WalletStorage;
   private _network: Network;
   private _availableNetworks: Array<NetworkTemplate>;
   private _txnRequest: any;
 
-  public set wallet(w: Record<string, Array<SafeAccount>>) {
+  public set wallet(w: WalletStorage) {
     this._wallet = w;
   }
 
-  public get wallet(): Record<string, Array<SafeAccount>> {
+  public get wallet(): WalletStorage {
     return this._wallet;
   }
 

@@ -6,43 +6,28 @@ import { autorun } from 'mobx';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { sendMessage } from 'services/Messaging';
 import logging, { LogLevel } from '@algosigner/common/logging';
-import { SessionObject } from '@algosigner/common/types';
+import { SessionObject, WalletStorage } from '@algosigner/common/types';
 
 export const StoreContext = createContext(undefined);
 
 export const StoreProvider = ({ children }) => {
   const store = useLocalStore(() => ({
-    ledger: 'MainNet',
-    availableLedgers: [],
-    TestNet: [],
-    MainNet: [],
-    savedRequest: undefined,
-    setLedger: (ledger: string) => {
-      if (!ledger) {
-        ledger = 'MainNet';
-      } else if (!store[ledger]) {
-        store[ledger] = [];
+    activeNetwork: 'MainNet',
+    setActiveNetwork: (networkName: string) => {
+      if (!networkName) {
+        networkName = 'MainNet';
+      } else if (!store.wallet[networkName]) {
+        store.wallet[networkName] = [];
       }
-      store.ledger = ledger;
+      store.activeNetwork = networkName;
     },
-    deleteNetwork: (ledger: string, callback: Function) => {
-      delete store[ledger];
-      store.setLedger('MainNet');
-      // Reset available ledgers
-      store.availableLedgers = [];
-      store.getAvailableLedgers((availableLedgers) => {
-        if (!availableLedgers.error) {
-          store.availableLedgers = availableLedgers;
-        }
-        callback();
-      });
-    },
-    getAvailableLedgers: (callback: Function) => {
-      if (!store.availableLedgers || store.availableLedgers.length === 0) {
+    availableNetworks: [],
+    getAvailableNetworks: (callback: Function) => {
+      if (!store.availableNetworks || store.availableNetworks.length === 0) {
         try {
           sendMessage(JsonRpcMethod.GetNetworks, undefined, (response) => {
             if (response) {
-              store.setAvailableLedgers(response);
+              store.setAvailableNetworks(response);
             }
             callback(response);
           });
@@ -51,43 +36,66 @@ export const StoreProvider = ({ children }) => {
           callback({ error: errorMsg });
         }
       } else {
-        callback(store.availableLedgers);
+        callback(store.availableNetworks);
       }
     },
-    setAvailableLedgers: (ledgers: any) => {
-      store.availableLedgers = ledgers;
+    setAvailableNetworks: (networks: any) => {
+      store.availableNetworks = networks;
     },
-    updateWallet: (newWallet: any, callback: Function) => {
-      let updateLedgers;
-      store.getAvailableLedgers((availableLedgers) => {
-        if (!availableLedgers.error) {
-          updateLedgers = availableLedgers;
+    deleteNetwork: (networkName: string, callback: Function) => {
+      delete store[networkName];
+      store.setActiveNetwork('MainNet');
+      // Reset available networks
+      store.availableNetworks = [];
+      store.getAvailableNetworks((availableNetworks) => {
+        if (!availableNetworks.error) {
+          store.availableNetworks = availableNetworks;
+        }
+        callback();
+      });
+    },
+    savedRequest: undefined,
+    setSavedRequest: (request) => {
+      store.savedRequest = request;
+    },
+    clearSavedRequest: () => {
+      delete store.savedRequest;
+    },
+    wallet: {
+      TestNet: [],
+      MainNet: [],
+    },
+    updateWallet: (newWallet: WalletStorage, callback: Function) => {
+      let networksToUpdate;
+      store.getAvailableNetworks((availableNetworks) => {
+        if (!availableNetworks.error) {
+          networksToUpdate = availableNetworks;
 
-          for (let i = 0; i < updateLedgers.length; i++) {
-            const currentLedgerName = updateLedgers[i].name;
-            if (currentLedgerName) {
-              store[currentLedgerName] = newWallet[currentLedgerName];
+          for (let i = 0; i < networksToUpdate.length; i++) {
+            const currentNetworkName = networksToUpdate[i].name;
+            if (currentNetworkName) {
+              store.wallet[currentNetworkName] = newWallet[currentNetworkName];
             }
           }
         }
         callback();
       });
     },
-    updateAccountDetails: (ledger: string, details: any) => {
-      logging.log(`Updating account details on ledger '${ledger}':`, LogLevel.Debug);
+    updateAccountDetails: (network: string, details: any) => {
+      logging.log(`Updating account details on network '${network}':`, LogLevel.Debug);
       logging.log(details, LogLevel.Debug);
-      for (let i = store[ledger].length - 1; i >= 0; i--) {
-        if (store[ledger][i].address === details.address) {
-          store[ledger][i].details = details;
+      for (let i = store.wallet[network].length - 1; i >= 0; i--) {
+        if (store.wallet[network][i].address === details.address) {
+          store.wallet[network][i].details = details;
           break;
         }
       }
     },
-    getAssetDetails: (ledger: string, address: string, callback: Function) => {
+    getAssetDetails: (network: string, address: string, callback: Function) => {
       const assetDetails: any = [];
-      for (let i = store[ledger].length - 1; i >= 0; i--) {
-        if (store[ledger][i].address === address) {
-          store[ledger][i]['details']['assets'].forEach((a) => {
+      for (let i = store.wallet[network].length - 1; i >= 0; i--) {
+        if (store.wallet[network][i].address === address) {
+          store.wallet[network][i]['details']['assets'].forEach((a) => {
             const id = a['asset-id'];
             const asset = {
               unitName: a['unit-name'],
@@ -101,23 +109,17 @@ export const StoreProvider = ({ children }) => {
       callback(assetDetails);
     },
     clearCache: (callback: Function) => {
-      store.getAvailableLedgers((storedLedgers) => {
-        storedLedgers.forEach((ledger) => {
-          const accounts = store[ledger.name];
+      store.getAvailableNetworks((storedNetworks) => {
+        storedNetworks.forEach((network) => {
+          const accounts = store.wallet[network.name];
           if (accounts && accounts.length) {
-            store[ledger.name].forEach((account) => {
+            store.wallet[network.name].forEach((account) => {
               delete account.details;
             });
           }
         });
       });
       callback();
-    },
-    saveRequest: (request) => {
-      store.savedRequest = request;
-    },
-    clearSavedRequest: () => {
-      delete store.savedRequest;
     },
   }));
 
@@ -135,9 +137,9 @@ export const StoreProvider = ({ children }) => {
       }
       if ('session' in response) {
         const session: SessionObject = response.session;
-        store.setAvailableLedgers(session.availableNetworks);
+        store.setAvailableNetworks(session.availableNetworks);
         store.updateWallet(session.wallet, () => {
-          store.setLedger(session.network);
+          store.setActiveNetwork(session.network);
           if (hashPath.length > 0) {
             route(`/${hashPath}`);
           } else {

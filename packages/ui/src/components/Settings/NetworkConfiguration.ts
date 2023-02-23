@@ -14,7 +14,7 @@ const NetworkConfiguration: FunctionalComponent = (props: any) => {
   const [activeNetworkTemplate, setActiveNetworkTemplate] = useState<any>(undefined);
 
   let sessionNetworks;
-  store.getAvailableLedgers((availableNetworks) => {
+  store.getAvailableNetworks((availableNetworks) => {
     if (!availableNetworks.error) {
       sessionNetworks = availableNetworks;
     }

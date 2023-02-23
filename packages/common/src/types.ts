@@ -80,8 +80,11 @@ export type SensitiveAccount = SafeAccount & {
   mnemonic: string;
 }
 
+// { network: [...accounts] }
+export type WalletStorage = Record<string, Array<SafeAccount>>;
+
 export type SessionObject = {
-  wallet: Record<string, Array<SafeAccount>>;
+  wallet: WalletStorage;
   network: Network;
   availableNetworks: Array<NetworkTemplate>;
   txnRequest: any;

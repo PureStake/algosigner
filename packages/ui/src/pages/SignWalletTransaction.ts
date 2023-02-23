@@ -99,11 +99,11 @@ const SignWalletTransaction: FunctionalComponent = () => {
 
   const findAccountNames = (network) => {
     const newAccountNames = accountNames.slice();
-    if (store[network] && store[network].length) {
-      for (let i = 0; i < store[network].length; i++) {
+    if (store.wallet[network] && store.wallet[network].length) {
+      for (let i = 0; i < store.wallet[network].length; i++) {
         transactionWraps.forEach((wrap, index) => {
-          const lookupAddress = store[network][i].address;
-          const lookupName = store[network][i].name;
+          const lookupAddress = store.wallet[network][i].address;
+          const lookupName = store.wallet[network][i].name;
           const msigData = wrap.msigData;
           const signers = wrap.signers;
           if (signers && !signers.length) {
@@ -193,7 +193,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
       // Add on any injected networks
       if (txnNetwork === undefined) {
         let sessionNetworks;
-        store.getAvailableLedgers((availableNetworks) => {
+        store.getAvailableNetworks((availableNetworks) => {
           if (!availableNetworks.error) {
             sessionNetworks = availableNetworks;
             sessionNetworks.forEach((n) => {

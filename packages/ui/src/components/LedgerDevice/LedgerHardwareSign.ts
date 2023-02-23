@@ -35,10 +35,10 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   let totalTxns: number = 0;
 
   const updateAccountName = (network: string, from: string): void => {
-    if (store[network] && store[network].length) {
-      for (let i = 0; i < store[network].length; i++) {
-        const lookupAddress = store[network][i].address;
-        const lookupName = store[network][i].name;
+    if (store.wallet[network] && store.wallet[network].length) {
+      for (let i = 0; i < store.wallet[network].length; i++) {
+        const lookupAddress = store.wallet[network][i].address;
+        const lookupName = store.wallet[network][i].name;
         if (lookupAddress === from) setAccount(lookupName);
       }
     } else {
@@ -67,7 +67,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
             if (txToSign.transaction?.genesisID === n['genesisID']) {
               const matchingNetwork = n['name'];
               setNetwork(matchingNetwork);
-              store.setLedger(matchingNetwork);
+              store.setActiveNetwork(matchingNetwork);
               updateAccountName(matchingNetwork, txToSign.transaction?.from);
             }
           });

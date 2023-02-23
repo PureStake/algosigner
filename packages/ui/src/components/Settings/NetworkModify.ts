@@ -52,7 +52,7 @@ const NetworkModify: FunctionalComponent = (props: any) => {
       } else {
         // Delete the network from store, then update the wallet and return
         store.deleteNetwork(networkName, () => {
-          store.setLedger(undefined);
+          store.setActiveNetwork(undefined);
           closeFunction && closeFunction(1);
         });
       }
@@ -111,8 +111,8 @@ const NetworkModify: FunctionalComponent = (props: any) => {
         // Error display
         console.log(response.error);
       } else {
-        store.setAvailableLedgers(response.availableLedgers);
-        store.setLedger(networkName);
+        store.setAvailableNetworks(response.availableNetworks);
+        store.setActiveNetwork(networkName);
         closeFunction && closeFunction(2);
       }
     });

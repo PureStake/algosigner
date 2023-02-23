@@ -19,7 +19,7 @@ const Wallet: FunctionalComponent = () => {
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 
   return useObserver(() => {
-    const network = store.ledger;
+    const network = store.activeNetwork;
     const onCreateAccount = () => {
       extensionBrowser.tabs.create(
         {
@@ -33,9 +33,9 @@ const Wallet: FunctionalComponent = () => {
       <div class="main-view" style="flex-direction: column; justify-content: space-between;">
         <div class="px-4 py-4" style="flex: 1; overflow: auto; max-height: 430px;">
           ${
-            store[network] &&
-            store[network].length !== 0 &&
-            store[network].map(
+            store.wallet[network] &&
+            store.wallet[network].length !== 0 &&
+            store.wallet[network].map(
               (x: Account) => html`
                 <${AccountPreview} key=${network + x} ledger=${network} account=${x} />
               `
@@ -45,7 +45,7 @@ const Wallet: FunctionalComponent = () => {
 
         <div class="has-text-centered" style="padding: 0.5em 0.75em;">
           ${
-            (store[network] === undefined || store[network].length === 0) &&
+            (store.wallet[network] === undefined || store.wallet[network].length === 0) &&
             html`
               <div class="mb-4" style="color: #8A9FA8;">
                 <p class="has-text-weight-bold is-size-4 mb-4" style="letter-spacing: 1px;">

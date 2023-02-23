@@ -40,9 +40,9 @@ const Login: FunctionalComponent = (props: any) => {
         setError('Wrong password!');
       } else {
         const session = response as SessionObject;
-        store.setAvailableLedgers(session.availableNetworks);
+        store.setAvailableNetworks(session.availableNetworks);
         store.updateWallet(session.wallet, () => {
-          store.setLedger(session.network);
+          store.setActiveNetwork(session.network);
           if (redirect.length > 0) { 
             route(`/${redirect}`);
           } else { 

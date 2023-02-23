@@ -12,7 +12,7 @@ const NetworkSelect: FunctionalComponent = () => {
   const [active, setActive] = useState<boolean>(false);
 
   let sessionNetworks;
-  store.getAvailableLedgers((availableNetworks) => {
+  store.getAvailableNetworks((availableNetworks) => {
     if (!availableNetworks.error) {
       sessionNetworks = availableNetworks;
     }
@@ -30,7 +30,7 @@ const NetworkSelect: FunctionalComponent = () => {
       ledger: network,
     };
     sendMessage(JsonRpcMethod.ChangeNetwork, params, function () {
-      store.setLedger(network);
+      store.setActiveNetwork(network);
       flip();
       route('/wallet');
     });
@@ -51,7 +51,7 @@ const NetworkSelect: FunctionalComponent = () => {
             <span class="icon is-small">
               <i class="fas fa-caret-down" aria-hidden="true"></i>
             </span>
-            <span>${store.ledger}</span>
+            <span>${store.activeNetwork}</span>
           </button>
         </div>
         <div class="dropdown-menu" id="dropdown-menu" role="menu">
