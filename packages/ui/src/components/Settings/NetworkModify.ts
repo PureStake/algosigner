@@ -10,7 +10,7 @@ import { NETWORK_HEADERS_TOOLTIP } from '@algosigner/common/strings';
 
 import { sendMessage } from 'services/Messaging';
 
-const LedgerNetworkModify: FunctionalComponent = (props: any) => {
+const NetworkModify: FunctionalComponent = (props: any) => {
   const { closeFunction, isEditable, isModify } = props;
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
@@ -52,7 +52,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       } else {
         // Delete the network from store, then update the wallet and return
         store.deleteNetwork(networkName, () => {
-          store.setLedger(undefined);
+          store.setActiveNetwork(undefined);
           closeFunction && closeFunction(1);
         });
       }
@@ -62,7 +62,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const checkNetwork = () => {
     setLoading(true);
     setAuthError('');
-    setCheckStatus('');
+    setCheckStatus('gray');
     setError('');
     const params = {
       name: networkName,
@@ -111,8 +111,8 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
         // Error display
         console.log(response.error);
       } else {
-        store.setAvailableLedgers(response.availableLedgers);
-        store.setLedger(networkName);
+        store.setAvailableNetworks(response.availableNetworks);
+        store.setActiveNetwork(networkName);
         closeFunction && closeFunction(2);
       }
     });
@@ -206,33 +206,41 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       </div>
       ${isEditable &&
       html`
-        <div className="network-modify-footer is-flex is-justify-content-space-between mt-2">
-          <button
-            id="deleteNetwork"
-            class="button is-danger is-flex-grow-1"
-            disabled="${loading}"
-            onClick=${() => {
-              setIsDeleting(true);
-              setAskAuth(true);
-            }}
-          >
-            Delete
-          </button>
-          <button
-            id="saveNetwork"
-            class="button is-link is-flex-grow-1 ml-1"
-            disabled="${loading}"
-            onClick=${() => {
-              if (isModify) {
+        <div className="network-modify-footer">
+          <div className="is-flex is-justify-content-space-between mt-2">
+            <button
+              id="deleteNetwork"
+              class="button is-danger is-flex-grow-1"
+              disabled="${loading}"
+              onClick=${() => {
+                setIsDeleting(true);
                 setAskAuth(true);
-              } else {
-                saveNetwork(undefined);
-              }
-            }}
-          >
-            Save
-          </button>
+              }}
+            >
+              Delete
+            </button>
+            <button
+              id="saveNetwork"
+              class="button is-link is-flex-grow-1 ml-1"
+              disabled="${loading}"
+              onClick=${() => {
+                if (isModify) {
+                  setAskAuth(true);
+                } else {
+                  saveNetwork(undefined);
+                }
+              }}
+            >
+              Save
+            </button>
+          </div>
+          ${error !== undefined &&
+          error.length > 0 &&
+          html`<div class="mt-2">
+            <span id="networkError" class="has-text-danger">${error}</span>
+          </div>`}
         </div>
+
         ${askAuth &&
         html`
           <div class="modal is-active">
@@ -250,12 +258,9 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             />
           </div>
         `}
-        ${error !== undefined &&
-        error.length > 0 &&
-        html`<span id="networkError" class="mt-3 has-text-danger">${error}</span>`}
       `}
     `
   );
 };
 
-export default LedgerNetworkModify;
+export default NetworkModify;

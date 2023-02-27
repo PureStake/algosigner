@@ -25,7 +25,7 @@ import { TransactionType } from '@algosigner/common/types/transaction';
 import { RequestError } from '@algosigner/common/errors';
 import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 import { Settings } from '../config';
-import { getBaseSupportedLedgers, LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
 import { removeEmptyFields } from '@algosigner/common/utils';
 import algosdk from 'algosdk';
 
@@ -143,61 +143,61 @@ export function getValidatedTxnWrap(
   return validatedTxnWrap;
 }
 
-export function getLedgerFromGenesisID(genesisID: string): string {
-  // Default the ledger to mainnet
-  const defaultLedger = 'MainNet';
+export function getNetworkNameFromGenesisID(genesisID: string): string {
+  // Default the network to mainnet
+  const defaultNetwork = 'MainNet';
 
-  // Check Genesis ID for base supported ledgers first
-  const defaultLedgers = getBaseSupportedLedgers();
-  let ledger = defaultLedgers.find((l) => genesisID === l['genesisID']);
-  if (ledger !== undefined) {
-    return ledger.name;
+  // Check Genesis ID for base networks first
+  const defaultNetworks = getBaseSupportedNetworks();
+  let network = defaultNetworks.find((n) => genesisID === n['genesisID']);
+  if (network !== undefined) {
+    return network.name;
   }
   // Injected networks may have additional information, multiples, or additional checks
   // so we will check them separately
-  ledger = Settings.getCleansedInjectedNetworks().find((l) => genesisID === l['genesisID']);
-  if (ledger !== undefined) {
-    return ledger.name;
+  network = Settings.getCleansedInjectedNetworks().find((n) => genesisID === n['genesisID']);
+  if (network !== undefined) {
+    return network.name;
   }
-  return defaultLedger;
+  return defaultNetwork;
 }
 
-export function getLedgerFromMixedGenesis(genesisID: string, genesisHash?: string): LedgerTemplate {
-  // Check Genesis Id and Hash for base supported ledgers first
-  const defaultLedgers = getBaseSupportedLedgers();
-  let ledger;
+export function getNetworkFromMixedGenesis(genesisID: string, genesisHash?: string): NetworkTemplate {
+  // Check Genesis Id and Hash for base networks first
+  const defaultNetworks = getBaseSupportedNetworks();
+  let network;
   if (genesisID) {
-    ledger = defaultLedgers.find((l) => genesisID === l['genesisID']);
-    if (ledger !== undefined) {
+    network = defaultNetworks.find((network) => genesisID === network['genesisID']);
+    if (network !== undefined) {
       // Found genesisID, make sure the hash matches 
-      if (!genesisHash || genesisHash === ledger.genesisHash) { 
-        return ledger;
+      if (!genesisHash || genesisHash === network.genesisHash) { 
+        return network;
       }
     }
     
     // Injected networks may have additional validations so we check them separately
     const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    ledger = injectedNetworks.find((network) => network['genesisID'] === genesisID);
-    if (ledger) {
-      return ledger;
+    network = injectedNetworks.find((network) => network['genesisID'] === genesisID);
+    if (network) {
+      return network;
     }
   }
 
   // We didn't match on the genesis id so check the hashes
   if (genesisHash) {
-    ledger = defaultLedgers.find((l) => genesisHash === l['genesisHash']);
-    if (ledger !== undefined) {
+    network = defaultNetworks.find((n) => genesisHash === n['genesisHash']);
+    if (network !== undefined) {
       // Found genesisHash, make sure the id matches 
-      if (!genesisID || genesisID === ledger.genesisID) { 
-        return ledger;
+      if (!genesisID || genesisID === network.genesisID) { 
+        return network;
       }
     }
 
     // We don't currently store the genesisHash of the custom networks
   }
 
-  // Default the ledger to mainnet
-  return defaultLedgers.find((l) => 'MainNet' === l['name']);
+  // Default the network to mainnet
+  return defaultNetworks.find((n) => 'MainNet' === n['name']);
 }
 
 export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, params: any): void {
@@ -206,14 +206,14 @@ export function calculateEstimatedFee(transactionWrap: BaseValidatedTxnWrap, par
   let estimatedFee = +transaction['fee'];
   if (transaction['flatFee']) {
     // If flatFee is enabled, we compare the presented fee by the dApp against the
-    // Ledger suggested min-fee and use the min-fee if higher than the presented fee
+    // Network suggested min-fee and use the min-fee if higher than the presented fee
     if (estimatedFee < minFee) {
       estimatedFee = minFee;
     }
   } else {
     const dappFee = estimatedFee;
     if (dappFee === 0) {
-      // If the dApp doesn't suggest a per-byte fee, we use the Ledger suggested total min-fee
+      // If the dApp doesn't suggest a per-byte fee, we use the network suggested total min-fee
       estimatedFee = minFee;
     } else {
       /*

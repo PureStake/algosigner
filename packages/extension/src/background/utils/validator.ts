@@ -1,5 +1,5 @@
 import algosdk from 'algosdk';
-import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks } from '@algosigner/common/types/network';
 import { Settings } from '../config';
 
 export const STRING_MAX_LENGTH = 1000;
@@ -202,8 +202,8 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Genesis ID must be present and one of the approved values
     case 'genesisID':
       if (
-        getBaseSupportedLedgers().some((l) => value === l['genesisID']) ||
-        Settings.getCleansedInjectedNetworks().find((l) => value === l['genesisID'])
+        getBaseSupportedNetworks().some((n) => value === n['genesisID']) ||
+        Settings.getCleansedInjectedNetworks().find((n) => value === n['genesisID'])
       ) {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {

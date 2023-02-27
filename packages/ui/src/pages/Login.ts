@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useRef, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { SessionObject } from '@algosigner/common/types';
 
 import { sendMessage } from 'services/Messaging';
 
@@ -14,13 +14,13 @@ import logo from 'assets/logo-inverted.svg';
 
 const Login: FunctionalComponent = (props: any) => {
   const { redirect } = props;
-  const [pwd, setPwd] = useState<String>('');
-  const [loading, setLoading] = useState<Boolean>(false);
-  const [error, setError] = useState<String>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
   const inputRef = useRef<HTMLHeadingElement>(null);
   const store: any = useContext(StoreContext);
 
-  const disabled = pwd.length === 0 || loading;
+  const disabled = password.length === 0 || loading;
 
   const handleEnter = (e) => {
     if (e.keyCode === 13 && !disabled) {
@@ -32,16 +32,17 @@ const Login: FunctionalComponent = (props: any) => {
     setLoading(true);
     setError('');
     const params = {
-      passphrase: pwd,
+      passphrase: password,
     };
-    sendMessage(JsonRpcMethod.Login, params, function (response) {
+    sendMessage(JsonRpcMethod.Login, params, function (response: SessionObject | { error }) {
       if ('error' in response) {
         setLoading(false);
         setError('Wrong password!');
       } else {
-        store.setAvailableLedgers(response.availableLedgers);
-        store.updateWallet(response.wallet, () => {
-          store.setLedger(response.ledger);
+        const session = response as SessionObject;
+        store.setAvailableNetworks(session.availableNetworks);
+        store.updateWallet(session.wallet, () => {
+          store.setActiveNetwork(session.network);
           if (redirect.length > 0) { 
             route(`/${redirect}`);
           } else { 
@@ -76,10 +77,10 @@ const Login: FunctionalComponent = (props: any) => {
             class="input"
             type="password"
             placeholder="Password"
-            value=${pwd}
+            value=${password}
             onKeyDown=${handleEnter}
             ref=${inputRef}
-            onInput=${(e) => setPwd(e.target.value)}
+            onInput=${(e) => setPassword(e.target.value)}
           />
 
           <p class="mt-5 has-text-centered is-size-7">

@@ -1,20 +1,20 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
-import { isLedgerBaseSupported } from '@algosigner/common/utils';
+import { isBaseSupportedNetwork } from '@algosigner/common/utils';
 
 import TxTemplate from './Common/TxTemplate';
 import ContactPreview from 'components/ContactPreview';
 
 const TxAxfer: FunctionalComponent = (props: any) => {
-  const { tx, account, contact, ledger, vo, dt, estFee, da, un, msig, authAddr } = props;
+  const { tx, account, contact, network, vo, dt, estFee, da, un, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   let assetIndex = html`<p style="width: 70%">${tx.assetIndex}</p>`;
-  if (isLedgerBaseSupported(ledger)) {
+  if (isBaseSupportedNetwork(network)) {
     assetIndex = html`
       <a
         style="width: 70%"
-        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
+        href=${`https://goalseeker.purestake.io/algorand/${network.toLowerCase()}/asset/${
           tx.assetIndex
         }`}
         target="_blank"

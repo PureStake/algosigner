@@ -36,9 +36,13 @@ export class ExtensionStorage {
   // Callback: Callback will return a boolean of true if an account exists
   // or false if no account is present.
   ///
-  public getStorage(objectName: string, callback: Function) {
+  public getStorage(objectName: string, callback?: Function): any | void {
     extensionBrowser.storage.local.get([objectName], (result: any) => {
-      callback && callback(result[objectName]);
+      if (callback) {
+        callback(result[objectName])
+      } else {
+        return result[objectName];
+      }
     });
   }
 

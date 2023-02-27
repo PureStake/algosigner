@@ -2,6 +2,7 @@ import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
+import { NetworkSelectionType } from '@algosigner/common/types';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { obfuscateAddress } from '@algosigner/common/utils';
 import { StoreContext } from 'services/StoreContext';
@@ -27,27 +28,27 @@ const Enable: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [genesisID, setGenesisID] = useState<any>('');
   const [genesisHash, setGenesisHash] = useState<any>('');
-  const [networkSpecifiedType, setNetworkSpecifiedType] = useState<any>('');
+  const [specifiedNetworkType, setSpecifiedNetworkType] = useState<NetworkSelectionType>(NetworkSelectionType.NoneProvided);
   const [accounts, setPromptedAccounts] = useState<any>([]);
   const [active, setActive] = useState<boolean>(false);
-  let sessionLedgers;
+  let sessionNetworks;
   let ddClass: string = 'dropdown';
 
-  store.getAvailableLedgers((availableLedgers) => {
-    if (!availableLedgers.error) {
-      let restrictedLedgers: any[] = [];
-      if (networkSpecifiedType === 1) {
-        restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisID === genesisID && l.genesisHash === genesisHash)
+  store.getAvailableNetworks((availableNetwork) => {
+    if (!availableNetwork.error) {
+      let restrictedNetworks: any[] = [];
+      if (specifiedNetworkType === NetworkSelectionType.BothProvided) {
+        restrictedNetworks.push(
+          availableNetwork.find((l) => l.genesisID === genesisID && l.genesisHash === genesisHash)
         );
-      } else if (networkSpecifiedType === 2) {
-        restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisID === genesisID)
+      } else if (specifiedNetworkType === NetworkSelectionType.OnlyIDProvided) {
+        restrictedNetworks.push(
+          availableNetwork.find((l) => l.genesisID === genesisID)
         );
       } else {
-        restrictedLedgers = availableLedgers;
+        restrictedNetworks = availableNetwork;
       }
-      sessionLedgers = restrictedLedgers;
+      sessionNetworks = restrictedNetworks;
     }
   });
 
@@ -69,20 +70,20 @@ const Enable: FunctionalComponent = () => {
     if (params.genesisHash) {
       setGenesisHash(params.genesisHash);
     }
-    if (params.networkSpecifiedType) {
-      setNetworkSpecifiedType(params.networkSpecifiedType);
+    if (params.specifiedNetworkType) {
+      setSpecifiedNetworkType(params.specifiedNetworkType);
     }
   };
 
-  const setLedger = (ledger: string) => {
-    if (ledger && store.savedRequest?.body) {
-      store.setLedger(ledger);
-  
-      // Set the new ledger to be loaded
+  const setNetwork = (network: string) => {
+    if (network && store.savedRequest?.body) {
+      store.setActiveNetwork(network);
+      // Set the new network to be loaded
       const params = {
         ...store.savedRequest.body.params,
-        ledger: ledger,
+        ledger: network,
       }
+
       sendMessage(JsonRpcMethod.GetEnableAccounts, params, function (response) {
         if (response.error) {
           console.error(response.error);
@@ -98,9 +99,9 @@ const Enable: FunctionalComponent = () => {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.body.method == JsonRpcMethod.EnableAuthorization) {
         // Set the request in the store with origin so we can respond later
-        store.saveRequest(request);
+        store.setSavedRequest(request);
         responseOriginTabID = request.originTabID;
-        setLedger(request?.body?.params?.ledger);
+        setNetwork(request?.body?.params?.ledger);
       }
     });
     window.addEventListener('beforeunload', deny);
@@ -108,7 +109,7 @@ const Enable: FunctionalComponent = () => {
   }, []);
 
   useEffect(() => {
-    setLedger(store.savedRequest?.body?.params?.ledger);
+    setNetwork(store.savedRequest?.body?.params?.ledger);
   }, [store.savedRequest]);
 
   const grant = () => {
@@ -124,7 +125,7 @@ const Enable: FunctionalComponent = () => {
           genesisID: genesisID,
           genesisHash: genesisHash,
           accounts: accounts,
-          ledger: store.ledger,
+          ledger: store.activeNetwork,
         },
       },
     });
@@ -154,11 +155,11 @@ const Enable: FunctionalComponent = () => {
               <b> Bolded</b> accounts are required by the dApp.</h3
             >
             <div class="is-flex is-align-items-baseline my-3">
-              ${sessionLedgers &&
-              sessionLedgers.length === 1 &&
-              html` <span>Sharing accounts on the <b>${store.ledger}</b> network.</span> `}
-              ${sessionLedgers &&
-              sessionLedgers.length > 1 &&
+              ${sessionNetworks &&
+              sessionNetworks.length === 1 &&
+              html` <span>Sharing accounts on the <b>${store.activeNetwork}</b> network.</span> `}
+              ${sessionNetworks &&
+              sessionNetworks.length > 1 &&
               html`
                 <div class="mr-3">Shared Network:</div>
                 <div class=${ddClass}>
@@ -173,22 +174,22 @@ const Enable: FunctionalComponent = () => {
                       <span class="icon is-small">
                         <i class="fas fa-caret-down" aria-hidden="true"></i>
                       </span>
-                      <span>${store.ledger}</span>
+                      <span>${store.activeNetwork}</span>
                     </button>
                   </div>
                   <div class="dropdown-menu" id="dropdown-menu" role="menu">
                     <div class="dropdown-mask" onClick=${flip} />
                     <div class="dropdown-content">
-                      ${sessionLedgers &&
-                      sessionLedgers.map(
-                        (availableLedger: any) =>
+                      ${sessionNetworks &&
+                      sessionNetworks.map(
+                        (network: any) =>
                           html`
                             <a
-                              id="select${availableLedger.name}"
-                              onClick=${() => { setLedger(availableLedger.name); flip(); }}
+                              id="select${network.name}"
+                              onClick=${() => { setNetwork(network.name); flip(); }}
                               class="dropdown-item"
                             >
-                              ${availableLedger.name}
+                              ${network.name}
                             </a>
                           `
                       )}
@@ -197,7 +198,7 @@ const Enable: FunctionalComponent = () => {
                 </div>
               `}
             </div>
-            ${!!store[store.ledger] &&
+            ${!!store.wallet[store.activeNetwork] &&
             html`
               ${(!accounts || accounts.length === 0) &&
               html`

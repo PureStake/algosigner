@@ -3,7 +3,7 @@ import { html } from 'htm/preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks } from '@algosigner/common/types/network';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import TxAcfg from 'components/SignTransaction/TxAcfg';
 import TxPay from 'components/SignTransaction/TxPay';
@@ -28,22 +28,22 @@ const LedgerHardwareSign: FunctionalComponent = () => {
   const [account, setAccount] = useState<string>('');
   const [txResponseHeader, setTxResponseHeader] = useState<string>('');
   const [txResponseDetail, setTxResponseDetail] = useState<string>('');
-  const [ledger, setLedger] = useState<string>('');
+  const [network, setNetwork] = useState<string>('');
   const [sessionTxnObj, setSessionTxnObj] = useState<any>({});
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
   let currentTransaction: number = 0;
   let totalTxns: number = 0;
 
-  const updateAccountName = (ledger: string, from: string): void => {
-    if (store[ledger] && store[ledger].length) {
-      for (let i = 0; i < store[ledger].length; i++) {
-        const lookupAddress = store[ledger][i].address;
-        const lookupName = store[ledger][i].name;
+  const updateAccountName = (network: string, from: string): void => {
+    if (store.wallet[network] && store.wallet[network].length) {
+      for (let i = 0; i < store.wallet[network].length; i++) {
+        const lookupAddress = store.wallet[network][i].address;
+        const lookupName = store.wallet[network][i].name;
         if (lookupAddress === from) setAccount(lookupName);
       }
     } else {
       setTimeout(() => {
-        updateAccountName(ledger, from);
+        updateAccountName(network, from);
       }, 100);
     }
   };
@@ -63,12 +63,12 @@ const LedgerHardwareSign: FunctionalComponent = () => {
           setSessionTxnObj(returnedSessionObj);
           setTxn(txToSign);
 
-          getBaseSupportedLedgers().forEach((l) => {
-            if (txToSign.transaction?.genesisID === l['genesisID']) {
-              const fetchedLedger = l['name'];
-              setLedger(fetchedLedger);
-              store.setLedger(fetchedLedger);
-              updateAccountName(fetchedLedger, txToSign.transaction?.from);
+          getBaseSupportedNetworks().forEach((n) => {
+            if (txToSign.transaction?.genesisID === n['genesisID']) {
+              const matchingNetwork = n['name'];
+              setNetwork(matchingNetwork);
+              store.setActiveNetwork(matchingNetwork);
+              updateAccountName(matchingNetwork, txToSign.transaction?.from);
             }
           });
         }
@@ -113,7 +113,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
 
           setSessionTxnObj(message.body.params);
           setTxn(txToSign);
-          updateAccountName(ledger, txToSign.transaction?.from);
+          updateAccountName(network, txToSign.transaction?.from);
           setShowTooltip(true);
         } else if (response) {
           setTxResponseHeader('Transaction(s) signed. Result sent to origin tab.');
@@ -189,7 +189,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       vo=${txn.validityObject}
                       estFee=${txn.estimatedFee}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                   ${txn.transaction.type === 'keyreg' &&
@@ -199,7 +199,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       vo=${txn.validityObject}
                       estFee=${txn.estimatedFee}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                   ${txn.transaction.type === 'acfg' &&
@@ -210,7 +210,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       dt=${txn.txDerivedTypeText}
                       estFee=${txn.estimatedFee}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                   ${txn.transaction.type === 'axfer' &&
@@ -223,7 +223,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       da=${txn.displayAmount}
                       un=${txn.unitName}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                   ${txn.transaction.type === 'afrz' &&
@@ -233,7 +233,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       vo=${txn.validityObject}
                       estFee=${txn.estimatedFee}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                   ${txn.transaction.type === 'appl' &&
@@ -243,7 +243,7 @@ const LedgerHardwareSign: FunctionalComponent = () => {
                       vo=${txn.validityObject}
                       estFee=${txn.estimatedFee}
                       account=${account}
-                      ledger=${ledger}
+                      network=${network}
                     />
                   `}
                 </div>

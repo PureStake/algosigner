@@ -6,11 +6,11 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { StoreContext } from 'services/StoreContext';
 
 import HeaderComponent from './HeaderComponent';
-import DeleteWallet from 'components/DeleteWallet';
+import DeleteWallet from './Settings/DeleteWallet';
 import Logo from './Logo';
 import { sendMessage } from 'services/Messaging';
-import LedgerNetworksConfiguration from './LedgerNetworksConfiguration';
-import NamespaceConfig from './NamespaceConfig';
+import NetworkConfiguration from './Settings/NetworkConfiguration';
+import NamespaceConfig from './Settings/NamespaceConfig';
 
 const SettingsMenu: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
@@ -45,7 +45,7 @@ const SettingsMenu: FunctionalComponent = () => {
   const getSubmenu = () => {
     switch (currentMenu) {
       case 'networkConfiguration':
-        return html`<${LedgerNetworksConfiguration}
+        return html`<${NetworkConfiguration}
           closeFunction=${() => {
             setCurrentMenu('settings');
             flip();

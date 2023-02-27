@@ -1,11 +1,11 @@
-import { Namespace, Ledger, Alias } from './types';
+import { Namespace, Network, Alias } from './types';
 
 const MAX_ALIASES_PER_NAMESPACE = 6;
 
 // prettier-ignore
 interface ConfigTemplate {
   name: string;                   // Formatted name, used for titles
-  ledgers: any;                   // Object holding supported Ledgers as keys, templated API URL as value
+  networks: any;                  // Object holding supported networks as keys, templated API URL as value
   findAliasedAddresses: Function; // How to process the API response to get the aliased addresses array
   apiTimeout: number;             // Amount in ms to wait for the API to respond
 }
@@ -17,25 +17,25 @@ const noop = (): void => {
 export class AliasConfig {
   static [Namespace.AlgoSigner_Contacts]: ConfigTemplate = {
     name: 'AlgoSigner Contact',
-    ledgers: null,
+    networks: null,
     findAliasedAddresses: noop,
     apiTimeout: 0,
   };
 
   static [Namespace.AlgoSigner_Accounts]: ConfigTemplate = {
     name: 'AlgoSigner Account',
-    ledgers: null,
+    networks: null,
     findAliasedAddresses: noop,
     apiTimeout: 0,
   };
 
   static [Namespace.NFD]: ConfigTemplate = {
     name: 'NFDomains',
-    ledgers: {
-      [Ledger.TestNet]:
+    networks: {
+      [Network.TestNet]:
         'https://api.testnet.nf.domains/nfd?prefix=${term}&requireAddresses=true' +
         `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
-      [Ledger.MainNet]:
+      [Network.MainNet]:
         'https://api.nf.domains/nfd?prefix=${term}&requireAddresses=true' +
         `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
     },
@@ -50,11 +50,11 @@ export class AliasConfig {
 
   static [Namespace.ANS]: ConfigTemplate = {
     name: 'Algorand Name Service',
-    ledgers: {
-      [Ledger.TestNet]:
+    networks: {
+      [Network.TestNet]:
         'https://testnet.api.algonameservice.com/names?pattern=${term}' +
         `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
-      [Ledger.MainNet]:
+      [Network.MainNet]:
         'https://api.algonameservice.com/names?pattern=${term}' +
         `&limit=${MAX_ALIASES_PER_NAMESPACE}`,
     },
@@ -69,12 +69,12 @@ export class AliasConfig {
     apiTimeout: 2000,
   };
 
-  public static getMatchingNamespaces(ledger: string): Array<Namespace> {
+  public static getMatchingNamespaces(network: string): Array<Namespace> {
     const matchingNamespaces: Array<Namespace> = [];
     for (const n in Namespace) {
       if (
         AliasConfig[n] &&
-        (AliasConfig[n].ledgers === null || Object.keys(AliasConfig[n].ledgers).includes(ledger))
+        (AliasConfig[n].networks === null || Object.keys(AliasConfig[n].networks).includes(network))
       ) {
         matchingNamespaces.push(n as Namespace);
       }

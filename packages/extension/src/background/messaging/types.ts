@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
-
-import { LedgerTemplate } from '@algosigner/common/types/ledgers';
+import { NetworkTemplate } from '@algosigner/common/types/network';
 
 // Key and value must match in this enum so we
 // can compare its existance with i.e. "TestNet" in SupportedLedger
@@ -18,31 +16,32 @@ export enum API {
 
 export interface Cache {
   /*
-        assets: {
-            ledger: [
-                assetId: {
-                    ...
-                },
+    assets: {
+        network: [
+            assetId: {
                 ...
-            ],
+            },
             ...
-        },
-        accounts: {
-            ledger: [
-                address: {
-                    ...
-                },
-                ...
-            ],
-            ...
-        },
-        availableLedgers: [
-          {
-            ...
-          }
         ],
-    */
+        ...
+    },
+    accounts: {
+        network: [
+            address: {
+                ...
+            },
+            ...
+        ],
+        ...
+    },
+    availableLedgers: [
+      {
+        ...
+      }
+    ],
+  */
   assets: object;
   accounts: object;
-  availableLedgers: Array<LedgerTemplate>;
+  // Legacy name, renaming could break stored caches
+  availableLedgers: Array<NetworkTemplate>;
 }
