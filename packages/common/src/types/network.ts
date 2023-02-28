@@ -59,13 +59,14 @@ export class NetworkTemplate {
     }
 
     this.name = name;
-    this.genesisID = genesisID || 'mainnet-v1.0';
+    this.genesisID = genesisID;
     this.genesisHash = genesisHash;
     this.symbol = symbol;
     this.algodUrl = algodUrl;
     this.indexerUrl = indexerUrl;
     this.headers = headers;
-    this.isEditable = name !== 'MainNet' && name !== 'TestNet';
+    // We protect the default networks from being overriden
+    this.isEditable = !Object.values(Network).includes(name as Network);
   }
 }
 

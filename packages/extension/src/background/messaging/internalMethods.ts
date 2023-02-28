@@ -1032,8 +1032,8 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.CheckNetwork](request: any, sendResponse: Function) {
     try {
-      const networks = Settings.checkNetwork(request.body.params);
-      sendResponse(networks);
+      const connection = Settings.getConnectionFromTemplate(request.body.params);
+      sendResponse(connection);
     } catch (e) {
       sendResponse({ error: e.message });
     }

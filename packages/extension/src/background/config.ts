@@ -41,7 +41,7 @@ export class Settings {
       injectedNetworks.push({
         name: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].name,
         genesisID: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisID,
-        genesisHash: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisID,
+        genesisHash: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisHash,
       });
     }
 
@@ -81,15 +81,9 @@ export class Settings {
     const parsedAlgodUrl = parseUrlServerAndPort(network.algodUrl);
     const parsedIndexerUrl = parseUrlServerAndPort(network.indexerUrl);
 
-    // Add the algod links defaulting the url to one based on the genesisID
-    let defaultUrl = 'https://algosigner.api.purestake.io/mainnet';
-    if (network.genesisID && network.genesisID.indexOf('testnet') > -1) {
-      defaultUrl = 'https://algosigner.api.purestake.io/testnet';
-    }
-
     // Add algod connection
     const injectedAlgod: ConnectionDetails = {
-      url: parsedAlgodUrl.server || `${defaultUrl}/algod`,
+      url: parsedAlgodUrl.server,
       port: parsedAlgodUrl.port,
       apiKey: headersAlgod || headers,
       headers: headersAlgod || headers,
@@ -97,7 +91,7 @@ export class Settings {
 
     // Add the indexer connection
     const injectedIndexer: ConnectionDetails = {
-      url: parsedIndexerUrl.server || `${defaultUrl}/indexer`,
+      url: parsedIndexerUrl.server,
       port: parsedIndexerUrl.port,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
@@ -126,7 +120,8 @@ export class Settings {
     // Initialize the injected network with the genesisID and a name that mimics the network for reference
     this.backend_settings.InjectedNetworks[network.name] = {
       name: network.name,
-      genesisID: network.genesisID || '',
+      genesisID: network.genesisID,
+      genesisHash: network.genesisHash,
     };
 
     this.setInjectedHeaders(network);
