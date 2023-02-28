@@ -9,9 +9,10 @@ import { StoreContext } from 'services/StoreContext';
 import { NETWORK_HEADERS_TOOLTIP } from '@algosigner/common/strings';
 
 import { sendMessage } from 'services/Messaging';
+import { SessionObject } from '@algosigner/common/types';
 
 const NetworkModify: FunctionalComponent = (props: any) => {
-  const { closeFunction, isEditable, isModify } = props;
+  const { closeFunction, isEditable } = props;
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -24,6 +25,7 @@ const NetworkModify: FunctionalComponent = (props: any) => {
   const [networkHeaders, setNetworkHeaders] = useState<string>(props.headers || '');
   const [checkStatus, setCheckStatus] = useState<string>('gray');
 
+  // If we have a previous name, we're modifying; otherwise, it's a new one
   const previousName = props.name ? props.name : '';
 
   const deleteNetwork = (pwd: string) => {
@@ -31,7 +33,7 @@ const NetworkModify: FunctionalComponent = (props: any) => {
     setAuthError('');
     setError('');
     const params = {
-      name: networkName,
+      name: previousName,
       passphrase: pwd,
     };
 
@@ -100,14 +102,20 @@ const NetworkModify: FunctionalComponent = (props: any) => {
     };
 
     sendMessage(JsonRpcMethod.SaveNetwork, params, function (response) {
-      setLoading(false);
       if (response.error) {
         // Error display
         console.log(response.error);
+        setLoading(false);
       } else {
-        store.setAvailableNetworks(response.availableNetworks);
-        store.setActiveNetwork(networkName);
-        closeFunction && closeFunction(2);
+        const session: SessionObject = response;
+        console.log('session');
+        console.log(session);
+        store.setAvailableNetworks(session.availableNetworks);
+        store.updateWallet(session.wallet, () => {
+          store.setActiveNetwork(session.network);
+          setLoading(false);
+          closeFunction && closeFunction(2);
+        });
       }
     });
   };
@@ -184,11 +192,15 @@ const NetworkModify: FunctionalComponent = (props: any) => {
             onInput=${(e) => setNetworkHeaders(e.target.value)}
           />
         </div>
-        <button
-          class="modal-close is-large"
-          style="z-index: 1; opacity: 0;"
+        <div
+          class="has-text-centered"
+          style="cursor: pointer; min-width: 24px; position: absolute; top: 3.5em; left: 1em; z-index: 5; background: white;"
           onClick=${() => closeFunction && closeFunction(1)}
-        />
+        >
+          <span class="icon">
+            <i class="fas fa-arrow-left" aria-hidden="true" />
+          </span>
+        </div>
       </div>
       ${isEditable &&
       html`
@@ -197,7 +209,7 @@ const NetworkModify: FunctionalComponent = (props: any) => {
             <button
               id="deleteNetwork"
               class="button is-danger is-flex-grow-1"
-              disabled="${loading}"
+              disabled="${loading || !previousName}"
               onClick=${() => {
                 setIsDeleting(true);
                 setAskAuth(true);
@@ -210,7 +222,7 @@ const NetworkModify: FunctionalComponent = (props: any) => {
               class="button is-link is-flex-grow-1 ml-1"
               disabled="${loading}"
               onClick=${() => {
-                if (isModify) {
+                if (previousName) {
                   setAskAuth(true);
                 } else {
                   saveNetwork(undefined);

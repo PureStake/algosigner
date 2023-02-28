@@ -33,10 +33,6 @@ export class NetworkTemplate {
   indexerUrl?: string;
   headers?: string;
 
-  public get uniqueName(): string {
-    return this.name.toLowerCase();
-  }
-
   constructor({
     name,
     genesisID,

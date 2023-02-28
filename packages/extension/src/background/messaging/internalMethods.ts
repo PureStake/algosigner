@@ -91,7 +91,7 @@ export class InternalMethods {
         });
       }
 
-      for (const n in Network) {
+      for (const n of Object.keys(wallet)) {
         // Format accounts as aliases
         const networkAccountAliases = [];
         for (const acc of wallet[n]) {
@@ -245,10 +245,10 @@ export class InternalMethods {
           // Load Accounts details from Cache
           extensionStorage.getStorage('cache', async (storedCache: any) => {
             const cache: Cache = initializeCache(storedCache);
-            const cachedNetworkAccounts = Object.keys(cache.accounts);
+            const cachedNetworksWithAccounts = Object.keys(cache.accounts);
 
-            for (let j = cachedNetworkAccounts.length - 1; j >= 0; j--) {
-              const network = cachedNetworkAccounts[j];
+            for (let j = cachedNetworksWithAccounts.length - 1; j >= 0; j--) {
+              const network = cachedNetworksWithAccounts[j];
               if (wallet[network]) {
                 for (let i = wallet[network].length - 1; i >= 0; i--) {
                   if (wallet[network][i].address in cache.accounts[network]) {
@@ -321,15 +321,22 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.ClearCache](request: any, sendResponse: Function) {
     const extensionStorage = new ExtensionStorage();
-    extensionStorage.setStorage('cache', initializeCache(), (isSuccessful) =>
-      sendResponse(isSuccessful)
-    );
+    extensionStorage.getStorage('cache', (storedCache: Cache) => {
+      const cache: Cache = initializeCache(storedCache);
+      storedCache.availableLedgers.forEach((network) => {
+        cache.accounts[network.name] = {};
+        cache.assets[network.name] = {};
+      });
+      extensionStorage.setStorage('cache', cache, (isSuccessful) => {
+        sendResponse(isSuccessful);
+      });
+    });
     return true;
   }
 
   public static [JsonRpcMethod.CreateAccount](request: any, sendResponse: Function) {
-    var keys = algosdk.generateAccount();
-    var mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
+    const keys = algosdk.generateAccount();
+    const mnemonic = algosdk.secretKeyToMnemonic(keys.sk);
     sendResponse([mnemonic, keys.addr]);
   }
 
@@ -980,11 +987,10 @@ export class InternalMethods {
   }
 
   public static [JsonRpcMethod.DeleteNetwork](request: any, sendResponse: Function) {
-    const network = request.body.params['name'];
-    const networkUniqueName = network.toLowerCase();
+    const networkName = request.body.params['name'];
     getAvailableNetworksFromCache((availiableNetworks) => {
       const matchingNetwork = availiableNetworks.find(
-        (network) => network.uniqueName === networkUniqueName
+        (network) => network.name === networkName
       );
 
       if (!matchingNetwork || !matchingNetwork.isEditable) {
@@ -992,7 +998,7 @@ export class InternalMethods {
       } else {
         // Delete network from availableNetworks and assign to new array
         const remainingNetworks = availiableNetworks.filter(
-          (network) => network.uniqueName !== networkUniqueName
+          (network) => network.name !== networkName
         );
 
         // Delete Accounts from wallet
@@ -1009,9 +1015,9 @@ export class InternalMethods {
           if ('error' in unlockedValue) {
             sendResponse(unlockedValue);
           } else {
-            if (unlockedValue[network]) {
+            if (unlockedValue[networkName]) {
               // The unlocked value contains network information - delete it
-              delete unlockedValue[network];
+              delete unlockedValue[networkName];
             }
 
             // Resave the updated wallet value
@@ -1038,7 +1044,7 @@ export class InternalMethods {
                   session.availableNetworks = remainingNetworks;
 
                   // Delete from the injected network settings
-                  Settings.deleteInjectedNetwork(networkUniqueName);
+                  Settings.deleteInjectedNetwork(networkName);
 
                   // Send back remaining networks
                   sendResponse({ availableNetworks: remainingNetworks });
@@ -1066,17 +1072,15 @@ export class InternalMethods {
       // If we have a passphrase then we are modifying.
       // There may be accounts attatched, if we match on a unique name, we should update.
       if (params['passphrase'] !== undefined) {
-        this._encryptionWrap = new encryptionWrap(request.body.params['passphrase']);
+        this._encryptionWrap = new encryptionWrap(params['passphrase']);
         this._encryptionWrap.unlock((unlockedValue: any) => {
           if ('error' in unlockedValue) {
             sendResponse(unlockedValue);
+            return true;
           }
           // We have evaluated the passphrase and it was valid.
         });
       }
-      
-      const previousName = params['previousName'].toLowerCase();
-      const targetName = previousName ? previousName : params['name'].toLowerCase();
 
       const addedNetwork = new NetworkTemplate({
         name: params['name'],
@@ -1085,6 +1089,12 @@ export class InternalMethods {
         indexerUrl: params['indexerUrl'],
         headers: params['headers'],
       });
+
+      // If network is not editable, it means they're trying to use a reserved name
+      if (!addedNetwork.isEditable) {
+        sendResponse({ error: `Default networks cannot be overwritten, please use a different name.` });
+        return true;
+      }
       logging.log(`Saving network '${addedNetwork.name}'`, LogLevel.Debug);
       logging.log(addedNetwork, LogLevel.Debug);
 
@@ -1092,49 +1102,79 @@ export class InternalMethods {
       getAvailableNetworksFromCache(async (cacheNetworks) => {
         const availableNetworks = [...cacheNetworks];
 
-        // If it's not a default network, fetch the updated genesis info
-        if (addedNetwork.isEditable) {
-          logging.log(`Fetching genesis info for network '${addedNetwork.name}'`, LogLevel.Debug);
+        // It's not a default network, fetch the updated genesis info
+        logging.log(`Fetching genesis info for network '${addedNetwork.name}'`, LogLevel.Debug);
+        try {
           const txnParams = await this.getAlgod(addedNetwork).getTransactionParams().do();
           addedNetwork.genesisID = txnParams.genesisID;
           addedNetwork.genesisHash = txnParams.genesisHash;
           logging.log(txnParams, LogLevel.Debug);
+        } catch (e) {
+          logging.log(`Unable to fetch genesis info for network '${addedNetwork.name}'`, LogLevel.Debug);
         }
 
-        // Add the new network if it isn't there.
-        if (!availableNetworks.some((network) => network.uniqueName === targetName)) {
-          availableNetworks.push(addedNetwork);
-
-          // Also add the network to the injected networks in settings
-          Settings.addInjectedNetwork(addedNetwork);
-        } else {
-          // If the new network name does exist, we sould update the values
-          const matchingNetwork = availableNetworks.find((network) => network.uniqueName === targetName);
-
-          // Default networks are protected from being overriden.
-          if (matchingNetwork.isEditable) {
-            Settings.updateInjectedNetwork(addedNetwork, previousName);
-            matchingNetwork.name = addedNetwork.name;
-            matchingNetwork.genesisID = addedNetwork.genesisID;
-            matchingNetwork.symbol = addedNetwork.symbol;
-            matchingNetwork.genesisHash = addedNetwork.genesisHash;
-            matchingNetwork.algodUrl = addedNetwork.algodUrl;
-            matchingNetwork.indexerUrl = addedNetwork.indexerUrl;
-            matchingNetwork.headers = addedNetwork.headers;
-          } else {
-            sendResponse({ error: `Default networks cannot be overwritten, please use a different name.` });
-          }
-        }
-
-        // Update the cache and session before sending response
         const extensionStorage = new ExtensionStorage();
         extensionStorage.getStorage('cache', (storedCache: Cache) => {
-          const cache = storedCache === undefined ? initializeCache() : storedCache;
-          cache.availableLedgers = availableNetworks;
-          extensionStorage.setStorage('cache', cache, null);
-        }); 
-        session.availableNetworks = availableNetworks;
-        sendResponse({ availableNetworks: availableNetworks });
+          const cache = initializeCache(storedCache);
+          const previousName = params['previousName'];
+
+          const prepareAndSendFinalResponse = (activeNetwork: NetworkTemplate, networks: Array<NetworkTemplate>, session: Session, cache: Cache) => {
+            // Update the cache and session before sending response
+            session.network = activeNetwork.name as Network;
+            session.availableNetworks = networks;
+            cache.availableLedgers = networks;
+            extensionStorage.setStorage('cache', cache, null);
+            console.log('returning session on save');
+            console.log(session.wallet);
+            console.log(session.asObject());
+            sendResponse(session.asObject());
+          }
+
+          // If there's a previous name, then we're overwriting an existing network
+          if (!previousName) {
+            // It's a new network, add into Settings.
+            availableNetworks.push(addedNetwork);
+            Settings.addInjectedNetwork(addedNetwork);
+            logging.log(`Adding new network '${addedNetwork.name}'`, LogLevel.Normal);
+            prepareAndSendFinalResponse(addedNetwork, availableNetworks, session, cache);
+          } else {
+            logging.log(`Updating network w/ previous name '${previousName}'`, LogLevel.Normal);
+            logging.log(availableNetworks, LogLevel.Normal);
+            // Otherwise overwrite existing network
+            const matchingIndex = availableNetworks.findIndex((n) => n.name === previousName);
+            availableNetworks[matchingIndex] = addedNetwork;
+            Settings.updateInjectedNetwork(addedNetwork, previousName);
+
+            // If renaming, update storage, cache & session wallet keys
+            if (previousName !== addedNetwork.name) {
+              const targetName = addedNetwork.name;
+              logging.log(`Rename wallet network from '${previousName}' to '${targetName}'`, LogLevel.Debug);
+              
+              this._encryptionWrap.unlock((unlockedValue: WalletStorage) => {
+                // We have already validated the passphrase
+                unlockedValue[targetName] = [...unlockedValue[previousName]]
+                delete unlockedValue[previousName];
+                this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
+                  if (isSuccessful) {
+                    // Update network key on session, cache & reload aliases
+                    session.wallet[targetName] = [...session.wallet[previousName]]
+                    delete session.wallet[previousName];
+                    cache.accounts[targetName] = cache.accounts[previousName];
+                    delete cache.accounts[previousName];
+                    cache.assets[targetName] = cache.assets[previousName];
+                    delete cache.assets[previousName];
+                    this.reloadAliases();
+                    prepareAndSendFinalResponse(addedNetwork, availableNetworks, session, cache);
+                  } else {
+                    sendResponse({ error: 'Lock failed' });
+                  }
+                });
+              });
+            } else {
+              prepareAndSendFinalResponse(addedNetwork, availableNetworks, session, cache);
+            }
+          }
+        });
       });
       return true;
     } catch (e) {

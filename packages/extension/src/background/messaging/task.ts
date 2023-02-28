@@ -1479,30 +1479,30 @@ export class Task {
               connection.indexer.port
             );
 
-            const responseAlgod = {};
-            const responseIndexer = {};
+            const defaultError = { error: 'Unable to connect'};
+            const statusReponse = {};
 
             const algodPromise = algodClient
               .getTransactionParams()
               .do()
               .then((response) => {
-                responseAlgod['message'] = response['message'] || response;
+                statusReponse['algod'] = response ? response : defaultError;
               })
               .catch((error) => {
-                responseAlgod['error'] = error.message || error;
+                statusReponse['algod'] = { error: error.message || error };
               });
 
             const indexerPromise = indexerClient
               .makeHealthCheck()
               .do()
               .then((response) => {
-                responseAlgod['message'] = response['message'] || response;
+                statusReponse['indexer'] = response ? response : defaultError;
               })
               .catch((error) => {
-                responseAlgod['error'] = error.message || error;
+                statusReponse['indexer'] = { error: error.message || error };
               });
             await Promise.all([algodPromise, indexerPromise]);
-            sendResponse({ algod: responseAlgod, indexer: responseIndexer });
+            sendResponse(statusReponse);
           });
           return true;
         },

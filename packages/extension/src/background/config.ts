@@ -34,14 +34,14 @@ export class Settings {
   };
 
   // Returns a copy of Injected networks with just basic information for dApp or display.
-  public static getCleansedInjectedNetworks() {
+  public static getCleansedInjectedNetworks(): Array<NetworkTemplate> {
     const injectedNetworks = [];
-    const injectedNetworkKeys = Object.keys(this.backend_settings.InjectedNetworks);
-    for (var i = 0; i < injectedNetworkKeys.length; i++) {
+    const injectedNetworkNames = Object.keys(this.backend_settings.InjectedNetworks);
+    for (let i = 0; i < injectedNetworkNames.length; i++) {
       injectedNetworks.push({
-        name: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].name,
-        genesisID: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisID,
-        genesisHash: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisHash,
+        name: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].name,
+        genesisID: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].genesisID,
+        genesisHash: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].genesisHash,
       });
     }
 
@@ -104,65 +104,36 @@ export class Settings {
     };
   }
 
-  private static setInjectedHeaders(network: NetworkTemplate) {
-    if (!this.backend_settings.InjectedNetworks[network.name]) {
-      console.log('Error: Network headers can not be updated. Network not available.');
-      return;
-    }
-    const connection = this.getConnectionFromTemplate(network);
+  public static addInjectedNetwork(network: NetworkTemplate): void {
+    const targetName = network.name;
 
-    this.backend_settings.InjectedNetworks[network.name][API.Algod] = connection.algod;
-    this.backend_settings.InjectedNetworks[network.name][API.Indexer] = connection.indexer;
-    this.backend_settings.InjectedNetworks[network.name].headers = connection.headers;
-  }
-
-  public static addInjectedNetwork(network: NetworkTemplate) {
-    // Initialize the injected network with the genesisID and a name that mimics the network for reference
-    this.backend_settings.InjectedNetworks[network.name] = {
-      name: network.name,
+    // Create settings entry and update w/ headers
+    this.backend_settings.InjectedNetworks[targetName] = {
+      name: targetName,
       genesisID: network.genesisID,
       genesisHash: network.genesisHash,
     };
-
-    this.setInjectedHeaders(network);
-    logging.log(
-      `Added Network:\n${JSON.stringify(
-        this.backend_settings.InjectedNetworks[network.name],
-        null,
-        1
-      )}`,
-      LogLevel.Debug
-    );
+    const connection = this.getConnectionFromTemplate(network);
+    this.backend_settings.InjectedNetworks[targetName][API.Algod] = connection.algod;
+    this.backend_settings.InjectedNetworks[targetName][API.Indexer] = connection.indexer;
+    this.backend_settings.InjectedNetworks[targetName].headers = connection.headers;
+    logging.log(`Added Network ${targetName}:`, LogLevel.Debug);
+    logging.log(this.backend_settings.InjectedNetworks[targetName], LogLevel.Debug);
   }
 
-  public static updateInjectedNetwork(updatedNetwork: NetworkTemplate, previousName: string = '') {
-    const targetName = updatedNetwork.uniqueName;
-
-    if (previousName) {
+  public static updateInjectedNetwork(updatedNetwork: NetworkTemplate, previousName: string): void {
+    if (!this.backend_settings.InjectedNetworks[previousName]) {
+      logging.log(`Unable to overwrite Network ${previousName}.`, LogLevel.Debug);
+    } else {
+      logging.log(`Overwriting Network ${previousName}.`, LogLevel.Debug);
       this.deleteInjectedNetwork(previousName);
-      this.backend_settings.InjectedNetworks[targetName] = {};
+      this.addInjectedNetwork(updatedNetwork);
     }
-    this.backend_settings.InjectedNetworks[targetName].genesisID = updatedNetwork.genesisID;
-    this.backend_settings.InjectedNetworks[targetName].symbol = updatedNetwork.symbol;
-    this.backend_settings.InjectedNetworks[targetName].genesisHash =
-      updatedNetwork.genesisHash;
-    this.backend_settings.InjectedNetworks[targetName].algodUrl = updatedNetwork.algodUrl;
-    this.backend_settings.InjectedNetworks[targetName].indexerUrl =
-      updatedNetwork.indexerUrl;
-    this.setInjectedHeaders(updatedNetwork);
-
-    logging.log(
-      `Updated Network:\n${JSON.stringify(
-        this.backend_settings.InjectedNetworks[targetName],
-        null,
-        1
-      )}`,
-      LogLevel.Debug
-    );
   }
 
-  public static deleteInjectedNetwork(networkUniqueName: string) {
-    delete this.backend_settings.InjectedNetworks[networkUniqueName];
+  public static deleteInjectedNetwork(network: string): void {
+    delete this.backend_settings.InjectedNetworks[network];
+    logging.log(`Deleted Network ${network}:`, LogLevel.Debug);
   }
 
   public static getBackendParams(network: string, api: API): ConnectionDetails {

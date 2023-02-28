@@ -51,12 +51,8 @@ export function getAvailableNetworksFromCache(callback?: Function): Array<Networ
       Settings.backend_settings.InjectedNetworks = {};
   
       for (let i = 0; i < cache.availableLedgers.length; i++) {
-        if (
-          !availableNetworks.some(
-            (network) => network.name.toLowerCase() === cache.availableLedgers[i].name.toLowerCase()
-          )
-        ) {
-          const networkFromCache = new NetworkTemplate(cache.availableLedgers[i]);
+        const networkFromCache = new NetworkTemplate(cache.availableLedgers[i]);
+        if (networkFromCache.isEditable) {
           Settings.addInjectedNetwork(networkFromCache);
           availableNetworks.push(networkFromCache);
         }

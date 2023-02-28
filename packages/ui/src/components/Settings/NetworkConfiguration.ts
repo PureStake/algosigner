@@ -83,9 +83,8 @@ const NetworkConfiguration: FunctionalComponent = (props: any) => {
           html`
             <${NetworkModify}
               closeFunction=${(closeType) => {
-                setNetConfigModalVisible(false);
                 if (closeType === 1) {
-                  closeFunction && closeFunction();
+                  setNetConfigModalVisible(false);
                 } else if (closeType === 2) {
                   closeFunction && closeFunction();
                   route('/wallet');
@@ -98,7 +97,6 @@ const NetworkConfiguration: FunctionalComponent = (props: any) => {
               indexerUrl=${activeNetworkTemplate.indexerUrl}
               headers=${activeNetworkTemplate.headers}
               isEditable=${activeNetworkTemplate.isEditable}
-              isModify=${activeNetworkTemplate.name !== ''}
             />
           `}
         </div>
