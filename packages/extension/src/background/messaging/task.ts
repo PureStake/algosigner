@@ -1484,32 +1484,27 @@ export class Task {
             const responseAlgod = {};
             const responseIndexer = {};
 
-            (async () => {
-              await algodClient
-                .status()
-                .do()
-                .then((response) => {
-                  responseAlgod['message'] = response['message'] || response;
-                })
-                .catch((error) => {
-                  responseAlgod['error'] = error.message || error;
-                });
-            })().then(() => {
-              (async () => {
-                await indexerClient
-                  .searchForTransactions()
-                  .limit(1)
-                  .do()
-                  .then((response) => {
-                    responseAlgod['message'] = response['message'] || response;
-                  })
-                  .catch((error) => {
-                    responseAlgod['error'] = error.message || error;
-                  });
-              })().then(() => {
-                sendResponse({ algod: responseAlgod, indexer: responseIndexer });
+            const algodPromise = algodClient
+              .getTransactionParams()
+              .do()
+              .then((response) => {
+                responseAlgod['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseAlgod['error'] = error.message || error;
               });
-            });
+
+            const indexerPromise = indexerClient
+              .makeHealthCheck()
+              .do()
+              .then((response) => {
+                responseAlgod['message'] = response['message'] || response;
+              })
+              .catch((error) => {
+                responseAlgod['error'] = error.message || error;
+              });
+            await Promise.all([algodPromise, indexerPromise]);
+            sendResponse({ algod: responseAlgod, indexer: responseIndexer });
           });
           return true;
         },

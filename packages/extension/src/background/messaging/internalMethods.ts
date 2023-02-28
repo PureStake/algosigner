@@ -240,7 +240,7 @@ export class InternalMethods {
         sendResponse(response);
       } else {
         const wallet = this.safeWallet(response);
-        getAvailableNetworksFromCache((availableNetworks: Array<NetworkTemplate>) => {
+        getAvailableNetworksFromCache((cachedNetworks: Array<NetworkTemplate>) => {
           const extensionStorage = new ExtensionStorage();
           // Load Accounts details from Cache
           extensionStorage.getStorage('cache', async (storedCache: any) => {
@@ -258,10 +258,28 @@ export class InternalMethods {
               }
             }
 
+            const updatedNetworks: Array<NetworkTemplate> = [];
+            logging.log('Checking for networks to update genesis info.', LogLevel.Debug);
+            for (const [index, network] of cachedNetworks.entries()) {
+              if (network.isEditable) {
+                logging.log(`Fetching updated genesis info for network '${network.name}'`, LogLevel.Debug);
+                try {
+                  const txnParams = await this.getAlgod(network.name).getTransactionParams().do();
+                  network.genesisID = txnParams.genesisID;
+                  network.genesisHash = txnParams.genesisHash; 
+                } catch (e) {
+                  logging.log(e.message, LogLevel.Debug);
+                }
+              }
+              updatedNetworks[index] = network;
+            }
+            cache.availableLedgers = updatedNetworks;
+            extensionStorage.setStorage('cache', cache, null);
+
             // Setup session
             session.wallet = wallet;
             session.network = Network.MainNet;
-            session.availableNetworks = availableNetworks;
+            session.availableNetworks = updatedNetworks;
 
             // Load internal aliases && namespace configurations
             this.reloadAliases();
@@ -1059,21 +1077,29 @@ export class InternalMethods {
       
       const previousName = params['previousName'].toLowerCase();
       const targetName = previousName ? previousName : params['name'].toLowerCase();
+
       const addedNetwork = new NetworkTemplate({
         name: params['name'],
-        genesisID: params['genesisID'],
-        genesisHash: params['genesisHash'],
         symbol: params['symbol'],
         algodUrl: params['algodUrl'],
         indexerUrl: params['indexerUrl'],
         headers: params['headers'],
       });
+      logging.log(`Saving network '${addedNetwork.name}'`, LogLevel.Debug);
+      logging.log(addedNetwork, LogLevel.Debug);
 
-      // Specifically get the base networks to check and prevent them from being overriden.
-      const defaultNetworks = getBaseSupportedNetworks();
-
-      getAvailableNetworksFromCache((cacheNetworks) => {
+      // Fetch currently stored networks from cache
+      getAvailableNetworksFromCache(async (cacheNetworks) => {
         const availableNetworks = [...cacheNetworks];
+
+        // If it's not a default network, fetch the updated genesis info
+        if (addedNetwork.isEditable) {
+          logging.log(`Fetching genesis info for network '${addedNetwork.name}'`, LogLevel.Debug);
+          const txnParams = await this.getAlgod(addedNetwork).getTransactionParams().do();
+          addedNetwork.genesisID = txnParams.genesisID;
+          addedNetwork.genesisHash = txnParams.genesisHash;
+          logging.log(txnParams, LogLevel.Debug);
+        }
 
         // Add the new network if it isn't there.
         if (!availableNetworks.some((network) => network.uniqueName === targetName)) {
@@ -1082,9 +1108,11 @@ export class InternalMethods {
           // Also add the network to the injected networks in settings
           Settings.addInjectedNetwork(addedNetwork);
         } else {
-          // If the new network name does exist, we sould update the values as long as it is not a default network.
+          // If the new network name does exist, we sould update the values
           const matchingNetwork = availableNetworks.find((network) => network.uniqueName === targetName);
-          if (!defaultNetworks.some((network) => network.uniqueName === matchingNetwork.uniqueName)) {
+
+          // Default networks are protected from being overriden.
+          if (matchingNetwork.isEditable) {
             Settings.updateInjectedNetwork(addedNetwork, previousName);
             matchingNetwork.name = addedNetwork.name;
             matchingNetwork.genesisID = addedNetwork.genesisID;
@@ -1093,23 +1121,20 @@ export class InternalMethods {
             matchingNetwork.algodUrl = addedNetwork.algodUrl;
             matchingNetwork.indexerUrl = addedNetwork.indexerUrl;
             matchingNetwork.headers = addedNetwork.headers;
+          } else {
+            sendResponse({ error: `Default networks cannot be overwritten, please use a different name.` });
           }
         }
-        // Update the session and send response before setting cache.
+
+        // Update the cache and session before sending response
+        const extensionStorage = new ExtensionStorage();
+        extensionStorage.getStorage('cache', (storedCache: Cache) => {
+          const cache = storedCache === undefined ? initializeCache() : storedCache;
+          cache.availableLedgers = availableNetworks;
+          extensionStorage.setStorage('cache', cache, null);
+        }); 
         session.availableNetworks = availableNetworks;
         sendResponse({ availableNetworks: availableNetworks });
-
-        // Updated the cached networks.
-        const extensionStorage = new ExtensionStorage();
-        extensionStorage.getStorage('cache', (cache: any) => {
-          if (cache === undefined) {
-            cache = initializeCache(cache);
-          }
-          if (cache) {
-            cache.availableLedgers = availableNetworks;
-            extensionStorage.setStorage('cache', cache, () => {});
-          }
-        });
       });
       return true;
     } catch (e) {

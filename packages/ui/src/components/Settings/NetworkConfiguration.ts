@@ -61,7 +61,7 @@ const NetworkConfiguration: FunctionalComponent = (props: any) => {
                       ${!network.isEditable &&
                       html`<span
                         class="icon"
-                        style="padding-right: 5%;padding-left: 90%;position: absolute;"
+                        style="padding-right: 5%; padding-left: 90%;position: absolute;"
                         ><i class="fas fa-lock"></i
                       ></span>`}
                     </button>

@@ -19,8 +19,6 @@ const NetworkModify: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [networkName, setNetworkName] = useState<string>(props.name || '');
-  const [networkID, setNetworkID] = useState<string>(props.genesisID || '');
-  const [networkSymbol, setNetworkSymbol] = useState<string>(props.symbol || '');
   const [networkAlgodUrl, setNetworkAlgodUrl] = useState<string>(props.algodUrl || '');
   const [networkIndexerUrl, setNetworkIndexerUrl] = useState<string>(props.indexerUrl || '');
   const [networkHeaders, setNetworkHeaders] = useState<string>(props.headers || '');
@@ -66,8 +64,6 @@ const NetworkModify: FunctionalComponent = (props: any) => {
     setError('');
     const params = {
       name: networkName,
-      genesisID: networkID,
-      symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
       headers: networkHeaders,
@@ -97,8 +93,6 @@ const NetworkModify: FunctionalComponent = (props: any) => {
     const params = {
       name: networkName,
       previousName: previousName,
-      genesisID: networkID,
-      symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
       headers: networkHeaders,
@@ -154,14 +148,6 @@ const NetworkModify: FunctionalComponent = (props: any) => {
             value=${networkName}
             onInput=${(e) => setNetworkName(e.target.value)}
           />
-          <label>Network ID</label>
-          <input
-            id="networkId"
-            class="input"
-            placeholder="mainnet-v1.0"
-            value=${networkID}
-            onInput=${(e) => setNetworkID(e.target.value)}
-          />
           <label>Network Algod URL</label>
           <input
             id="networkAlgodUrl"
@@ -190,9 +176,9 @@ const NetworkModify: FunctionalComponent = (props: any) => {
               />
             </a>
           </label>
-          <input
+          <textarea
             id="networkHeaders"
-            class="input"
+            class="textarea"
             placeholder="API Key or JSON Structure"
             value=${networkHeaders}
             onInput=${(e) => setNetworkHeaders(e.target.value)}
