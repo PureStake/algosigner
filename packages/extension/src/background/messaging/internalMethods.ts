@@ -190,6 +190,9 @@ export class InternalMethods {
     }
     extensionStorage.setStorage('namespaces', namespaceConfigs, null);
 
+    const cache = initializeCache();
+    extensionStorage.setStorage('cache', cache, null);
+
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     const newWallet = {
       [Network.MainNet]: [],
@@ -1199,7 +1202,7 @@ export class InternalMethods {
 
     extensionStorage.getStorage('aliases', async (aliases: any) => {
       // aliases: { network: { namespace: [...aliases] } }
-      await extensionStorage.getStorage(
+      extensionStorage.getStorage(
         'namespaces',
         async (storedConfigs: Array<NamespaceConfig>) => {
           const availableExternalNamespaces: Array<string> = [];
