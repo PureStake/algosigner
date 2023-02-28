@@ -641,9 +641,7 @@ export class Task {
           // This is because a dapp may request an id and hash from different ledgers
           if (
             (genesisID && genesisID !== network.genesisID) ||
-            (genesisHash &&
-              network.genesisHash &&
-              genesisHash !== network.genesisHash)
+            (genesisHash && genesisHash !== network.genesisHash)
           ) {
             d.error = RequestError.UnsupportedNetwork;
             setTimeout(() => {

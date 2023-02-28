@@ -163,37 +163,37 @@ export function getNetworkNameFromGenesisID(genesisID: string): string {
 }
 
 export function getNetworkFromMixedGenesis(genesisID: string, genesisHash?: string): NetworkTemplate {
-  // Check Genesis Id and Hash for base networks first
   const defaultNetworks = getBaseSupportedNetworks();
+  const injectedNetworks = Settings.getCleansedInjectedNetworks();
+  const availableNetworks = [...defaultNetworks, ...injectedNetworks];
   let network;
+  let partialMatches;
+  
+  // First we check for matching IDs
   if (genesisID) {
-    network = defaultNetworks.find((network) => genesisID === network['genesisID']);
+    partialMatches = availableNetworks.filter((network) => genesisID === network['genesisID']);
+    // Found matching genesisID, make sure the hash matches if available
+    if (genesisHash) {
+      network = partialMatches.find((network) => genesisHash === network['genesisHash']);
+    } else if (partialMatches && partialMatches.length) {
+      // If no Hash was provided, return the first ID
+      network = partialMatches[0];
+    }
     if (network !== undefined) {
-      // Found genesisID, make sure the hash matches 
       if (!genesisHash || genesisHash === network.genesisHash) { 
         return network;
       }
-    }
-    
-    // Injected networks may have additional validations so we check them separately
-    const injectedNetworks = Settings.getCleansedInjectedNetworks();
-    network = injectedNetworks.find((network) => network['genesisID'] === genesisID);
-    if (network) {
-      return network;
     }
   }
 
   // We didn't match on the genesis id so check the hashes
   if (genesisHash) {
-    network = defaultNetworks.find((n) => genesisHash === n['genesisHash']);
+    network = availableNetworks.find((network) => genesisHash === network['genesisHash']);
     if (network !== undefined) {
-      // Found genesisHash, make sure the id matches 
-      if (!genesisID || genesisID === network.genesisID) { 
+      if (!genesisHash || genesisHash === network.genesisHash) { 
         return network;
       }
     }
-
-    // We don't currently store the genesisHash of the custom networks
   }
 
   // Default the network to mainnet
