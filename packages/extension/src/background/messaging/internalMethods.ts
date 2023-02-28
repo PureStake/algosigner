@@ -1,12 +1,14 @@
 import algosdk from 'algosdk';
-import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { logging, LogLevel } from '@algosigner/common/logging';
-import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Alias, Network, Namespace, NamespaceConfig, SessionObject, SensitiveAccount, WalletStorage } from '@algosigner/common/types';
-import { RequestError } from '@algosigner/common/errors';
+
+import { extensionBrowser } from '@algosigner/common/chrome';
 import { AliasConfig } from '@algosigner/common/config';
-import { Task } from './task';
-import { API, Cache } from './types';
+import { RequestError } from '@algosigner/common/errors';
+import { logging, LogLevel } from '@algosigner/common/logging';
+import { Alias, Namespace, NamespaceConfig, SessionObject, SensitiveAccount, WalletStorage } from '@algosigner/common/types';
+import { ConnectionDetails, getBaseSupportedNetworks, Network, NetworkTemplate } from '@algosigner/common/types/network';
+import { JsonRpcMethod } from '@algosigner/common/messaging/types';
+import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
+
 import { Settings } from '../config';
 import encryptionWrap from '../encryptionWrap';
 import Session from '../utils/session';
@@ -21,21 +23,33 @@ import {
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { buildTransaction } from '../utils/transactionBuilder';
-import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
-import { extensionBrowser } from '@algosigner/common/chrome';
+
+import { Task } from './task';
+import { API, Cache } from './types';
 
 const session = new Session();
 
 export class InternalMethods {
   private static _encryptionWrap: encryptionWrap | undefined;
 
-  public static getAlgod(network: string): algosdk.Algodv2 {
-    const params = Settings.getBackendParams(network, API.Algod);
-    return new algosdk.Algodv2(params.apiKey, params.url, params.port);
+  public static getAlgod(network: string | NetworkTemplate): algosdk.Algodv2 {
+    let connection: ConnectionDetails;
+    if (typeof network === 'string') {
+      connection = Settings.getBackendParams(network, API.Algod);
+    } else {
+      connection = Settings.getConnectionFromTemplate(network).algod;
+    }
+    return new algosdk.Algodv2(connection.apiKey, connection.url, connection.port);
   }
+
   public static getIndexer(network: string): algosdk.Indexer {
-    const params = Settings.getBackendParams(network, API.Indexer);
-    return new algosdk.Indexer(params.apiKey, params.url, params.port);
+    let connection: ConnectionDetails;
+    if (typeof network === 'string') {
+      connection = Settings.getBackendParams(network, API.Indexer);
+    } else {
+      connection = Settings.getConnectionFromTemplate(network).indexer;
+    }
+    return new algosdk.Indexer(connection.apiKey, connection.url, connection.port);
   }
 
   private static safeWallet(wallet: WalletStorage): WalletStorage {
@@ -1194,7 +1208,7 @@ export class InternalMethods {
             .map((config) => availableExternalNamespaces.push(config.namespace));
 
           // Search the storage for the aliases stored for the matching namespaces
-          const returnedAliasedAddresses: Record<string, Array<Alias>> = {};
+          const returnedAliasedAddresses: { [key: string]: Array<Alias> } = {};
           const apiFetches = [];
           for (const namespace of matchingNamespaces) {
             const aliasesMatchingInNamespace: Array<Alias> = [];

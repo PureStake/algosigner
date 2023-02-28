@@ -1,5 +1,5 @@
-import { NetworkTemplate } from '@algosigner/common/types/network';
-import { Network } from '@algosigner/common/types';
+import { Connection, ConnectionDetails, NetworkTemplate } from '@algosigner/common/types/network';
+import { Network } from '@algosigner/common/types/network';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
@@ -33,10 +33,6 @@ export class Settings {
     InjectedNetworks: {},
   };
 
-  public static deleteInjectedNetwork(networkUniqueName: string) {
-    delete this.backend_settings.InjectedNetworks[networkUniqueName];
-  }
-
   // Returns a copy of Injected networks with just basic information for dApp or display.
   public static getCleansedInjectedNetworks() {
     const injectedNetworks = [];
@@ -52,12 +48,7 @@ export class Settings {
     return injectedNetworks;
   }
 
-  private static setInjectedHeaders(network: NetworkTemplate, isCheckOnly?: boolean) {
-    if (!this.backend_settings.InjectedNetworks[network.name] && !isCheckOnly) {
-      console.log('Error: Network headers can not be updated. Network not available.');
-      return;
-    }
-
+  public static getConnectionFromTemplate(network: NetworkTemplate): Connection {
     // Initialize headers for apiKey and individuals if there
     let headers = {};
     let headersAlgod = undefined;
@@ -69,6 +60,13 @@ export class Settings {
       // Then try to parse the headers, in the case it is a string object.
       try {
         headers = JSON.parse(network['headers']);
+        // Get individual sub headers if they are available
+        if (headers['Algod']) {
+          headersAlgod = headers['Algod'];
+        }
+        if (headers['Indexer']) {
+          headersIndexer = headers['Indexer'];
+        }
       } catch (e) {
         // Use headers default value, but use it as a token if it is a string
         if (typeof headers === 'string') {
@@ -77,15 +75,11 @@ export class Settings {
           headers = { 'X-Algo-API-Token': headers };
         }
       }
-
-      // Get individual sub headers if they are available
-      if (headers['Algod']) {
-        headersAlgod = headers['Algod'];
-      }
-      if (headers['Indexer']) {
-        headersIndexer = headers['Indexer'];
-      }
     }
+
+    // Setup port splits for algod and indexer - used in sandbox installs
+    const parsedAlgodUrl = parseUrlServerAndPort(network.algodUrl);
+    const parsedIndexerUrl = parseUrlServerAndPort(network.indexerUrl);
 
     // Add the algod links defaulting the url to one based on the genesisID
     let defaultUrl = 'https://algosigner.api.purestake.io/mainnet';
@@ -93,36 +87,39 @@ export class Settings {
       defaultUrl = 'https://algosigner.api.purestake.io/testnet';
     }
 
-    // Setup port splits for algod and indexer - used in sandbox installs
-    const parsedAlgodUrlObj = parseUrlServerAndPort(network.algodUrl);
-    const parsedIndexerUrlObj = parseUrlServerAndPort(network.indexerUrl);
-
-    // Add algod links
-    const injectedAlgod = {
-      url: parsedAlgodUrlObj.server || `${defaultUrl}/algod`,
-      port: parsedAlgodUrlObj.port,
+    // Add algod connection
+    const injectedAlgod: ConnectionDetails = {
+      url: parsedAlgodUrl.server || `${defaultUrl}/algod`,
+      port: parsedAlgodUrl.port,
       apiKey: headersAlgod || headers,
       headers: headersAlgod || headers,
     };
 
-    // Add the indexer links
-    const injectedIndexer = {
-      url: parsedIndexerUrlObj.server || `${defaultUrl}/indexer`,
-      port: parsedIndexerUrlObj.port,
+    // Add the indexer connection
+    const injectedIndexer: ConnectionDetails = {
+      url: parsedIndexerUrl.server || `${defaultUrl}/indexer`,
+      port: parsedIndexerUrl.port,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
     };
 
-    if (isCheckOnly) {
-      return {
-        algod: injectedAlgod,
-        indexer: injectedIndexer,
-      };
-    } else {
-      this.backend_settings.InjectedNetworks[network.name][API.Algod] = injectedAlgod;
-      this.backend_settings.InjectedNetworks[network.name][API.Indexer] = injectedIndexer;
-      this.backend_settings.InjectedNetworks[network.name].headers = headers;
+    return {
+      headers: headers,
+      algod: injectedAlgod,
+      indexer: injectedIndexer,
+    };
+  }
+
+  private static setInjectedHeaders(network: NetworkTemplate) {
+    if (!this.backend_settings.InjectedNetworks[network.name]) {
+      console.log('Error: Network headers can not be updated. Network not available.');
+      return;
     }
+    const connection = this.getConnectionFromTemplate(network);
+
+    this.backend_settings.InjectedNetworks[network.name][API.Algod] = connection.algod;
+    this.backend_settings.InjectedNetworks[network.name][API.Indexer] = connection.indexer;
+    this.backend_settings.InjectedNetworks[network.name].headers = connection.headers;
   }
 
   public static addInjectedNetwork(network: NetworkTemplate) {
@@ -169,7 +166,11 @@ export class Settings {
     );
   }
 
-  public static getBackendParams(network: string, api: API) {
+  public static deleteInjectedNetwork(networkUniqueName: string) {
+    delete this.backend_settings.InjectedNetworks[networkUniqueName];
+  }
+
+  public static getBackendParams(network: string, api: API): ConnectionDetails {
     // If we are using the PureStake backend we can return the url, port, and apiKey
     if (this.backend_settings[this.backend][network]) {
       return {
@@ -187,10 +188,5 @@ export class Settings {
       apiKey: this.backend_settings.InjectedNetworks[network][api].apiKey,
       headers: this.backend_settings.InjectedNetworks[network][api].headers,
     };
-  }
-
-  public static checkNetwork(network: NetworkTemplate) {
-    const networks = this.setInjectedHeaders(network, true);
-    return networks;
   }
 }

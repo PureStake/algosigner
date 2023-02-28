@@ -1,6 +1,5 @@
 import algosdk from 'algosdk';
-import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
-import { Network } from '@algosigner/common/types';
+import { getBaseSupportedNetworks, Network, NetworkTemplate } from '@algosigner/common/types/network';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';
 import { API, Cache } from '../messaging/types';

@@ -2,7 +2,7 @@ import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
-import { NetworkSelectionType } from '@algosigner/common/types';
+import { NetworkSelectionType } from '@algosigner/common/types/network';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { obfuscateAddress } from '@algosigner/common/utils';
 import { StoreContext } from 'services/StoreContext';

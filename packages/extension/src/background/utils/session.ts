@@ -1,5 +1,5 @@
-import { Network, SessionObject, WalletStorage } from "@algosigner/common/types";
-import { NetworkTemplate } from "@algosigner/common/types/network";
+import { SessionObject, WalletStorage } from "@algosigner/common/types";
+import { Network, NetworkTemplate } from "@algosigner/common/types/network";
 
 export default class Session {
   private _wallet: WalletStorage;
