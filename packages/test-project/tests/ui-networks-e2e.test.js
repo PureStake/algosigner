@@ -31,9 +31,9 @@ describe('Wallet Setup', () => {
 describe('Create and Test Custom Networks', () => {
   const NetworkConfig = {
     name: 'E2ENet',
-    id: 'testnet-v1.0',
-    algod: 'https://algosigner.api.purestake.io/testnet/algod',
-    indexer: 'https://algosigner.api.purestake.io/testnet/indexer',
+    algod: 'https://betanet-algorand.api.purestake.io/ps2',
+    indexer: 'https://betanet-algorand.api.purestake.io/idx2',
+    headers: '{"Algod":{"x-api-key":"yiMMSnme3SE0CmZZARJW87yWHTXZrEGaNSJNx2Me"},"Indexer":{"x-api-key":"yiMMSnme3SE0CmZZARJW87yWHTXZrEGaNSJNx2Me"}}',
   };
 
   const e2eNetSelector = `button#select${NetworkConfig.name}`;
@@ -45,11 +45,11 @@ describe('Create and Test Custom Networks', () => {
     await openNetworkMenu();
     await extensionPage.click('#createNetwork');
 
-    // Fill wrong network config
+    // Fill erroneous network config
     await extensionPage.type('#networkName', NetworkConfig.name);
-    await extensionPage.type('#networkId', NetworkConfig.id);
     await extensionPage.type('#networkAlgodUrl', NetworkConfig.indexer);
     await extensionPage.type('#networkIndexerUrl', NetworkConfig.indexer);
+    await extensionPage.type('#networkHeaders', NetworkConfig.headers);
 
     // Test connection rejected
     await extensionPage.click('#checkNetwork');
