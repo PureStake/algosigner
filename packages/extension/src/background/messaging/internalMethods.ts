@@ -1124,9 +1124,6 @@ export class InternalMethods {
             session.availableNetworks = networks;
             cache.availableLedgers = networks;
             extensionStorage.setStorage('cache', cache, null);
-            console.log('returning session on save');
-            console.log(session.wallet);
-            console.log(session.asObject());
             sendResponse(session.asObject());
           }
 

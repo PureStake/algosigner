@@ -108,8 +108,6 @@ const NetworkModify: FunctionalComponent = (props: any) => {
         setLoading(false);
       } else {
         const session: SessionObject = response;
-        console.log('session');
-        console.log(session);
         store.setAvailableNetworks(session.availableNetworks);
         store.updateWallet(session.wallet, () => {
           store.setActiveNetwork(session.network);
