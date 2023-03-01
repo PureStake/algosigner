@@ -50,6 +50,41 @@ describe('Wallet Setup', () => {
   ConnectWithAlgorandObject([uiAccount]);
 });
 
+describe('Enable validations', () => {
+  const secondaryAccount = accounts.multisig.subaccounts[0];
+  test('Error when requesting a signature with a non-approved account', async () => {
+    const unavailableAccountTxn = buildSdkTx({
+      type: 'pay',
+      from: secondaryAccount.address,
+      to: secondaryAccount.address,
+      amount: 0,
+      ...sdkParams,
+      fee: 1000,
+    });
+    const unsignedTxns = [unavailableAccountTxn.toByte()]
+      .map(byteArrayToBase64)
+      .map((b64Txn) => ({
+        txn: b64Txn,
+      }));
+    const requestResponse = await dappPage.evaluate((transactions) => {
+      return Promise.resolve(algorand.signTxns(transactions))
+        .then((data) => {
+          return data;
+        })
+        .catch((error) => {
+          return error;
+        });
+    }, unsignedTxns)
+    await expect(requestResponse).toMatchObject({
+      code: 4100,
+      message: expect.stringContaining('problem validating'),
+      data: expect.anything(),
+    });
+    await expect(requestResponse.data).toHaveLength(1);
+    await expect(requestResponse.data[0]).toContain('No matching account found');
+  });
+});
+
 describe('PostTxns Validations', () => {
   describe('Transaction validations', () => {
     test('Error on missing group(s)', async () => {

@@ -17,7 +17,7 @@ export class ExtensionStorage {
   // Callback: Callback will return a boolean of true if storage sets without error
   // or false otherwise.
   ///
-  public setStorage(objectName: string, saveObject: Object, callback: Function) {
+  public setStorage(objectName: string, saveObject: Object, callback: Function): void {
     extensionBrowser.storage.local.set({ [objectName]: saveObject }, () => {
       const isSuccessful = !extensionBrowser.runtime.lastError;
       if (!isSuccessful) {
@@ -36,28 +36,9 @@ export class ExtensionStorage {
   // Callback: Callback will return a boolean of true if an account exists
   // or false if no account is present.
   ///
-  public getStorage(objectName: string, callback?: Function): any | void {
+  public getStorage(objectName: string, callback?: Function): void {
     extensionBrowser.storage.local.get([objectName], (result: any) => {
-      if (callback) {
-        callback(result[objectName])
-      } else {
-        return result[objectName];
-      }
-    });
-  }
-
-  ///
-  // Check for the existance of a wallet account.
-  // Callback: Callback will return a boolean of true if an account exists
-  // or false if no account is present.
-  ///
-  public noAccountExistsCheck(objectName: string, callback: Function) {
-    extensionBrowser.storage.local.get([objectName], function (result: any) {
-      if (result[objectName]) {
-        callback && callback(true);
-      } else {
-        callback && callback(false);
-      }
+      callback && callback(result[objectName]);
     });
   }
 

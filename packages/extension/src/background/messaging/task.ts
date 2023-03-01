@@ -1,10 +1,14 @@
 import algosdk, { MultisigMetadata, Transaction } from 'algosdk';
 
-import { NetworkSelectionType, OptsKeys, WalletTransaction } from '@algosigner/common/types';
+import { extensionBrowser } from '@algosigner/common/chrome';
+import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
 import { RequestError } from '@algosigner/common/errors';
+import { logging, LogLevel } from '@algosigner/common/logging';
+import { OptsKeys, WalletTransaction } from '@algosigner/common/types';
+import { Connection, Network, NetworkSelectionType, NetworkTemplate } from '@algosigner/common/types/network';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Network } from '@algosigner/common/types';
-import { API } from './types';
+import { areBuffersEqual } from '@algosigner/common/utils';
+
 import {
   getValidatedTxnWrap,
   getNetworkNameFromGenesisID,
@@ -12,15 +16,12 @@ import {
 } from '../transaction/actions';
 import { BaseValidatedTxnWrap } from '../transaction/baseValidatedTxnWrap';
 import { ValidationResponse, ValidationStatus } from '../utils/validator';
-import { InternalMethods } from './internalMethods';
-import { MessageApi } from './api';
 import encryptionWrap from '../encryptionWrap';
 import { Settings } from '../config';
-import { extensionBrowser } from '@algosigner/common/chrome';
-import { logging, LogLevel } from '@algosigner/common/logging';
-import { base64ToByteArray, byteArrayToBase64 } from '@algosigner/common/encoding';
-import { areBuffersEqual } from '@algosigner/common/utils';
-import { NetworkTemplate } from '@algosigner/common/types/network';
+
+import { MessageApi } from './api';
+import { InternalMethods } from './internalMethods';
+import { API } from './types';
 
 // Popup properties accounts for additional space needed for the title bar
 const titleBarHeight = 28;
@@ -640,9 +641,7 @@ export class Task {
           // This is because a dapp may request an id and hash from different ledgers
           if (
             (genesisID && genesisID !== network.genesisID) ||
-            (genesisHash &&
-              network.genesisHash &&
-              genesisHash !== network.genesisHash)
+            (genesisHash && genesisHash !== network.genesisHash)
           ) {
             d.error = RequestError.UnsupportedNetwork;
             setTimeout(() => {
@@ -1468,47 +1467,42 @@ export class Task {
           return InternalMethods[JsonRpcMethod.SaveNetwork](request, sendResponse);
         },
         [JsonRpcMethod.CheckNetwork]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (networks) => {
+          InternalMethods[JsonRpcMethod.CheckNetwork](request, async (connection: Connection) => {
             const algodClient = new algosdk.Algodv2(
-              networks.algod.apiKey,
-              networks.algod.url,
-              networks.algod.port
+              connection.algod.apiKey,
+              connection.algod.url,
+              connection.algod.port
             );
             const indexerClient = new algosdk.Indexer(
-              networks.indexer.apiKey,
-              networks.indexer.url,
-              networks.indexer.port
+              connection.indexer.apiKey,
+              connection.indexer.url,
+              connection.indexer.port
             );
 
-            const responseAlgod = {};
-            const responseIndexer = {};
+            const defaultError = { error: 'Unable to connect'};
+            const statusReponse = {};
 
-            (async () => {
-              await algodClient
-                .status()
-                .do()
-                .then((response) => {
-                  responseAlgod['message'] = response['message'] || response;
-                })
-                .catch((error) => {
-                  responseAlgod['error'] = error.message || error;
-                });
-            })().then(() => {
-              (async () => {
-                await indexerClient
-                  .searchForTransactions()
-                  .limit(1)
-                  .do()
-                  .then((response) => {
-                    responseAlgod['message'] = response['message'] || response;
-                  })
-                  .catch((error) => {
-                    responseAlgod['error'] = error.message || error;
-                  });
-              })().then(() => {
-                sendResponse({ algod: responseAlgod, indexer: responseIndexer });
+            const algodPromise = algodClient
+              .getTransactionParams()
+              .do()
+              .then((response) => {
+                statusReponse['algod'] = response ? response : defaultError;
+              })
+              .catch((error) => {
+                statusReponse['algod'] = { error: error.message || error };
               });
-            });
+
+            const indexerPromise = indexerClient
+              .makeHealthCheck()
+              .do()
+              .then((response) => {
+                statusReponse['indexer'] = response ? response : defaultError;
+              })
+              .catch((error) => {
+                statusReponse['indexer'] = { error: error.message || error };
+              });
+            await Promise.all([algodPromise, indexerPromise]);
+            sendResponse(statusReponse);
           });
           return true;
         },

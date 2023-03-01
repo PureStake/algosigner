@@ -1,4 +1,5 @@
-import { Namespace, Network, Alias } from './types';
+import { Namespace, Alias } from './types';
+import { Network } from './types/network';
 
 const MAX_ALIASES_PER_NAMESPACE = 6;
 

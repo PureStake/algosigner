@@ -1,6 +1,5 @@
 import algosdk from 'algosdk';
-import { getBaseSupportedNetworks, NetworkTemplate } from '@algosigner/common/types/network';
-import { Network } from '@algosigner/common/types';
+import { getBaseSupportedNetworks, Network, NetworkTemplate } from '@algosigner/common/types/network';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';
 import { API, Cache } from '../messaging/types';
@@ -40,32 +39,29 @@ export function initializeCache(
 }
 
 export function getAvailableNetworksFromCache(callback?: Function): Array<NetworkTemplate> | void {
-  // Load Accounts details from Cache
+  // Load network details from Cache
   const availableNetworks = getBaseSupportedNetworks();
   const extensionStorage = new ExtensionStorage();
-  const storedCache = extensionStorage.getStorage('cache');
-  const cache: Cache = initializeCache(storedCache);
+  extensionStorage.getStorage('cache', (storedCache) => {
+    const cache: Cache = initializeCache(storedCache);
 
-  // Join networks from cache with the base networks
-  if (cache.availableLedgers && cache.availableLedgers.length > 0) {
-    // We should reset and update the injected networks to ensure they will be available for use
-    Settings.backend_settings.InjectedNetworks = {};
-
-    for (let i = 0; i < cache.availableLedgers.length; i++) {
-      if (
-        !availableNetworks.some(
-          (network) => network.name.toLowerCase() === cache.availableLedgers[i].name.toLowerCase()
-        )
-      ) {
+    // Join networks from cache with the base networks
+    if (cache.availableLedgers && cache.availableLedgers.length > 0) {
+      // We should reset and update the injected networks to ensure they will be available for use
+      Settings.backend_settings.InjectedNetworks = {};
+  
+      for (let i = 0; i < cache.availableLedgers.length; i++) {
         const networkFromCache = new NetworkTemplate(cache.availableLedgers[i]);
-        Settings.addInjectedNetwork(networkFromCache);
-        availableNetworks.push(networkFromCache);
+        if (networkFromCache.isEditable) {
+          Settings.addInjectedNetwork(networkFromCache);
+          availableNetworks.push(networkFromCache);
+        }
       }
     }
-  }
-  if (callback) {
-    callback(availableNetworks);
-  } else {
-    return availableNetworks;
-  }
+    if (callback) {
+      callback(availableNetworks);
+    } else {
+      return availableNetworks;
+    }
+  });
 }
