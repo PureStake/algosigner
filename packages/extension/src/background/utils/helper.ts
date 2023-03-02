@@ -1,18 +1,7 @@
-import algosdk from 'algosdk';
 import { getBaseSupportedNetworks, Network, NetworkTemplate } from '@algosigner/common/types/network';
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
 import { Settings } from '../config';
-import { API, Cache } from '../messaging/types';
-
-export function getAlgod(ledger: string) {
-  const params = Settings.getBackendParams(ledger, API.Algod);
-  return new algosdk.Algodv2(params.apiKey, params.url, params.port, params.headers);
-}
-
-export function getIndexer(ledger: string) {
-  const params = Settings.getBackendParams(ledger, API.Indexer);
-  return new algosdk.Indexer(params.apiKey, params.url, params.port, params.headers);
-}
+import { Cache } from '../messaging/types';
 
 // Helper function to initialize Cache
 export function initializeCache(
