@@ -41,22 +41,29 @@ export class Task {
     return Task.authorized_pool.indexOf(origin) > -1;
   }
 
-  public static isPreAuthorized(origin: string, genesisID: string, requestedAccounts: Array<any>): boolean {
+  public static isPreAuthorized(
+    origin: string,
+    genesisID: string,
+    requestedAccounts: Array<any>
+  ): boolean {
     // Validate the origin is in the authorized pool
     if (Task.authorized_pool.indexOf(origin) === -1) {
       return false;
     }
 
-    // Validate the genesisID is the authorized one
-    if (!Task.authorized_pool_details[origin] || !(Task.authorized_pool_details[origin]['genesisID'] === genesisID)) {
+    // Validate the genesisID is previously authorized
+    if (
+      !Task.authorized_pool_details[origin] ||
+      !(Task.authorized_pool_details[origin]['genesisID'] === genesisID)
+    ) {
       return false;
     }
 
     // Validate the requested accounts exist in the pool detail
     for (let i = 0; i < requestedAccounts.length; i++) {
-      if (!(Task.authorized_pool_details[origin].accounts.includes(requestedAccounts[i]))) {
+      if (!Task.authorized_pool_details[origin].accounts.includes(requestedAccounts[i])) {
         return false;
-      }    
+      }
     }
 
     // We made it through negative checks to accounts are currently authroized
@@ -531,7 +538,9 @@ export class Task {
         }
 
         // If we only receive reference transactions, we reject
-        if (!transactionWraps.some((wrap) => !wrap.signers || (wrap.signers && wrap.signers.length))) {
+        if (
+          !transactionWraps.some((wrap) => !wrap.signers || (wrap.signers && wrap.signers.length))
+        ) {
           throw RequestError.NoTxsToSign;
         }
 
@@ -636,6 +645,8 @@ export class Task {
 
           // Get ledger/hash/id from the genesisID and/or hash
           const network: NetworkTemplate = getNetworkFromMixedGenesis(genesisID, genesisHash);
+          logging.log('Network from genesis info', LogLevel.Debug);
+          logging.log(network, LogLevel.Debug);
 
           // Validate that the genesis id and hash if provided match the resulting one
           // This is because a dapp may request an id and hash from different ledgers
@@ -1376,17 +1387,14 @@ export class Task {
                     return;
                   }
                 } else {
-                  InternalMethods[JsonRpcMethod.LedgerSignTransaction](
-                    message,
-                    (response) => {
-                      // We only have to worry about possible errors here
-                      if ('error' in response) {
-                        // Cancel the hold response since errors needs to be returned
-                        holdResponse = false;
-                        message.error = response.error;
-                      }
+                  InternalMethods[JsonRpcMethod.LedgerSignTransaction](message, (response) => {
+                    // We only have to worry about possible errors here
+                    if ('error' in response) {
+                      // Cancel the hold response since errors needs to be returned
+                      holdResponse = false;
+                      message.error = response.error;
                     }
-                  );
+                  });
                 }
               }
             });
@@ -1519,56 +1527,66 @@ export class Task {
           return InternalMethods[JsonRpcMethod.LedgerGetSessionTxn](request, sendResponse);
         },
         [JsonRpcMethod.LedgerSendTxnResponse]: (request: any, sendResponse: Function) => {
-          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](request, function (internalResponse) {
-            logging.log('Internal response from LedgerSendTxnResponse:', LogLevel.Debug);
-            logging.log(internalResponse, LogLevel.Debug);
+          InternalMethods[JsonRpcMethod.LedgerSendTxnResponse](
+            request,
+            function (internalResponse) {
+              logging.log('Internal response from LedgerSendTxnResponse:', LogLevel.Debug);
+              logging.log(internalResponse, LogLevel.Debug);
 
-            // Message indicates that this response will go to the DApp
-            if ('message' in internalResponse) {
-              const message = internalResponse.message;
-              const { ledgerIndexes, currentLedgerTransaction, currentGroup, signedGroups, opts } = message.body.params;
-              const signedTxnIndex = ledgerIndexes[currentLedgerTransaction];
-              const b64Response = message.response;
+              // Message indicates that this response will go to the DApp
+              if ('message' in internalResponse) {
+                const message = internalResponse.message;
+                const {
+                  ledgerIndexes,
+                  currentLedgerTransaction,
+                  currentGroup,
+                  signedGroups,
+                  opts,
+                } = message.body.params;
+                const signedTxnIndex = ledgerIndexes[currentLedgerTransaction];
+                const b64Response = message.response;
 
-              // We add the signed txn to the final response
-              signedGroups[currentGroup][signedTxnIndex] =
-                opts && opts[OptsKeys.ARC01Return]
-                  ? b64Response
-                  : {
-                      blob: b64Response,
-                    };
+                // We add the signed txn to the final response
+                signedGroups[currentGroup][signedTxnIndex] =
+                  opts && opts[OptsKeys.ARC01Return]
+                    ? b64Response
+                    : {
+                        blob: b64Response,
+                      };
 
-              // We determine if there's more txns to sign before sending a response back
-              if (currentLedgerTransaction + 1 < ledgerIndexes.length) {
-                message.body.params.currentLedgerTransaction++;
-                sendResponse(internalResponse);
-              } else {
-                // If there's no more ledger transactions to sign, we prepare to return a response
-                // First we clear the cached ledger info
-                message.body.params.ledgerIndexes = undefined;
-                message.body.params.currentLedgerTransaction = undefined;
-  
-                // Then we send an informative response to the UI
-                const displayResponse = signedGroups[currentGroup].filter((_, index) => ledgerIndexes.includes(index));
-                sendResponse(displayResponse);
-
-                // Lastly we prepare & send the dApp response
-                if (opts && opts[OptsKeys.sendTxns]) {
-                  message.body.params.stxns = signedGroups;
-                  Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+                // We determine if there's more txns to sign before sending a response back
+                if (currentLedgerTransaction + 1 < ledgerIndexes.length) {
+                  message.body.params.currentLedgerTransaction++;
+                  sendResponse(internalResponse);
                 } else {
-                  // Send the response back to the originating page
-                  message.response = signedGroups.length === 1 ? signedGroups[0] : signedGroups;
-                  MessageApi.send(message);
-                  return;
-                }
-              }
+                  // If there's no more ledger transactions to sign, we prepare to return a response
+                  // First we clear the cached ledger info
+                  message.body.params.ledgerIndexes = undefined;
+                  message.body.params.currentLedgerTransaction = undefined;
 
-            } else {
-              // Send response to the calling function
-              sendResponse(internalResponse);
+                  // Then we send an informative response to the UI
+                  const displayResponse = signedGroups[currentGroup].filter((_, index) =>
+                    ledgerIndexes.includes(index)
+                  );
+                  sendResponse(displayResponse);
+
+                  // Lastly we prepare & send the dApp response
+                  if (opts && opts[OptsKeys.sendTxns]) {
+                    message.body.params.stxns = signedGroups;
+                    Task.methods().public[JsonRpcMethod.PostTransactions](message, MessageApi.send);
+                  } else {
+                    // Send the response back to the originating page
+                    message.response = signedGroups.length === 1 ? signedGroups[0] : signedGroups;
+                    MessageApi.send(message);
+                    return;
+                  }
+                }
+              } else {
+                // Send response to the calling function
+                sendResponse(internalResponse);
+              }
             }
-          });
+          );
           return true;
         },
         [JsonRpcMethod.LedgerSaveAccount]: (request: any, sendResponse: Function) => {

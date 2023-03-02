@@ -5,7 +5,7 @@ const Footer: FunctionalComponent = () => {
   return html`
     <div style="flex: 0; padding: 0 0.5em; border-top: 1px solid #EFF4F7;">
       <span class="is-size-7">
-        ${'\u00A9'} 2022 PureStake
+        ${'\u00A9'} 2023 PureStake
       </span>
     </div>
   `;
