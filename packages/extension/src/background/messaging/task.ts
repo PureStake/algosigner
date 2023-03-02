@@ -1494,8 +1494,6 @@ export class Task {
               .getTransactionParams()
               .do()
               .then((response) => {
-                console.log('algod response');
-                console.log(response);
                 statusReponse['algod'] = response ? response : defaultError;
               })
               .catch((error) => {
@@ -1506,16 +1504,12 @@ export class Task {
               .makeHealthCheck()
               .do()
               .then((response) => {
-                console.log('indexer response');
-                console.log(response);
                 statusReponse['indexer'] = response ? response : defaultError;
               })
               .catch((error) => {
                 statusReponse['indexer'] = { error: error.message || error };
               });
             await Promise.all([algodPromise, indexerPromise]);
-            console.log('joined response');
-            console.log(statusReponse);
             sendResponse(statusReponse);
           });
           return true;
