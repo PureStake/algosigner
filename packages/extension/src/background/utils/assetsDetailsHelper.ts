@@ -1,5 +1,5 @@
 import { ExtensionStorage } from '@algosigner/storage/src/extensionStorage';
-import { Ledger } from '@algosigner/common/types';
+import { Network } from '@algosigner/common/types/network';
 import { InternalMethods } from '../messaging/internalMethods';
 import { Cache } from '../messaging/types';
 import { initializeCache } from './helper';
@@ -11,16 +11,16 @@ const TIMEOUT = 500;
 ///
 export default class AssetsDetailsHelper {
   private static assetsToAdd: { [key: string]: Array<number> } = {
-    [Ledger.TestNet]: [],
-    [Ledger.MainNet]: [],
+    [Network.TestNet]: [],
+    [Network.MainNet]: [],
   };
 
   private static timeouts = {
-    [Ledger.TestNet]: null,
-    [Ledger.MainNet]: null,
+    [Network.TestNet]: null,
+    [Network.MainNet]: null,
   };
 
-  public static add(assets: Array<number>, ledger: Ledger) {
+  public static add(assets: Array<number>, ledger: Network) {
     // If this ledger doesn't have assets yet, then default them to an array
     if (this.assetsToAdd[ledger] === undefined) {
       this.assetsToAdd[ledger] = [];
@@ -31,41 +31,41 @@ export default class AssetsDetailsHelper {
       this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
   }
 
-  private static run(ledger: Ledger) {
-    if (this.assetsToAdd[ledger].length === 0) {
-      this.timeouts[ledger] = null;
+  private static run(network: Network) {
+    if (this.assetsToAdd[network].length === 0) {
+      this.timeouts[network] = null;
       return;
     }
 
     const extensionStorage = new ExtensionStorage();
     extensionStorage.getStorage('cache', (storedCache: any) => {
-      const cache: Cache = initializeCache(storedCache, ledger);
+      const cache: Cache = initializeCache(storedCache, network);
 
-      let assetId = this.assetsToAdd[ledger][0];
-      while (assetId in cache.assets[ledger]) {
-        this.assetsToAdd[ledger].shift();
-        if (this.assetsToAdd[ledger].length === 0) {
-          this.timeouts[ledger] = null;
+      let assetId = this.assetsToAdd[network][0];
+      while (assetId in cache.assets[network]) {
+        this.assetsToAdd[network].shift();
+        if (this.assetsToAdd[network].length === 0) {
+          this.timeouts[network] = null;
           return;
         }
-        assetId = this.assetsToAdd[ledger][0];
+        assetId = this.assetsToAdd[network][0];
       }
 
-      const indexer = InternalMethods.getIndexer(ledger);
+      const indexer = InternalMethods.getIndexer(network);
       indexer
         .lookupAssetByID(assetId)
         .do()
         .then((res: any) => {
-          cache.assets[ledger][assetId] = res.asset.params;
+          cache.assets[network][assetId] = res.asset.params;
           extensionStorage.setStorage('cache', cache, null);
         })
         .catch(() => {
           // If there's an issue with the request, remove the asset from the queue.
           // If not done, it will just keep trying to get the same asset over and over.
-          this.assetsToAdd[ledger].shift();
+          this.assetsToAdd[network].shift();
         })
         .finally(() => {
-          this.timeouts[ledger] = setTimeout(() => this.run(ledger), TIMEOUT);
+          this.timeouts[network] = setTimeout(() => this.run(network), TIMEOUT);
         });
     });
   }

@@ -52,17 +52,25 @@ const AccountKeys: FunctionalComponent = (props: any) => {
         <div class="mb-4 px-4 py-2" style="background: #EFF4F7; border-radius: 5px;">
           <div>
             <b>Public Account address</b>
-            <${ToClipboard} class="is-pulled-right" style="font-size: 0.9em;" data=${account.address} />
+            <${ToClipboard}
+              class="is-pulled-right"
+              style="font-size: 0.9em;"
+              data=${account.address}
+            />
           </div>
-          <p style="word-break: break-all; font-size: 0.9em" id="accountAddress">${account.address}</p>
+          <p style="word-break: break-all; font-size: 0.9em" id="accountAddress">
+            ${account.address}
+          </p>
           <div style="display: flow-root;">
-            <b>Mnemonic </b>
-            <${ToClipboard} class="is-pulled-right" style="font-size: 0.9em;" data=${account.mnemonic} />
+            <b>Mnemonic</b>
+            <${ToClipboard}
+              class="is-pulled-right"
+              style="font-size: 0.9em; z-index: 5; position: relative;"
+              data=${account.mnemonic}
+            />
           </div>
           <div class="columns is-mobile">
-            ${grid.map(column => html`
-              <div class="column is-one-fifth">${column}</div>
-            `)}
+            ${grid.map((column) => html`<div class="column is-one-fifth">${column}</div>`)}
           </div>
         </div>
         <p class="mb-4">Make sure you have the entire <b>25-word mnemonic</b>, or you will <b>lose access to this account forever</b>.</p>
@@ -70,17 +78,23 @@ const AccountKeys: FunctionalComponent = (props: any) => {
       </div>
       <div style="padding: 1em;">
         <label class="checkbox mb-4">
-          <input type="checkbox"
-            class="mr-2" id="recordCheckbox" name="recordCheckbox"
+          <input
+            type="checkbox"
+            class="mr-2"
+            id="recordCheckbox"
+            name="recordCheckbox"
             value=${recorded}
-            onClick=${() => setRecorded(!recorded)} />
+            onClick=${() => setRecorded(!recorded)}
+          />
           I’ve securely recorded my mnemonic
         </label>
 
-        <button class="button is-primary is-fullwidth"
+        <button
+          class="button is-primary is-fullwidth"
           disabled=${!recorded}
           id="nextStep"
-          onClick=${nextStep}>
+          onClick=${nextStep}
+        >
           Continue
         </button>
       </div>

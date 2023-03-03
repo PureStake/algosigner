@@ -1,5 +1,5 @@
 import algosdk from 'algosdk';
-import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks } from '@algosigner/common/types/network';
 import { Settings } from '../config';
 
 export const STRING_MAX_LENGTH = 1000;
@@ -16,19 +16,6 @@ export enum ValidationStatus {
   Warning = 2, // Field is out of normal parameters and should be inspected closely
   Dangerous = 3, // Field has risky or costly fields with values and should be inspected very closely
 }
-///
-// Helper to convert a validation status into a classname for display purposes
-///
-function _convertFieldResponseToClassname(validationStatus: ValidationStatus): string {
-  switch (validationStatus) {
-    case ValidationStatus.Dangerous:
-      return 'tx-field-danger';
-    case ValidationStatus.Warning:
-      return 'tx-field-warning';
-    default:
-      return '';
-  }
-}
 
 ///
 // Validation responses.
@@ -36,11 +23,9 @@ function _convertFieldResponseToClassname(validationStatus: ValidationStatus): s
 export class ValidationResponse {
   status: ValidationStatus;
   info: string;
-  className: string;
   constructor(props) {
     this.status = props.status;
     this.info = props.info;
-    this.className = _convertFieldResponseToClassname(this.status);
   }
 }
 
@@ -217,8 +202,8 @@ export function Validate(field: any, value: any): ValidationResponse {
     // Genesis ID must be present and one of the approved values
     case 'genesisID':
       if (
-        getBaseSupportedLedgers().some((l) => value === l['genesisId']) ||
-        Settings.getCleansedInjectedNetworks().find((l) => value === l['genesisId'])
+        getBaseSupportedNetworks().some((n) => value === n['genesisID']) ||
+        Settings.getCleansedInjectedNetworks().find((n) => value === n['genesisID'])
       ) {
         return new ValidationResponse({ status: ValidationStatus.Valid });
       } else {

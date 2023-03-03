@@ -4,8 +4,9 @@ import { AssetConfigTransaction } from './acfgTransaction';
 import { AssetTransferTransaction } from './axferTransaction';
 import { AssetCloseTransaction } from './axferCloseTransaction';
 import { AssetFreezeTransaction } from './afrzTransaction';
-import { KeyregTransaction } from './keyregTransaction';
 import { ApplicationTransaction } from './applTransaction';
+import { OnlineKeyregTransaction } from './keyregOnlineTransaction';
+import { OfflineKeyregTransaction } from './keyregOfflineTransaction';
 
 test('Validate build of pay transaction', () => {
   const preTransaction = {
@@ -57,7 +58,7 @@ test('Validate build of appl transaction', () => {
   expect(result instanceof ApplicationTransaction).toBe(true);
 });
 
-test('Validate build of keygreg transaction', () => {
+test('Validate build of keyreg transaction', () => {
   const preTransaction = {
     type: 'keyreg',
     fee: 1000,
@@ -67,6 +68,25 @@ test('Validate build of keygreg transaction', () => {
     stateProofKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQNM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     voteFirst: 1,
     voteLast: 1001,
+    voteKeyDilution: 1001,
+    firstRound: 1,
+    lastRound: 1001,
+    genesisID: 'testnet-v1.0',
+    genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    note: new Uint8Array(0),
+  };
+
+  const result = getValidatedTxnWrap(preTransaction, 'keyreg');
+  expect(result instanceof BaseValidatedTxnWrap).toBe(true);
+  expect(result instanceof OnlineKeyregTransaction).toBe(true);
+});
+
+test('Validate build of offline keyreg transaction', () => {
+  const preTransaction = {
+    type: 'keyreg',
+    fee: 1000,
+    from: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    stateProofKey: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQNM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     firstRound: 1,
     lastRound: 1001,
     genesisID: 'testnet-v1.0',
@@ -77,7 +97,7 @@ test('Validate build of keygreg transaction', () => {
 
   const result = getValidatedTxnWrap(preTransaction, 'keyreg');
   expect(result instanceof BaseValidatedTxnWrap).toBe(true);
-  expect(result instanceof KeyregTransaction).toBe(true);
+  expect(result instanceof OfflineKeyregTransaction).toBe(true);
 });
 
 test('Validate build of acfg transaction', () => {
@@ -90,6 +110,10 @@ test('Validate build of acfg transaction', () => {
     lastRound: 1001,
     genesisID: 'testnet-v1.0',
     genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
+    assetManager: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetReserve: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetFreeze: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
+    assetClawback: 'NM2MBC673SL7TQIKUXD4JOBR3XQITDCHIMIEODQBUGFMAN54QV2VUYWZNQ',
     note: new Uint8Array(0),
   };
 
@@ -172,20 +196,63 @@ test('Validate pay transaction required fields', () => {
     type: 'pay',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'pay');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('to');
-  expect(data).toContain('from');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('to');
+  expect(message).toContain('from');
+});
+
+test('Validate keyreg transaction required fields', () => {
+  const preTransaction = {
+    type: 'keyreg',
+  };
+
+  let message: string = undefined;
+  try {
+    getValidatedTxnWrap(preTransaction, 'keyreg');
+  } catch (e) {
+    message = e.message;
+  }
+  expect(message).toContain('Validation failed');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('voteKey');
+  expect(message).toContain('selectionKey');
+  expect(message).toContain('voteFirst');
+  expect(message).toContain('voteLast');
+  expect(message).toContain('voteKeyDilution');
+});
+
+test('Validate offline keyreg transaction required fields', () => {
+  const preTransaction = {
+    type: 'keyreg',
+    nonParticipation: true,
+  };
+
+  let message: string = undefined;
+  try {
+    getValidatedTxnWrap(preTransaction, 'keyreg');
+  } catch (e) {
+    message = e.message;
+  }
+  expect(message).toContain('Validation failed');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('nonParticipation');
 });
 
 test('Validate clawback transaction required fields', () => {
@@ -193,21 +260,19 @@ test('Validate clawback transaction required fields', () => {
     type: 'axfer',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
-  expect(data).toContain('assetRevocationTarget');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
+  expect(message).toContain('assetRevocationTarget');
 });
 
 test('Validate accept transaction required fields', () => {
@@ -215,20 +280,18 @@ test('Validate accept transaction required fields', () => {
     type: 'axfer',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'axfer');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
 });
 
 test('Validate create transaction required fields', () => {
@@ -236,20 +299,19 @@ test('Validate create transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetTotal');
+  expect(message).toContain('AssetCreateTx');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetTotal');
 });
 
 test('Validate destroy transaction required fields', () => {
@@ -257,20 +319,19 @@ test('Validate destroy transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('AssetDestroyTx');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
 });
 
 test('Validate modify asset transaction required fields', () => {
@@ -278,18 +339,21 @@ test('Validate modify asset transaction required fields', () => {
     type: 'acfg',
   };
   let message: string = undefined;
-  let data: string = undefined;
   try {
     getValidatedTxnWrap(preTransaction, 'acfg');
   } catch (e) {
     message = e.message;
-    data = e.data;
   }
   expect(message).toContain('Validation failed');
-  expect(data).toContain('firstRound');
-  expect(data).toContain('lastRound');
-  expect(data).toContain('genesisID');
-  expect(data).toContain('genesisHash');
-  expect(data).toContain('from');
-  expect(data).toContain('assetIndex');
+  expect(message).toContain('AssetConfigTx');
+  expect(message).toContain('firstRound');
+  expect(message).toContain('lastRound');
+  expect(message).toContain('genesisID');
+  expect(message).toContain('genesisHash');
+  expect(message).toContain('from');
+  expect(message).toContain('assetIndex');
+  expect(message).toContain('assetManager');
+  expect(message).toContain('assetReserve');
+  expect(message).toContain('assetFreeze');
+  expect(message).toContain('assetClawback');
 });

@@ -15,7 +15,7 @@ import Authenticate from 'components/Authenticate';
 import { sendMessage } from 'services/Messaging';
 import { StoreContext } from 'services/StoreContext';
 import logotype from 'assets/logotype.png';
-import { getBaseSupportedLedgers } from '@algosigner/common/types/ledgers';
+import { getBaseSupportedNetworks } from '@algosigner/common/types/network';
 
 function deny() {
   const params = {
@@ -34,7 +34,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>('');
   const [request, setRequest] = useState<any>({});
-  const [ledger, setLedger] = useState<string>('');
+  const [network, setNetwork] = useState<string>('');
   const [activeTx, setActiveTx] = useState<number>(0);
   const [dropdown, setDropdown] = useState<boolean>(false);
   const [approvals, setApprovals] = useState<Array<boolean>>([]);
@@ -97,13 +97,13 @@ const SignWalletTransaction: FunctionalComponent = () => {
     });
   };
 
-  const findAccountNames = (ledger) => {
+  const findAccountNames = (network) => {
     const newAccountNames = accountNames.slice();
-    if (store[ledger] && store[ledger].length) {
-      for (let i = 0; i < store[ledger].length; i++) {
+    if (store.wallet[network] && store.wallet[network].length) {
+      for (let i = 0; i < store.wallet[network].length; i++) {
         transactionWraps.forEach((wrap, index) => {
-          const lookupAddress = store[ledger][i].address;
-          const lookupName = store[ledger][i].name;
+          const lookupAddress = store.wallet[network][i].address;
+          const lookupName = store.wallet[network][i].name;
           const msigData = wrap.msigData;
           const signers = wrap.signers;
           if (signers && !signers.length) {
@@ -128,7 +128,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
       setAccountNames(newAccountNames);
     } else {
       setTimeout(() => {
-        findAccountNames(ledger);
+        findAccountNames(network);
       }, 100);
     }
   };
@@ -179,35 +179,35 @@ const SignWalletTransaction: FunctionalComponent = () => {
       setAccountNames(new Array(transactionWraps.length).fill(''));
     }
 
-    if (!ledger) {
-      // Search for ledger and find accounts
-      let txLedger;
-      getBaseSupportedLedgers().forEach((l) => {
-        if (transactionWraps[0].transaction.genesisID === l['genesisId']) {
-          txLedger = l['name'];
-          setLedger(txLedger);
-          findAccountNames(txLedger);
+    if (!network) {
+      // Search for network and find accounts
+      let txnNetwork;
+      getBaseSupportedNetworks().forEach((n) => {
+        if (transactionWraps[0].transaction.genesisID === n['genesisID']) {
+          txnNetwork = n['name'];
+          setNetwork(txnNetwork);
+          findAccountNames(txnNetwork);
         }
       });
 
-      // Add on any injected ledgers
-      if (txLedger === undefined) {
-        let sessionLedgers;
-        store.getAvailableLedgers((availableLedgers) => {
-          if (!availableLedgers.error) {
-            sessionLedgers = availableLedgers;
-            sessionLedgers.forEach((l) => {
-              if (transactionWraps[0].transaction.genesisID === l['genesisId']) {
-                txLedger = l['name'];
+      // Add on any injected networks
+      if (txnNetwork === undefined) {
+        let sessionNetworks;
+        store.getAvailableNetworks((availableNetworks) => {
+          if (!availableNetworks.error) {
+            sessionNetworks = availableNetworks;
+            sessionNetworks.forEach((n) => {
+              if (transactionWraps[0].transaction.genesisID === n['genesisID']) {
+                txnNetwork = n['name'];
               }
             });
 
-            setLedger(txLedger);
-            findAccountNames(txLedger);
+            setNetwork(txnNetwork);
+            findAccountNames(txnNetwork);
           }
         });
       } else {
-        setLedger(txLedger);
+        setNetwork(txnNetwork);
       }
     }
   }
@@ -229,7 +229,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             vo=${wrap.validityObject}
             estFee=${wrap.estimatedFee}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             contact=${contact}
             authAddr=${wrap.authAddr}
@@ -242,7 +242,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             vo=${wrap.validityObject}
             estFee=${wrap.estimatedFee}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             authAddr=${wrap.authAddr}
           />
@@ -255,7 +255,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             dt=${wrap.txDerivedTypeText}
             estFee=${wrap.estimatedFee}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             authAddr=${wrap.authAddr}
           />
@@ -270,7 +270,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             da=${wrap.assetInfo.displayAmount}
             un=${wrap.assetInfo.unitName}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             contact=${contact}
             authAddr=${wrap.authAddr}
@@ -283,7 +283,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             vo=${wrap.validityObject}
             estFee=${wrap.estimatedFee}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             authAddr=${wrap.authAddr}
           />
@@ -295,7 +295,7 @@ const SignWalletTransaction: FunctionalComponent = () => {
             vo=${wrap.validityObject}
             estFee=${wrap.estimatedFee}
             account=${account}
-            ledger=${ledger}
+            network=${network}
             msig=${wrap.msigData}
             authAddr=${wrap.authAddr}
           />
@@ -324,8 +324,8 @@ const SignWalletTransaction: FunctionalComponent = () => {
             html`<img class="mr-2" src=${request.favIconUrl} width="32" style="float:left" />`}
             <h1 class="title is-size-5">
               <span>${request.originTitle} wants to sign transactions for </span>
-              <span style="color:${ledger.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
-                ${ledger}
+              <span style="color:${network.toLowerCase() == 'mainnet' ? '#f16522' : '#222b60'};">
+                ${network}
               </span>
             </h1>
           </div>

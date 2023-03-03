@@ -32,13 +32,13 @@ describe('Wallet Setup', () => {
 
 describe('UI Transactions Tests', () => {
   const amount = Math.ceil(Math.random() * 3); // txn size, modify multiplier for bulk
+  const testAssetIndex = 157722252;
+  const testAssetDecimals = 6;
 
   let txId; // returned tx id from send txn
   let txTitle; // for tx verification
 
-  beforeEach(async () => {
-    jest.setTimeout(15000);
-  });
+  jest.setTimeout(17000);
 
   afterAll(async () => {
     extensionPage.close();
@@ -141,19 +141,20 @@ describe('UI Transactions Tests', () => {
     await extensionPage.waitForTimeout(100);
     await extensionPage.click('#selectAsset');
     await extensionPage.waitForTimeout(100);
-    await extensionPage.waitForSelector('#asset-13169404');
-    await extensionPage.click('#asset-13169404');
+    const assetSelector = `#asset-${testAssetIndex}`;
+    await extensionPage.waitForSelector(assetSelector);
+    await extensionPage.click(assetSelector);
     await extensionPage.waitForTimeout(500);
     // Test correct decimal handling
-    await extensionPage.type('#transferAmount', `0.000000000${amount}`);
-    const actualAmount = await extensionPage.$eval('#transferAmount', (e) => {
+    await extensionPage.type('#transferAmount', `${(amount / (10 ** (testAssetDecimals + 3))).toFixed(testAssetDecimals + 3)}`);
+    const enteredAmount = await extensionPage.$eval('#transferAmount', (e) => {
       const inputValue = e.value;
       e.value = '';
       return inputValue;
     });
-    expect(actualAmount).toMatch('0.000000');
+    expect(enteredAmount).toMatch(`0.${new Array(testAssetDecimals).fill(0).join('')}`);
     // Test actual transfer
-    await extensionPage.type('#transferAmount', `0.00000${amount}`);
+    await extensionPage.type('#transferAmount', `${(amount / (10 ** testAssetDecimals).toFixed(testAssetDecimals))}`);
     // Select an Imported Account from aliases
     await extensionPage.type('#destinationAddress', 't');
     await extensionPage.waitForSelector('.alias-selector-container');

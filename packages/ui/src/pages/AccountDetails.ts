@@ -48,9 +48,9 @@ const AccountDetails: FunctionalComponent = (props: any) => {
   };
 
   useEffect(() => {
-    for (let i = store[ledger].length - 1; i >= 0; i--) {
-      if (store[ledger][i].address === address) {
-        setDetails(store[ledger][i].details);
+    for (let i = store.wallet[ledger].length - 1; i >= 0; i--) {
+      if (store.wallet[ledger][i].address === address) {
+        setDetails(store.wallet[ledger][i].details);
         break;
       }
     }

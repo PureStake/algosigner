@@ -10,8 +10,8 @@ module.exports = {
     ui: {
       name: 'E2E-Tests',
       mnemonic:
-        'grape topple reform pistol excite salute loud spike during draw drink planet naive high treat captain dutch cloth more bachelor attend attract magnet ability heavy',
-      address: 'MTHFSNXBMBD4U46Z2HAYAOLGD2EV6GQBPXVTL727RR3G44AJ3WVFMZGSBE',
+        'belt middle party tired craft blanket guide want perfect taste couch march goddess render orient chair avocado intact other stand route attend number abandon icon',
+      address: 'SGQOSQKZQWABMLHY6CPLKFZ4FHURBLVQTMZZQFP4U7LGZHPW3U4MIPXEDU',
     },
     multisig: {
       name: 'Joined Multisig',

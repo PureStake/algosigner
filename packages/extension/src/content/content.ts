@@ -1,4 +1,3 @@
-const allowed_public_methods = ['get-account-keys'];
 const BUNDLE = 'AlgoSigner.min.js';
 import {extensionBrowser} from '@algosigner/common/chrome';
 
@@ -13,7 +12,7 @@ class Content {
     }
 
     inject() {
-        let url = extensionBrowser.runtime.getURL(BUNDLE);
+        const url = extensionBrowser.runtime.getURL(BUNDLE);
         const el = document.createElement('script');
         el.setAttribute('type', 'text/javascript');
         el.setAttribute('src', url);
@@ -23,13 +22,13 @@ class Content {
     // Messages coming from AlgoSigner injected library.
     // They are sent to background using chrome.runtime.
     messageChannelListener() {
-        let ctx = this;
+        const ctx = this;
         window.addEventListener("message",(ev) => {
             var d = ev.data;
             try {
                 if (typeof d === 'string') {
-                    let result = JSON.parse(d);  
-                    let type = Object.prototype.toString.call(result);
+                    const result = JSON.parse(d);  
+                    const type = Object.prototype.toString.call(result);
                     if(type === '[object Object]' || type === '[object Array]') {
                         // We can display message output here, but as a string object it doesn't match our format and is likely from other sources
                     }   
@@ -37,7 +36,7 @@ class Content {
                 else {
                     if(Object.prototype.toString.call(d) === '[object Object]' && "source" in d){
                         if(d.source == "dapp") {
-                            let eventId: string = d.body.id;
+                            const eventId: string = d.body.id;
                             ctx.events[eventId] = ev;
                         }
                         if(d.source == "dapp" || d.source == "router") {
@@ -55,10 +54,10 @@ class Content {
     // Messages coming from background.
     // They are sent to the AlgoSigner injected library.
     chromeRuntimeListener() {
-        let ctx = this;
+        const ctx = this;
         extensionBrowser.runtime.onMessage.addListener((d) => {
             if( Object.prototype.toString.call(d) === '[object Object]' && "body" in d) {
-                let body = d.body;
+                const body = d.body;
                 if(body.id in ctx.events) {
                     ctx.events[body.id].ports[0].postMessage(d);
                     delete ctx.events[body.id];

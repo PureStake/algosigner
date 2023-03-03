@@ -1,5 +1,5 @@
-import { LedgerTemplate } from '@algosigner/common/types/ledgers';
-import { Ledger } from '@algosigner/common/types';
+import { Connection, ConnectionDetails, NetworkTemplate } from '@algosigner/common/types/network';
+import { Network } from '@algosigner/common/types/network';
 import { logging, LogLevel } from '@algosigner/common/logging';
 import { Backend, API } from './messaging/types';
 import { parseUrlServerAndPort } from './utils/networkUrlParser';
@@ -8,7 +8,7 @@ export class Settings {
   static backend: Backend = Backend.PureStake;
   static backend_settings: { [key: string]: any } = {
     [Backend.PureStake]: {
-      [Ledger.TestNet]: {
+      [Network.TestNet]: {
         [API.Algod]: {
           url: 'https://algosigner.api.purestake.io/testnet/algod',
           port: '',
@@ -18,7 +18,7 @@ export class Settings {
           port: '',
         },
       },
-      [Ledger.MainNet]: {
+      [Network.MainNet]: {
         [API.Algod]: {
           url: 'https://algosigner.api.purestake.io/mainnet/algod',
           port: '',
@@ -33,41 +33,40 @@ export class Settings {
     InjectedNetworks: {},
   };
 
-  public static deleteInjectedNetwork(ledgerUniqueName: string) {
-    delete this.backend_settings.InjectedNetworks[ledgerUniqueName];
-  }
-
   // Returns a copy of Injected networks with just basic information for dApp or display.
-  public static getCleansedInjectedNetworks() {
+  public static getCleansedInjectedNetworks(): Array<NetworkTemplate> {
     const injectedNetworks = [];
-    const injectedNetworkKeys = Object.keys(this.backend_settings.InjectedNetworks);
-    for (var i = 0; i < injectedNetworkKeys.length; i++) {
+    const injectedNetworkNames = Object.keys(this.backend_settings.InjectedNetworks);
+    for (let i = 0; i < injectedNetworkNames.length; i++) {
       injectedNetworks.push({
-        name: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].name,
-        genesisId: this.backend_settings.InjectedNetworks[injectedNetworkKeys[i]].genesisId,
+        name: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].name,
+        genesisID: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].genesisID,
+        genesisHash: this.backend_settings.InjectedNetworks[injectedNetworkNames[i]].genesisHash,
       });
     }
 
     return injectedNetworks;
   }
 
-  private static setInjectedHeaders(ledger: LedgerTemplate, isCheckOnly?: boolean) {
-    if (!this.backend_settings.InjectedNetworks[ledger.name] && !isCheckOnly) {
-      console.log('Error: Ledger headers can not be updated. Ledger not available.');
-      return;
-    }
-
+  public static getConnectionFromTemplate(network: NetworkTemplate): Connection {
     // Initialize headers for apiKey and individuals if there
     let headers = {};
     let headersAlgod = undefined;
     let headersIndexer = undefined;
-    if (ledger['headers']) {
+    if (network['headers']) {
       // Set the headers to the base level first, this allows a string key to be used
-      headers = ledger['headers'];
+      headers = network['headers'];
 
       // Then try to parse the headers, in the case it is a string object.
       try {
-        headers = JSON.parse(ledger['headers']);
+        headers = JSON.parse(network['headers']);
+        // Get individual sub headers if they are available
+        if (headers['Algod']) {
+          headersAlgod = headers['Algod'];
+        }
+        if (headers['Indexer']) {
+          headersIndexer = headers['Indexer'];
+        }
       } catch (e) {
         // Use headers default value, but use it as a token if it is a string
         if (typeof headers === 'string') {
@@ -76,104 +75,73 @@ export class Settings {
           headers = { 'X-Algo-API-Token': headers };
         }
       }
-
-      // Get individual sub headers if they are available
-      if (headers['Algod']) {
-        headersAlgod = headers['Algod'];
-      }
-      if (headers['Indexer']) {
-        headersIndexer = headers['Indexer'];
-      }
-    }
-
-    // Add the algod links defaulting the url to one based on the genesisId
-    let defaultUrl = 'https://algosigner.api.purestake.io/mainnet';
-    if (ledger.genesisId && ledger.genesisId.indexOf('testnet') > -1) {
-      defaultUrl = 'https://algosigner.api.purestake.io/testnet';
     }
 
     // Setup port splits for algod and indexer - used in sandbox installs
-    const parsedAlgodUrlObj = parseUrlServerAndPort(ledger.algodUrl);
-    const parsedIndexerUrlObj = parseUrlServerAndPort(ledger.indexerUrl);
+    const parsedAlgodUrl = parseUrlServerAndPort(network.algodUrl);
+    const parsedIndexerUrl = parseUrlServerAndPort(network.indexerUrl);
 
-    // Add algod links
-    const injectedAlgod = {
-      url: parsedAlgodUrlObj.server || `${defaultUrl}/algod`,
-      port: parsedAlgodUrlObj.port,
+    // Add algod connection
+    const injectedAlgod: ConnectionDetails = {
+      url: parsedAlgodUrl.server,
+      port: parsedAlgodUrl.port,
       apiKey: headersAlgod || headers,
       headers: headersAlgod || headers,
     };
 
-    // Add the indexer links
-    const injectedIndexer = {
-      url: parsedIndexerUrlObj.server || `${defaultUrl}/indexer`,
-      port: parsedIndexerUrlObj.port,
+    // Add the indexer connection
+    const injectedIndexer: ConnectionDetails = {
+      url: parsedIndexerUrl.server,
+      port: parsedIndexerUrl.port,
       apiKey: headersIndexer || headers,
       headers: headersIndexer || headers,
     };
 
-    if (isCheckOnly) {
-      return {
-        algod: injectedAlgod,
-        indexer: injectedIndexer,
-      };
-    } else {
-      this.backend_settings.InjectedNetworks[ledger.name][API.Algod] = injectedAlgod;
-      this.backend_settings.InjectedNetworks[ledger.name][API.Indexer] = injectedIndexer;
-      this.backend_settings.InjectedNetworks[ledger.name].headers = headers;
-    }
-  }
-
-  public static addInjectedNetwork(ledger: LedgerTemplate) {
-    // Initialize the injected network with the genesisId and a name that mimics the ledger for reference
-    this.backend_settings.InjectedNetworks[ledger.name] = {
-      name: ledger.name,
-      genesisId: ledger.genesisId || '',
+    return {
+      headers: headers,
+      algod: injectedAlgod,
+      indexer: injectedIndexer,
     };
-
-    this.setInjectedHeaders(ledger);
-    logging.log(
-      `Added Network:\n${JSON.stringify(
-        this.backend_settings.InjectedNetworks[ledger.name],
-        null,
-        1
-      )}`,
-      LogLevel.Debug
-    );
   }
 
-  public static updateInjectedNetwork(updatedLedger: LedgerTemplate, previousName: string = '') {
-    const targetName = updatedLedger.uniqueName;
+  public static addInjectedNetwork(network: NetworkTemplate): void {
+    const targetName = network.name;
 
-    if (previousName) {
+    // Create settings entry and update w/ headers
+    this.backend_settings.InjectedNetworks[targetName] = {
+      name: targetName,
+      genesisID: network.genesisID,
+      genesisHash: network.genesisHash,
+    };
+    const connection = this.getConnectionFromTemplate(network);
+    this.backend_settings.InjectedNetworks[targetName][API.Algod] = connection.algod;
+    this.backend_settings.InjectedNetworks[targetName][API.Indexer] = connection.indexer;
+    this.backend_settings.InjectedNetworks[targetName].headers = connection.headers;
+    logging.log(`Added Network ${targetName}:`, LogLevel.Debug);
+    logging.log(this.backend_settings.InjectedNetworks[targetName], LogLevel.Debug);
+  }
+
+  public static updateInjectedNetwork(updatedNetwork: NetworkTemplate, previousName: string): void {
+    if (!this.backend_settings.InjectedNetworks[previousName]) {
+      logging.log(`Unable to overwrite Network ${previousName}.`, LogLevel.Debug);
+    } else {
+      logging.log(`Overwriting Network ${previousName}.`, LogLevel.Debug);
       this.deleteInjectedNetwork(previousName);
-      this.backend_settings.InjectedNetworks[targetName] = {};
+      this.addInjectedNetwork(updatedNetwork);
     }
-    this.backend_settings.InjectedNetworks[targetName].genesisId = updatedLedger.genesisId;
-    this.backend_settings.InjectedNetworks[targetName].symbol = updatedLedger.symbol;
-    this.backend_settings.InjectedNetworks[targetName].genesisHash =
-      updatedLedger.genesisHash;
-    this.backend_settings.InjectedNetworks[targetName].algodUrl = updatedLedger.algodUrl;
-    this.backend_settings.InjectedNetworks[targetName].indexerUrl =
-      updatedLedger.indexerUrl;
-    this.setInjectedHeaders(updatedLedger);
-
-    logging.log(
-      `Updated Network:\n${JSON.stringify(
-        this.backend_settings.InjectedNetworks[targetName],
-        null,
-        1
-      )}`,
-      LogLevel.Debug
-    );
   }
 
-  public static getBackendParams(ledger: string, api: API) {
+  public static deleteInjectedNetwork(network: string): void {
+    delete this.backend_settings.InjectedNetworks[network];
+    logging.log(`Deleted Network ${network}:`, LogLevel.Debug);
+  }
+
+  public static getBackendParams(network: string, api: API): ConnectionDetails {
     // If we are using the PureStake backend we can return the url, port, and apiKey
-    if (this.backend_settings[this.backend][ledger]) {
+    if (this.backend_settings[this.backend][network]) {
       return {
-        url: this.backend_settings[this.backend][ledger][api].url,
-        port: this.backend_settings[this.backend][ledger][api].port,
+        url: this.backend_settings[this.backend][network][api].url,
+        port: this.backend_settings[this.backend][network][api].port,
         apiKey: this.backend_settings[this.backend].apiKey,
         headers: {},
       };
@@ -181,15 +149,10 @@ export class Settings {
 
     // Here we have to grab data from injected networks instead of the backend
     return {
-      url: this.backend_settings.InjectedNetworks[ledger][api].url,
-      port: this.backend_settings.InjectedNetworks[ledger][api].port,
-      apiKey: this.backend_settings.InjectedNetworks[ledger][api].apiKey,
-      headers: this.backend_settings.InjectedNetworks[ledger][api].headers,
+      url: this.backend_settings.InjectedNetworks[network][api].url,
+      port: this.backend_settings.InjectedNetworks[network][api].port,
+      apiKey: this.backend_settings.InjectedNetworks[network][api].apiKey,
+      headers: this.backend_settings.InjectedNetworks[network][api].headers,
     };
-  }
-
-  public static checkNetwork(ledger: LedgerTemplate) {
-    const networks = this.setInjectedHeaders(ledger, true);
-    return networks;
   }
 }
