@@ -1,5 +1,5 @@
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
-import { Ledger } from '@algosigner/common/types';
+import { Network } from '@algosigner/common/types/network';
 import encryptionWrap from '../encryptionWrap';
 import { InternalMethods } from './internalMethods';
 import algosdk from 'algosdk';
@@ -94,11 +94,11 @@ describe('wallet flow', () => {
     InternalMethods[JsonRpcMethod.CreateWallet](request, sendResponse);
 
     expect(sendResponse).toHaveBeenCalledWith({
-      availableLedgers: [
+      availableNetworks: [
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
-          genesisId: 'mainnet-v1.0',
+          genesisID: 'mainnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -108,7 +108,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
-          genesisId: 'testnet-v1.0',
+          genesisID: 'testnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -116,7 +116,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Ledger.MainNet,
+      network: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -137,12 +137,12 @@ describe('wallet flow', () => {
     };
     const sendResponse = jest.fn();
 
-    const session = {
-      availableLedgers: [
+    const sessionObject = {
+      availableNetworks: [
         {
           algodUrl: undefined,
           genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
-          genesisId: 'mainnet-v1.0',
+          genesisID: 'mainnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -152,7 +152,7 @@ describe('wallet flow', () => {
         {
           algodUrl: undefined,
           genesisHash: 'SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=',
-          genesisId: 'testnet-v1.0',
+          genesisID: 'testnet-v1.0',
           headers: undefined,
           indexerUrl: undefined,
           isEditable: false,
@@ -160,7 +160,7 @@ describe('wallet flow', () => {
           symbol: undefined,
         },
       ],
-      ledger: Ledger.MainNet,
+      network: Network.MainNet,
       wallet: {
         TestNet: [],
         MainNet: [],
@@ -176,7 +176,7 @@ describe('wallet flow', () => {
 
     InternalMethods[JsonRpcMethod.GetSession](request, sendResponse);
 
-    expect(sendResponse).toHaveBeenCalledWith({ exist: true, session: session });
+    expect(sendResponse).toHaveBeenCalledWith({ exist: true, session: sessionObject });
   });
 
   test('a TestNet account can be added', () => {
@@ -197,7 +197,7 @@ describe('wallet flow', () => {
         params: {
           ...account,
           mnemonic: mnemonic,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -238,7 +238,7 @@ describe('wallet flow', () => {
         params: {
           name: testImportAccount.name,
           mnemonic: testImportAccount.mnemonic,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -283,7 +283,7 @@ describe('wallet flow', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -329,7 +329,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -371,7 +371,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           address: testImportAccount.address,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },
@@ -505,7 +505,7 @@ describe('algosdk methods', () => {
         method: method,
         params: {
           assetId: 12008492,
-          ledger: Ledger.TestNet,
+          ledger: Network.TestNet,
         },
         id: '17402bbaa89',
       },

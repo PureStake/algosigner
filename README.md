@@ -10,24 +10,28 @@ _This is the preferred solution for end-users, updates will be automatically ins
 
 Developers working with dApps may also install directly from the release package, or by downloading the project and building it.
 
-## 1.10.1 Release
+### Important
 
-### Main updates
-As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0, a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated. 
-
-- A new top level object, `window.algorand` is made available and can be accessed by the dapp to make calls to AlgoSigner. The existing `window.AlgoSigner` object remains but will be deprecated over the next year. 
-- An updated connection flow and address discovery process for dApps is in place, using `algorand.enable()`. **The existing connection flow persists but will be deprecated over the next 3-6 months.**
-- Dapps may also now request for AlgoSigner to directly post signed transactions to the network and not return the signed blob to the dApp for handling. 
-- Additional documentation regarding the use of `authAddr` for signing transactions with rekeyed accounts.
+As part of the process of supporting the [Algorand Foundations ARCs](https://arc.algorand.foundation/), in 1.10.0, a number of non-breaking additions have been made to support how dApps will work with AlgoSigner. In time, the existing legacy features will be deprecated.
 
 An interactive transition guide is available [here](https://purestake.github.io/algosigner-dapp-example/arcTransitionGuide.html) to aid in the migration of existing functionalities.
 
-### Other updates (1.10.1):
-- Transaction signing with Ledger devices now support signing multiple transactions in a single group at once. Also updated the Ledger libraries.
-- Added support for the `boxes` field on application transactions and the `stateProofKey` & `nonParticipation` fields for key registration transactions.
-- Various bugfixes:
-  - Fixed an issue where custom networks weren't working correctly on `algorand.enable()` calls.
-  - Fixed an issue AlgoSigner becoming unresponsive when trying to sign a transaction with a Reference Account with no `authAddr` provided.
+## 1.11.0 Release
+
+### Main updates
+
+- Multiple improvements to Custom Networks including:
+  - Automatic fetching of genesis ID and hashes for the user.
+  - Achieved full compatibility with `enable()` calls.
+  - Other UI/UX changes.
+- Updated a lot of error messages and data structures to better communicate the causes of errors.
+
+### Other updates and bugfixes:
+- Connecting to a dApp using an `enable()` call while logged out no longer closes the connection window after inputting your password.
+- Improved validations for `keyreg` transactions regarding nonParticipation.
+- Improved validations for `acfg` transactions regarding the distinctions between 'Create', 'Config' and 'Destroy'.
+- Fixed account permission bug on `enable()` calls.
+- SDK support updated to v2.0.0.
 
 ## New Users
 

@@ -7,14 +7,14 @@ import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { StoreContext } from 'services/StoreContext';
 import { sendMessage } from 'services/Messaging';
 
-const LedgerSelect: FunctionalComponent = () => {
+const NetworkSelect: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [active, setActive] = useState<boolean>(false);
 
-  let sessionLedgers;
-  store.getAvailableLedgers((availableLedgers) => {
-    if (!availableLedgers.error) {
-      sessionLedgers = availableLedgers;
+  let sessionNetworks;
+  store.getAvailableNetworks((availableNetworks) => {
+    if (!availableNetworks.error) {
+      sessionNetworks = availableNetworks;
     }
   });
 
@@ -25,12 +25,12 @@ const LedgerSelect: FunctionalComponent = () => {
     setActive(!active);
   };
 
-  const setLedger = (ledger) => {
+  const setNetwork = (network) => {
     const params = {
-      ledger: ledger,
+      ledger: network,
     };
-    sendMessage(JsonRpcMethod.ChangeLedger, params, function () {
-      store.setLedger(ledger);
+    sendMessage(JsonRpcMethod.ChangeNetwork, params, function () {
+      store.setActiveNetwork(network);
       flip();
       route('/wallet');
     });
@@ -51,22 +51,22 @@ const LedgerSelect: FunctionalComponent = () => {
             <span class="icon is-small">
               <i class="fas fa-caret-down" aria-hidden="true"></i>
             </span>
-            <span>${store.ledger}</span>
+            <span>${store.activeNetwork}</span>
           </button>
         </div>
         <div class="dropdown-menu" id="dropdown-menu" role="menu">
           <div class="dropdown-mask" onClick=${flip} />
           <div class="dropdown-content">
-            ${sessionLedgers &&
-            sessionLedgers.map(
-              (availableLedger: any) =>
+            ${sessionNetworks &&
+            sessionNetworks.map(
+              (network: any) =>
                 html`
                   <a
-                    id="select${availableLedger.name}"
-                    onClick=${() => setLedger(availableLedger.name)}
+                    id="select${network.name}"
+                    onClick=${() => setNetwork(network.name)}
                     class="dropdown-item"
                   >
-                    ${availableLedger.name}
+                    ${network.name}
                   </a>
                 `
             )}
@@ -77,4 +77,4 @@ const LedgerSelect: FunctionalComponent = () => {
   );
 };
 
-export default LedgerSelect;
+export default NetworkSelect;

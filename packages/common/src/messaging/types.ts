@@ -34,11 +34,11 @@ export enum JsonRpcMethod {
   AssetsAPIList = 'assets-api-list',
   AssetsVerifiedList = 'assets-verified-list',
   SignSendTransaction = 'sign-send-transaction',
-  ChangeLedger = 'change-ledger',
+  ChangeNetwork = 'change-network',
   SaveNetwork = 'save-network',
   CheckNetwork = 'check-network',
   DeleteNetwork = 'delete-network',
-  GetLedgers = 'get-ledgers',
+  GetNetworks = 'get-networks',
   GetContacts = 'get-contacts',
   SaveContact = 'save-contact',
   DeleteContact = 'delete-contact',
@@ -73,6 +73,7 @@ export enum MessageSource {
   Router = 'router',
   UI = 'ui',
 }
+
 export type MessageBody = {
   readonly source: MessageSource;
   readonly body: JsonRpcBody;

@@ -83,10 +83,10 @@ const AddAsset: FunctionalComponent = (props: any) => {
   useEffect(() => {
     setLoading(true);
     // Load account's assets
-    for (let i = store[ledger].length - 1; i >= 0; i--) {
-      if (store[ledger][i].address === address) {
-        if ('details' in store[ledger][i]) {
-          const ids = store[ledger][i].details.assets.map((x) => x['asset-id']);
+    for (let i = store.wallet[ledger].length - 1; i >= 0; i--) {
+      if (store.wallet[ledger][i].address === address) {
+        if ('details' in store.wallet[ledger][i]) {
+          const ids = store.wallet[ledger][i].details.assets.map((x) => x['asset-id']);
           setAccountsAssetsIDs(ids);
         }
         break;

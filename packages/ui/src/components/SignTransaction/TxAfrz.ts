@@ -1,20 +1,20 @@
 import { html } from 'htm/preact';
 import { FunctionalComponent } from 'preact';
 import TxTemplate from './Common/TxTemplate';
-import { isLedgerBaseSupported } from '@algosigner/common/utils';
+import { isBaseSupportedNetwork } from '@algosigner/common/utils';
 
 const TxAfrz: FunctionalComponent = (props: any) => {
-  const { tx, account, ledger, vo, estFee, msig, authAddr } = props;
+  const { tx, account, network, vo, estFee, msig, authAddr } = props;
   const fee = estFee ? estFee : tx['fee'];
 
   const state = tx.freezeState ? 'Freeze' : 'Unfreeze';
 
   let assetIndex = html`<p style="width: 70%">${tx.assetIndex}</p>`;
-  if (isLedgerBaseSupported(ledger)) {
+  if (isBaseSupportedNetwork(network)) {
     assetIndex = html`
       <a
         style="width: 70%"
-        href=${`https://goalseeker.purestake.io/algorand/${ledger.toLowerCase()}/asset/${
+        href=${`https://goalseeker.purestake.io/algorand/${network.toLowerCase()}/asset/${
           tx.assetIndex
         }`}
         target="_blank"
@@ -53,7 +53,7 @@ const TxAfrz: FunctionalComponent = (props: any) => {
         <p style="width: 30%;">Asset:</p>
         ${assetIndex}
       </div>
-      <div class="is-flex${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}">
+      <div class="is-flex">
         <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
         <p style="width: 70%;">${fee / 1e6} Algos</p>
       </div>

@@ -1,5 +1,5 @@
 import { extensionBrowser } from './chrome';
-import { getBaseSupportedLedgers } from './types/ledgers';
+import { getBaseSupportedNetworks } from './types/network';
 
 export function isFromExtension(origin: string): boolean {
   const s = origin.split('://');
@@ -21,12 +21,12 @@ export function removeEmptyFields(obj: { [index: string]: any }): any {
 }
 
 /**
- * Check if a ledger belongs to our base supported ledgers (e.g: links to GoalSeeker)
- * @param ledger 
+ * Check if a network belongs to our base supported network (e.g: links to GoalSeeker)
+ * @param network 
  * @returns boolean
  */
-export function isLedgerBaseSupported(ledger: string): boolean {
-  return getBaseSupportedLedgers().map((l) => l.name.toLowerCase()).includes(ledger.toLowerCase());
+export function isBaseSupportedNetwork(network: string): boolean {
+  return getBaseSupportedNetworks().map((l) => l.name.toLowerCase()).includes(network.toLowerCase());
 }
 
 /**

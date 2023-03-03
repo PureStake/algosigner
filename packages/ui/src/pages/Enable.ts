@@ -2,6 +2,7 @@ import { FunctionalComponent } from 'preact';
 import { html } from 'htm/preact';
 import { useState, useContext, useEffect } from 'preact/hooks';
 import { useObserver } from 'mobx-react-lite';
+import { NetworkSelectionType } from '@algosigner/common/types/network';
 import { JsonRpcMethod } from '@algosigner/common/messaging/types';
 import { obfuscateAddress } from '@algosigner/common/utils';
 import { StoreContext } from 'services/StoreContext';
@@ -27,30 +28,27 @@ const Enable: FunctionalComponent = () => {
   const store: any = useContext(StoreContext);
   const [genesisID, setGenesisID] = useState<any>('');
   const [genesisHash, setGenesisHash] = useState<any>('');
-  const [networkSpecifiedType, setNetworkSpecifiedType] = useState<any>('');
+  const [specifiedNetworkType, setSpecifiedNetworkType] = useState<NetworkSelectionType>(NetworkSelectionType.NoneProvided);
   const [accounts, setPromptedAccounts] = useState<any>([]);
-  const [request, setRequest] = useState<any>({});
   const [active, setActive] = useState<boolean>(false);
-  let sessionLedgers;
+  let sessionNetworks;
   let ddClass: string = 'dropdown';
 
-  store.getAvailableLedgers((availableLedgers) => {
-    if (!availableLedgers.error) {
-      let restrictedLedgers: any[] = [];
-      if (networkSpecifiedType === 1) {
-        restrictedLedgers.push(
-          availableLedgers.find((l) => l.genesisId === genesisID && l.genesisHash === genesisHash)
+  store.getAvailableNetworks((availableNetwork) => {
+    if (!availableNetwork.error) {
+      let restrictedNetworks: any[] = [];
+      if (specifiedNetworkType === NetworkSelectionType.BothProvided) {
+        restrictedNetworks.push(
+          availableNetwork.find((l) => l.genesisID === genesisID && l.genesisHash === genesisHash)
         );
-      } else if (networkSpecifiedType === 2) {
-        for (let i = 0; i < availableLedgers.length; i++) {
-          if (availableLedgers[i]['genesisId'] === genesisID) {
-            restrictedLedgers.push(availableLedgers[i]);
-          }
-        }
+      } else if (specifiedNetworkType === NetworkSelectionType.OnlyIDProvided) {
+        restrictedNetworks.push(
+          availableNetwork.find((l) => l.genesisID === genesisID)
+        );
       } else {
-        restrictedLedgers = availableLedgers;
+        restrictedNetworks = availableNetwork;
       }
-      sessionLedgers = restrictedLedgers;
+      sessionNetworks = restrictedNetworks;
     }
   });
 
@@ -72,29 +70,28 @@ const Enable: FunctionalComponent = () => {
     if (params.genesisHash) {
       setGenesisHash(params.genesisHash);
     }
-    if (params.ledger) {
-      // Ledger is added during EnableAuthorization to match with legacy ledger name and with GetEnableAccounts
-      store.setLedger(params.ledger);
-    }
-    if (params.networkSpecifiedType) {
-      setNetworkSpecifiedType(params.networkSpecifiedType);
+    if (params.specifiedNetworkType) {
+      setSpecifiedNetworkType(params.specifiedNetworkType);
     }
   };
 
-  const setLedger = (ledger) => {
-    store.setLedger(ledger);
-    flip();
-
-    // Set the new ledger to be loaded
-    request.body.params['ledger'] = ledger;
-
-    sendMessage(JsonRpcMethod.GetEnableAccounts, request.body.params, function (response) {
-      if (response.error) {
-        console.error(response.error);
-      } else {
-        setDetails(response);
+  const setNetwork = (network: string) => {
+    if (network && store.savedRequest?.body) {
+      store.setActiveNetwork(network);
+      // Set the new network to be loaded
+      const params = {
+        ...store.savedRequest.body.params,
+        ledger: network,
       }
-    });
+
+      sendMessage(JsonRpcMethod.GetEnableAccounts, params, function (response) {
+        if (response.error) {
+          console.error(response.error);
+        } else {
+          setDetails(response);
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -102,17 +99,18 @@ const Enable: FunctionalComponent = () => {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.body.method == JsonRpcMethod.EnableAuthorization) {
         // Set the request in the store with origin so we can respond later
-        setRequest(request);
-        store.saveRequest(request);
+        store.setSavedRequest(request);
         responseOriginTabID = request.originTabID;
-
-        // Check for existence of the params and set page values
-        setDetails(request.body.params);
+        setNetwork(request?.body?.params?.ledger);
       }
     });
     window.addEventListener('beforeunload', deny);
     return () => window.removeEventListener('beforeunload', deny);
   }, []);
+
+  useEffect(() => {
+    setNetwork(store.savedRequest?.body?.params?.ledger);
+  }, [store.savedRequest]);
 
   const grant = () => {
     window.removeEventListener('beforeunload', deny);
@@ -127,7 +125,7 @@ const Enable: FunctionalComponent = () => {
           genesisID: genesisID,
           genesisHash: genesisHash,
           accounts: accounts,
-          ledger: store.ledger,
+          ledger: store.activeNetwork,
         },
       },
     });
@@ -142,26 +140,26 @@ const Enable: FunctionalComponent = () => {
         <div style="flex: 1">
           <section class="hero">
             <div class="hero-body py-5">
-              ${request.favIconUrl &&
-              html` <img src=${request.favIconUrl} width="48" style="float:left" /> `}
+              ${store.savedRequest?.favIconUrl &&
+              html` <img src=${store.savedRequest.favIconUrl} width="48" style="float:left" /> `}
               <h1 class="title is-size-4" style="margin-left: 58px;">
                 Access requested to your
-                wallet${request.originTitle && html` from ${request.originTitle}`}
+                wallet${store.savedRequest?.originTitle && html` from ${store.savedRequest?.originTitle}`}
               </h1>
             </div>
           </section>
           <section class="px-5 py-0">
             <h3
               >Select the accounts to
-              share${request.originTitle && html` with ${request.originTitle}`}.
+              share${store.savedRequest?.originTitle && html` with ${store.savedRequest?.originTitle}`}.
               <b> Bolded</b> accounts are required by the dApp.</h3
             >
             <div class="is-flex is-align-items-baseline my-3">
-              ${sessionLedgers &&
-              sessionLedgers.length === 1 &&
-              html` <span>Sharing accounts on the <b>${store.ledger}</b> network.</span> `}
-              ${sessionLedgers &&
-              sessionLedgers.length > 1 &&
+              ${sessionNetworks &&
+              sessionNetworks.length === 1 &&
+              html` <span>Sharing accounts on the <b>${store.activeNetwork}</b> network.</span> `}
+              ${sessionNetworks &&
+              sessionNetworks.length > 1 &&
               html`
                 <div class="mr-3">Shared Network:</div>
                 <div class=${ddClass}>
@@ -176,22 +174,22 @@ const Enable: FunctionalComponent = () => {
                       <span class="icon is-small">
                         <i class="fas fa-caret-down" aria-hidden="true"></i>
                       </span>
-                      <span>${store.ledger}</span>
+                      <span>${store.activeNetwork}</span>
                     </button>
                   </div>
                   <div class="dropdown-menu" id="dropdown-menu" role="menu">
                     <div class="dropdown-mask" onClick=${flip} />
                     <div class="dropdown-content">
-                      ${sessionLedgers &&
-                      sessionLedgers.map(
-                        (availableLedger: any) =>
+                      ${sessionNetworks &&
+                      sessionNetworks.map(
+                        (network: any) =>
                           html`
                             <a
-                              id="select${availableLedger.name}"
-                              onClick=${() => setLedger(availableLedger.name)}
+                              id="select${network.name}"
+                              onClick=${() => { setNetwork(network.name); flip(); }}
                               class="dropdown-item"
                             >
-                              ${availableLedger.name}
+                              ${network.name}
                             </a>
                           `
                       )}
@@ -200,7 +198,7 @@ const Enable: FunctionalComponent = () => {
                 </div>
               `}
             </div>
-            ${!!store[store.ledger] &&
+            ${!!store.wallet[store.activeNetwork] &&
             html`
               ${(!accounts || accounts.length === 0) &&
               html`

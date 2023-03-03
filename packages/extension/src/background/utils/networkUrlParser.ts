@@ -1,11 +1,16 @@
 import { logging, LogLevel } from '@algosigner/common/logging';
 
-export function parseUrlServerAndPort(urlInput: string): any {
+type ParsedUrl = {
+  server: string,
+  port: string,
+}
+
+export function parseUrlServerAndPort(urlInput: string): ParsedUrl {
   // In some cases the default URL builder will not work so we default to splitting on failure
   let urlSplit = false;
 
   // Initialize the server and port as strings
-  const returnUrlObj = { server: '', port: '' };
+  const returnUrlObj: ParsedUrl = { server: '', port: '' };
 
   // If the input value is blank just return a blank urlObj
   if (urlInput.length === 0) {

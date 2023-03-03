@@ -53,9 +53,9 @@ const SendAlgos: FunctionalComponent = (props: any) => {
 
   // Initial setup
   useEffect(() => {
-    for (let i = store[ledger].length - 1; i >= 0; i--) {
-      if (store[ledger][i].address === address) {
-        setAccount(store[ledger][i]);
+    for (let i = store.wallet[ledger].length - 1; i >= 0; i--) {
+      if (store.wallet[ledger][i].address === address) {
+        setAccount(store.wallet[ledger][i]);
         break;
       }
     }

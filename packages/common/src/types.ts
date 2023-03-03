@@ -1,4 +1,6 @@
 /* eslint-disable no-unused-vars */
+import { Network, NetworkTemplate } from "./types/network";
+
 export type Field<T> = string | number;
 
 export type TAccount = Field<string>;
@@ -11,11 +13,6 @@ export type Transaction = {
   readonly note?: Note;
   readonly to: TAccount;
 };
-
-export enum Ledger {
-  TestNet = 'TestNet',
-  MainNet = 'MainNet',
-}
 
 export type WalletMultisigMetadata = {
   readonly version: number;
@@ -60,3 +57,24 @@ export type NamespaceConfig = {
   namespace: Namespace;
   toggle: boolean;
 };
+
+export type SafeAccount = {
+  address: string;
+  isRef: boolean;
+  name: string;
+  details?: any;
+}
+
+export type SensitiveAccount = SafeAccount & {
+  mnemonic: string;
+}
+
+// { network: [...accounts] }
+export type WalletStorage = { [key: string]: Array<SafeAccount> };
+
+export type SessionObject = {
+  wallet: WalletStorage;
+  network: Network;
+  availableNetworks: Array<NetworkTemplate>;
+  txnRequest: any;
+}

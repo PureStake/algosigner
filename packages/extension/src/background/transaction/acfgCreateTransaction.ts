@@ -6,7 +6,8 @@ import { BaseValidatedTxnWrap } from './baseValidatedTxnWrap';
 ///
 class AssetCreateTx implements IAssetCreateTx {
   assetTotal: BigInt = undefined;
-  assetDecimals?: number = null;
+  assetDecimals: number = 0;
+  assetDefaultFrozen: boolean = false;
   type: string = undefined;
   from: string = undefined;
   fee?: number = 0;
@@ -15,7 +16,6 @@ class AssetCreateTx implements IAssetCreateTx {
   note?: string = null;
   genesisID: string = undefined;
   genesisHash: any = undefined;
-  assetDefaultFrozen?: boolean = null;
   assetUnitName?: string = null;
   assetName?: string = null;
   assetURL?: string = null;

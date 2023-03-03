@@ -120,7 +120,7 @@ const AssetsList: FunctionalComponent = (props: any) => {
       <div class="modal-background" onClick=${() => setShowAsset(null)}></div>
       <div class="modal-content">
         ${showAsset &&
-        html`<${AssetDetails} asset=${showAsset} ledger=${ledger} optOutFn=${() => setAskAuth(true)} />`}
+        html`<${AssetDetails} asset=${showAsset} ledger=${ledger} optOutFn=${() => { setAskAuth(true); setAuthError(''); }} />`}
       </div>
       <button class="modal-close is-large" aria-label="close" onClick=${() => setShowAsset(null)} />
     </div>

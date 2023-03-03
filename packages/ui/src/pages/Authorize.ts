@@ -32,7 +32,7 @@ const Authorize: FunctionalComponent = (props) => {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.body.method == JsonRpcMethod.Authorization) {
         setRequest(request);
-        store.saveRequest(request);
+        store.setSavedRequest(request);
         responseOriginTabID = request.originTabID;
       }
     });

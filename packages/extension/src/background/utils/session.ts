@@ -1,23 +1,26 @@
+import { SessionObject, WalletStorage } from "@algosigner/common/types";
+import { Network, NetworkTemplate } from "@algosigner/common/types/network";
+
 export default class Session {
-  private _wallet: any;
-  private _ledger: any;
-  private _availableLedgers: any;
+  private _wallet: WalletStorage;
+  private _network: Network;
+  private _availableNetworks: Array<NetworkTemplate>;
   private _txnRequest: any;
 
-  public set wallet(w: any) {
+  public set wallet(w: WalletStorage) {
     this._wallet = w;
   }
 
-  public get wallet(): any {
+  public get wallet(): WalletStorage {
     return this._wallet;
   }
 
-  public set ledger(l: any) {
-    this._ledger = l;
+  public set network(n: Network) {
+    this._network = n;
   }
 
-  public get ledger(): any {
-    return this._ledger;
+  public get network(): Network {
+    return this._network;
   }
 
   public set txnRequest(r: any) {
@@ -34,31 +37,31 @@ export default class Session {
     return r?.body?.params;
   }
 
-  public set availableLedgers(al: any) {
-    this._availableLedgers = al;
+  public set availableNetworks(an: Array<NetworkTemplate>) {
+    this._availableNetworks = an;
   }
 
-  public get availableLedgers(): any {
-    if (this._availableLedgers) {
-      return this._availableLedgers;
+  public get availableNetworks(): Array<NetworkTemplate> {
+    if (this._availableNetworks) {
+      return this._availableNetworks;
     } else {
       return [];
     }
   }
 
-  public get session(): any {
+  public asObject(): SessionObject {
     return {
       wallet: this._wallet,
-      ledger: this._ledger,
-      availableLedgers: this._availableLedgers || [],
+      network: this._network,
+      availableNetworks: this._availableNetworks || [],
       txnRequest: this._txnRequest,
     };
   }
 
   public clearSession(): void {
     this._wallet = undefined;
-    this._ledger = undefined;
-    this._availableLedgers = undefined;
+    this._network = undefined;
+    this._availableNetworks = undefined;
     this._txnRequest = undefined;
   }
 }

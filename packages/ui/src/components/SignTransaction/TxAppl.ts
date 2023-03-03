@@ -143,19 +143,16 @@ const TxAppl: FunctionalComponent = (props: any) => {
           <p style="width: 40%;">Boxes: (ID | Name)</p>
           <p style="width: 60%;" class="value-list">
             ${tx.boxes.map((item) => {
-              return html`<span class="truncate-text">${'\u2022'} ${item.appIndex} | ${item.name}</span>`;
+              return html`<span class="truncate-text">
+                ${'\u2022'} ${item.appIndex} | ${item.name}
+              </span>`;
             })}
           </p>
         </div>
       `}
       <div class="is-flex">
-        <p
-          class="${vo && vo['fee'] ? (' ' + vo['fee']['className']).trimRight() : ''}"
-          style="width: 40%;"
-        >
-          ${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}
-        </p>
-        <p style="width: 60%;"><span>${fee / 1e6} Algos</span></p>
+        <p style="width: 30%;">${!estFee || tx['flatFee'] ? 'Fee:' : 'Estimated fee:'}</p>
+        <p style="width: 70%;">${fee / 1e6} Algos</p>
       </div>
     </div>
   `;

@@ -9,9 +9,10 @@ import { StoreContext } from 'services/StoreContext';
 import { NETWORK_HEADERS_TOOLTIP } from '@algosigner/common/strings';
 
 import { sendMessage } from 'services/Messaging';
+import { SessionObject } from '@algosigner/common/types';
 
-const LedgerNetworkModify: FunctionalComponent = (props: any) => {
-  const { closeFunction, isEditable, isModify } = props;
+const NetworkModify: FunctionalComponent = (props: any) => {
+  const { closeFunction, isEditable } = props;
   const store: any = useContext(StoreContext);
   const [askAuth, setAskAuth] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -19,13 +20,12 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const [authError, setAuthError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [networkName, setNetworkName] = useState<string>(props.name || '');
-  const [networkId, setNetworkId] = useState<string>(props.genesisId || '');
-  const [networkSymbol, setNetworkSymbol] = useState<string>(props.symbol || '');
   const [networkAlgodUrl, setNetworkAlgodUrl] = useState<string>(props.algodUrl || '');
   const [networkIndexerUrl, setNetworkIndexerUrl] = useState<string>(props.indexerUrl || '');
   const [networkHeaders, setNetworkHeaders] = useState<string>(props.headers || '');
   const [checkStatus, setCheckStatus] = useState<string>('gray');
 
+  // If we have a previous name, we're modifying; otherwise, it's a new one
   const previousName = props.name ? props.name : '';
 
   const deleteNetwork = (pwd: string) => {
@@ -33,7 +33,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     setAuthError('');
     setError('');
     const params = {
-      name: networkName,
+      name: previousName,
       passphrase: pwd,
     };
 
@@ -52,7 +52,7 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
       } else {
         // Delete the network from store, then update the wallet and return
         store.deleteNetwork(networkName, () => {
-          store.setLedger(undefined);
+          store.setActiveNetwork(undefined);
           closeFunction && closeFunction(1);
         });
       }
@@ -62,12 +62,10 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
   const checkNetwork = () => {
     setLoading(true);
     setAuthError('');
-    setCheckStatus('');
+    setCheckStatus('gray');
     setError('');
     const params = {
       name: networkName,
-      genesisId: networkId,
-      symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
       headers: networkHeaders,
@@ -97,8 +95,6 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     const params = {
       name: networkName,
       previousName: previousName,
-      genesisId: networkId,
-      symbol: networkSymbol,
       algodUrl: networkAlgodUrl,
       indexerUrl: networkIndexerUrl,
       headers: networkHeaders,
@@ -106,14 +102,18 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
     };
 
     sendMessage(JsonRpcMethod.SaveNetwork, params, function (response) {
-      setLoading(false);
       if (response.error) {
         // Error display
         console.log(response.error);
+        setLoading(false);
       } else {
-        store.setAvailableLedgers(response.availableLedgers);
-        store.setLedger(networkName);
-        closeFunction && closeFunction(2);
+        const session: SessionObject = response;
+        store.setAvailableNetworks(session.availableNetworks);
+        store.updateWallet(session.wallet, () => {
+          store.setActiveNetwork(session.network);
+          setLoading(false);
+          closeFunction && closeFunction(2);
+        });
       }
     });
   };
@@ -154,14 +154,6 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             value=${networkName}
             onInput=${(e) => setNetworkName(e.target.value)}
           />
-          <label>Network ID</label>
-          <input
-            id="networkId"
-            class="input"
-            placeholder="mainnet-v1.0"
-            value=${networkId}
-            onInput=${(e) => setNetworkId(e.target.value)}
-          />
           <label>Network Algod URL</label>
           <input
             id="networkAlgodUrl"
@@ -190,49 +182,61 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
               />
             </a>
           </label>
-          <input
+          <textarea
             id="networkHeaders"
-            class="input"
+            class="textarea"
             placeholder="API Key or JSON Structure"
             value=${networkHeaders}
             onInput=${(e) => setNetworkHeaders(e.target.value)}
           />
         </div>
-        <button
-          class="modal-close is-large"
-          style="z-index: 1; opacity: 0;"
+        <div
+          class="has-text-centered"
+          style="cursor: pointer; min-width: 24px; position: absolute; top: 3.5em; left: 1em; z-index: 5; background: white;"
           onClick=${() => closeFunction && closeFunction(1)}
-        />
+        >
+          <span class="icon">
+            <i class="fas fa-arrow-left" aria-hidden="true" />
+          </span>
+        </div>
       </div>
       ${isEditable &&
       html`
-        <div className="network-modify-footer is-flex is-justify-content-space-between mt-2">
-          <button
-            id="deleteNetwork"
-            class="button is-danger is-flex-grow-1"
-            disabled="${loading}"
-            onClick=${() => {
-              setIsDeleting(true);
-              setAskAuth(true);
-            }}
-          >
-            Delete
-          </button>
-          <button
-            id="saveNetwork"
-            class="button is-link is-flex-grow-1 ml-1"
-            disabled="${loading}"
-            onClick=${() => {
-              if (isModify) {
+        <div className="network-modify-footer">
+          <div className="is-flex is-justify-content-space-between mt-2">
+            <button
+              id="deleteNetwork"
+              class="button is-danger is-flex-grow-1"
+              disabled="${loading || !previousName}"
+              onClick=${() => {
+                setIsDeleting(true);
                 setAskAuth(true);
-              } else {
-                saveNetwork(undefined);
-              }
-            }}
-          >
-            Save
-          </button>
+              }}
+            >
+              Delete
+            </button>
+            <button
+              id="saveNetwork"
+              class="button is-link is-flex-grow-1 ml-1"
+              disabled="${loading}"
+              onClick=${() => {
+                if (previousName) {
+                  setAskAuth(true);
+                } else {
+                  saveNetwork(undefined);
+                }
+              }}
+            >
+              Save
+            </button>
+          </div>
+          ${error !== undefined &&
+          error.length > 0 &&
+          html`<div class="mt-2">
+            <span id="networkError" class="has-text-danger">${error}</span>
+          </div>`}
         </div>
+
         ${askAuth &&
         html`
           <div class="modal is-active">
@@ -250,12 +254,9 @@ const LedgerNetworkModify: FunctionalComponent = (props: any) => {
             />
           </div>
         `}
-        ${error !== undefined &&
-        error.length > 0 &&
-        html`<span id="networkError" class="mt-3 has-text-danger">${error}</span>`}
       `}
     `
   );
 };
 
-export default LedgerNetworkModify;
+export default NetworkModify;
