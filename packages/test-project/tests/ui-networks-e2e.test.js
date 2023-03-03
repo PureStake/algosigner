@@ -105,7 +105,7 @@ describe('Create and Test Custom Networks', () => {
     await inputPassword();
 
     // Check network was deleted
-    await openNetworkMenu();
+    await extensionPage.waitForTimeout(1000);
     await expect(extensionPage.select(otherNetSelector)).rejects.toThrow();
   });
 });
