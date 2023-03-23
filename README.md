@@ -10,6 +10,7 @@ Existing users should migrate to a different wallet immediately. There is no way
 
 For developers, the Github repo for the project will migrate to the Algorand Foundation on March 31st. 
 
+[Foundation press release](https://www.algorand.foundation/news/algosigner-support-ending)
 
 ## FAQ
 ----
