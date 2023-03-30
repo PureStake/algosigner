@@ -112,6 +112,35 @@ export class InternalMethods {
     });
   }
 
+  public static validateSession(callback){
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Validate session (partial)
+    // Rebuild from cache if service worker has shut down
+    /////////////////////////////////////////////////////////   
+    if (!session.wallet) {
+      const extensionStorage = new ExtensionStorage();
+      extensionStorage.getStorage('cache', (response: any) => {
+        // TODO MV3: The cache here contains accounts, assets, availableLedgers
+        // *Need to save additional information in the cache of network and txnRequest to rebuild*
+        // *May want to save an entire cleansed wallet in cache to prevent rebuilding*
+        
+        // Example of what we will need is below
+        // [WARNING] - These are not yet part of the cache so leaving a logging warning for now
+        logging.log(`[WARNING] - Attempting to get cache information that does not exist.`)
+        if(response) {
+          session.wallet =  response.wallet as WalletStorage;
+          session.network =  response.ledger as Network;
+          session.availableNetworks =  response.availableLedgers as Array<NetworkTemplate>;
+          session.txnRequest =  response.txnRequest;
+        }
+        callback(session);
+      });
+    }
+    else {
+      callback(session);
+    }   
+  }
+
   // Checks if an account for the given address exists on AlgoSigner for a given network.
   public static checkAccountIsImported(genesisID: string, address: string): void {
     const network: string = getNetworkNameFromGenesisID(genesisID);
@@ -126,21 +155,26 @@ export class InternalMethods {
   }
 
   private static loadAccountAssetsDetails(address: string, network: Network) {
-    const algod = this.getAlgod(network);
-    algod
-      .accountInformation(address)
-      .do()
-      .then((res: any) => {
-        if ('assets' in res && res.assets.length > 0) {
-          AssetsDetailsHelper.add(
-            res.assets.map((x) => x['asset-id']),
-            network
-          );
-        }
-      })
-      .catch((e: any) => {
-        console.error(e);
-      });
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Swap call to fetch from algod (partial)
+    /////////////////////////////////////////////////////////    
+    const params = Settings.getBackendParams(network, API.Algod);
+    const subPath = 'v2/accounts';
+    const url = `${params.url}/${subPath}/${address}`; 
+
+    fetch(url)
+    .then((response) => response.json())
+    .then((data: any) => {
+      if ('assets' in data && data.assets.length > 0) {
+        AssetsDetailsHelper.add(
+          data.assets.map((x) => x['asset-id']),
+          network
+        );
+      }
+    })
+    .catch((e: any) => {
+      console.error(e);
+    });
   }
 
   public static getSessionObject(): SessionObject {
@@ -407,59 +441,66 @@ export class InternalMethods {
     this._encryptionWrap = new encryptionWrap(request.body.params.passphrase);
     let newAccount: SensitiveAccount;
 
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Validate session (partial)
+    // *Need to validate for all methods that use session*
+    ////////////////////////////////////////////////////////  
     try {
-      const existingAccounts = session.wallet[network];
-      let targetAddress = address;
+      this.validateSession(() => {
+        const existingAccounts = session.wallet[network];
+        let targetAddress = address;
 
-      if (!isRef) {
-        targetAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
-      }
+        if (!isRef) {
+          targetAddress = algosdk.mnemonicToSecretKey(mnemonic).addr;
+        }
 
-      if (existingAccounts) {
-        for (let i = 0; i < existingAccounts.length; i++) {
-          if (existingAccounts[i].address === targetAddress) {
-            throw new Error(
-              `An account with this address already exists in your ${network} wallet.`
-            );
-          }
-          if (existingAccounts[i].name === name) {
-            throw new Error(`An account named '${name}' already exists in your ${network} wallet.`);
+        if (existingAccounts) {
+          for (let i = 0; i < existingAccounts.length; i++) {
+            if (existingAccounts[i].address === targetAddress) {
+              throw new Error(
+                `An account with this address already exists in your ${network} wallet.`
+              );
+            }
+            if (existingAccounts[i].name === name) {
+              throw new Error(`An account named '${name}' already exists in your ${network} wallet.`);
+            }
           }
         }
-      }
 
-      newAccount = {
-        address: targetAddress,
-        mnemonic: !isRef ? mnemonic : null,
-        isRef: isRef,
-        name: name,
-      };
+        newAccount = {
+          address: targetAddress,
+          mnemonic: !isRef ? mnemonic : null,
+          isRef: isRef,
+          name: name,
+        };
+
+        this._encryptionWrap.unlock((unlockedValue: any) => {
+          if ('error' in unlockedValue) {
+            sendResponse(unlockedValue);
+          } else {
+            if (!unlockedValue[network]) {
+              unlockedValue[network] = [];
+            }
+    
+            unlockedValue[network].push(newAccount);
+            this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
+              if (isSuccessful) {
+                this.loadAccountAssetsDetails(newAccount.address, network);
+                session.wallet = this.safeWallet(unlockedValue);
+                this.reloadAliases();
+                sendResponse(session.wallet);
+              } else {
+                sendResponse({ error: 'Lock failed' });
+              }
+            });
+          }
+        });
+      });
     } catch (error) {
       sendResponse({ error: error.message });
       return false;
     }
 
-    this._encryptionWrap.unlock((unlockedValue: any) => {
-      if ('error' in unlockedValue) {
-        sendResponse(unlockedValue);
-      } else {
-        if (!unlockedValue[network]) {
-          unlockedValue[network] = [];
-        }
-
-        unlockedValue[network].push(newAccount);
-        this._encryptionWrap?.lock(JSON.stringify(unlockedValue), (isSuccessful: any) => {
-          if (isSuccessful) {
-            this.loadAccountAssetsDetails(newAccount.address, network);
-            session.wallet = this.safeWallet(unlockedValue);
-            this.reloadAliases();
-            sendResponse(session.wallet);
-          } else {
-            sendResponse({ error: 'Lock failed' });
-          }
-        });
-      }
-    });
     return true;
   }
 
@@ -468,7 +509,7 @@ export class InternalMethods {
     extensionBrowser.tabs.create(
       {
         active: true,
-        url: extensionBrowser.extension.getURL(`/index.html#/${network}/ledger-hardware-connector`),
+        url: extensionBrowser.runtime.getURL(`/index.html#/${network}/ledger-hardware-connector`),
       },
       (tab) => {
         // Tab object is created here, but extension popover will close.
@@ -542,6 +583,9 @@ export class InternalMethods {
           // If this is an UI transaction then we need to submit to the network
           const network = getNetworkNameFromGenesisID(decodedTxn.txn.genesisID);
 
+          /////////////////////////////////////////////////////////
+          // TODO MV3: Swap call to fetch for algod
+          /////////////////////////////////////////////////////////
           const algod = this.getAlgod(network);
           algod
             .sendRawTransaction(txnBuffer)
@@ -635,38 +679,42 @@ export class InternalMethods {
 
   public static [JsonRpcMethod.AccountDetails](request: any, sendResponse: Function) {
     const { ledger: network, address } = request.body.params;
-    const algod = this.getAlgod(network);
-    algod
-      .accountInformation(address)
-      .do()
-      .then((res: any) => {
-        const extensionStorage = new ExtensionStorage();
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Swap call to fetch for algod
+    /////////////////////////////////////////////////////////
+    const params = Settings.getBackendParams(network, API.Algod);
+    const subPath = `v2/accounts`;
+    const url = `${params.url}/${subPath}/${address}`; 
+
+    try {   
+      fetch(url)
+      .then((response) => response.json())
+      .then((data: any) => {
+        const extensionStorage = new ExtensionStorage();  
         extensionStorage.getStorage('cache', (storedCache: any) => {
           const cache: Cache = initializeCache(storedCache, network);
-
+          
           // Check for asset details saved in storage, if needed
-          if ('assets' in res && res.assets.length > 0) {
+          if ('assets' in data && data.assets.length > 0) {
             const assetDetails = [];
-            for (var i = res.assets.length - 1; i >= 0; i--) {
-              const assetId = res.assets[i]['asset-id'];
+            for (var i = data.assets.length - 1; i >= 0; i--) {
+              const assetId = data.assets[i]['asset-id'];
               if (assetId in cache.assets[network]) {
-                res.assets[i] = {
+                data.assets[i] = {
                   ...cache.assets[network][assetId],
-                  ...res.assets[i],
+                  ...data.assets[i],
                 };
               }
               assetDetails.push(assetId);
             }
-
             if (assetDetails.length > 0) AssetsDetailsHelper.add(assetDetails, network);
-
-            res.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
+            data.assets.sort((a, b) => a['asset-id'] - b['asset-id']);
           }
 
-          sendResponse(res);
+          sendResponse(data);
 
           // Save account updated account details in cache
-          cache.accounts[network][address] = res;
+          cache.accounts[network][address] = data;
           extensionStorage.setStorage('cache', cache, null);
 
           // Add details to session
@@ -675,7 +723,7 @@ export class InternalMethods {
           if (network && wallet[network]) {
             for (var i = wallet[network].length - 1; i >= 0; i--) {
               if (wallet[network][i].address === address) {
-                wallet[network][i].details = res;
+                wallet[network][i].details = data;
               }
             }
           }
@@ -684,6 +732,10 @@ export class InternalMethods {
       .catch((e: any) => {
         sendResponse({ error: e.message });
       });
+    }
+    catch(e){
+      sendResponse({ error: e.message });
+    }
     return true;
   }
 
@@ -691,6 +743,10 @@ export class InternalMethods {
     const { ledger: network, address, limit, 'next-token': token } = request.body.params;
     const indexer = this.getIndexer(network);
     const algod = this.getAlgod(network);
+
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Swap call to fetch from indexer and algod
+    /////////////////////////////////////////////////////////
     const txList = indexer.lookupAccountTransactions(address);
     const pendingTxList = algod.pendingTransactionByAddress(address);
     if (limit) txList.limit(limit);
@@ -745,6 +801,10 @@ export class InternalMethods {
     const { ledger: network } = request.body.params;
     const assetId = request.body.params['asset-id'];
     const indexer = this.getIndexer(network);
+
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Swap call to fetch from indexer
+    /////////////////////////////////////////////////////////
     indexer
       .lookupAssetByID(assetId)
       .do()
@@ -794,6 +854,10 @@ export class InternalMethods {
 
     const { ledger: network, filter, nextToken } = request.body.params;
     const indexer = this.getIndexer(network);
+
+    /////////////////////////////////////////////////////////
+    // TODO MV3: Swap call to fetch from indexer
+    /////////////////////////////////////////////////////////
     // Do the search for asset id (if filter value is integer)
     // and asset name and concat them.
     if (filter.length > 0 && !isNaN(filter) && (!nextToken || nextToken.length === 0)) {
@@ -849,6 +913,9 @@ export class InternalMethods {
         return false;
       }
 
+      /////////////////////////////////////////////////////////
+      // TODO MV3: Swap call to fetch from algod
+      /////////////////////////////////////////////////////////
       const params = await algod.getTransactionParams().do();
       const txn = {
         ...txnParams,
@@ -955,6 +1022,9 @@ export class InternalMethods {
             return false;
           }
 
+          /////////////////////////////////////////////////////////
+          // TODO MV3: Swap call to fetch post 
+          /////////////////////////////////////////////////////////
           this.getAlgod(network)
             .sendRawTransaction(signedTxn.blob)
             .do()

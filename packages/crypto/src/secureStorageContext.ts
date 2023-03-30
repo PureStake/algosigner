@@ -39,14 +39,14 @@ export class SecureStorageContext {
   // Generate random values using crypto getRandomValues based on provided byte length value.
   ///
   private generateRandomValues(byteLength: number): Uint8Array {
-      return window.crypto.getRandomValues(new Uint8Array(byteLength));
+      return crypto.getRandomValues(new Uint8Array(byteLength));
   }
   
   ///
   // Using the passphrase, create a CryptoKey for use in key derivation. 
   ///
   private async createPasskey(passphrase: ArrayBuffer): Promise<CryptoKey> { 
-    return await window.crypto.subtle.importKey(
+    return await crypto.subtle.importKey(
       "raw",
       passphrase, 
       "PBKDF2", 
@@ -58,7 +58,7 @@ export class SecureStorageContext {
   }
 
   private async deriveBitsFromRawKey(rawKey: CryptoKey, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
-    return await window.crypto.subtle.deriveBits(
+    return await crypto.subtle.deriveBits(
       {
           name: "PBKDF2",
           hash: "SHA-256",
@@ -82,7 +82,7 @@ export class SecureStorageContext {
     // Generate bits from the key that will be ued for a master key import
     const masterKeyBits = await this.deriveBitsFromRawKey(rawKey, salt, iterations);
     // Import the newly created master key bits for HKDF
-    return await window.crypto.subtle.importKey(
+    return await crypto.subtle.importKey(
       "raw",
       masterKeyBits,
       {
@@ -102,7 +102,7 @@ export class SecureStorageContext {
   private async deriveAESKeyFromMasterKey(masterKey: CryptoKey, nonce: Uint8Array): Promise<CryptoKey> {
     // We use a hardcoded salt for all implementations, gerated with 'openssl rand -base64 32'
     const hkdfSalt = Uint8Array.from(atob("wJW4IFKeBayDZpNJTmMyb1nkGWX4LXdZ3XOJwz3reAY="), c => c.charCodeAt(0));
-    return await window.crypto.subtle.deriveKey(
+    return await crypto.subtle.deriveKey(
       {
         name: "HKDF",
         salt: hkdfSalt, 
@@ -173,7 +173,7 @@ export class SecureStorageContext {
       // Generate the AES key from the master with new nonce.
       let aesKey = await this.deriveAESKeyFromMasterKey(masterKey, nonce);
       // Use crypto subtle with the iv and a AES-GCM cipher for encryption. 
-      await window.crypto.subtle.encrypt(
+      await crypto.subtle.encrypt(
         {
           name: "AES-GCM",
           iv: this.getVersionBuffer()  
@@ -208,7 +208,7 @@ export class SecureStorageContext {
       let aesKey = await this.deriveAESKeyFromMasterKey(masterKey, blob.nonce);
       // Use crypto subtle with the iv and a AES-GCM cipher for decryption. 
       try {
-        await window.crypto.subtle.decrypt(
+        await crypto.subtle.decrypt(
           {
             name: "AES-GCM",
             iv: this.getVersionBuffer() 

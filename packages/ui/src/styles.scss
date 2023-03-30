@@ -1,6 +1,7 @@
 @charset "utf-8";
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import "~@fontsource/open-sans/index.css";
+@import "~@fontsource/roboto/index.css";
 
 // Main extension window
 $extension-height: 550px;
