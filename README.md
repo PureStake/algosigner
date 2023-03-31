@@ -2,13 +2,14 @@
 
 # AlgoSigner Sunset
 
-Support for AlgoSigner by the Algorand Foundation is ending on March 31st and the extension will be unpublished from the Chrome Store. This **should not** delete the extension if it is installed through the store but neither the extension or code base will be updated or supported. 
+*This repository is no longer under active development.* 
+
+Support for AlgoSigner by the Algorand Foundation has ended as of March 31st, 2023 and the extension will be unpublished from the Chrome Store. This **should not** delete the extension if it is installed through the store but neither the extension or code base will be updated or supported. 
 
 Refer to the Algorand website for a list of [alternative providers](https://developer.algorand.org/ecosystem-projects/?tags=wallets). The Algorand Foundation also providers a list of [wallet security best practices](https://www.algorand.foundation/wallet-security-best-practices).
 
 Existing users should migrate to a different wallet immediately. There is no way to export a mnemonic from AlgoSigner. If you did not write it down when creating an account you should migrate to another account before March 31st or rekey your account to an account you do have the secret for. 
 
-For developers, the Github repo for the project will migrate to the Algorand Foundation on March 31st. 
 
 [Foundation press release](https://www.algorand.foundation/news/algosigner-support-ending)
 
@@ -24,11 +25,11 @@ A: Yes, you can, several guides are available recently depending on your new wal
 
 #### Q: Are there are any more releases planned?
 
-A: There are no more planned releases to the Chrome Store. There is final code only release (1.11.0) in the Github repository with the last developed features. 
+A: The Chrome Store listing is unpublished. There is a final code only release (1.11.0) in the Github repository with the last developed features. 
 
 #### Q: Is the code Manifest v3 ready?
 
-A: No. There will be a branch containing all the changes towards supporting v3, but it should not be considered tested or production ready. 
+A: No. There will be a [branch](https://github.com/PureStake/algosigner/tree/manifest-version3) containing all the changes towards supporting v3, but it should not be considered tested or production ready. 
 
 
 ## 1.11.0 Final Code Release
